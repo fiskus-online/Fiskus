@@ -50,3 +50,15 @@ func (s *Store) GetEInvoice(_ context.Context, companyID, id int64) (store.EInvo
 	}
 	return store.EInvoice{}, store.ErrNotFound
 }
+
+func (s *Store) SetEInvoiceStatus(_ context.Context, companyID, id int64, status, delivered string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	for i := range s.einvoices {
+		if e := &s.einvoices[i]; e.ID == id && e.CompanyID == companyID {
+			e.Status, e.Delivered = status, delivered
+			return nil
+		}
+	}
+	return store.ErrNotFound
+}

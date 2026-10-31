@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/palo-krnac/fiscus/backend/internal/audit"
@@ -268,4 +269,95 @@ func (a *App) ReopenEInvoice(ctx context.Context, companyID, id int64) (Purchase
 		return PurchaseDraft{}, store.ErrNotFound
 	}
 	return a.ImportUBL(ctx, companyID, strings.TrimSpace(e.File), e.Data)
+}
+
+// finalDelivery: stav, ktorý sa už nezmení (netreba sa ďalej pýtať).
+func finalDelivery(status string) bool {
+	switch status {
+	case "delivered", "failed", "rejected", "undeliverable", "nedoručiteľná":
+		return true
+	}
+	return false
+}
+
+// trackEInvoice zistí stav jednej odoslanej e-faktúry a uloží ho.
+func (a *App) trackEInvoice(ctx context.Context, companyID int64, e store.EInvoice) (store.EInvoice, error) {
+	if e.Direction != "out" || e.MessageID == "" || e.Error != "" {
+		return e, ErrNoTrack
+	}
+	p, err := a.provider(ctx, companyID)
+	if err != nil {
+		return e, err
+	}
+	t, ok := p.(postman.Tracker)
+	if !ok {
+		return e, postman.ErrNoTracking
+	}
+	d, err := t.Delivery(ctx, e.MessageID)
+	if err != nil {
+		return e, err
+	}
+	if d.Status == e.Status && d.Delivered == e.Delivered {
+		return e, nil
+	}
+	if err := a.Store.SetEInvoiceStatus(ctx, companyID, e.ID, d.Status, d.Delivered); err != nil {
+		return e, err
+	}
+	e.Status, e.Delivered = d.Status, d.Delivered
+	if finalDelivery(d.Status) && d.Status != "delivered" {
+		msg := "E-faktúra " + e.DocNumber + " nebola doručená (" + d.Status + ")"
+		if d.Error != "" {
+			msg += ": " + d.Error
+		}
+		a.record(ctx, companyID, audit.CatInvoices, "einvoice", "invoice", e.DocID, msg, nil, e)
+	}
+	return e, nil
+}
+
+// ErrNoTrack — záznam nie je odoslaná e-faktúra (stav sa nezisťuje).
+var ErrNoTrack = errors.New("stav doručenia sa zisťuje iba pri odoslaných e-faktúrach")
+
+// TrackEInvoice zistí u poštára stav doručenia odoslanej e-faktúry.
+func (a *App) TrackEInvoice(ctx context.Context, companyID, id int64) (store.EInvoice, error) {
+	if err := a.Require(ctx, companyID, auth.PermInvoicesWrite); err != nil {
+		return store.EInvoice{}, err
+	}
+	e, err := a.Store.GetEInvoice(ctx, companyID, id)
+	if err != nil {
+		return store.EInvoice{}, err
+	}
+	e.Data = nil
+	return a.trackEInvoice(ctx, companyID, e)
+}
+
+// TrackAllEInvoices zistí stav nedoručených e-faktúr odoslaných za posledných
+// 30 dní vo všetkých firmách (beží každú hodinu na pozadí).
+func (a *App) TrackAllEInvoices(ctx context.Context) {
+	ctx = auth.WithActor(ctx, auth.System)
+	companies, err := a.Store.ListCompanies(ctx)
+	if err != nil {
+		return
+	}
+	since := a.now().AddDate(0, 0, -30)
+	for _, co := range companies {
+		s, err := a.loadEInvoice(ctx, co.ID)
+		if err != nil || s.Mode != postman.ModeSAPI {
+			continue
+		}
+		list, err := a.Store.ListEInvoices(ctx, co.ID, store.EInvoiceFilter{Direction: "out"})
+		if err != nil {
+			continue
+		}
+		for _, e := range list {
+			if e.Created.Before(since) || finalDelivery(e.Status) || e.MessageID == "" || e.Error != "" {
+				continue
+			}
+			if _, err := a.trackEInvoice(ctx, co.ID, e); err != nil {
+				if !errors.Is(err, postman.ErrNoTracking) {
+					log.Printf("stav e-faktúry %s (firma %d): %v", e.DocNumber, co.ID, err)
+				}
+				break // poskytovateľ stav nevie alebo neodpovedá — ďalšie e-faktúry tejto firmy nabudúce
+			}
+		}
+	}
 }

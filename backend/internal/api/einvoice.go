@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/palo-krnac/fiscus/backend/internal/app"
 	"github.com/palo-krnac/fiscus/backend/internal/invoice"
 	"github.com/palo-krnac/fiscus/backend/internal/postman"
 	"github.com/palo-krnac/fiscus/backend/internal/store"
@@ -88,6 +89,15 @@ func (s *Server) sendEInvoice(w http.ResponseWriter, r *http.Request) {
 	}
 	e, err := s.App.SendEInvoice(r.Context(), cid, id)
 	if err != nil {
+		var invalid *postman.InvalidError
+		if errors.As(err, &invalid) { // kontrola pravidiel u poštára — každé pravidlo zvlášť
+			fields := make([]invoice.FieldError, len(invalid.Rules))
+			for i, r := range invalid.Rules {
+				fields[i] = invoice.FieldError{Field: "einvoice", Message: r}
+			}
+			writeErr(w, http.StatusUnprocessableEntity, "E-faktúra neprešla kontrolou poštára — neodoslala sa", fields)
+			return
+		}
 		if e.ID != 0 { // poštár odmietol — záznam s chybou je v zozname
 			writeErr(w, http.StatusBadGateway, "E-faktúra sa neodoslala: "+err.Error(), nil)
 			return
@@ -155,4 +165,25 @@ func (s *Server) checkEInvoice(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]bool{"ok": true})
+}
+
+func (s *Server) trackEInvoice(w http.ResponseWriter, r *http.Request) {
+	cid, _ := pathID(w, r, "cid")
+	id, ok := pathID(w, r, "id")
+	if !ok {
+		return
+	}
+	e, err := s.App.TrackEInvoice(r.Context(), cid, id)
+	if err != nil {
+		switch {
+		case errors.Is(err, postman.ErrNoTracking), errors.Is(err, app.ErrNoTrack), errors.Is(err, postman.ErrOff):
+			writeErr(w, http.StatusConflict, err.Error(), nil)
+		case statusOf(err) != http.StatusInternalServerError:
+			failEInvoice(w, err)
+		default:
+			writeErr(w, http.StatusBadGateway, err.Error(), nil)
+		}
+		return
+	}
+	writeJSON(w, http.StatusOK, e)
 }

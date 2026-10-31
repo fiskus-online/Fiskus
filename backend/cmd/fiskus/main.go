@@ -275,6 +275,7 @@ func main() {
 	go ratesLoop(runCtx, a)
 	go calendarSyncLoop(runCtx, a)
 	go eshopLoop(runCtx, a)
+	go einvoiceLoop(runCtx, a)
 
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
@@ -390,6 +391,22 @@ func eshopLoop(ctx context.Context, a *app.App) {
 			return
 		case <-t.C:
 			a.SyncAllEshops(ctx)
+			t.Reset(time.Hour)
+		}
+	}
+}
+
+// einvoiceLoop zisťuje u poštára stav doručenia odoslaných e-faktúr:
+// pár minút po štarte a potom každú hodinu.
+func einvoiceLoop(ctx context.Context, a *app.App) {
+	t := time.NewTimer(3 * time.Minute)
+	defer t.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-t.C:
+			a.TrackAllEInvoices(ctx)
 			t.Reset(time.Hour)
 		}
 	}
