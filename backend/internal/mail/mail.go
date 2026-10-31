@@ -42,8 +42,13 @@ type Settings struct {
 	// BccSelf: kópia každej správy na adresu odosielateľa (do vlastnej pošty).
 	BccSelf bool `json:"bccSelf"`
 	// NotifyDrafts: adresa pre upozornenia na koncepty z pravidelnej fakturácie (prázdna = neposielať).
-	NotifyDrafts string              `json:"notifyDrafts"`
-	Templates    map[string]Template `json:"templates"`
+	NotifyDrafts string `json:"notifyDrafts"`
+	// NotifyDeadlines: adresa pre upozornenia na blížiace sa lehoty (DPH,
+	// daň z príjmov, vlastné termíny, splatné prijaté faktúry); NotifyDays
+	// je koľko dní vopred (1 až 14, predvolene 3).
+	NotifyDeadlines string              `json:"notifyDeadlines"`
+	NotifyDays      int                 `json:"notifyDays"`
+	Templates       map[string]Template `json:"templates"`
 }
 
 // Template je predmet a text správy; obsahuje zástupné znaky {cislo} a pod.
@@ -126,6 +131,10 @@ func (s *Settings) Normalize() {
 	s.FromEmail = strings.TrimSpace(s.FromEmail)
 	s.ReplyTo = strings.TrimSpace(s.ReplyTo)
 	s.NotifyDrafts = strings.TrimSpace(s.NotifyDrafts)
+	s.NotifyDeadlines = strings.TrimSpace(s.NotifyDeadlines)
+	if s.NotifyDays == 0 {
+		s.NotifyDays = 3
+	}
 	if s.Security == "" {
 		s.Security = StartTLS
 	}
@@ -178,6 +187,14 @@ func (s Settings) Validate() error {
 		if _, err := ParseList(s.NotifyDrafts); err != nil {
 			add("notifyDrafts", "Neplatná e-mailová adresa")
 		}
+	}
+	if s.NotifyDeadlines != "" {
+		if _, err := ParseList(s.NotifyDeadlines); err != nil {
+			add("notifyDeadlines", "Neplatná e-mailová adresa")
+		}
+	}
+	if s.NotifyDays < 1 || s.NotifyDays > 14 {
+		add("notifyDays", "Upozorniť 1 až 14 dní vopred")
 	}
 	if hasNewline(s.FromName) || hasNewline(s.Username) {
 		add("fromName", "Meno nesmie obsahovať koniec riadku")

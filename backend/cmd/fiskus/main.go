@@ -275,6 +275,7 @@ func main() {
 	go ratesLoop(runCtx, a)
 	go calendarSyncLoop(runCtx, a)
 	go eshopLoop(runCtx, a)
+	go deadlineLoop(runCtx, a)
 
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
@@ -390,6 +391,22 @@ func eshopLoop(ctx context.Context, a *app.App) {
 			return
 		case <-t.C:
 			a.SyncAllEshops(ctx)
+			t.Reset(time.Hour)
+		}
+	}
+}
+
+// deadlineLoop posiela upozornenia na blížiace sa lehoty: každú hodinu
+// (správa ide raz za termín, až od 7:00).
+func deadlineLoop(ctx context.Context, a *app.App) {
+	t := time.NewTimer(4 * time.Minute)
+	defer t.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-t.C:
+			a.NotifyDeadlines(ctx)
 			t.Reset(time.Hour)
 		}
 	}
