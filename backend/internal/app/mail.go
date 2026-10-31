@@ -58,6 +58,9 @@ func (a *App) loadMail(ctx context.Context, companyID int64) (mail.Settings, err
 
 // public skryje heslo a doplní predvolené šablóny pre formulár.
 func public(s mail.Settings) mail.Settings {
+	if s.NotifyDays == 0 {
+		s.NotifyDays = 3
+	}
 	s.PasswordSet = s.Password != ""
 	s.Password = ""
 	t := map[string]mail.Template{}

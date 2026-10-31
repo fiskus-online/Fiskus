@@ -123,6 +123,13 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
             hint="Keď pravidelná fakturácia pripraví koncept na kontrolu, príde sem e-mail. Prázdne = neposielať.">
             <InputText v-model="form.notifyDrafts" size="small" inputmode="email" placeholder="napr. uctovnictvo@firma.sk" :invalid="!!errors.notifyDrafts" />
           </FormField>
+          <FormField label="Upozornenia na lehoty na" :span="2" :error="errors.notifyDeadlines"
+            hint="DPH a kontrolný výkaz, daň z príjmov, vlastné termíny a splatné prijaté faktúry — e-mail raz za termín. Prázdne = neposielať.">
+            <InputText v-model="form.notifyDeadlines" size="small" inputmode="email" placeholder="napr. ja@firma.sk" :invalid="!!errors.notifyDeadlines" />
+          </FormField>
+          <FormField label="Koľko dní vopred" :span="2" :error="errors.notifyDays" hint="1 až 14">
+            <InputNumber v-model="form.notifyDays" :min="1" :max="14" show-buttons size="small" class="days" :invalid="!!errors.notifyDays" />
+          </FormField>
           <label class="switch span2">
             <ToggleSwitch v-model="form.bccSelf" />
             <span>
@@ -184,6 +191,9 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
 </template>
 
 <style scoped>
+.days {
+  max-width: 140px;
+}
 .save-row {
   display: flex;
   justify-content: flex-end;
