@@ -158,4 +158,5 @@ Slovenské špecifiká, ktoré MyÚčto nemá: RÚZ, tri identifikátory (IČO /
 - [x] Vlastné opakované termíny (odvody, preddavky, STK, poistky) s rýchlym výberom a označením „splnené“
 - [x] Odber do mobilu a kalendára (iCalendar, tajný odkaz iba na čítanie, pripomienky 3 dni a 1 deň vopred), súbor .ics, odznak v menu
 - [x] Prepojenie kalendára termínov s Google Kalendárom a Outlookom (Microsoft 365, Outlook.com) cez ich API — funguje aj v desktopovej verzii
-- [ ] Upozornenie e-mailom pred lehotou, termíny miezd (etapa 4)
+- [x] Upozornenie e-mailom pred lehotou (daňové a vlastné termíny, splatné prijaté faktúry; 1 až 14 dní vopred, raz za termín, od 7:00)
+- [ ] Termíny miezd (etapa 4)
