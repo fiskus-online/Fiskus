@@ -18,7 +18,7 @@ import IcoInput from '../components/IcoInput.vue'
 import VatIdInput from '../components/VatIdInput.vue'
 import { fillFromRegistry, fillFromVIES } from '../lib/registry.js'
 import { saveBlob } from '../lib/export.js'
-import { sentText } from '../lib/einvoice.js'
+import { sentText, trackable } from '../lib/einvoice.js'
 import { api, ApiError } from '../lib/api.js'
 import { session, can } from '../lib/session.js'
 import {
@@ -74,6 +74,21 @@ onMounted(() =>
   ),
 )
 const einvStatus = computed(() => sentText(einvLog.value))
+// posledná úspešne odoslaná e-faktúra — jej stav sa dá zistiť u poštára
+const einvLast = computed(() => einvLog.value.find((e) => !e.error))
+const tracking = ref(false)
+async function trackEInvoice() {
+  tracking.value = true
+  try {
+    const e = await api.trackEInvoice(session.companyId, einvLast.value.id)
+    einvLog.value = einvLog.value.map((x) => (x.id === e.id ? e : x))
+    if (trackable(e)) toast.add({ severity: 'info', summary: 'Zatiaľ nedoručená', detail: 'Poštár e-faktúru ešte doručuje. Fiškus sa ho pýta aj sám každú hodinu.', life: 5000 })
+  } catch (e) {
+    toast.add({ severity: 'warn', summary: 'Stav sa nezistil', detail: e.message, life: 8000 })
+  } finally {
+    tracking.value = false
+  }
+}
 async function sendEInvoice() {
   busyUBL.value = true
   try {
@@ -1020,7 +1035,11 @@ const customerFields = reactive([
       <div class="form">
         <p v-if="amending" class="advance-note"><i class="pi pi-pencil" /> <span>Vystavená faktúra sa dá upravovať, kým nie je uhradená. Číslo ostane; ak ste ju už poslali, pošlite odberateľovi opravenú.</span></p>
         <p v-else-if="!isDraftDoc && inv.lockReason && !isQuote && !isRecurring" class="advance-note"><i class="pi pi-lock" /> <span>{{ inv.lockReason }}</span></p>
-        <p v-if="einvStatus" class="advance-note einv-status"><i class="pi pi-send" /> <span>{{ einvStatus }}</span></p>
+        <p v-if="einvStatus" class="advance-note einv-status">
+          <i class="pi pi-send" /> <span>{{ einvStatus }}</span>
+          <Button v-if="einvMode === 'sapi' && canWrite && trackable(einvLast)" label="Zistiť stav" text size="small" :loading="tracking" class="track"
+            v-tooltip.bottom="'Opýtať sa poštára, či bola e-faktúra doručená'" @click="trackEInvoice" />
+        </p>
         <p v-if="isProforma" class="advance-note">
           <i class="pi pi-info-circle" />
           <span>

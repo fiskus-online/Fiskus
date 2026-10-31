@@ -3,6 +3,7 @@ package postman
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -23,6 +24,8 @@ type fakeSAPI struct {
 	acked    []string
 	reject   bool
 	badLogin bool
+	invalid  bool // validátor nájde chybu
+	validate int  // počet kontrol
 }
 
 func (f *fakeSAPI) handler(t *testing.T) http.Handler {
@@ -83,6 +86,32 @@ func (f *fakeSAPI) handler(t *testing.T) http.Handler {
 			f.sent = append(f.sent, in)
 		}
 		_ = json.NewEncoder(w).Encode(map[string]any{"providerDocumentId": id, "status": "ACCEPTED"})
+	})
+	mux.HandleFunc("POST /sapi/v1/document/validate", func(w http.ResponseWriter, r *http.Request) {
+		if !auth(w, r) {
+			return
+		}
+		f.mu.Lock()
+		defer f.mu.Unlock()
+		f.validate++
+		if f.invalid {
+			_, _ = io.WriteString(w, `{"valid":false,"errors":["BR-CO-15: Invoice total amount with VAT (BT-112) nesedí","PEPPOL-EN16931-R001: chýba BT-23"],"warnings":[]}`)
+			return
+		}
+		_, _ = io.WriteString(w, `{"valid":true,"errors":[],"warnings":["drobnosť"]}`)
+	})
+	mux.HandleFunc("GET /sapi/v1/document/sent/{id}", func(w http.ResponseWriter, r *http.Request) {
+		if !auth(w, r) {
+			return
+		}
+		switch r.PathValue("id") {
+		case "prov-doruc":
+			_, _ = io.WriteString(w, `{"providerDocumentId":"prov-doruc","status":"DELIVERED","sentAt":"2027-01-04T08:59:00Z","deliveredAt":"2027-01-04T09:00:00Z"}`)
+		case "prov-zle":
+			_, _ = io.WriteString(w, `{"document":{"status":"undeliverable","messages":[{"message":"príjemca nie je v sieti Peppol"}]}}`)
+		default:
+			http.Error(w, `{"error":{"code":"NOT_FOUND"}}`, 404)
+		}
 	})
 	mux.HandleFunc("GET /sapi/v1/document/receive", func(w http.ResponseWriter, r *http.Request) {
 		if !auth(w, r) {
@@ -203,6 +232,39 @@ func TestSAPI(t *testing.T) {
 	nodic.Participant = ""
 	if _, err := New(nodic); err == nil {
 		t.Error("bez DIČ")
+	}
+}
+
+// Poskytovateľ s validátorom a stavom doručenia (Verteco).
+func TestSAPIValidateAndDelivery(t *testing.T) {
+	f := &fakeSAPI{keys: map[string]string{}, inbox: map[string]string{}}
+	srv := httptest.NewServer(f.handler(t))
+	defer srv.Close()
+	p := SAPI{BaseURL: srv.URL + "/sapi/v1", ClientID: "k", ClientSecret: "tajne", Participant: "0245:2120000003"}
+	ctx := context.Background()
+	inv := Outgoing{Sender: p.Participant, Receiver: "0245:1234567890", Data: []byte("<Invoice>v</Invoice>")}
+	f.invalid = true
+	_, err := p.Send(ctx, inv)
+	var ie *InvalidError
+	if !errors.As(err, &ie) || len(ie.Rules) != 2 || !strings.HasPrefix(ie.Rules[0], "BR-CO-15") || len(f.sent) != 0 {
+		t.Fatalf("neplatná e-faktúra sa nemá odoslať: %v (odoslaných %d)", err, len(f.sent))
+	}
+	f.invalid = false
+	if _, err := p.Send(ctx, inv); err != nil || len(f.sent) != 1 || f.validate != 2 {
+		t.Fatalf("platná: %v, odoslaných %d, kontrol %d", err, len(f.sent), f.validate)
+	}
+	for _, tt := range []struct {
+		id, status, delivered, errText string
+		err                            error
+	}{
+		{"prov-doruc", "delivered", "2027-01-04T09:00:00Z", "", nil},
+		{"prov-zle", "undeliverable", "", "príjemca nie je v sieti Peppol", nil},
+		{"neznamy", "", "", "", ErrNoTracking},
+	} {
+		d, err := p.Delivery(ctx, tt.id)
+		if !errors.Is(err, tt.err) || d.Status != tt.status || d.Delivered != tt.delivered || d.Error != tt.errText {
+			t.Errorf("%s: %+v %v", tt.id, d, err)
+		}
 	}
 }
 

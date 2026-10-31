@@ -49,6 +49,21 @@ type Checker interface {
 	Check(ctx context.Context) error
 }
 
+// Delivery je stav odoslanej e-faktúry u poštára.
+type Delivery struct {
+	Status    string // napr. accepted, sent, delivered, failed, rejected, undeliverable
+	Delivered string // čas doručenia (RFC 3339), "" = zatiaľ nie
+	Error     string // dôvod pri zlyhaní
+}
+
+// Tracker vie zistiť stav odoslanej e-faktúry.
+type Tracker interface {
+	Delivery(ctx context.Context, messageID string) (Delivery, error)
+}
+
+// ErrNoTracking — poskytovateľ stav doručenia cez toto rozhranie neposkytuje.
+var ErrNoTracking = errors.New("poštár stav doručenia cez toto rozhranie neposkytuje — pozrite ho v jeho portáli")
+
 // Druhy pripojenia.
 const (
 	ModeOff    = ""       // vypnuté: e-faktúra sa iba stiahne
