@@ -245,6 +245,10 @@ export const api = {
   vatXML: (cid, kind, period, excess, opts = {}, fetchImpl = globalThis.fetch) =>
     download(`/api/companies/${cid}/vat/${kind}.xml` + query({ period, excess, ...opts }), `${kind}.xml`, fetchImpl),
   /** E-faktúra (UBL, Peppol BIS 3.0) ako Blob; chýbajúce údaje sú v ApiError.fields. */
+  // daňové priznanie FO typ B
+  taxReturn: (cid, year) => request('GET', `/api/companies/${cid}/tax-return/${year}`),
+  saveTaxReturn: (cid, year, input) => request('PUT', `/api/companies/${cid}/tax-return/${year}`, input),
+  taxReturnXML: (cid, year, fetchImpl = globalThis.fetch) => download(`/api/companies/${cid}/tax-return/${year}/xml`, `DPFOB-${year}.xml`, fetchImpl),
   einvoice: (cid, id, fetchImpl = globalThis.fetch) => download(`/api/companies/${cid}/invoices/${id}/ubl`, 'e-faktura.xml', fetchImpl),
 
   codes: () => request('GET', '/api/codes'),
