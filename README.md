@@ -37,7 +37,7 @@ Windows, macOS a Linux sú vo [vydaniach](https://github.com/palo-krnac/Fiscus/r
 - **Úprava vystavenej faktúry** s auditom, kým nie je uhradená, priznaná ani opravená — potom iba **dobropis** (celý aj čiastočný, kontrola limitu)
 - **Zálohové faktúry**, daňový doklad k prijatej platbe, vyúčtovanie s odpočtom po sadzbách (aj čiastočné úhrady, cudzia mena, zahraničie, prenesenie)
 - **Cenové ponuky** s prijatím cez odkaz, **pravidelná fakturácia**, **upomienky** s úrokom z omeškania a paušálnou náhradou
-- Tlač a PDF s **PAY by square**, odoslanie e-mailom, **e-faktúra** UBL 2.1 / Peppol
+- Tlač a PDF s **PAY by square**, odoslanie e-mailom, **e-faktúra** UBL 2.1 / Peppol cez digitálneho poštára (rozhranie SAPI-SK)
 - Osobitné režimy: tuzemské prenesenie (§ 69 ods. 12), dodanie do EÚ, vývoz, trojstranný obchod
 
 ### Nákup
@@ -178,8 +178,11 @@ DPH, súčty, úroky z omeškania aj limity dobropisu počíta Fiškus; asistent
 
 Vystavená faktúra a dobropis sa dajú stiahnuť ako e-faktúra UBL 2.1 (EN 16931, Peppol BIS Billing 3.0). Adresa v sieti Peppol je `0245:DIČ`. Prijatá e-faktúra sa načíta ako koncept prijatej faktúry. Pripojenie k digitálnemu poštárovi sa nastavuje v časti **Nastavenia → E-faktúry**:
 
+- **SAPI-SK (odporúčané)**: národné rozhranie SAPI-SK 1.0, ktoré spoločne podporujú slovenskí prístupoví body Peppol (napr. ePošťák, Verteco). Zadáte adresu API, Client ID a Client secret z portálu poštára; tlačidlo **Overiť spojenie** skontroluje prihlásenie a schránku firmy. Opakované odoslanie toho istého dokumentu sa nezdvojí (kľúč `Idempotency-Key` z obsahu).
 - **Priečinky**: Fiškus ukladá odosielané e-faktúry do jedného priečinka a číta prijaté z druhého (prevzaté presunie do `prevzate`). Priečinky synchronizuje aplikácia poskytovateľa.
-- **API poskytovateľa**: jednoduchá zmluva pre adaptér (`POST /documents`, `GET /inbox`, `GET /inbox/{id}`, `POST /inbox/{id}/ack`, token `Bearer`) — pozri `internal/postman/http.go`.
+- **Vlastný adaptér**: jednoduchá zmluva (`POST /documents`, `GET /inbox`, `GET /inbox/{id}`, `POST /inbox/{id}/ack`, token `Bearer`) — pozri `internal/postman/http.go`.
+
+Poštára si treba zároveň vybrať na portáli finančnej správy (výber digitálneho poštára), inak e-faktúry nedoručí.
 
 ## Architektúra
 

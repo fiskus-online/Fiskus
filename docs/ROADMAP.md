@@ -81,7 +81,8 @@ Referenčný prehľad funkcií pochádza z českých systémov MyInvoice (MIT) a
 - [ ] Ostrý licenčný kľúč (`fiskus-license keygen`) namiesto vývojového
 - [x] E-faktúra UBL 2.1 (EN 16931, Peppol BIS Billing 3.0): vytvorenie z vystavenej faktúry a dobropisu (adresa 0245:DIČ), načítanie prijatej e-faktúry ako nákladu
 - [x] E-faktúra: všeobecné napojenie na digitálneho poštára — priečinky (synchronizácia aplikáciou poskytovateľa) alebo HTTP API adaptéra; odoslanie, schránka prijatých, zoznam odoslaných a prevzatých
-- [ ] E-faktúra: adaptér pre konkrétneho poskytovateľa (po výbere), vyúčtovanie zálohy ako e-faktúra, overenie validátorom Peppol a SK TDD
+- [x] E-faktúra: národné rozhranie SAPI-SK 1.0 (ePošťák, Verteco a ďalší prístupoví body): prihlásenie client_credentials, odoslanie s Idempotency-Key, schránka so stránkovaním, potvrdenie prevzatia, overenie spojenia
+- [ ] E-faktúra: stav doručenia odoslanej faktúry, vyúčtovanie zálohy ako e-faktúra, overenie validátorom Peppol a SK TDD
 
 ## Používatelia, práva a audit (pre účtovné kancelárie a poskytovateľov služieb)
 - [x] Používatelia a prihlasovanie v serverovom režime (heslo PBKDF2, relácia v HttpOnly cookie, limit pokusov, ochrana CSRF)
@@ -144,7 +145,6 @@ Referenčný prehľad funkcií pochádza z českých systémov MyInvoice (MIT) a
 - [x] Riadenie obchodu pre Shopify (zdaniteľný = 23 %, nezdaniteľný = 0 %) a Magento (triedy dane z daňových pravidiel, ceny bez DPH)
 - [x] Riadenie obchodu pre Shoptet podľa oficiálnej schémy openapi.yaml: produkty a varianty, zákazníci, cena v predvolenom cenníku (sadzba + cena bez DPH), názov a skrytie, nový produkt skrytý v prvej kategórii
 - [x] Riadenie obchodu pre PrestaShop: skupiny daňových pravidiel (SK), produkty aj kombinácie, zákazníci; úprava celého produktu v XML (iba cena, DPH, aktívnosť, jednojazyčný názov), nový produkt neaktívny v domovskej kategórii
-- [ ] Upgates (čaká na oficiálnu dokumentáciu)
 
 ## Etapa 4 — mzdy (samostatný návrh)
 - [ ] Sociálna poisťovňa, zdravotné poisťovne, preddavky na daň, ročné zúčtovanie

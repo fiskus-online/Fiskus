@@ -4,6 +4,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/palo-krnac/fiscus/backend/internal/auth"
@@ -124,5 +125,42 @@ func TestEInvoiceFolderOnServer(t *testing.T) {
 	}
 	if _, err := o.a.SetEInvoiceSettings(ctxAdmin, o.alfa.ID, set); err != nil {
 		t.Fatal(err)
+	}
+}
+
+// SAPI-SK: participant je 0245:DIČ firmy, overenie spojenia nič neprevezme.
+func TestEInvoiceSAPI(t *testing.T) {
+	a, c := newApp(t, edition.Desktop)
+	var got postman.Settings
+	a.Postman = func(s postman.Settings) (postman.Provider, error) {
+		got = s
+		return postman.New(s)
+	}
+	if err := a.CheckEInvoice(ctx, c.ID); !errors.Is(err, postman.ErrOff) {
+		t.Fatalf("vypnuté: %v", err)
+	}
+	set := postman.Settings{Mode: postman.ModeSAPI, URL: "https://127.0.0.1:1/sapi/v1", ClientID: "id", Token: "tajne", Provider: "ePošťák"}
+	if _, err := a.SetEInvoiceSettings(ctx, c.ID, set); !fieldErr(err, "url") {
+		// https na 127.0.0.1 je platná adresa; overenie zlyhá až pri spojení
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+	pub, _ := a.EInvoiceSettings(ctx, c.ID)
+	if pub.Token != "" || !pub.TokenSet || pub.ClientID != "id" {
+		t.Fatalf("verejné nastavenie %+v", pub)
+	}
+	if err := a.CheckEInvoice(ctx, c.ID); err == nil || !strings.Contains(err.Error(), "DIČ") {
+		t.Errorf("bez DIČ: %v", err)
+	}
+	c.DIC = "2120000003"
+	if err := a.Store.UpdateCompany(ctx, c); err != nil {
+		t.Fatal(err)
+	}
+	if err := a.CheckEInvoice(ctx, c.ID); err == nil || !strings.Contains(err.Error(), "neodpovedá") {
+		t.Errorf("spojenie: %v", err)
+	}
+	if got.Participant != "0245:2120000003" {
+		t.Errorf("participant %q (DIČ %q)", got.Participant, c.DIC)
 	}
 }

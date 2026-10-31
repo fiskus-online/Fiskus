@@ -143,3 +143,16 @@ func (s *Server) reopenEInvoice(w http.ResponseWriter, r *http.Request) {
 	}
 	writeJSON(w, http.StatusOK, d)
 }
+
+func (s *Server) checkEInvoice(w http.ResponseWriter, r *http.Request) {
+	cid, _ := pathID(w, r, "cid")
+	if err := s.App.CheckEInvoice(r.Context(), cid); err != nil {
+		if errors.Is(err, postman.ErrOff) || statusOf(err) != http.StatusInternalServerError {
+			failEInvoice(w, err)
+			return
+		}
+		writeErr(w, http.StatusBadGateway, err.Error(), nil)
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]bool{"ok": true})
+}

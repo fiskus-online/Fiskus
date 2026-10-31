@@ -27,6 +27,9 @@ func TestValidate(t *testing.T) {
 		{"HTTP lokálne", Settings{Mode: ModeHTTP, URL: "http://127.0.0.1:9000", Token: "x"}, ""},
 		{"HTTP bez šifrovania", Settings{Mode: ModeHTTP, URL: "http://postar.sk", Token: "x"}, "url"},
 		{"HTTP bez tokenu", Settings{Mode: ModeHTTP, URL: "https://api.postar.sk"}, "token"},
+		{"SAPI-SK", Settings{Mode: ModeSAPI, URL: "https://epostak.sk/sapi/v1/", ClientID: "id", Token: "tajne"}, ""},
+		{"SAPI-SK bez client ID", Settings{Mode: ModeSAPI, URL: "https://epostak.sk/sapi/v1", Token: "tajne"}, "clientId"},
+		{"SAPI-SK bez tajomstva", Settings{Mode: ModeSAPI, URL: "https://epostak.sk/sapi/v1", ClientID: "id"}, "token"},
 		{"neznámy", Settings{Mode: "fax"}, "mode"},
 	}
 	for _, tt := range tests {
