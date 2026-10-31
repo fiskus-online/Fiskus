@@ -54,6 +54,27 @@ započíta.
   odoslanie cez digitálneho poštára. Prijaté e-faktúry sa načítajú ako
   nákup.
 
+## E-faktúra a digitálny poštár
+
+Od 1. 1. 2027 si platitelia DPH posielajú faktúry cez sieť Peppol. Fiškus
+e-faktúru vytvorí, odošle a prijme ju certifikovaný **digitálny poštár**.
+Pripojenie je v **Nastaveniach → E-faktúry**:
+
+| Spôsob | Kedy |
+|---|---|
+| SAPI-SK | odporúčané — národné rozhranie, ktoré spoločne podporujú slovenskí poštári (ePošťák, Verteco…); zadáte adresu API, Client ID a Client secret |
+| Priečinky | poštár má aplikáciu, ktorá synchronizuje priečinky na počítači |
+| Vlastný adaptér | iný poštár cez prekladový program |
+
+Tlačidlo **Overiť spojenie** skontroluje prihlásenie a schránku firmy bez
+odoslania čohokoľvek. Ten istý doklad odoslaný dvakrát (napríklad po výpadku
+spojenia) poštár nezdvojí.
+
+:::warning[Výber poštára na portáli finančnej správy]
+Okrem nastavenia vo Fiškuse si poštára musíte vybrať aj na portáli finančnej
+správy (výber digitálneho poštára). Bez toho vám e-faktúry nebudú doručované.
+:::
+
 ## Zahraničie a osobitné režimy
 
 | Prípad | Ako to Fiškus rieši |

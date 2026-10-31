@@ -83,6 +83,8 @@ func modeLabel(s postman.Settings) string {
 		return "priečinky " + s.OutDir + " / " + s.InDir
 	case postman.ModeHTTP:
 		return "API " + s.URL
+	case postman.ModeSAPI:
+		return "SAPI-SK " + s.URL
 	}
 	return "vypnuté"
 }
@@ -92,10 +94,30 @@ func (a *App) provider(ctx context.Context, companyID int64) (postman.Provider, 
 	if err != nil {
 		return nil, err
 	}
+	if co, err := a.Store.GetCompany(ctx, companyID); err == nil {
+		s.Participant = postman.PeppolID(co.DIC)
+	}
 	if a.Postman != nil {
 		return a.Postman(s)
 	}
 	return postman.New(s)
+}
+
+// CheckEInvoice overí uložené pripojenie k poštárovi (prihlásenie a schránku
+// firmy) bez odoslania alebo prevzatia dokumentu.
+func (a *App) CheckEInvoice(ctx context.Context, companyID int64) error {
+	if err := a.Require(ctx, companyID, auth.PermSettingsWrite); err != nil {
+		return err
+	}
+	p, err := a.provider(ctx, companyID)
+	if err != nil {
+		return err
+	}
+	if c, ok := p.(postman.Checker); ok {
+		return c.Check(ctx)
+	}
+	_, err = p.Inbox(ctx)
+	return err
 }
 
 // SendEInvoice odošle e-faktúru vystavenej faktúry cez digitálneho poštára
