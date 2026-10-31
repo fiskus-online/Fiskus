@@ -93,3 +93,34 @@ func TestPreviewPurchase(t *testing.T) {
 		t.Fatal(out.Summary.Total)
 	}
 }
+
+// Neplatiteľ DPH si daň z nákupov neodpočítava (ani z bločkov).
+func TestPurchaseNonVATPayer(t *testing.T) {
+	for _, tt := range []struct {
+		name     string
+		payer    bool
+		noDeduct bool
+	}{
+		{"platiteľ odpočítava", true, false},
+		{"neplatiteľ neodpočítava", false, true},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			a, c := newApp(t, edition.Desktop)
+			c.VATPayer = tt.payer
+			if err := a.Store.UpdateCompany(ctx, c); err != nil {
+				t.Fatal(err)
+			}
+			in := validPurchase()
+			if !tt.payer {
+				in.Mixed, in.DeductPercent = true, 50 // neplatiteľovi sa vynulujú
+			}
+			p, _, err := a.SavePurchase(ctx, c.ID, in)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if p.NoDeduction != tt.noDeduct || (tt.noDeduct && (!p.Deducted.IsZero() || p.Mixed || p.DeductPercent != 0)) {
+				t.Errorf("odpočet: noDeduction=%v deducted=%s mixed=%v pct=%d", p.NoDeduction, p.Deducted, p.Mixed, p.DeductPercent)
+			}
+		})
+	}
+}
