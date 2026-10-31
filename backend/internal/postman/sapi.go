@@ -64,6 +64,20 @@ func (s SAPI) tokenKey() string {
 	return hex.EncodeToString(h[:])
 }
 
+// statusError nesie kód odpovede (404/405 = operáciu poskytovateľ nemá).
+type statusError struct {
+	code int
+	err  error
+}
+
+func (e *statusError) Error() string { return e.err.Error() }
+func (e *statusError) Unwrap() error { return e.err }
+
+func unsupported(err error) bool {
+	var se *statusError
+	return errors.As(err, &se) && (se.code == http.StatusNotFound || se.code == http.StatusMethodNotAllowed || se.code == http.StatusNotImplemented)
+}
+
 // sapiError prečíta chybu {"error":{"code","message"}} (aj iné bežné tvary).
 func sapiError(status string, data []byte) error {
 	var e struct {
@@ -172,7 +186,7 @@ func (s SAPI) do(ctx context.Context, method, path string, body any, hdr map[str
 			continue // token mohol vypršať — raz nový
 		}
 		if res.StatusCode >= 300 {
-			return nil, sapiError(res.Status, data)
+			return nil, &statusError{res.StatusCode, sapiError(res.Status, data)}
 		}
 		return data, nil
 	}
@@ -200,7 +214,50 @@ func documentType(data []byte) string {
 	return sapiInvoiceType
 }
 
+// validate dá e-faktúru skontrolovať poskytovateľovi (pravidlá EN 16931,
+// Peppol BIS a slovenské), nič neuloží ani neodošle. Poskytovateľ bez
+// tejto operácie kontrolu preskočí — e-faktúru potom overí pri odoslaní.
+func (s SAPI) validate(ctx context.Context, data []byte) error {
+	out, err := s.do(ctx, http.MethodPost, "/document/validate", map[string]any{"payload": string(data), "payloadFormat": "XML"}, nil)
+	if err != nil {
+		if unsupported(err) {
+			return nil
+		}
+		var se *statusError
+		if errors.As(err, &se) && se.code >= 500 {
+			return nil // validátor dočasne nedostupný — rozhodne poskytovateľ pri odoslaní
+		}
+		return err
+	}
+	var res struct {
+		Valid  *bool `json:"valid"`
+		Errors []any `json:"errors"`
+	}
+	if json.Unmarshal(out, &res) != nil || res.Valid == nil || *res.Valid {
+		return nil
+	}
+	return &InvalidError{Rules: ruleTexts(res.Errors)}
+}
+
+// InvalidError — e-faktúra neprešla kontrolou pravidiel (neodoslala sa).
+type InvalidError struct{ Rules []string }
+
+func (e *InvalidError) Error() string {
+	return "e-faktúra neprešla kontrolou poštára: " + strings.Join(e.Rules, "; ")
+}
+
+func ruleTexts(ms []any) []string {
+	t := messagesText(ms)
+	if t == "bez udania dôvodu" {
+		return []string{t}
+	}
+	return strings.Split(t, "; ")
+}
+
 func (s SAPI) Send(ctx context.Context, o Outgoing) (Sent, error) {
+	if err := s.validate(ctx, o.Data); err != nil {
+		return Sent{}, err
+	}
 	key := idempotencyKey(o)
 	body := map[string]any{
 		"metadata": map[string]string{
@@ -337,4 +394,42 @@ func (s SAPI) Check(ctx context.Context) error {
 	}
 	_, err := s.do(ctx, http.MethodGet, "/document/receive?limit=1&status=RECEIVED", nil, nil)
 	return err
+}
+
+// Delivery zistí stav odoslanej e-faktúry (GET {base}/document/sent/{id}).
+func (s SAPI) Delivery(ctx context.Context, messageID string) (Delivery, error) {
+	data, err := s.do(ctx, http.MethodGet, "/document/sent/"+url.PathEscape(messageID), nil, nil)
+	if err != nil {
+		if unsupported(err) {
+			return Delivery{}, ErrNoTracking
+		}
+		return Delivery{}, err
+	}
+	// poskytovatelia vracajú dokument priamo alebo v obálke {"document": …}
+	var raw map[string]any
+	if err := json.Unmarshal(data, &raw); err != nil {
+		return Delivery{}, errors.New("poštár: neplatná odpoveď o stave")
+	}
+	if d, ok := raw["document"].(map[string]any); ok {
+		raw = d
+	}
+	str := func(keys ...string) string {
+		for _, k := range keys {
+			if v, ok := raw[k].(string); ok && v != "" {
+				return v
+			}
+		}
+		return ""
+	}
+	out := Delivery{Status: strings.ToLower(str("status", "state")), Delivered: str("deliveredAt", "deliveredDateTime")}
+	if out.Status == "" {
+		return Delivery{}, errors.New("poštár: odpoveď o stave neobsahuje stav")
+	}
+	out.Error = str("error", "reason", "statusReason")
+	if out.Error == "" {
+		if ms, ok := raw["messages"].([]any); ok && len(ms) > 0 {
+			out.Error = messagesText(ms)
+		}
+	}
+	return out, nil
 }
