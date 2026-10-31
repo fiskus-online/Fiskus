@@ -36,3 +36,25 @@ a výsledok hospodárenia sa počíta bez nej.
 - **Uzávierkové operácie k 31. 12.** — odpisy, zostatková cena predaného
   majetku, úpravy — bez vplyvu na stav peňazí.
 - **Podklady pre DP FO typ B** — VI. oddiel, tabuľky 1 a 1a.
+
+## Daňové priznanie typ B
+
+Obrazovka **Dane → Daň z príjmov** zostaví priznanie živnostníka za rok:
+
+| Odkiaľ | Čo |
+|---|---|
+| peňažný denník | príjmy a výdavky zo živnosti (tabuľka č. 1), zaplatené poistné |
+| výkaz o majetku a záväzkoch | tabuľka č. 1a (začiatok a koniec roka) |
+| zadáte vy | osobné údaje, SK NACE, skutočné alebo paušálne výdavky, preddavky, zamestnanie, DDS, 2 % / 3 %, IBAN |
+| vypočíta Fiškus | nezdaniteľnú časť, daň 15 % (príjmy do 100 000 €) alebo 19 – 35 %, daň na úhradu alebo preplatok |
+
+**Stiahnuť XML pre eDane** vytvorí súbor v štruktúre formulára DPFOB.
+Načítate ho vo formulári na portáli finančnej správy (Načítať zo súboru),
+doplníte deti, manžela/ku či prílohy a formulár priznanie skontroluje.
+
+:::info[Prečo sa daň z podnikania počíta zvlášť]
+Základ dane z podnikania sa pri príjmoch do 100 000 € zdaňuje
+sadzbou 15 %, kým základ zo zamestnania progresívne. Nezdaniteľná časť sa
+preto najprv odpočíta zo zamestnania a iba zvyšok zo živnosti (riadky 91
+a 92) — inak by daňovník prišiel o časť úľavy.
+:::
