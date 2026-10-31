@@ -33,3 +33,8 @@ vozidiel — posunuté na pracovný deň. K tomu splatnosti faktúr, pravidelné
 faktúry a vlastné opakované termíny (odvody, STK, poistky). Kalendár sa dá
 odoberať do mobilu (iCalendar) alebo prepojiť s Google Kalendárom a
 Outlookom.
+
+V **Nastaveniach → E-mail** zadáte adresu pre **upozornenia na lehoty** a
+koľko dní vopred (1 až 14). Fiškus potom pošle e-mail o každom blížiacom sa
+daňovom termíne, vlastnom termíne a splatnej prijatej faktúre — raz za termín,
+nie skôr ako o 7:00.
