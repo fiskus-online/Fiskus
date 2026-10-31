@@ -102,7 +102,8 @@ Referenčný prehľad funkcií pochádza z českých systémov MyInvoice (MIT) a
 - [x] Výkazy JÚ v celých eurách: Výkaz o príjmoch a výdavkoch (Úč FO 1-01) z peňažného denníka, Výkaz o majetku a záväzkoch (Úč FO 2-01) z kníh, pokladne a účtov + ručne zadané riadky (dlhodobý majetok, zásoby, úvery…), predchádzajúce obdobie, tlač, export, MCP
 - [x] Uzávierkové operácie k 31. 12. (odpisy, zostatková cena predaného majetku, úpravy príjmov a výdavkov) v peňažnom denníku, bez vplyvu na stavy peňazí; prenesú sa do výkazov
 - [x] Podklady pre DP FO typ B (DPFOBv25, VI. oddiel): tabuľka č. 1 r. 2, r. 39–42, tabuľka č. 1a na začiatku a na konci obdobia, zaplatené poistné na kontrolu
-- [ ] Jednoduché účtovníctvo ďalej: elektronické uloženie závierky do RÚZ, XML daňového priznania typu B pre eDane
+- [x] Daňové priznanie FO typ B pre živnostníka: tabuľka 1 a 1a z kníh, skutočné alebo paušálne výdavky, zamestnanie, NČZD (2025 aj 2026 — tretina základu), sadzba 15 % do 100 000 € príjmov alebo pásma 19/25/30/35 %, DDS, preddavky, podiel dane 2 %/3 %, vrátenie preplatku; XML v štruktúre formulára DPFOB na načítanie na portáli
+- [ ] Jednoduché účtovníctvo ďalej: elektronické uloženie závierky do RÚZ; priznanie typu B s deťmi, manželom/kou a stratou z minulých rokov priamo vo Fiškuse
 - [x] Účtový rozvrh: rámcová účtová osnova pre podnikateľov (syntetické účty, druh, nedaňové náklady), analytické účty firmy, skrytie nepoužívaných, strediská a zákazky
 - [x] Predkontácie (vzory zaúčtovania) pre faktúry, nákupy, banku a pokladňu — 23 predvolených, vlastné, kontrola vyrovnania MD = D
 - [x] Podvojné účtovníctvo: účtovný denník, hlavná kniha (obratová predvaha), automatické účtovanie faktúr, nákupov, banky a pokladne podľa predkontácií, ručné zápisy, interné doklady, počiatočné stavy
