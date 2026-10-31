@@ -75,9 +75,9 @@ export const modules = [
   {
     group: 'Dane',
     items: [
-      { path: '/dph', label: 'Priznanie DPH', icon: 'pi-percentage', ready: true, perm: 'vat.read' },
-      { path: '/kontrolny-vykaz', label: 'Kontrolný výkaz', icon: 'pi-list-check', ready: true, perm: 'vat.read' },
-      { path: '/suhrnny-vykaz', label: 'Súhrnný výkaz', icon: 'pi-globe', ready: true, perm: 'vat.read' },
+      { path: '/dph', vat: true, label: 'Priznanie DPH', icon: 'pi-percentage', ready: true, perm: 'vat.read' },
+      { path: '/kontrolny-vykaz', vat: true, label: 'Kontrolný výkaz', icon: 'pi-list-check', ready: true, perm: 'vat.read' },
+      { path: '/suhrnny-vykaz', vat: true, label: 'Súhrnný výkaz', icon: 'pi-globe', ready: true, perm: 'vat.read' },
       { path: '/dan-z-prijmov', label: 'Daň z príjmov', icon: 'pi-calculator', ready: true, perm: 'ledger.read', book: 'simple' },
     ],
   },

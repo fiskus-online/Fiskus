@@ -101,6 +101,10 @@ func (a *App) SavePurchase(ctx context.Context, companyID int64, p purchase.Purc
 	if err := a.applyVehicleVAT(ctx, companyID, &p); err != nil {
 		return p, nil, err
 	}
+	if !company.VATPayer {
+		// neplatiteľ DPH si daň neodpočítava — celá suma s DPH je výdavok
+		p.NoDeduction, p.Mixed, p.DeductPercent = true, false, 0
+	}
 	if err := a.stampCoef(ctx, company, "mixed", p.Mixed && company.VATPayer, purchaseDate(p), &p.Coef); err != nil {
 		return p, nil, err
 	}
