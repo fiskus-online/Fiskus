@@ -9,7 +9,7 @@ import { session, loadSession, selectCompany, can, canSee, isSuperAdmin } from '
 import { isSettingsPath, visibleSettings } from './lib/settingsNav.js'
 import SettingsShell from './components/SettingsShell.vue'
 import SetupWizard from './components/SetupWizard.vue'
-import { bookAllows } from './lib/setup.js'
+import { bookAllows, vatAllows } from './lib/setup.js'
 import { visibleModules } from './lib/access.js'
 import Login from './views/Login.vue'
 import UserMenu from './components/UserMenu.vue'
@@ -48,7 +48,7 @@ const menu = computed(() =>
   visibleModules(
     modules,
     // Nastavenia sú v menu, ak je viditeľná aspoň jedna ich sekcia
-    (i) => bookAllows(i, session.company?.bookkeeping) && (i.settingsHub ? visibleSettings(canSee).length > 0 : canSee(i)),
+    (i) => bookAllows(i, session.company?.bookkeeping) && vatAllows(i, session.company) && (i.settingsHub ? visibleSettings(canSee).length > 0 : canSee(i)),
   ),
 )
 const allowed = computed(() => (route.meta.superAdmin ? isSuperAdmin() : can(route.meta.perm)))

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { afterSetup, bookAllows, bookkeepingLabel, migrationNote, stepErrors } from './setup.js'
+import { afterSetup, bookAllows, bookkeepingLabel, migrationNote, stepErrors, vatAllows } from './setup.js'
 
 describe('úvodné nastavenie', () => {
   it.each([
@@ -32,3 +32,10 @@ describe('úvodné nastavenie', () => {
     expect(migrationNote({ migratedFrom: 'POHODA', migratedAt: '2026-10-31T12:00:00Z' })).toContain('z programu POHODA (31. 10. 2026)')
   })
 })
+
+it.each([
+  [{ vat: true }, { vatPayer: true }, true],
+  [{ vat: true }, { vatPayer: false }, false],
+  [{}, { vatPayer: false }, true],
+  [{ vat: true }, null, false],
+])('vatAllows %j %j', (item, co, want) => expect(vatAllows(item, co)).toBe(want))

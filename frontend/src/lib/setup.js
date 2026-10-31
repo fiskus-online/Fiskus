@@ -25,6 +25,11 @@ export function bookAllows(item, bookkeeping) {
   return !item.book || !bookkeeping || item.book === bookkeeping
 }
 
+/** Položky DPH (vat: true) iba pre platiteľa DPH. */
+export function vatAllows(item, company) {
+  return !item.vat || !!company?.vatPayer
+}
+
 export const setupSteps = ['Firma', 'DPH', 'Účtovníctvo', 'Začiatok']
 
 /** Chyby kroku sprievodcu (prázdny objekt = dá sa pokračovať). */
