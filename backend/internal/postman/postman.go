@@ -1,8 +1,8 @@
 // Package postman je všeobecné rozhranie na digitálneho poštára (prístupový
 // bod siete Peppol), cez ktorého sa od 1. 1. 2027 posielajú a prijímajú
 // e-faktúry a hlásia údaje finančnej správe. Konkrétny poskytovateľ sa
-// pripojí cez priečinok (synchronizácia aplikáciou poskytovateľa) alebo
-// cez jednoduché HTTP API (adaptér poskytovateľa).
+// pripojí cez národné rozhranie SAPI-SK, priečinok (synchronizácia aplikáciou
+// poskytovateľa) alebo jednoduché HTTP API (adaptér poskytovateľa).
 package postman
 
 import (
@@ -44,22 +44,31 @@ type Provider interface {
 	Ack(ctx context.Context, id string) error
 }
 
+// Checker vie overiť spojenie bez odoslania a prevzatia dokumentov.
+type Checker interface {
+	Check(ctx context.Context) error
+}
+
 // Druhy pripojenia.
 const (
 	ModeOff    = ""       // vypnuté: e-faktúra sa iba stiahne
 	ModeFolder = "folder" // priečinky odoslané/prijaté
 	ModeHTTP   = "http"   // HTTP API adaptéra poskytovateľa
+	ModeSAPI   = "sapi"   // národné rozhranie SAPI-SK priamo u poskytovateľa
 )
 
 // Settings je nastavenie pripojenia firmy k poštárovi.
 type Settings struct {
 	Mode     string `json:"mode"`
-	OutDir   string `json:"outDir"` // folder: sem Fiškus ukladá odosielané e-faktúry
-	InDir    string `json:"inDir"`  // folder: odtiaľto číta prijaté e-faktúry
-	URL      string `json:"url"`    // http: základná adresa API
-	Token    string `json:"token,omitempty"`
-	TokenSet bool   `json:"tokenSet"` // iba na zobrazenie — token sa nevracia
-	Provider string `json:"provider"` // názov poskytovateľa (iba na zobrazenie)
+	OutDir   string `json:"outDir"`          // folder: sem Fiškus ukladá odosielané e-faktúry
+	InDir    string `json:"inDir"`           // folder: odtiaľto číta prijaté e-faktúry
+	URL      string `json:"url"`             // http, sapi: základná adresa API
+	ClientID string `json:"clientId"`        // sapi: identifikátor klienta API
+	Token    string `json:"token,omitempty"` // http: token; sapi: tajomstvo klienta (client_secret)
+	TokenSet bool   `json:"tokenSet"`        // iba na zobrazenie — token sa nevracia
+	Provider string `json:"provider"`        // názov poskytovateľa (iba na zobrazenie)
+	// Participant je 0245:DIČ firmy — dopĺňa ho program, neukladá sa.
+	Participant string `json:"-"`
 }
 
 // ErrOff — pripojenie k poštárovi nie je nastavené.
@@ -86,6 +95,7 @@ func (s *Settings) Normalize() {
 	s.Mode = strings.TrimSpace(s.Mode)
 	s.OutDir, s.InDir = strings.TrimSpace(s.OutDir), strings.TrimSpace(s.InDir)
 	s.URL = strings.TrimRight(strings.TrimSpace(s.URL), "/")
+	s.ClientID = strings.TrimSpace(s.ClientID)
 	s.Provider = strings.TrimSpace(s.Provider)
 }
 
@@ -104,12 +114,19 @@ func (s Settings) Validate() error {
 		if s.OutDir != "" && s.OutDir == s.InDir {
 			ps = append(ps, Problem{"inDir", "Priečinok prijatých musí byť iný ako odosielaných"})
 		}
-	case ModeHTTP:
+	case ModeHTTP, ModeSAPI:
 		if !strings.HasPrefix(s.URL, "https://") && !strings.HasPrefix(s.URL, "http://127.0.0.1") && !strings.HasPrefix(s.URL, "http://localhost") {
 			ps = append(ps, Problem{"url", "Adresa API musí začínať https:// (http iba na tomto počítači)"})
 		}
+		if s.Mode == ModeSAPI && s.ClientID == "" {
+			ps = append(ps, Problem{"clientId", "Zadajte Client ID od poskytovateľa"})
+		}
 		if s.Token == "" {
-			ps = append(ps, Problem{"token", "Zadajte prístupový token od poskytovateľa"})
+			msg := "Zadajte prístupový token od poskytovateľa"
+			if s.Mode == ModeSAPI {
+				msg = "Zadajte Client secret od poskytovateľa"
+			}
+			ps = append(ps, Problem{"token", msg})
 		}
 	default:
 		ps = append(ps, Problem{"mode", "Neznámy spôsob pripojenia"})
@@ -127,6 +144,11 @@ func New(s Settings) (Provider, error) {
 		return Folder{Out: s.OutDir, In: s.InDir}, nil
 	case ModeHTTP:
 		return HTTP{BaseURL: s.URL, Token: s.Token}, nil
+	case ModeSAPI:
+		if s.Participant == "" {
+			return nil, errors.New("firma nemá DIČ — bez neho nie je adresa v sieti Peppol (0245:DIČ)")
+		}
+		return SAPI{BaseURL: s.URL, ClientID: s.ClientID, ClientSecret: s.Token, Participant: s.Participant}, nil
 	case ModeOff:
 		return nil, ErrOff
 	}

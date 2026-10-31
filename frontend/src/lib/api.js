@@ -387,6 +387,7 @@ export const api = {
   // PDF alebo fotka prijatej faktúry → koncept na kontrolu (Claude API)
   einvoiceSettings: (cid) => request('GET', `/api/companies/${cid}/einvoice-settings`),
   saveEInvoiceSettings: (cid, s) => request('PUT', `/api/companies/${cid}/einvoice-settings`, s),
+  checkEInvoice: (cid) => request('POST', `/api/companies/${cid}/einvoice-settings/check`, {}),
   sendEInvoice: (cid, id) => request('POST', `/api/companies/${cid}/invoices/${id}/einvoice`),
   einvoices: (cid, filter = {}) => request('GET', `/api/companies/${cid}/einvoices` + query(filter)),
   einvoiceInbox: (cid) => request('GET', `/api/companies/${cid}/einvoice-inbox`),
