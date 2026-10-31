@@ -228,6 +228,8 @@ type EInvoice struct {
 	Created   time.Time `json:"created"`
 	User      string    `json:"user"`
 	Data      []byte    `json:"-"` // XML (iba prijaté)
+	// Delivered je čas doručenia príjemcovi (RFC 3339, "" = nevieme).
+	Delivered string `json:"delivered,omitempty"`
 }
 
 // EInvoiceFilter obmedzuje zoznam e-faktúr.
@@ -305,6 +307,8 @@ type Store interface {
 	AddEInvoice(ctx context.Context, companyID int64, e *EInvoice) error
 	ListEInvoices(ctx context.Context, companyID int64, f EInvoiceFilter) ([]EInvoice, error)
 	GetEInvoice(ctx context.Context, companyID, id int64) (EInvoice, error)
+	// SetEInvoiceStatus zmení stav (a čas doručenia) odoslanej e-faktúry.
+	SetEInvoiceStatus(ctx context.Context, companyID, id int64, status, delivered string) error
 
 	// Logo firmy na dokladoch. GetLogo a DeleteLogo vrátia ErrNotFound, ak logo nie je.
 	GetLogo(ctx context.Context, companyID int64) (Logo, error)
