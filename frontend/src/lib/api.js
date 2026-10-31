@@ -393,6 +393,7 @@ export const api = {
   einvoiceInbox: (cid) => request('GET', `/api/companies/${cid}/einvoice-inbox`),
   takeEInvoice: (cid, msg) => request('POST', `/api/companies/${cid}/einvoice-inbox/${encodeURIComponent(msg)}/take`),
   reopenEInvoice: (cid, id) => request('POST', `/api/companies/${cid}/einvoices/${id}/reopen`),
+  trackEInvoice: (cid, id) => request('POST', `/api/companies/${cid}/einvoices/${id}/track`, {}),
   importUBL: (cid, file) => request('POST', `/api/companies/${cid}/purchases/import-ubl${query({ name: file.name })}`, file),
   extractPurchase: (cid, file) => request('POST', `/api/companies/${cid}/purchases/extract${query({ name: file.name })}`, file),
   legal: () => request('GET', '/api/legal'),

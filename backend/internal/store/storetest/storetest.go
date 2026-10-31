@@ -1056,6 +1056,19 @@ func Run(t *testing.T, newStore Factory) {
 		if _, err := s.GetEInvoice(ctx, b.ID, in.ID); !errors.Is(err, store.ErrNotFound) {
 			t.Fatal("firma B načítala e-faktúru firmy A")
 		}
+		// stav doručenia
+		if err := s.SetEInvoiceStatus(ctx, a.ID, out.ID, "delivered", "2027-01-04T09:00:00Z"); err != nil {
+			t.Fatal(err)
+		}
+		if got, _ := s.GetEInvoice(ctx, a.ID, out.ID); got.Status != "delivered" || got.Delivered != "2027-01-04T09:00:00Z" {
+			t.Fatalf("stav: %+v", got)
+		}
+		if l, _ := s.ListEInvoices(ctx, a.ID, store.EInvoiceFilter{Direction: "out"}); l[0].Delivered == "" {
+			t.Fatal("čas doručenia v zozname")
+		}
+		if err := s.SetEInvoiceStatus(ctx, b.ID, out.ID, "x", ""); !errors.Is(err, store.ErrNotFound) {
+			t.Fatal("firma B zmenila stav e-faktúry firmy A")
+		}
 	})
 
 	t.Run("odoslané e-maily", func(t *testing.T) {

@@ -70,6 +70,13 @@ Tlačidlo **Overiť spojenie** skontroluje prihlásenie a schránku firmy bez
 odoslania čohokoľvek. Ten istý doklad odoslaný dvakrát (napríklad po výpadku
 spojenia) poštár nezdvojí.
 
+| Krok | Čo sa deje |
+|---|---|
+| Kontrola | ak ju poštár ponúka, skontroluje e-faktúru podľa pravidiel EN 16931 a Peppol; neplatná sa **neodošle** a pri faktúre uvidíte porušené pravidlá |
+| Odoslanie | poštár potvrdí prevzatie |
+| Doručenie | Fiškus sa poštára pýta každú hodinu (30 dní); pri faktúre vidíte „doručená 4. 1. 2027“, alebo použite **Zistiť stav** |
+| Nedoručenie | príjemca nie je v sieti Peppol alebo doručenie zlyhalo — zapíše sa do auditu a faktúru treba poslať inak |
+
 :::warning[Výber poštára na portáli finančnej správy]
 Okrem nastavenia vo Fiškuse si poštára musíte vybrať aj na portáli finančnej
 správy (výber digitálneho poštára). Bez toho vám e-faktúry nebudú doručované.
