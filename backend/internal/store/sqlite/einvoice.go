@@ -24,13 +24,13 @@ func (s *Store) AddEInvoice(ctx context.Context, companyID int64, e *store.EInvo
 	return nil
 }
 
-const einvoiceCols = `id, company_id, direction, doc_id, doc_number, partner, peppol_id, file, message_id, status, error, created, user_name`
+const einvoiceCols = `id, company_id, direction, doc_id, doc_number, partner, peppol_id, file, message_id, status, error, created, user_name, delivered`
 
 func scanEInvoice(r interface{ Scan(...any) error }, extra ...any) (store.EInvoice, error) {
 	var e store.EInvoice
 	var created string
 	dst := append([]any{&e.ID, &e.CompanyID, &e.Direction, &e.DocID, &e.DocNumber, &e.Partner, &e.PeppolID, &e.File,
-		&e.MessageID, &e.Status, &e.Error, &created, &e.User}, extra...)
+		&e.MessageID, &e.Status, &e.Error, &created, &e.User, &e.Delivered}, extra...)
 	if err := r.Scan(dst...); err != nil {
 		return e, err
 	}
@@ -78,4 +78,15 @@ func (s *Store) GetEInvoice(ctx context.Context, companyID, id int64) (store.EIn
 	}
 	e.Data = data
 	return e, err
+}
+
+func (s *Store) SetEInvoiceStatus(ctx context.Context, companyID, id int64, status, delivered string) error {
+	res, err := s.db.ExecContext(ctx, "UPDATE einvoices SET status = ?, delivered = ? WHERE id = ? AND company_id = ?", status, delivered, id, companyID)
+	if err != nil {
+		return err
+	}
+	if n, _ := res.RowsAffected(); n == 0 {
+		return store.ErrNotFound
+	}
+	return nil
 }
