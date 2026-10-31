@@ -24,6 +24,8 @@ import { formatAmount, formatDate, formatMoney, fromISODate, parseNumber, purcha
 import { takePurchaseDraft } from '../lib/drafts.js'
 import { currencyOptions, isForeignCurrency, rateHint, rateText } from '../lib/fx.js'
 
+// neplatiteľ DPH si daň neodpočítava — údaje o odpočte sa neukazujú
+const vatPayer = computed(() => !!session.company?.vatPayer)
 const props = defineProps({ id: String })
 const photoOk = ref(true) // fotka bločku (z mobilu); chýbajúca sa skryje
 const router = useRouter()
@@ -380,7 +382,7 @@ const set = (obj, key) => (v) => {
             <FormField label="Dátum dodania" hint="Rozhoduje o sadzbe DPH">
               <DatePicker v-model="deliveryDate" :disabled="locked" date-format="d. m. yy" show-icon icon-display="input" size="small" />
             </FormField>
-            <FormField label="Dátum doručenia" :error="fieldError('receivedDate')" hint="Obdobie odpočtu DPH">
+            <FormField label="Dátum doručenia" :error="fieldError('receivedDate')" :hint="vatPayer ? 'Obdobie odpočtu DPH' : ''">
               <DatePicker v-model="receivedDate" :disabled="locked" date-format="d. m. yy" show-icon icon-display="input" size="small" :invalid="!!fieldError('receivedDate')" />
             </FormField>
             <FormField label="Splatnosť" :error="fieldError('dueDate')">
@@ -462,11 +464,11 @@ const set = (obj, key) => (v) => {
               <Checkbox :model-value="p.reverseCharge" binary :disabled="locked" @update:model-value="set(p, 'reverseCharge')($event)" />
               <span>Prenesenie daňovej povinnosti (dodávateľ fakturuje bez DPH, daň priznávam ja)</span>
             </label>
-            <label class="check">
+            <label v-if="vatPayer" class="check">
               <Checkbox :model-value="p.noDeduction" binary :disabled="locked" @update:model-value="set(p, 'noDeduction')($event)" />
               <span>Neuplatňovať odpočet DPH</span>
             </label>
-            <label v-if="!p.noDeduction" class="check">
+            <label v-if="vatPayer && !p.noDeduction" class="check">
               <Checkbox :model-value="!!p.mixed" binary :disabled="locked" @update:model-value="set(p, 'mixed')($event)" />
               <span>Spoločný nákup aj pre oslobodené plnenia — pomerné odpočítanie koeficientom (§ 50)<template v-if="p.mixed && p.coef"> — koeficient {{ p.coef }} %</template></span>
             </label>
@@ -476,7 +478,7 @@ const set = (obj, key) => (v) => {
             <span class="supply-label">Vozidlo</span>
             <Select :model-value="p.vehicleId || null" :options="vehicles" option-label="label" option-value="value" show-clear size="small"
               placeholder="nákup nesúvisí s autom" :disabled="locked" aria-label="Vozidlo" @update:model-value="set(p, 'vehicleId')($event || 0)" />
-            <small class="supply-hint">PHM, servis, nájom k autu — pri osobnom aute sa od 2026 odpočíta 50 % DPH (§ 85n)<template v-if="p.deductPercent"> — odpočet {{ p.deductPercent }} %</template></small>
+            <small class="supply-hint">{{ vatPayer ? 'PHM, servis, nájom k autu — pri osobnom aute sa od 2026 odpočíta 50 % DPH (§ 85n)' : 'PHM, servis, nájom k autu — pre knihu jázd' }}<template v-if="vatPayer && p.deductPercent"> — odpočet {{ p.deductPercent }} %</template></small>
           </div>
           <small v-if="fieldError('supplier.icdph')" class="err">{{ fieldError('supplier.icdph') }}</small>
           <div v-if="isForeign(p.supplier.country)" class="supply">
@@ -514,7 +516,7 @@ const set = (obj, key) => (v) => {
         <dl>
           <dt>Základ dane</dt><dd class="num">{{ formatAmount(summary.base) }}</dd>
           <dt>{{ p.reverseCharge ? 'DPH (samozdanenie)' : 'DPH' }}</dt><dd class="num">{{ formatAmount(summary.vat) }}</dd>
-          <template v-if="!foreign">
+          <template v-if="!foreign && vatPayer">
             <dt>Odpočet DPH<template v-if="p.deductPercent && !p.noDeduction"> ({{ p.deductPercent }} %)</template><template v-if="p.mixed && !p.noDeduction"> (koeficient {{ p.coef }} %)</template></dt><dd class="num">{{ p.noDeduction ? 'neuplatňuje sa' : formatAmount(p.deducted ?? summary.vat) }}</dd>
           </template>
         </dl>
@@ -527,7 +529,9 @@ const set = (obj, key) => (v) => {
           <dl v-if="p.local">
             <dt>Základ v EUR</dt><dd>{{ formatMoney(p.local.summary.base) }}</dd>
             <dt>DPH v EUR</dt><dd>{{ formatMoney(p.local.summary.vat) }}</dd>
-            <dt>Odpočet DPH<template v-if="p.mixed && !p.noDeduction"> (koeficient {{ p.coef }} %)</template></dt><dd>{{ p.noDeduction ? 'neuplatňuje sa' : formatMoney(p.deducted ?? p.local.summary.vat) }}</dd>
+            <template v-if="vatPayer">
+              <dt>Odpočet DPH<template v-if="p.mixed && !p.noDeduction"> (koeficient {{ p.coef }} %)</template></dt><dd>{{ p.noDeduction ? 'neuplatňuje sa' : formatMoney(p.deducted ?? p.local.summary.vat) }}</dd>
+            </template>
             <dt>Spolu v EUR</dt><dd>{{ formatMoney(p.local.summary.total) }}</dd>
           </dl>
         </div>

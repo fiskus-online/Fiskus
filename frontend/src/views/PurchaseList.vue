@@ -21,6 +21,8 @@ import { useToast } from 'primevue/usetoast'
 import { setPurchaseDraft } from '../lib/drafts.js'
 import { isForeignCurrency, purchaseEUR } from '../lib/fx.js'
 
+// neplatiteľ DPH si daň neodpočítava — údaje o odpočte sa neukazujú
+const vatPayer = computed(() => !!session.company?.vatPayer)
 const router = useRouter()
 const toast = useToast()
 const orderOpen = ref(false)
@@ -203,7 +205,7 @@ const columnDefs = [
     cellRenderer: (p) => {
       if (p.data._totals) return ''
       const s = purchaseStatusOf(p.data)
-      const flags = [p.data.reverseCharge && 'prenesenie', p.data.noDeduction && 'bez odpočtu'].filter(Boolean)
+      const flags = [p.data.reverseCharge && 'prenesenie', vatPayer.value && p.data.noDeduction && 'bez odpočtu'].filter(Boolean)
       return `<span class="tag" data-tone="${s.tone}"><span class="tag-text">${s.label}</span></span>` +
         (flags.length ? `<span class="flag">${flags.join(', ')}</span>` : '')
     },
@@ -262,7 +264,7 @@ onBeforeUnmount(() => {
         <span class="label">Prijaté v {{ year }}</span>
         <span class="value">{{ formatMoney(ledger.total) }}</span>
       </div>
-      <div class="figure">
+      <div v-if="vatPayer" class="figure">
         <span class="label">DPH na odpočet</span>
         <span class="value">{{ formatMoney(ledger.vat) }}</span>
       </div>
