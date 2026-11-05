@@ -103,12 +103,16 @@ func New(s store.Store, caps edition.Capabilities) *App {
 
 // CreateCompany založí firmu, ak to edícia dovoľuje.
 func (a *App) CreateCompany(ctx context.Context, c store.Company) (store.Company, error) {
-	n, err := a.Store.CountCompanies(ctx)
+	// domácnosť sa do počtu firiem licencie nezapočítava
+	n, err := a.businessCount(ctx)
 	if err != nil {
 		return store.Company{}, err
 	}
-	if !a.Capabilities().CanAddCompany(n) {
+	if c.Bookkeeping != store.BookkeepingHousehold && !a.Capabilities().CanAddCompany(n) {
 		return store.Company{}, a.companyLimitError()
+	}
+	if c.Bookkeeping == store.BookkeepingHousehold {
+		c.SetupDone = true // domácnosť nepotrebuje sprievodcu (DPH, účtovníctvo)
 	}
 	normalizeCompany(&c)
 	if err := validateCompany(c); err != nil {
@@ -141,6 +145,10 @@ func (a *App) UpdateCompany(ctx context.Context, c store.Company) (store.Company
 	}
 	// prenos z iného programu zapisuje iba server
 	c.MigratedFrom, c.MigratedAt = old.MigratedFrom, old.MigratedAt
+	// domácnosť a firma sa nedajú zameniť (iné dáta, licencia)
+	if (old.Bookkeeping == store.BookkeepingHousehold) != (c.Bookkeeping == store.BookkeepingHousehold) {
+		return c, vErr("bookkeeping", "Domácnosť sa nedá zmeniť na firmu ani naopak — založte novú")
+	}
 	if err := a.Store.UpdateCompany(ctx, c); err != nil {
 		return c, err
 	}
@@ -204,6 +212,21 @@ func NumberFormat(c store.Company, k invoice.Kind) string {
 	return invoice.DefaultFormats[invoice.KindInvoice]
 }
 
+// businessCount je počet firiem bez domácností (limit licencie).
+func (a *App) businessCount(ctx context.Context) (int, error) {
+	cs, err := a.Store.ListCompanies(ctx)
+	if err != nil {
+		return 0, err
+	}
+	n := 0
+	for _, c := range cs {
+		if c.Bookkeeping != store.BookkeepingHousehold {
+			n++
+		}
+	}
+	return n, nil
+}
+
 func validateCompany(c store.Company) error {
 	var fe []invoice.FieldError
 	add := func(f, m string) { fe = append(fe, invoice.FieldError{Field: f, Message: m}) }
@@ -211,9 +234,12 @@ func validateCompany(c store.Company) error {
 		add("name", "Zadajte názov firmy")
 	}
 	switch c.Bookkeeping {
-	case "", store.BookkeepingSimple, store.BookkeepingDouble:
+	case "", store.BookkeepingSimple, store.BookkeepingDouble, store.BookkeepingHousehold:
 	default:
 		add("bookkeeping", "Účtovníctvo je jednoduché alebo podvojné")
+	}
+	if c.Bookkeeping == store.BookkeepingHousehold && (c.VATPayer || c.ICDPH != "") {
+		add("vatPayer", "Domácnosť nie je platiteľ DPH")
 	}
 	if c.VATPeriod != store.VATPeriodMonth && c.VATPeriod != store.VATPeriodQuarter {
 		add("vatPeriod", "Zdaňovacie obdobie je mesačné alebo štvrťročné")

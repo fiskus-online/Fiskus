@@ -20,6 +20,7 @@ import (
 	"github.com/palo-krnac/fiscus/backend/internal/bank"
 	"github.com/palo-krnac/fiscus/backend/internal/cash"
 	"github.com/palo-krnac/fiscus/backend/internal/fx"
+	"github.com/palo-krnac/fiscus/backend/internal/household"
 	"github.com/palo-krnac/fiscus/backend/internal/invoice"
 	"github.com/palo-krnac/fiscus/backend/internal/logbook"
 	m "github.com/palo-krnac/fiscus/backend/internal/money"
@@ -631,6 +632,80 @@ func Run(t *testing.T, newStore Factory) {
 		}
 		if _, err := s.GetAsset(ctx, a.ID, car.ID); !errors.Is(err, store.ErrNotFound) {
 			t.Fatal("zmazaný majetok")
+		}
+	})
+
+	t.Run("domácnosť", func(t *testing.T) {
+		s := newStore(t)
+		a, _ := s.CreateCompany(ctx, store.Company{Name: "Domácnosť", Bookkeeping: store.BookkeepingHousehold})
+		b, _ := s.CreateCompany(ctx, store.Company{Name: "Beta"})
+		bank := household.Account{Name: "Účet VÚB", Kind: household.Bank, IBAN: "SK3112000000198742637541", Opening: m.MustParse("250.40")}
+		wallet := household.Account{Name: "Peňaženka", Kind: household.Cash}
+		for _, x := range []*household.Account{&bank, &wallet} {
+			if err := s.SaveHHAccount(ctx, a.ID, x); err != nil || x.ID == 0 {
+				t.Fatalf("účet: %v", err)
+			}
+		}
+		if list, _ := s.ListHHAccounts(ctx, a.ID); len(list) != 2 || !reflect.DeepEqual(list[0], bank) {
+			t.Fatalf("účty: %+v", list)
+		}
+		if err := s.SaveHHAccount(ctx, b.ID, &bank); !errors.Is(err, store.ErrNotFound) {
+			t.Fatal("úprava účtu inej domácnosti")
+		}
+		es := []household.Entry{
+			{Date: invoice.MustDate("2026-03-05"), AccountID: bank.ID, Amount: m.MustParse("-45.20"), Category: "Potraviny", Payee: "Lidl", Source: "bank:abc"},
+			{Date: invoice.MustDate("2026-03-01"), AccountID: bank.ID, ToAccountID: wallet.ID, Amount: m.MustParse("100")},
+			{Date: invoice.MustDate("2025-12-31"), AccountID: wallet.ID, Amount: m.MustParse("-3"), Category: "Iné výdavky"},
+		}
+		for i := range es {
+			if err := s.SaveHHEntry(ctx, a.ID, &es[i]); err != nil || es[i].ID == 0 {
+				t.Fatalf("pohyb: %v", err)
+			}
+		}
+		if got, err := s.GetHHEntry(ctx, a.ID, es[0].ID); err != nil || !reflect.DeepEqual(got, es[0]) {
+			t.Fatalf("načítanie pohybu:\n got %+v\nwant %+v", got, es[0])
+		}
+		if _, err := s.GetHHEntry(ctx, b.ID, es[0].ID); !errors.Is(err, store.ErrNotFound) {
+			t.Fatal("pohyb inej domácnosti")
+		}
+		// opakovaný import: rovnaký pôvod sa neuloží; v inej domácnosti áno
+		dup := household.Entry{Date: invoice.MustDate("2026-03-05"), AccountID: bank.ID, Amount: m.MustParse("-45.20"), Category: "Potraviny", Source: "bank:abc"}
+		if err := s.SaveHHEntry(ctx, a.ID, &dup); !errors.Is(err, store.ErrDuplicate) {
+			t.Fatalf("duplicitný pôvod: %v", err)
+		}
+		other := dup
+		other.ID = 0
+		if err := s.SaveHHEntry(ctx, b.ID, &other); err != nil {
+			t.Fatalf("pôvod v inej domácnosti: %v", err)
+		}
+		list, _ := s.ListHHEntries(ctx, a.ID, 2026)
+		if len(list) != 2 || list[0].ID != es[1].ID || list[1].ID != es[0].ID {
+			t.Fatalf("pohyby 2026 podľa dátumu: %+v", list)
+		}
+		if all, _ := s.ListHHEntries(ctx, a.ID, 0); len(all) != 3 {
+			t.Fatalf("všetky pohyby: %d", len(all))
+		}
+		es[0].Note = "nákup"
+		if err := s.SaveHHEntry(ctx, a.ID, &es[0]); err != nil {
+			t.Fatalf("úprava pohybu s pôvodom: %v", err)
+		}
+		if err := s.DeleteHHEntry(ctx, b.ID, es[0].ID); !errors.Is(err, store.ErrNotFound) {
+			t.Fatal("zmazanie pohybu inej domácnosti")
+		}
+		if err := s.DeleteHHEntry(ctx, a.ID, es[0].ID); err != nil {
+			t.Fatal(err)
+		}
+		if err := s.DeleteHHAccount(ctx, a.ID, wallet.ID); err != nil {
+			t.Fatal(err)
+		}
+		if err := s.DeleteCompany(ctx, a.ID); err != nil {
+			t.Fatalf("zmazanie domácnosti: %v", err)
+		}
+		if list, _ := s.ListHHEntries(ctx, a.ID, 0); len(list) != 0 {
+			t.Fatalf("pohyby po zmazaní domácnosti: %d", len(list))
+		}
+		if list, _ := s.ListHHEntries(ctx, b.ID, 0); len(list) != 1 {
+			t.Fatal("zmazanie domácnosti zmazalo pohyby inej")
 		}
 	})
 

@@ -18,6 +18,7 @@ import (
 	"github.com/palo-krnac/fiscus/backend/internal/cash"
 	"github.com/palo-krnac/fiscus/backend/internal/catalog"
 	"github.com/palo-krnac/fiscus/backend/internal/fx"
+	"github.com/palo-krnac/fiscus/backend/internal/household"
 	"github.com/palo-krnac/fiscus/backend/internal/invoice"
 	"github.com/palo-krnac/fiscus/backend/internal/journal"
 	"github.com/palo-krnac/fiscus/backend/internal/logbook"
@@ -74,6 +75,9 @@ type Company struct {
 const (
 	BookkeepingSimple = "simple"
 	BookkeepingDouble = "double"
+	// BookkeepingHousehold je domácnosť (domáce účtovníctvo) — bez dokladov,
+	// DPH a daní; nezapočítava sa do počtu firiem licencie.
+	BookkeepingHousehold = "household"
 )
 
 // Zdaňovacie obdobia DPH.
@@ -375,6 +379,17 @@ type Store interface {
 	GetFuel(ctx context.Context, companyID, id int64) (logbook.Fuel, error)
 	SaveFuel(ctx context.Context, companyID int64, f *logbook.Fuel) error
 	DeleteFuel(ctx context.Context, companyID, id int64) error
+
+	// Domácnosť: účty a pohyby (year 0 = všetky roky). Pohyby sú zoradené
+	// podľa dátumu a ID. SaveHHEntry vráti ErrDuplicate, ak už iný pohyb
+	// domácnosti má rovnaký neprázdny Source (opakovaný import).
+	ListHHAccounts(ctx context.Context, companyID int64) ([]household.Account, error)
+	SaveHHAccount(ctx context.Context, companyID int64, a *household.Account) error
+	DeleteHHAccount(ctx context.Context, companyID, id int64) error
+	ListHHEntries(ctx context.Context, companyID int64, year int) ([]household.Entry, error)
+	GetHHEntry(ctx context.Context, companyID, id int64) (household.Entry, error)
+	SaveHHEntry(ctx context.Context, companyID int64, e *household.Entry) error
+	DeleteHHEntry(ctx context.Context, companyID, id int64) error
 
 	// ListRecurring vráti šablóny pravidelnej fakturácie firmy zoradené podľa ID.
 	ListRecurring(ctx context.Context, companyID int64) ([]recurring.Template, error)

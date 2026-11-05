@@ -11,6 +11,12 @@ tags: [prehľad]
 Verzie sú značky v repozitári (`v0.2.0`). Podrobný zoznam funkcií po
 etapách je v [pláne vývoja](./ROADMAP.md).
 
+## Pripravuje sa (0.4)
+
+- **Domácnosť**: domáce účtovníctvo v samostatnej domácnosti — účty
+  so zostatkami, výdavky a príjmy podľa kategórií, prevody, mesačný
+  rozpočet, import výpisu a prenos výberov zo živnosti.
+
 ## Pripravuje sa (0.2)
 
 - **Karta produktu**: EAN, kategória, značka, dodávateľ, nákupná cena,
