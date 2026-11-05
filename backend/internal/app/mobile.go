@@ -59,14 +59,20 @@ type mobileConfig struct {
 	Enabled bool           `json:"enabled"`
 	Port    int            `json:"port"`
 	Devices []MobileDevice `json:"devices"`
+	// Address je adresa vybraná používateľom (prázdne = automaticky).
+	Address string `json:"address,omitempty"`
 }
 
 // MobileStatus je stav pre Nastavenia (bez odtlačkov tokenov).
 type MobileStatus struct {
 	Enabled bool           `json:"enabled"`
 	Port    int            `json:"port"`
-	URLs    []string       `json:"urls"` // adresy počítača v sieti
+	URLs    []string       `json:"urls"` // adresy počítača v sieti (vybraná prvá)
 	Devices []MobileDevice `json:"devices"`
+	// Addresses sú všetky nájdené adresy s názvom karty; Address je vybraná
+	// (prázdne = automaticky prvá).
+	Addresses []LANAddress `json:"addresses"`
+	Address   string       `json:"address"`
 	Error   string         `json:"error,omitempty"` // počúvanie sa nepodarilo
 }
 
@@ -125,37 +131,39 @@ func (a *App) requireMobileAdmin(ctx context.Context) error {
 	return nil
 }
 
-// LANAddresses vráti IPv4 adresy počítača v súkromných sieťach.
-func LANAddresses() []string {
-	var out []string
-	ifs, err := net.Interfaces()
-	if err != nil {
+// lanList vráti adresy počítača v sieti (nastavené z príkazového riadka
+// -lan-ip majú prednosť pred zistenými).
+func (a *App) lanList() []LANAddress {
+	if a.LANAddresses != nil {
+		var out []LANAddress
+		for _, ip := range a.LANAddresses() {
+			out = append(out, LANAddress{IP: ip, Name: "zadaná pri spustení", Primary: true})
+		}
 		return out
 	}
-	for _, i := range ifs {
-		if i.Flags&net.FlagUp == 0 || i.Flags&net.FlagLoopback != 0 {
-			continue
-		}
-		addrs, _ := i.Addrs()
-		for _, ad := range addrs {
-			if n, ok := ad.(*net.IPNet); ok && n.IP.To4() != nil && n.IP.IsPrivate() {
-				out = append(out, n.IP.String())
-			}
+	return ListLANAddresses()
+}
+
+// lanAddresses vráti adresy na odkazy: vybraná adresa prvá, potom ostatné.
+func (a *App) lanAddresses(c mobileConfig) []string {
+	var out []string
+	if c.Address != "" {
+		out = append(out, c.Address)
+	}
+	for _, l := range a.lanList() {
+		if l.IP != c.Address {
+			out = append(out, l.IP)
 		}
 	}
 	return out
 }
 
-func (a *App) lanAddresses() []string {
-	if a.LANAddresses != nil {
-		return a.LANAddresses()
-	}
-	return LANAddresses()
-}
-
 func (a *App) mobileStatus(c mobileConfig) MobileStatus {
-	st := MobileStatus{Enabled: c.Enabled, Port: c.Port, URLs: []string{}, Devices: []MobileDevice{}}
-	for _, ip := range a.lanAddresses() {
+	st := MobileStatus{Enabled: c.Enabled, Port: c.Port, URLs: []string{}, Devices: []MobileDevice{}, Addresses: a.lanList(), Address: c.Address}
+	if st.Addresses == nil {
+		st.Addresses = []LANAddress{}
+	}
+	for _, ip := range a.lanAddresses(c) {
 		st.URLs = append(st.URLs, fmt.Sprintf("http://%s:%d", ip, c.Port))
 	}
 	for _, d := range c.Devices {
@@ -402,5 +410,38 @@ func (a *App) RemoveMobileDevice(ctx context.Context, id string) (MobileStatus, 
 		return MobileStatus{}, err
 	}
 	a.record(ctx, 0, audit.CatSettings, "delete", "mobile_device", 0, "Odobraný telefón "+removed, nil, nil)
+	return a.mobileStatus(c), nil
+}
+
+// SetMobileAddress uloží adresu, ktorá pôjde do QR kódu (prázdne = automaticky).
+// Môže to byť aj adresa, ktorú Fiškus nenašiel (napr. pevná adresa v routeri).
+func (a *App) SetMobileAddress(ctx context.Context, addr string) (MobileStatus, error) {
+	if err := a.requireMobileAdmin(ctx); err != nil {
+		return MobileStatus{}, err
+	}
+	addr = strings.TrimSpace(addr)
+	if addr != "" {
+		ip := net.ParseIP(addr)
+		if ip == nil || ip.To4() == nil {
+			return MobileStatus{}, mfaFieldErr("address", "Zadajte IPv4 adresu počítača, napr. 192.168.1.20")
+		}
+		if !ip.IsPrivate() {
+			return MobileStatus{}, mfaFieldErr("address", "Adresa musí byť z miestnej siete (192.168.x.x, 10.x.x.x alebo 172.16–31.x.x)")
+		}
+		addr = ip.To4().String()
+	}
+	c, err := a.loadMobile(ctx)
+	if err != nil {
+		return MobileStatus{}, err
+	}
+	c.Address = addr
+	if err := a.saveMobile(ctx, c); err != nil {
+		return MobileStatus{}, err
+	}
+	what := "automaticky"
+	if addr != "" {
+		what = addr
+	}
+	a.record(ctx, 0, audit.CatSettings, "update", "mobile", 0, "Mobil v sieti: adresa "+what, nil, nil)
 	return a.mobileStatus(c), nil
 }
