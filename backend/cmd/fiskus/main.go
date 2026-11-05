@@ -484,6 +484,6 @@ func (m *mobileListener) set(enabled bool, port int) error {
 			log.Printf("mobil v sieti: %v", err)
 		}
 	}(m.srv)
-	log.Printf("mobil v sieti: počúva na porte %d %v", port, app.LANAddresses())
+	log.Printf("mobil v sieti: počúva na porte %d %v", port, app.ListLANAddresses())
 	return nil
 }
