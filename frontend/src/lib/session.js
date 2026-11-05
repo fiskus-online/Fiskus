@@ -36,7 +36,9 @@ export function canSee(item) {
   return (
     (item.superAdmin ? isSuperAdmin() : can(item.perm)) &&
     (!item.serverOnly || session.caps.mode === 'server') &&
-    (!item.desktopOnly || session.caps.mode === 'desktop')
+    (!item.desktopOnly || session.caps.mode === 'desktop') &&
+    // domácnosť nemá doklady, DPH ani e-faktúry
+    (!item.biz || session.company?.bookkeeping !== 'household')
   )
 }
 
