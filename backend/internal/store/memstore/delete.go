@@ -42,6 +42,7 @@ func dropCompany(ptr any, id int64) {
 	}
 }
 
+// DeleteCompany zmaže firmu a jej dáta; audit ostáva (je nemenný, ako v SQLite).
 func (s *Store) DeleteCompany(_ context.Context, id int64) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -59,7 +60,7 @@ func (s *Store) DeleteCompany(_ context.Context, id int64) error {
 	}
 	s.companies = companies
 	for _, m := range []any{&s.invoices, &s.contacts, &s.purchases, &s.bankTx, &s.apiKeys, &s.cashDocs, &s.quotes, &s.assets,
-		&s.vehicles, &s.trips, &s.fuel, &s.recurring, &s.reminders, &s.items, &s.stockDocs, &s.emails, &s.einvoices, &s.auditLog, &s.files, &s.images} {
+		&s.vehicles, &s.trips, &s.fuel, &s.recurring, &s.reminders, &s.items, &s.stockDocs, &s.emails, &s.einvoices, &s.files, &s.images} {
 		dropCompany(m, id)
 	}
 	delete(s.journal, id)
@@ -76,7 +77,8 @@ func (s *Store) DeleteCompany(_ context.Context, id int64) error {
 	}
 	suffix := "." + strconv.FormatInt(id, 10)
 	for k := range s.settings {
-		if strings.HasSuffix(k, suffix) {
+		// „x.<id>“ a „dpfo.<id>.<rok>“ (priznanie po rokoch)
+		if strings.HasSuffix(k, suffix) || strings.HasPrefix(k, "dpfo"+suffix+".") {
 			delete(s.settings, k)
 		}
 	}
