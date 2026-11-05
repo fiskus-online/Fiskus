@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { afterSetup, bookAllows, bookkeepingLabel, migrationNote, stepErrors, vatAllows } from './setup.js'
+import { afterSetup, bookAllows, bookkeepingLabel, homePath, pathFits, migrationNote, stepErrors, vatAllows } from './setup.js'
 
 describe('úvodné nastavenie', () => {
   it.each([
@@ -8,6 +8,12 @@ describe('úvodné nastavenie', () => {
     [{ book: 'double' }, 'double', true],
     [{ book: 'double' }, '', true],
     [{}, 'double', true],
+    [{ book: 'household' }, '', false],
+    [{ book: 'household' }, 'simple', false],
+    [{ book: 'household' }, 'household', true],
+    [{}, 'household', false],
+    [{ home: true }, 'household', true],
+    [{ book: 'simple' }, 'household', false],
   ])('menu %j pri %s → %s', (item, book, want) => expect(bookAllows(item, book)).toBe(want))
 
   it.each([
@@ -25,6 +31,21 @@ describe('úvodné nastavenie', () => {
     expect(bookkeepingLabel('')).toContain('Nezvolené')
     expect(afterSetup('migrate')).toBe('/prenos')
     expect(afterSetup('new')).toBe('/faktury')
+    expect(homePath({ bookkeeping: 'household' })).toBe('/domacnost')
+    expect(homePath({ bookkeeping: 'simple' })).toBe('/faktury')
+  })
+
+  it.each([
+    ['/domacnost/pohyby', 'household', true],
+    ['/audit', 'household', true],
+    ['/nastavenia/firma', 'household', true],
+    ['/faktury', 'household', false],
+    ['/banka', 'household', false],
+    ['/domacnost', 'simple', false],
+    ['/domacnost', '', false],
+    ['/faktury', '', true],
+  ])('obrazovka %s pri %s → %s', (path, bk, want) => {
+    expect(pathFits(path, bk, (p) => p.startsWith('/nastavenia/'))).toBe(want)
   })
 
   it('poznámka o prenose', () => {

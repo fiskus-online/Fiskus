@@ -43,9 +43,23 @@ import { settingsSections } from './lib/settingsNav.js'
 import DataTransfer from './views/DataTransfer.vue'
 import StockView from './views/StockView.vue'
 import Calendar from './views/Calendar.vue'
+import HouseholdOverview from './views/HouseholdOverview.vue'
+import HouseholdEntries from './views/HouseholdEntries.vue'
+import HouseholdAccounts from './views/HouseholdAccounts.vue'
+import HouseholdBudget from './views/HouseholdBudget.vue'
 
 // Moduly z etapového plánu — zatiaľ prázdne stránky s popisom.
 export const modules = [
+  {
+    // domácnosť (domáce účtovníctvo) — iba pri firme druhu Domácnosť
+    group: 'Domácnosť',
+    items: [
+      { path: '/domacnost', label: 'Prehľad', icon: 'pi-home', ready: true, perm: 'ledger.read', book: 'household' },
+      { path: '/domacnost/pohyby', label: 'Pohyby', icon: 'pi-list', ready: true, perm: 'ledger.read', book: 'household' },
+      { path: '/domacnost/ucty', label: 'Účty', icon: 'pi-wallet', ready: true, perm: 'ledger.read', book: 'household' },
+      { path: '/domacnost/rozpocet', label: 'Kategórie a rozpočet', icon: 'pi-chart-bar', ready: true, perm: 'ledger.read', book: 'household' },
+    ],
+  },
   {
     group: 'Prehľad',
     items: [{ path: '/kalendar', label: 'Kalendár', icon: 'pi-calendar', ready: true }],
@@ -98,8 +112,8 @@ export const modules = [
     group: 'Ostatné',
     items: [
       { path: '/adresar', label: 'Adresár', icon: 'pi-address-book', ready: true, perm: 'contacts.read' },
-      { path: '/audit', label: 'Audit', icon: 'pi-shield', ready: true, perm: 'audit.read' },
-      { path: '/nastavenia', label: 'Nastavenia', icon: 'pi-cog', ready: true, settingsHub: true },
+      { path: '/audit', label: 'Audit', icon: 'pi-shield', ready: true, perm: 'audit.read', home: true },
+      { path: '/nastavenia', label: 'Nastavenia', icon: 'pi-cog', ready: true, settingsHub: true, home: true },
     ],
   },
 ]
@@ -130,6 +144,10 @@ export const router = createRouter({
     { path: '/ponuky/:id(\\d+)/tlac', component: InvoicePrint, props: (r) => ({ id: r.params.id, quote: true }), meta: { title: 'Cenová ponuka', bare: true, perm: 'invoices.read' } },
     { path: '/prenos', component: DataTransfer, meta: { settings: true, title: 'Prenos dát', perm: 'invoices.write' } },
     { path: '/kalendar', component: Calendar, meta: { title: 'Kalendár' } },
+    { path: '/domacnost', component: HouseholdOverview, meta: { title: 'Domácnosť', perm: 'ledger.read' } },
+    { path: '/domacnost/pohyby', component: HouseholdEntries, meta: { title: 'Pohyby', perm: 'ledger.read' } },
+    { path: '/domacnost/ucty', component: HouseholdAccounts, meta: { title: 'Účty', perm: 'ledger.read' } },
+    { path: '/domacnost/rozpocet', component: HouseholdBudget, meta: { title: 'Kategórie a rozpočet', perm: 'ledger.read' } },
     { path: '/pravidelne', component: RecurringList, meta: { title: 'Pravidelná fakturácia', perm: 'invoices.read' } },
     { path: '/pravidelne/nova', component: InvoiceEdit, props: { recurring: true }, meta: { title: 'Nová pravidelná faktúra', perm: 'invoices.write' } },
     { path: '/pravidelne/:id(\\d+)', component: InvoiceEdit, props: (r) => ({ id: r.params.id, recurring: true }), meta: { title: 'Pravidelná faktúra', perm: 'invoices.read' } },

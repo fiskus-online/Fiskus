@@ -8,6 +8,7 @@ import { levelShort } from './reminders.js'
 import { kindLabel } from './advance.js'
 import { assetStatus, disposalOptions, periodLabel } from './assets.js'
 import { tripTime } from './logbook.js'
+import { accountKindLabel, accountName, entryCategory, typeLabel, entryType } from './household.js'
 import { moveLabel } from './itemcard.js'
 import { kindLabel as calendarKind, repeatLabel, stateOf } from './calendar.js'
 import { docKindLabel, emailStatus } from './emails.js'
@@ -607,4 +608,24 @@ export const itemMoveColumns = [
   money('Hodnota pohybu', (r) => r.total),
   num('Stav', (r) => r.balance),
   money('Hodnota zásoby', (r) => r.value),
+]
+
+// domácnosť: pohyby (accounts sa doplnia pri exporte) a účty
+export const householdEntryColumns = (accounts) => [
+  date('Dátum', (r) => r.date),
+  t('Druh', (r) => typeLabel(entryType(r)), 10),
+  t('Účet', (r) => accountName(accounts, r.accountId), 18),
+  t('Kategória', (r) => entryCategory(r, accounts), 24),
+  t('Obchod / komu', (r) => r.payee, 26),
+  money('Suma €', (r) => r.amount),
+  t('Poznámka', (r) => r.note, 30),
+]
+
+export const householdAccountColumns = [
+  t('Účet', (r) => r.name, 24),
+  t('Druh', (r) => accountKindLabel(r.kind), 14),
+  t('IBAN', (r) => r.iban, 26),
+  money('Počiatočný stav €', (r) => r.opening),
+  money('Zostatok €', (r) => r.balance),
+  t('Zrušený', (r) => yes(r.closed), 8),
 ]

@@ -1,6 +1,6 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import Select from 'primevue/select'
 import Toast from 'primevue/toast'
 import ConfirmDialog from 'primevue/confirmdialog'
@@ -9,7 +9,7 @@ import { session, loadSession, selectCompany, can, canSee, isSuperAdmin } from '
 import { isSettingsPath, visibleSettings } from './lib/settingsNav.js'
 import SettingsShell from './components/SettingsShell.vue'
 import SetupWizard from './components/SetupWizard.vue'
-import { bookAllows, vatAllows } from './lib/setup.js'
+import { bookAllows, homePath, pathFits, vatAllows } from './lib/setup.js'
 import { visibleModules } from './lib/access.js'
 import Login from './views/Login.vue'
 import UserMenu from './components/UserMenu.vue'
@@ -20,6 +20,7 @@ import { attention, badgeText, refreshCalendar, refreshDrafts } from './lib/atte
 import { badgeRange, soonCount } from './lib/calendar.js'
 
 const route = useRoute()
+const router = useRouter()
 const navOpen = ref(false)
 
 // verejná stránka (odkaz pre zákazníka) reláciu nenačítava
@@ -89,7 +90,22 @@ async function quitApp() {
   stopped.value = true
 }
 const isActive = (path) =>
-  path === '/nastavenia' ? isSettingsPath(route.path) : route.path === path || route.path.startsWith(path + '/')
+  path === '/nastavenia'
+    ? isSettingsPath(route.path)
+    : path === '/domacnost'
+      ? route.path === path
+      : route.path === path || route.path.startsWith(path + '/')
+
+// obrazovka, ktorá k druhu firmy nepatrí (domácnosť ↔ firma, aj po prepnutí
+// firmy) → úvodná obrazovka firmy
+watch(
+  () => [session.company?.id, session.company?.bookkeeping, route.path],
+  () => {
+    const c = session.company
+    if (!c || route.meta.public || route.meta.bare || route.meta.consent || route.meta.noCompany || route.meta.mobile) return
+    if (!pathFits(route.path, c.bookkeeping, isSettingsPath)) router.replace(homePath(c))
+  },
+)
 </script>
 
 <template>

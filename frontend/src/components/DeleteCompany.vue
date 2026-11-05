@@ -17,6 +17,7 @@ const name = ref('')
 const error = ref('')
 const busy = ref(false)
 const matches = computed(() => name.value.trim() === session.company?.name)
+const hh = computed(() => session.company?.bookkeeping === 'household')
 
 async function remove() {
   busy.value = true
@@ -26,7 +27,7 @@ async function remove() {
     open.value = false
     toast.add({
       severity: 'success',
-      summary: 'Firma je zmazaná',
+      summary: hh.value ? 'Domácnosť je zmazaná' : 'Firma je zmazaná',
       detail: r.backup ? `Záloha pred zmazaním: ${r.backup}` : 'Zálohy sú vypnuté — záloha sa nevytvorila.',
       life: 10000,
     })
@@ -42,16 +43,20 @@ async function remove() {
 
 <template>
   <fieldset class="form-section danger">
-    <legend>Zmazať firmu</legend>
-    <p>
-      Zmaže firmu <strong>{{ session.company?.name }}</strong> so všetkými dokladmi, adresárom, cenníkom, nastaveniami a auditom. Pred
-      zmazaním sa vytvorí záloha, z ktorej sa firma dá obnoviť v Zálohách. Potom môžete firmu založiť nanovo.
+    <legend>{{ hh ? 'Zmazať domácnosť' : 'Zmazať firmu' }}</legend>
+    <p v-if="hh">
+      Zmaže domácnosť <strong>{{ session.company?.name }}</strong> so všetkými účtami, pohybmi, kategóriami a rozpočtom. Záznamy
+      v audite ostanú. Pred zmazaním sa vytvorí záloha, z ktorej sa domácnosť dá obnoviť v Zálohách.
     </p>
-    <Button label="Zmazať firmu…" icon="pi pi-trash" severity="danger" outlined size="small" @click="(open = true), (name = ''), (error = '')" />
+    <p v-else>
+      Zmaže firmu <strong>{{ session.company?.name }}</strong> so všetkými dokladmi, adresárom, cenníkom a nastaveniami; záznamy
+      v audite ostanú. Pred zmazaním sa vytvorí záloha, z ktorej sa firma dá obnoviť v Zálohách. Potom môžete firmu založiť nanovo.
+    </p>
+    <Button :label="hh ? 'Zmazať domácnosť…' : 'Zmazať firmu…'" icon="pi pi-trash" severity="danger" outlined size="small" @click="(open = true), (name = ''), (error = '')" />
   </fieldset>
 
-  <Dialog v-model:visible="open" header="Zmazať firmu" modal :style="{ width: '30rem' }" :breakpoints="{ '640px': '94vw' }">
-    <p class="confirm">Táto akcia sa nedá vrátiť (iba obnovou zo zálohy). Na potvrdenie napíšte názov firmy:</p>
+  <Dialog v-model:visible="open" :header="hh ? 'Zmazať domácnosť' : 'Zmazať firmu'" modal :style="{ width: '30rem' }" :breakpoints="{ '640px': '94vw' }">
+    <p class="confirm">Táto akcia sa nedá vrátiť (iba obnovou zo zálohy). Na potvrdenie napíšte názov {{ hh ? 'domácnosti' : 'firmy' }}:</p>
     <p class="name">{{ session.company?.name }}</p>
     <InputText v-model="name" size="small" fluid autofocus :invalid="!!error" aria-label="Názov firmy na potvrdenie" @keyup.enter="matches && remove()" />
     <small v-if="error" class="err">{{ error }}</small>

@@ -15,6 +15,7 @@ import (
 	"github.com/palo-krnac/fiscus/backend/internal/auth"
 	"github.com/palo-krnac/fiscus/backend/internal/bank"
 	"github.com/palo-krnac/fiscus/backend/internal/cash"
+	"github.com/palo-krnac/fiscus/backend/internal/household"
 	"github.com/palo-krnac/fiscus/backend/internal/invoice"
 	"github.com/palo-krnac/fiscus/backend/internal/logbook"
 	"github.com/palo-krnac/fiscus/backend/internal/purchase"
@@ -33,38 +34,40 @@ type seqKey struct {
 
 // Store je úložisko v pamäti, bezpečné pre súbežný prístup.
 type Store struct {
-	mu        sync.Mutex
-	companies []store.Company
-	invoices  map[int64]invoice.Invoice
-	contacts  map[int64]store.Contact
-	purchases map[int64]purchase.Purchase
-	bankTx    map[int64]bank.Transaction
-	apiKeys   map[int64]auth.APIKey
-	journal   map[int64]map[string]store.JournalOverride // firma → zdroj → rozpis
-	cashDocs  map[int64]cash.Document
-	quotes    map[int64]quote.Quote
-	assets    map[int64]asset.Asset
-	vehicles  map[int64]logbook.Vehicle
-	trips     map[int64]logbook.Trip
-	fuel      map[int64]logbook.Fuel
-	recurring map[int64]recurring.Template
-	reminders map[int64]reminder.Reminder
-	settings  map[string]string
-	items     map[int64]catalog.Item
-	stockDocs map[int64]stock.Doc
-	logos     map[int64]store.Logo
-	files     map[int64]store.PurchaseFile // doklad → súbor
-	images    map[int64]store.ItemImage
-	emails    []store.Email
-	einvoices []store.EInvoice
-	rates     map[fxKey]fx.Rate
-	users     map[int64]auth.User
-	members   map[memKey]auth.Role
-	sessions  map[string]auth.Session
-	auditLog  []audit.Entry
-	auditSeq  int64
-	seq       map[seqKey]int
-	nextID    int64
+	mu         sync.Mutex
+	companies  []store.Company
+	invoices   map[int64]invoice.Invoice
+	contacts   map[int64]store.Contact
+	purchases  map[int64]purchase.Purchase
+	bankTx     map[int64]bank.Transaction
+	apiKeys    map[int64]auth.APIKey
+	journal    map[int64]map[string]store.JournalOverride // firma → zdroj → rozpis
+	cashDocs   map[int64]cash.Document
+	quotes     map[int64]quote.Quote
+	assets     map[int64]asset.Asset
+	vehicles   map[int64]logbook.Vehicle
+	trips      map[int64]logbook.Trip
+	fuel       map[int64]logbook.Fuel
+	hhAccounts map[int64]household.Account
+	hhEntries  map[int64]household.Entry
+	recurring  map[int64]recurring.Template
+	reminders  map[int64]reminder.Reminder
+	settings   map[string]string
+	items      map[int64]catalog.Item
+	stockDocs  map[int64]stock.Doc
+	logos      map[int64]store.Logo
+	files      map[int64]store.PurchaseFile // doklad → súbor
+	images     map[int64]store.ItemImage
+	emails     []store.Email
+	einvoices  []store.EInvoice
+	rates      map[fxKey]fx.Rate
+	users      map[int64]auth.User
+	members    map[memKey]auth.Role
+	sessions   map[string]auth.Session
+	auditLog   []audit.Entry
+	auditSeq   int64
+	seq        map[seqKey]int
+	nextID     int64
 }
 
 // New vytvorí prázdne úložisko.
