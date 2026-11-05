@@ -73,7 +73,7 @@ type MobileStatus struct {
 	// (prázdne = automaticky prvá).
 	Addresses []LANAddress `json:"addresses"`
 	Address   string       `json:"address"`
-	Error   string         `json:"error,omitempty"` // počúvanie sa nepodarilo
+	Error     string       `json:"error,omitempty"` // počúvanie sa nepodarilo
 }
 
 // MobilePairing je jednorazový kód na spárovanie.
