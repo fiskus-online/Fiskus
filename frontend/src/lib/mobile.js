@@ -23,3 +23,20 @@ export function pairCode(search) {
   const k = new URLSearchParams(search).get('kod') ?? ''
   return k.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6)
 }
+
+/** Popis adresy v sieti na výber (názov karty, hlavná, virtuálna). */
+export function addressLabel(a) {
+  const tags = [a.primary && !a.virtual && 'hlavná sieť', a.virtual && 'virtuálna — telefón ju nevidí'].filter(Boolean)
+  return `${a.ip} — ${a.name || 'sieť'}${tags.length ? ` (${tags.join(', ')})` : ''}`
+}
+
+/** Voľby adresy: automaticky, nájdené adresy a vlastná. OTHER = zadať ručne. */
+export const OTHER = '*'
+export function addressOptions(st) {
+  const list = st?.addresses ?? []
+  const auto = list[0] ? `Automaticky (${list[0].ip})` : 'Automaticky'
+  const opts = [{ label: auto, value: '' }, ...list.map((a) => ({ label: addressLabel(a), value: a.ip }))]
+  if (st?.address && !list.some((a) => a.ip === st.address)) opts.push({ label: `${st.address} — zadaná ručne`, value: st.address })
+  opts.push({ label: 'Iná adresa…', value: OTHER })
+  return opts
+}

@@ -22,3 +22,18 @@ describe('mobil v sieti', () => {
     ['', ''],
   ])('kód %s', (q, want) => expect(pairCode(q)).toBe(want))
 })
+
+import { addressLabel, addressOptions, OTHER } from './mobile.js'
+
+it('addressLabel', () => {
+  expect(addressLabel({ ip: '192.168.1.20', name: 'Wi-Fi', primary: true })).toBe('192.168.1.20 — Wi-Fi (hlavná sieť)')
+  expect(addressLabel({ ip: '172.24.80.1', name: 'vEthernet (WSL)', virtual: true })).toBe('172.24.80.1 — vEthernet (WSL) (virtuálna — telefón ju nevidí)')
+})
+
+it('addressOptions', () => {
+  const st = { address: '192.168.0.50', addresses: [{ ip: '192.168.1.20', name: 'Wi-Fi', primary: true }] }
+  const v = addressOptions(st).map((o) => o.value)
+  expect(v).toEqual(['', '192.168.1.20', '192.168.0.50', OTHER])
+  expect(addressOptions(st)[0].label).toBe('Automaticky (192.168.1.20)')
+  expect(addressOptions({ addresses: [] }).map((o) => o.value)).toEqual(['', OTHER])
+})

@@ -13,6 +13,8 @@ import (
 // DeleteCompany zmaže firmu a všetky riadky so stĺpcom company_id (tabuľky
 // sa zistia zo schémy, aby nová tabuľka nezostala zabudnutá), riadky
 // faktúr a nastavenia firmy (kľúče „….<id>“).
+// Audit (audit_log) ostáva: je nemenný (spúšťač zakazuje mazanie) a patrí
+// doň aj záznam o zmazaní firmy.
 func (s *Store) DeleteCompany(ctx context.Context, id int64) error {
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
@@ -27,7 +29,7 @@ func (s *Store) DeleteCompany(ctx context.Context, id int64) error {
 		return store.ErrNotFound
 	}
 	rows, err := tx.QueryContext(ctx, `SELECT m.name FROM sqlite_master m JOIN pragma_table_info(m.name) p
-		WHERE m.type = 'table' AND p.name = 'company_id' AND m.name <> 'companies' ORDER BY m.name`)
+		WHERE m.type = 'table' AND p.name = 'company_id' AND m.name NOT IN ('companies', 'audit_log') ORDER BY m.name`)
 	if err != nil {
 		return err
 	}
@@ -49,7 +51,9 @@ func (s *Store) DeleteCompany(ctx context.Context, id int64) error {
 			return fmt.Errorf("%s: %w", t, err)
 		}
 	}
-	if _, err := tx.ExecContext(ctx, "DELETE FROM settings WHERE key LIKE ?", "%."+strconv.FormatInt(id, 10)); err != nil {
+	cid := strconv.FormatInt(id, 10)
+	// „x.<id>“ a „dpfo.<id>.<rok>“ (priznanie po rokoch)
+	if _, err := tx.ExecContext(ctx, "DELETE FROM settings WHERE key LIKE ? OR key LIKE ?", "%."+cid, "dpfo."+cid+".%"); err != nil {
 		return err
 	}
 	if _, err := tx.ExecContext(ctx, "DELETE FROM companies WHERE id = ?", id); err != nil {

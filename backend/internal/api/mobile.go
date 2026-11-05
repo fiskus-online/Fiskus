@@ -141,3 +141,18 @@ func (s *Server) pairMobile(w http.ResponseWriter, r *http.Request) {
 		HttpOnly: true, SameSite: http.SameSiteStrictMode, Secure: secure(r)})
 	writeJSON(w, http.StatusOK, map[string]bool{"paired": true})
 }
+
+func (s *Server) setMobileAddress(w http.ResponseWriter, r *http.Request) {
+	var in struct {
+		Address string `json:"address"`
+	}
+	if !decode(w, r, &in) {
+		return
+	}
+	out, err := s.App.SetMobileAddress(r.Context(), in.Address)
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, out)
+}

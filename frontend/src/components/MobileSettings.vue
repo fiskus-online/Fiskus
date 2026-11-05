@@ -4,12 +4,14 @@ import { onBeforeUnmount, onMounted, ref } from 'vue'
 import QRCode from 'qrcode'
 import Button from 'primevue/button'
 import InputNumber from 'primevue/inputnumber'
+import InputText from 'primevue/inputtext'
+import Select from 'primevue/select'
 import ToggleSwitch from 'primevue/toggleswitch'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
 import FormField from './FormField.vue'
 import { api, ApiError } from '../lib/api.js'
-import { remaining } from '../lib/mobile.js'
+import { OTHER, addressOptions, remaining } from '../lib/mobile.js'
 import { formatDate } from '../lib/format.js'
 
 const toast = useToast()
@@ -23,12 +25,18 @@ const urlIdx = ref(0)
 const qr = ref('')
 const left = ref('')
 let timer = null
+// adresa do QR kódu: '' = automaticky, OTHER = zadať ručne
+const addrChoice = ref('')
+const addrOther = ref('')
+const addrError = ref('')
 
 async function load() {
   try {
     st.value = await api.mobile()
     enabled.value = st.value.enabled
     port.value = st.value.port
+    addrChoice.value = st.value.address ?? ''
+
   } catch (e) {
     toast.add({ severity: 'error', summary: 'Nastavenie sa nenačítalo', detail: e.message, life: 6000 })
   }
@@ -44,6 +52,26 @@ async function save() {
     toast.add({ severity: st.value.error ? 'warn' : 'success', summary: st.value.enabled ? 'Mobil v sieti zapnutý' : 'Mobil v sieti vypnutý', detail: st.value.error, life: 5000 })
   } catch (e) {
     toast.add({ severity: 'error', summary: 'Uloženie zlyhalo', detail: e instanceof ApiError && e.fields.length ? e.fields[0].message : e.message, life: 6000 })
+  } finally {
+    busy.value = ''
+  }
+}
+
+async function saveAddress() {
+  const address = addrChoice.value === OTHER ? addrOther.value.trim() : addrChoice.value
+  if (addrChoice.value === OTHER && !address) {
+    addrError.value = 'Zadajte adresu počítača'
+    return
+  }
+  busy.value = 'addr'
+  addrError.value = ''
+  try {
+    st.value = await api.setMobileAddress(address)
+    addrChoice.value = st.value.address ?? ''
+    pairing.value = null // nový QR kód už s vybranou adresou
+    toast.add({ severity: 'success', summary: 'Adresa uložená', detail: 'Spárujte telefón znova — QR kód už obsahuje novú adresu.', life: 4000 })
+  } catch (e) {
+    addrError.value = e instanceof ApiError && e.fields.length ? e.fields[0].message : e.message
   } finally {
     busy.value = ''
   }
@@ -115,6 +143,19 @@ function remove(d) {
     <p v-if="st.error" class="err"><i class="pi pi-exclamation-triangle" aria-hidden="true" /> {{ st.error }}</p>
     <p v-if="st.enabled && !st.urls.length" class="err">Počítač nie je pripojený do siete — telefón sa nemá kam pripojiť.</p>
 
+    <template v-if="st.enabled">
+      <div class="addr">
+        <FormField label="Adresa počítača v sieti (do QR kódu)" :span="2" :error="addrError"
+          hint="Telefón musí byť v tej istej Wi-Fi. Adresu Wi-Fi karty zistíte vo Windows príkazom ipconfig (IPv4 Address), na Macu v Nastaveniach → Sieť.">
+          <Select v-model="addrChoice" :options="addressOptions(st)" option-label="label" option-value="value" size="small" />
+        </FormField>
+        <FormField v-if="addrChoice === OTHER" label="Adresa" :error="addrError">
+          <InputText v-model="addrOther" size="small" placeholder="192.168.1.20" inputmode="decimal" />
+        </FormField>
+        <Button label="Použiť" icon="pi pi-check" size="small" severity="secondary" outlined :loading="busy === 'addr'" @click="saveAddress" />
+      </div>
+    </template>
+
     <template v-if="st.enabled && st.urls.length">
       <div class="pairing">
         <div v-if="pairing" class="qr">
@@ -177,6 +218,20 @@ function remove(d) {
 }
 .pairing {
   margin: 16px 0;
+}
+.addr {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 12px 0;
+}
+.addr > .p-button {
+  margin-top: 21px; /* zarovnané s poľom pod nadpisom */
+}
+.addr > :first-child {
+  flex: 1 1 340px;
+  min-width: 0;
 }
 .qr {
   display: flex;

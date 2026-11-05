@@ -116,6 +116,7 @@ func (s *Server) Handler() http.Handler {
 	open("GET /api/license", s.getLicense)
 	open("GET /api/mobile", s.mobileStatus)
 	open("PUT /api/mobile", s.setMobile)
+	open("PUT /api/mobile/address", s.setMobileAddress)
 	open("POST /api/mobile/pairing", s.newPairing)
 	open("DELETE /api/mobile/devices/{id}", s.removeDevice)
 	public("POST /api/mobile/pair", s.pairMobile)
