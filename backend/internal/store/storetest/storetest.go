@@ -246,6 +246,20 @@ func Run(t *testing.T, newStore Factory) {
 			if err := s.SetSetting(ctx, fmt.Sprintf("stock.%d", c.ID), "{}"); err != nil {
 				t.Fatal(err)
 			}
+			if err := s.SetSetting(ctx, fmt.Sprintf("dpfo.%d.2026", c.ID), "{}"); err != nil {
+				t.Fatal(err)
+			}
+			// ďalšie dáta firmy: audit, cenník s obrázkom, nákup so súborom
+			if err := s.AppendAudit(ctx, &audit.Entry{Time: time.Now(), CompanyID: c.ID, Channel: "ui", Category: audit.CatSettings, Action: "update", Summary: "zmena " + c.Name}); err != nil {
+				t.Fatal(err)
+			}
+			it := catalog.Item{Code: "K1", Name: "Kábel", Unit: "m", Price: m.FromInt(1), PriceMode: vat.PriceNet, Rate: vat.Rate23}
+			if err := s.SaveItem(ctx, c.ID, &it); err != nil {
+				t.Fatal(err)
+			}
+			if err := s.AddItemImage(ctx, &store.ItemImage{CompanyID: c.ID, ItemID: it.ID, Name: "a.png", ContentType: "image/png", Data: []byte("x")}); err != nil {
+				t.Fatal(err)
+			}
 		}
 		if err := s.SetSetting(ctx, "legal.vat", "x"); err != nil {
 			t.Fatal(err)
@@ -262,8 +276,17 @@ func Run(t *testing.T, newStore Factory) {
 		if l, _ := s.ListInvoices(ctx, a.ID, store.InvoiceFilter{}); len(l) != 0 {
 			t.Errorf("faktúry ostali: %d", len(l))
 		}
-		if _, err := s.GetSetting(ctx, fmt.Sprintf("stock.%d", a.ID)); !errors.Is(err, store.ErrNotFound) {
-			t.Errorf("nastavenie ostalo: %v", err)
+		for _, k := range []string{fmt.Sprintf("stock.%d", a.ID), fmt.Sprintf("dpfo.%d.2026", a.ID)} {
+			if _, err := s.GetSetting(ctx, k); !errors.Is(err, store.ErrNotFound) {
+				t.Errorf("nastavenie %s ostalo: %v", k, err)
+			}
+		}
+		if l, _ := s.ListItems(ctx, a.ID); len(l) != 0 {
+			t.Errorf("cenník ostal: %d", len(l))
+		}
+		// audit je nemenný — záznamy zmazanej firmy ostanú (aj kvôli reťazcu odtlačkov)
+		if l, _, _ := s.ListAudit(ctx, audit.Filter{}); len(l) != 2 {
+			t.Errorf("audit: %d záznamov, chcem 2", len(l))
 		}
 		// druhá firma a spoločné nastavenia ostanú
 		if l, _ := s.ListContacts(ctx, b.ID, ""); len(l) != 1 {
