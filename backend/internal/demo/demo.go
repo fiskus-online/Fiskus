@@ -16,6 +16,7 @@ import (
 	"github.com/palo-krnac/fiscus/backend/internal/catalog"
 	"github.com/palo-krnac/fiscus/backend/internal/chart"
 	"github.com/palo-krnac/fiscus/backend/internal/fx"
+	"github.com/palo-krnac/fiscus/backend/internal/household"
 	"github.com/palo-krnac/fiscus/backend/internal/invoice"
 	"github.com/palo-krnac/fiscus/backend/internal/ledger"
 	"github.com/palo-krnac/fiscus/backend/internal/logbook"
@@ -282,6 +283,9 @@ func Seed(ctx context.Context, a *app.App) (store.Company, error) {
 	}
 	if err := seedLedger(ctx, a, c); err != nil {
 		return c, fmt.Errorf("demo účtovníctvo: %w", err)
+	}
+	if err := seedHousehold(ctx, a); err != nil {
+		return c, fmt.Errorf("demo domácnosť: %w", err)
 	}
 	// upomienka najväčšiemu dlžníkovi (ostatní čakajú na prvú upomienku)
 	if groups, err := a.Overdue(ctx, c.ID); err == nil && len(groups) > 0 {
@@ -869,4 +873,88 @@ func seedStock(ctx context.Context, a *app.App, c store.Company, contactIDs []in
 	}
 	_, err = a.Issue(ctx, c.ID, inv.ID)
 	return err
+}
+
+// seedHousehold založí ukážkovú domácnosť: účty, rozpočet a pohyby za
+// posledné tri mesiace (do počtu firiem sa nepočíta).
+func seedHousehold(ctx context.Context, a *app.App) error {
+	h, err := a.CreateCompany(ctx, store.Company{Name: "Domácnosť Novákovci", Street: "Námestie SNP 1", City: "Banská Bystrica", Zip: "974 01",
+		Bookkeeping: store.BookkeepingHousehold})
+	if err != nil {
+		return err
+	}
+	acc := func(name string, kind household.AccountKind, opening string) (household.Account, error) {
+		return a.SaveHouseholdAccount(ctx, h.ID, household.Account{Name: name, Kind: kind, Opening: m.MustParse(opening)})
+	}
+	bank, err := acc("Bežný účet", household.Bank, "1240.50")
+	if err != nil {
+		return err
+	}
+	wallet, err := acc("Peňaženka", household.Cash, "85")
+	if err != nil {
+		return err
+	}
+	if _, err := acc("Sporenie", household.Savings, "3200"); err != nil {
+		return err
+	}
+	cats, err := a.HouseholdCategories(ctx, h.ID)
+	if err != nil {
+		return err
+	}
+	budget := map[string]string{"Potraviny": "450", "Reštaurácie": "60", "Auto a doprava": "180", "Voľný čas": "80", "Drogéria a domácnosť": "70"}
+	for i := range cats {
+		if b, ok := budget[cats[i].Name]; ok {
+			cats[i].Budget = m.MustParse(b)
+		}
+	}
+	if _, err := a.SaveHouseholdCategories(ctx, h.ID, cats); err != nil {
+		return err
+	}
+	today := a.Today()
+	first := invoice.NewDate(today.Year(), time.Month(today.Month()), 1)
+	type mv struct {
+		day         int
+		acc         int64
+		to          int64
+		amount, cat string
+		payee, note string
+	}
+	month := []mv{
+		{1, bank.ID, 0, "1850", "Mzda a príjem zo živnosti", "Demo elektroservis", "výber zo živnosti"},
+		{2, bank.ID, 0, "-520", "Bývanie", "Spoločenstvo vlastníkov", "zálohy a fond opráv"},
+		{3, bank.ID, wallet.ID, "300", "", "", "bankomat"},
+		{15, bank.ID, wallet.ID, "150", "", "", "bankomat"},
+		{4, wallet.ID, 0, "-46.80", "Potraviny", "Lidl", ""},
+		{6, bank.ID, 0, "-89", "Energie", "ZSE Energia", "elektrina"},
+		{7, bank.ID, 0, "-24.99", "Telefón a internet", "Orange Slovensko", ""},
+		{9, bank.ID, 0, "-62.30", "Auto a doprava", "Slovnaft", "nafta"},
+		{11, wallet.ID, 0, "-118.45", "Potraviny", "Kaufland", "veľký nákup"},
+		{12, bank.ID, 0, "-31.20", "Drogéria a domácnosť", "dm drogerie markt", ""},
+		{14, wallet.ID, 0, "-18.50", "Reštaurácie", "Bistro u Kamila", "obed"},
+		{16, bank.ID, 0, "-150", "Splátky a dlhy", "Home Credit", "splátka chladničky"},
+		{18, wallet.ID, 0, "-73.10", "Potraviny", "Tesco", ""},
+		{20, bank.ID, 0, "-13.99", "Voľný čas", "Netflix", ""},
+		{21, bank.ID, 0, "120", "Dávky a príspevky", "Sociálna poisťovňa", "rodinný prídavok"},
+		{23, bank.ID, 0, "-58", "Zdravie", "Dr.Max lekáreň", ""},
+		{25, wallet.ID, 0, "-96.40", "Potraviny", "Billa", ""},
+		{27, bank.ID, 0, "-35", "Poistenie", "Allianz", "PZP"},
+	}
+	for back := 2; back >= 0; back-- {
+		start := first.AddMonths(-back)
+		for _, x := range month {
+			d := start.AddDays(x.day - 1)
+			if d.After(today) {
+				continue
+			}
+			amt := m.MustParse(x.amount)
+			if back == 1 && x.cat == "Potraviny" {
+				amt = amt.Add(m.MustParse("-40")) // minulý mesiac viac — rozpočet prekročený
+			}
+			e := household.Entry{Date: d, AccountID: x.acc, ToAccountID: x.to, Amount: amt, Category: x.cat, Payee: x.payee, Note: x.note}
+			if _, err := a.SaveHouseholdEntry(ctx, h.ID, e); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }

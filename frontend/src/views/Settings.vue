@@ -63,7 +63,8 @@ function resetUnits() {
   form.value.units = [...codes.defaultUnits]
 }
 
-const companyFields = [
+const household = computed(() => session.company?.bookkeeping === 'household')
+const allCompanyFields = [
   { key: 'name', label: 'Obchodné meno', span: 2, autocomplete: 'organization' },
   { key: 'street', label: 'Ulica a číslo', span: 2, autocomplete: 'street-address' },
   { key: 'zip', label: 'PSČ', autocomplete: 'postal-code' },
@@ -73,6 +74,12 @@ const companyFields = [
   { key: 'email', label: 'E-mail', span: 2, autocomplete: 'email' },
   { key: 'phone', label: 'Telefón', span: 2, autocomplete: 'tel' },
 ]
+// domácnosť: iba názov, adresa a kontakt (bez IČO, DIČ)
+const companyFields = computed(() =>
+  household.value
+    ? allCompanyFields.filter((f) => !['ico', 'dic'].includes(f.key)).map((f) => (f.key === 'name' ? { ...f, label: 'Názov domácnosti' } : f))
+    : allCompanyFields,
+)
 
 // ---- logo ----
 const logoInput = ref(null)
@@ -164,7 +171,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
 
     <div class="body">
       <fieldset v-if="section === 'firma'" class="form-section">
-        <legend>Údaje na faktúre</legend>
+        <legend>{{ household ? 'Údaje domácnosti' : 'Údaje na faktúre' }}</legend>
         <div class="form-grid">
           <FormField v-for="f in companyFields" :key="f.key" :label="f.label" :span="f.span" :error="errors[f.key]">
             <IcoInput v-if="f.key === 'ico'" v-model="form.ico" :invalid="!!errors.ico" @found="(c) => (form = fillFromRegistry(form, c))" />
@@ -173,7 +180,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
         </div>
       </fieldset>
 
-      <fieldset v-if="section === 'firma'" class="form-section">
+      <fieldset v-if="section === 'firma' && !household" class="form-section">
         <legend>Účtovníctvo</legend>
         <div class="books" role="radiogroup" aria-label="Druh účtovníctva">
           <label v-for="o in bookkeepingOptions" :key="o.value" class="book" :class="{ on: form.bookkeeping === o.value }">
@@ -185,7 +192,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
         <p v-if="migrationNote(session.company)" class="help">{{ migrationNote(session.company) }}</p>
       </fieldset>
 
-      <fieldset v-if="section === 'firma'" class="form-section">
+      <fieldset v-if="section === 'firma' && !household" class="form-section">
         <legend>Logo na dokladoch</legend>
         <div class="logo-row">
           <div class="logo-box">

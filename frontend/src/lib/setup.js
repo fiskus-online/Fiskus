@@ -20,10 +20,16 @@ export function bookkeepingLabel(v) {
   return bookkeepingOptions.find((o) => o.value === v)?.label ?? 'Nezvolené (zobrazuje sa oboje)'
 }
 
-/** Patrí položka menu k zvolenému účtovníctvu? Nezvolené = všetko. */
+/** Patrí položka menu k zvolenému účtovníctvu? Nezvolené = všetko okrem
+ * domácnosti. Domácnosť má iba svoje položky a spoločné (home: true). */
 export function bookAllows(item, bookkeeping) {
+  if (bookkeeping === 'household') return item.book === 'household' || !!item.home
+  if (item.book === 'household') return false
   return !item.book || !bookkeeping || item.book === bookkeeping
 }
+
+/** Úvodná stránka podľa druhu firmy. */
+export const homePath = (company) => (company?.bookkeeping === 'household' ? '/domacnost' : '/faktury')
 
 /** Položky DPH (vat: true) iba pre platiteľa DPH. */
 export function vatAllows(item, company) {
@@ -52,4 +58,12 @@ export function migrationNote(company) {
   const d = new Date(company.migratedAt)
   const when = Number.isNaN(d.getTime()) ? company.migratedAt : `${d.getDate()}. ${d.getMonth() + 1}. ${d.getFullYear()}`
   return `Doklady sa už preniesli z programu ${company.migratedFrom} (${when}). Ďalší prenos dokladov nie je možný — adresár a cenník sa prenášajú kedykoľvek.`
+}
+
+/** Patrí obrazovka k druhu firmy? Domácnosť má svoje obrazovky, nastavenia
+ * a audit; firma všetko okrem domácnosti. */
+export function pathFits(path, bookkeeping, isSettings = () => false) {
+  const home = path === '/domacnost' || path.startsWith('/domacnost/')
+  if (bookkeeping !== 'household') return !home
+  return home || path === '/audit' || path === '/nastavenia' || isSettings(path)
 }

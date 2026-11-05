@@ -32,16 +32,19 @@ const errors = ref({})
 
 const caps = computed(() => info.value ?? session.caps)
 const lic = computed(() => info.value?.license ?? null)
-const count = computed(() => session.companies.length)
+// domácnosť sa do počtu firiem licencie nepočíta
+const businesses = computed(() => session.companies.filter((c) => c.bookkeeping !== 'household'))
+const count = computed(() => businesses.value.length)
+const households = computed(() => session.companies.filter((c) => c.bookkeeping === 'household'))
 const search = ref('')
 const visible = computed(() => {
   const terms = searchTerms(search.value)
-  return session.companies.filter((c) => matches(terms, [c.name, c.ico, c.dic, c.icdph, c.city]))
+  return session.companies.filter((c) => matches(terms, [c.name, c.ico, c.dic, c.icdph, c.city, c.bookkeeping === 'household' ? 'domácnosť' : '']))
 })
 const canAdd = computed(() => !caps.value.maxCompanies || count.value < caps.value.maxCompanies)
 const limitText = computed(() => {
   if (canAdd.value) return ''
-  if (!server.value) return 'Desktopová verzia je pre jednu firmu. Viac firiem zvládne serverová verzia.'
+  if (!server.value) return 'Desktopová verzia je pre jednu firmu (domácností môže byť viac). Viac firiem zvládne serverová verzia.'
   if (lic.value && !lic.value.valid) return 'Licencia vypršala — nové firmy založíte po jej obnovení.'
   if (caps.value.plan === 'multi') return `Licencia je na ${caps.value.maxCompanies} firiem a všetky sú využité.`
   return `Bezplatná serverová verzia je pre jednu firmu. Pre viac firiem nahrajte licenciu (${caps.value.price}).`
@@ -76,8 +79,10 @@ async function upload() {
   }
 }
 
-function openCreate() {
-  form.value = { name: '', ico: '', dic: '', icdph: '', street: '', city: '', zip: '', vatPayer: false }
+function openCreate(household = false) {
+  form.value = household
+    ? { name: '', street: '', city: '', zip: '', vatPayer: false, bookkeeping: 'household' }
+    : { name: '', ico: '', dic: '', icdph: '', street: '', city: '', zip: '', vatPayer: false }
   errors.value = {}
   creating.value = true
 }
@@ -92,8 +97,9 @@ async function create() {
     // nová firma: správca je jej členom → obnoviť práva
     session.me = await api.me()
     creating.value = false
-    toast.add({ severity: 'success', summary: 'Firma založená', detail: c.name, life: 3000 })
-    router.push('/nastavenia')
+    const hh = c.bookkeeping === 'household'
+    toast.add({ severity: 'success', summary: hh ? 'Domácnosť založená' : 'Firma založená', detail: c.name, life: 3000 })
+    router.push(hh ? '/domacnost/ucty' : '/nastavenia')
   } catch (e) {
     errors.value = e.fieldMap?.() ?? {}
     if (!Object.keys(errors.value).length) toast.add({ severity: 'error', summary: 'Firmu nemožno založiť', detail: e.message, life: 6000 })
@@ -106,11 +112,12 @@ async function create() {
 <template>
   <div class="page">
     <header class="head">
-      <h1>{{ server ? 'Firmy a licencia' : 'Firma' }}</h1>
+      <h1>{{ server ? 'Firmy a licencia' : 'Firma a domácnosť' }}</h1>
       <span class="count">{{ count }}{{ caps.maxCompanies ? ` / ${caps.maxCompanies}` : '' }}</span>
       <div class="spacer" />
-      <ExportButton v-if="count" name="Firmy" :columns="companyColumns" :rows="visible" />
-      <Button size="small" icon="pi pi-plus" label="Založiť firmu" :disabled="!canAdd" @click="openCreate" />
+      <ExportButton v-if="session.companies.length" name="Firmy" :columns="companyColumns" :rows="visible" />
+      <Button size="small" icon="pi pi-home" label="Založiť domácnosť" severity="secondary" outlined @click="openCreate(true)" />
+      <Button size="small" icon="pi pi-plus" label="Založiť firmu" :disabled="!canAdd" @click="openCreate(false)" />
     </header>
 
     <p v-if="!count" class="welcome">
@@ -118,19 +125,24 @@ async function create() {
     </p>
     <p v-else-if="limitText" class="note">{{ limitText }}</p>
 
-    <IconField v-if="count" class="search">
+    <p v-if="count && !households.length" class="note">
+      Domáce účtovníctvo (rodinný rozpočet, účty, výdavky) vediete v samostatnej domácnosti — tlačidlo „Založiť domácnosť“. Do počtu
+      firiem sa nepočíta.
+    </p>
+
+    <IconField v-if="session.companies.length" class="search">
       <InputIcon class="pi pi-search" />
       <InputText v-model="search" placeholder="Hľadať firmu, IČO, obec" size="small" aria-label="Hľadať firmu" />
     </IconField>
 
-    <table v-if="count" class="companies">
+    <table v-if="session.companies.length" class="companies">
       <thead>
         <tr><th>Firma</th><th>IČO</th><th>IČ DPH</th><th aria-label="Akcie" /></tr>
       </thead>
       <tbody>
         <tr v-if="!visible.length"><td colspan="4" class="empty">Žiadna firma nevyhovuje hľadaniu.</td></tr>
         <tr v-for="c in visible" :key="c.id" :class="{ current: c.id === session.companyId }">
-          <td class="name" data-label="Firma">{{ c.name }}</td>
+          <td class="name" data-label="Firma">{{ c.name }}<small v-if="c.bookkeeping === 'household'" class="hh"> · domácnosť</small></td>
           <td data-label="IČO">{{ c.ico || '—' }}</td>
           <td data-label="IČ DPH">{{ c.icdph || '—' }}</td>
           <td class="act">
@@ -185,8 +197,19 @@ async function create() {
       </form>
     </section>
 
-    <Dialog v-model:visible="creating" header="Založiť firmu" modal :style="{ width: '34rem' }" :breakpoints="{ '560px': '94vw' }">
-      <form v-if="form" class="form-grid create" @submit.prevent="create">
+    <Dialog v-model:visible="creating" :header="form?.bookkeeping === 'household' ? 'Založiť domácnosť' : 'Založiť firmu'" modal :style="{ width: '34rem' }" :breakpoints="{ '560px': '94vw' }">
+      <form v-if="form && form.bookkeeping === 'household'" class="form-grid create" @submit.prevent="create">
+        <FormField label="Názov domácnosti" :error="errors.name" :span="2"><InputText v-model="form.name" fluid placeholder="napr. Krnáčovci" autofocus /></FormField>
+        <FormField label="Ulica" :error="errors.street" :span="2"><InputText v-model="form.street" fluid /></FormField>
+        <FormField label="PSČ" :error="errors.zip"><InputText v-model="form.zip" fluid /></FormField>
+        <FormField label="Obec" :error="errors.city"><InputText v-model="form.city" fluid /></FormField>
+        <p class="hint">Domácnosť má vlastné účty, pohyby, kategórie a rozpočet — oddelene od firmy. Výbery zo živnosti do nej prenesiete v Pohyboch.</p>
+        <div class="actions">
+          <Button label="Zrušiť" severity="secondary" text size="small" @click="creating = false" />
+          <Button type="submit" label="Založiť" icon="pi pi-check" size="small" :loading="busy" />
+        </div>
+      </form>
+      <form v-else-if="form" class="form-grid create" @submit.prevent="create">
         <FormField label="IČO" :error="errors.ico">
           <IcoInput v-model="form.ico" :invalid="!!errors.ico" auto @found="(c) => (form = fillFromRegistry(form, c))" />
         </FormField>
@@ -224,6 +247,10 @@ async function create() {
 .head h1 {
   font-size: var(--fs-xl);
   margin: 0;
+}
+.hh {
+  color: var(--ink-faint);
+  font-weight: 400;
 }
 .count {
   color: var(--ink-faint);
