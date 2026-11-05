@@ -363,6 +363,7 @@ export const api = {
   importContacts: (cid, file, apply = false) => request('POST', `/api/companies/${cid}/contacts/import${apply ? '?apply=1' : ''}`, file),
   mobile: () => request('GET', '/api/mobile'),
   setMobile: (enabled, port) => request('PUT', '/api/mobile', { enabled, port }),
+  setMobileAddress: (address) => request('PUT', '/api/mobile/address', { address }),
   newPairing: () => request('POST', '/api/mobile/pairing', {}),
   removeDevice: (id) => request('DELETE', `/api/mobile/devices/${id}`),
   pairMobile: (code, name) => request('POST', '/api/mobile/pair', { code, name }),
