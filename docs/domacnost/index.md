@@ -36,6 +36,29 @@ Slovnaft → Auto a doprava, ZSE → Energie…).
 výpis*. Kategórie sa navrhnú rovnako; opakované nahratie toho istého výpisu
 nič nezdvojí. Platby v cudzej mene sa vynechajú.
 
+## Bločky
+
+Tlačidlo **Bloček** (v prehľade aj v pohyboch) otvorí fotoaparát alebo výber
+fotky. Bloček odfoťte celý, aj s QR kódom.
+
+| Bloček | Odkiaľ sú položky |
+|---|---|
+| s QR kódom eKasa | priamo z Finančnej správy — presné názvy a ceny |
+| bez QR kódu | Fiškus ho prečíta z fotky cez Claude API (kľúč v Nastaveniach → Prístup pre AI) |
+
+Každú položku Fiškus zaradí do kategórie: rožky a mlieko do potravín,
+šampón do drogérie, lieky do zdravia. Pred zapísaním ich skontrolujete
+a zmeníte; tlačidlom *Všetky do kategórie…* zaradíte celý nákup naraz.
+Ako položku zaradíte, tak ju Fiškus navrhne nabudúce. Zľava je samostatná
+položka, rozdiel k celkovej sume (zaokrúhlenie) tiež.
+
+Bloček sa zapíše ako jeden výdavok rozdelený na položky; prehľad
+a rozpočet počítajú každú kategóriu zvlášť. Fotka ostane pri pohybe.
+Ten istý bloček sa druhýkrát nezapíše.
+
+Na telefóne spárovanom s programom (*Mobil v sieti*) sa bloček po odfotení
+zapíše hneď s navrhnutými kategóriami, upraviť ich môžete neskôr v Pohyboch.
+
 ## Peniaze zo živnosti
 
 Tlačidlo *Zo živnosti* ukáže výbery a vklady podnikateľa z peňažného denníka

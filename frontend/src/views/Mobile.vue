@@ -2,7 +2,7 @@
 // Mobil: odfotenie bločku eKasa. QR kód sa prečíta z fotky priamo v telefóne
 // (jsQR), na server ide iba kód a zmenšená fotka. Funguje aj cez http v sieti
 // (fotoaparát cez <input capture>, bez živého náhľadu kamery).
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import jsQR from 'jsqr'
 import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
@@ -10,14 +10,56 @@ import SelectButton from 'primevue/selectbutton'
 import { api, ApiError } from '../lib/api.js'
 import { can, session } from '../lib/session.js'
 import { formatMoney, formatDate } from '../lib/format.js'
-import { findQR, fitSize, payments, receiptId } from '../lib/receipt.js'
+import { findQR, imageReader, loadImage, payments, receiptId, shrinkImage } from '../lib/receipt.js'
 
 const fileInput = ref(null)
 const busy = ref('')
 const error = ref('')
 const manual = ref('')
 const done = ref([]) // zapísané bločky v tejto relácii (najnovší hore)
-const canWrite = computed(() => can('purchases.write'))
+// domácnosť: bloček sa zapíše ako pohyb rozdelený na položky (kategórie
+// navrhne server, upraviť ich možno v programe); bez QR kódu sa číta fotka
+const hh = computed(() => session.company?.bookkeeping === 'household')
+const canWrite = computed(() => can(hh.value ? 'ledger.write' : 'purchases.write'))
+const accounts = ref([])
+const account = ref(null)
+watch(hh, async (on) => {
+  if (!on) return
+  try {
+    accounts.value = (await api.hhAccounts(session.companyId)).filter((a) => !a.closed)
+    let saved = 0
+    try {
+      saved = Number(localStorage.getItem('fiskus.hhAccount'))
+    } catch {
+      /* súkromné okno */
+    }
+    account.value = accounts.value.find((a) => a.id === saved)?.id ?? accounts.value.find((a) => a.kind === 'cash')?.id ?? accounts.value[0]?.id ?? null
+  } catch (e) {
+    error.value = e.message
+  }
+}, { immediate: true })
+function rememberAccount(v) {
+  try {
+    localStorage.setItem('fiskus.hhAccount', String(v))
+  } catch {
+    /* súkromné okno — nevadí */
+  }
+}
+
+async function sendHousehold(qr, photo) {
+  busy.value = 'send'
+  try {
+    const d = qr ? await api.hhReceiptQR(session.companyId, qr) : await api.hhReceiptPhoto(session.companyId, photo)
+    const saved = await api.hhSaveEntry(session.companyId, { ...d.entry, accountId: account.value || d.entry.accountId })
+    if (photo) await api.hhSavePhoto(session.companyId, saved.id, photo).catch(() => {})
+    done.value = [{ id: saved.id, hh: true, name: saved.payee || 'Nákup', date: saved.date, items: saved.split?.length ?? 0, total: saved.amount.replace('-', ''), category: saved.category }, ...done.value].slice(0, 20)
+    manual.value = ''
+  } catch (err) {
+    error.value = err instanceof ApiError && err.fields.length ? err.fields[0].message : err.message
+  } finally {
+    busy.value = ''
+  }
+}
 
 function remembered() {
   try {
@@ -35,40 +77,6 @@ function rememberPayment(v) {
   }
 }
 
-function loadImage(file) {
-  return new Promise((resolve, reject) => {
-    const url = URL.createObjectURL(file)
-    const img = new Image()
-    img.onload = () => resolve({ img, url })
-    img.onerror = () => {
-      URL.revokeObjectURL(url)
-      reject(new Error('Fotka sa nedá otvoriť'))
-    }
-    img.src = url
-  })
-}
-
-// zmenšená fotka na uloženie (JPEG, dlhšia strana 1600 px)
-function shrink(img) {
-  const { w, h } = fitSize(img.naturalWidth, img.naturalHeight, 1600)
-  const c = document.createElement('canvas')
-  c.width = w
-  c.height = h
-  c.getContext('2d').drawImage(img, 0, 0, w, h)
-  return new Promise((resolve) => c.toBlob(resolve, 'image/jpeg', 0.82))
-}
-
-function reader(img) {
-  const c = document.createElement('canvas')
-  const ctx = c.getContext('2d', { willReadFrequently: true })
-  return (w, h) => {
-    c.width = w
-    c.height = h
-    ctx.drawImage(img, 0, 0, w, h)
-    return ctx.getImageData(0, 0, w, h)
-  }
-}
-
 async function onPhoto(e) {
   const file = e.target.files?.[0]
   e.target.value = ''
@@ -79,12 +87,17 @@ async function onPhoto(e) {
   try {
     const loaded = await loadImage(file)
     url = loaded.url
-    const text = findQR(jsQR, loaded.img.naturalWidth, loaded.img.naturalHeight, reader(loaded.img))
+    const text = findQR(jsQR, loaded.img.naturalWidth, loaded.img.naturalHeight, imageReader(loaded.img))
+    if (hh.value) {
+      const photo = await shrinkImage(loaded.img)
+      await sendHousehold(receiptId(text) ? text : '', photo)
+      return
+    }
     if (!text) {
       error.value = 'Na fotke sa nenašiel QR kód. Odfoťte ho zblízka, ostro a celý (aj s bielym okrajom).'
       return
     }
-    const photo = await shrink(loaded.img)
+    const photo = await shrinkImage(loaded.img)
     await send(text, photo)
   } catch (err) {
     error.value = err.message
@@ -114,7 +127,8 @@ function sendManual() {
     return
   }
   error.value = ''
-  send(id, null)
+  if (hh.value) sendHousehold(id, null)
+  else send(id, null)
 }
 </script>
 
@@ -130,19 +144,22 @@ function sendManual() {
         <strong>Bločky</strong>
         <span>{{ session.company?.name }}</span>
       </div>
-      <RouterLink to="/faktury" class="full">Celý program</RouterLink>
+      <RouterLink :to="hh ? '/domacnost' : '/faktury'" class="full">Celý program</RouterLink>
     </header>
 
     <main class="m-body">
       <p v-if="!canWrite" class="m-error">Na zapisovanie dokladov nemáte oprávnenie.</p>
       <template v-else>
-        <SelectButton v-model="payment" :options="payments" option-label="label" option-value="value" :allow-empty="false" class="pay"
+        <SelectButton v-if="hh" v-model="account" :options="accounts" option-label="name" option-value="id" :allow-empty="false" class="pay"
+          aria-label="Zaplatené z účtu" @update:model-value="rememberAccount" />
+        <SelectButton v-else v-model="payment" :options="payments" option-label="label" option-value="value" :allow-empty="false" class="pay"
           aria-label="Spôsob úhrady" @update:model-value="rememberPayment" />
 
         <button type="button" class="shoot" :disabled="!!busy" @click="fileInput.click()">
           <i class="pi" :class="busy ? 'pi-spin pi-spinner' : 'pi-camera'" aria-hidden="true" />
-          <span>{{ busy === 'read' ? 'Čítam QR kód…' : busy === 'send' ? 'Zapisujem bloček…' : 'Odfotiť bloček' }}</span>
-          <small>Odfoťte QR kód na bločku — zvyšok sa doplní z eKasy</small>
+          <span>{{ busy === 'read' ? 'Čítam QR kód…' : busy === 'send' ? (hh ? 'Čítam a zapisujem bloček…' : 'Zapisujem bloček…') : 'Odfotiť bloček' }}</span>
+          <small v-if="hh">Celý bloček aj s QR kódom — položky sa zaradia do kategórií</small>
+          <small v-else>Odfoťte QR kód na bločku — zvyšok sa doplní z eKasy</small>
         </button>
         <input ref="fileInput" type="file" accept="image/*" capture="environment" class="hidden" @change="onPhoto" />
 
@@ -158,10 +175,16 @@ function sendManual() {
 
         <section v-if="done.length" class="list" aria-label="Zapísané bločky">
           <h2>Zapísané</h2>
-          <RouterLink v-for="p in done" :key="p.id" :to="`/prijate/${p.id}`" class="row">
-            <span class="who">{{ p.supplier.name }}<small>{{ formatDate(p.issueDate) }}, {{ p.number }}</small></span>
-            <strong class="sum">{{ formatMoney(p.total) }}</strong>
-          </RouterLink>
+          <template v-for="p in done" :key="p.id">
+            <RouterLink v-if="p.hh" to="/domacnost/pohyby" class="row">
+              <span class="who">{{ p.name }}<small>{{ formatDate(p.date) }}, {{ p.items }} položiek · {{ p.category }}</small></span>
+              <strong class="sum">{{ formatMoney(p.total) }}</strong>
+            </RouterLink>
+            <RouterLink v-else :to="`/prijate/${p.id}`" class="row">
+              <span class="who">{{ p.supplier.name }}<small>{{ formatDate(p.issueDate) }}, {{ p.number }}</small></span>
+              <strong class="sum">{{ formatMoney(p.total) }}</strong>
+            </RouterLink>
+          </template>
         </section>
       </template>
     </main>

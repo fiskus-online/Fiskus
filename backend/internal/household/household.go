@@ -6,6 +6,7 @@
 package household
 
 import (
+	"fmt"
 	"sort"
 	"strings"
 	"unicode"
@@ -49,11 +50,32 @@ type Entry struct {
 	Category    string       `json:"category"`
 	Payee       string       `json:"payee"` // obchod, firma, osoba
 	Note        string       `json:"note"`
+	// Split je rozdelenie pohybu na položky s vlastnou kategóriou (bloček
+	// s potravinami aj drogériou); súčet položiek je Amount. Category je
+	// potom kategória najväčšej položky.
+	Split []Split `json:"split,omitempty"`
 	// ObligationID je záväzok, ktorého splátkou pohyb je (0 = žiadny).
 	ObligationID int64 `json:"obligationId,omitempty"`
 	// Source je pôvod pohybu z importu ("bank:<odtlačok>", "biz:<firma>:<pohyb>");
 	// pohyb s rovnakým pôvodom sa druhýkrát neuloží.
 	Source string `json:"source,omitempty"`
+}
+
+// Split je položka rozdeleného pohybu (suma so znamienkom ako pohyb).
+type Split struct {
+	Category string    `json:"category"`
+	Amount   money.Dec `json:"amount"`
+	Note     string    `json:"note"` // názov položky z bločku
+	Quantity string    `json:"quantity,omitempty"`
+}
+
+// Parts vráti časti pohybu na súčty: položky rozdeleného pohybu, inak
+// pohyb celý.
+func (e Entry) Parts() []Split {
+	if len(e.Split) > 0 {
+		return e.Split
+	}
+	return []Split{{Category: e.Category, Amount: e.Amount}}
 }
 
 // Transfer: je pohyb prevod medzi účtami?
@@ -131,7 +153,33 @@ func (e *Entry) Normalize() {
 	e.Amount = e.Amount.RoundCents()
 	if e.Transfer() {
 		e.Category = ""
+		e.Split = nil
 	}
+	if len(e.Split) > 0 {
+		// kategória pohybu = kategória s najväčšou sumou (na zobrazenie)
+		by := map[string]money.Dec{}
+		best := ""
+		for i := range e.Split {
+			x := &e.Split[i]
+			x.Category = strings.TrimSpace(x.Category)
+			x.Note = strings.TrimSpace(x.Note)
+			x.Amount = x.Amount.RoundCents()
+			by[x.Category] = by[x.Category].Add(x.Amount)
+		}
+		for _, x := range e.Split {
+			if best == "" || absDec(by[x.Category]).Cmp(absDec(by[best])) > 0 {
+				best = x.Category
+			}
+		}
+		e.Category = best
+	}
+}
+
+func absDec(d money.Dec) money.Dec {
+	if d.Sign() < 0 {
+		return d.Neg()
+	}
+	return d
 }
 
 // Validate skontroluje pohyb.
@@ -155,6 +203,18 @@ func (e Entry) Validate() error {
 		}
 	} else if e.Category == "" {
 		fe = append(fe, FieldError{Field: "category", Message: "Vyberte kategóriu"})
+	}
+	if len(e.Split) > 0 {
+		sum := money.Zero
+		for i, x := range e.Split {
+			if x.Category == "" {
+				fe = append(fe, FieldError{Field: fmt.Sprintf("split.%d", i), Message: "Vyberte kategóriu položky"})
+			}
+			sum = sum.Add(x.Amount)
+		}
+		if !sum.Equal(e.Amount) {
+			fe = append(fe, FieldError{Field: "split", Message: fmt.Sprintf("Súčet položiek %s € nesedí so sumou %s €", sum.Display(), e.Amount.Display())})
+		}
 	}
 	return verr(fe)
 }
@@ -210,26 +270,28 @@ func Summarize(year int, cats []Category, entries []Entry) Overview {
 		if e.Transfer() || e.Date.Year() != year {
 			continue
 		}
-		i, ok := idx[e.Category]
-		if !ok {
-			// kategória, ktorá už v zozname nie je — znamienko určí druh
-			i = len(ov.Categories)
-			idx[e.Category] = i
-			ov.Categories = append(ov.Categories, CategoryMonth{Name: e.Category, Income: e.Amount.Sign() > 0})
+		for _, part := range e.Parts() {
+			i, ok := idx[part.Category]
+			if !ok {
+				// kategória, ktorá už v zozname nie je — znamienko pohybu určí druh
+				i = len(ov.Categories)
+				idx[part.Category] = i
+				ov.Categories = append(ov.Categories, CategoryMonth{Name: part.Category, Income: e.Amount.Sign() > 0})
+			}
+			c := &ov.Categories[i]
+			m := e.Date.Month() - 1
+			v := part.Amount
+			if !c.Income {
+				v = v.Neg()
+				ov.Expense[m] = ov.Expense[m].Add(v)
+				ov.TotalOut = ov.TotalOut.Add(v)
+			} else {
+				ov.Income[m] = ov.Income[m].Add(v)
+				ov.TotalIn = ov.TotalIn.Add(v)
+			}
+			c.Months[m] = c.Months[m].Add(v)
+			c.Total = c.Total.Add(v)
 		}
-		c := &ov.Categories[i]
-		m := e.Date.Month() - 1
-		v := e.Amount
-		if !c.Income {
-			v = v.Neg()
-			ov.Expense[m] = ov.Expense[m].Add(v)
-			ov.TotalOut = ov.TotalOut.Add(v)
-		} else {
-			ov.Income[m] = ov.Income[m].Add(v)
-			ov.TotalIn = ov.TotalIn.Add(v)
-		}
-		c.Months[m] = c.Months[m].Add(v)
-		c.Total = c.Total.Add(v)
 	}
 	ov.Net = ov.TotalIn.Sub(ov.TotalOut)
 	return ov

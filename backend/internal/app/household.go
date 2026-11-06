@@ -241,12 +241,18 @@ func (a *App) checkEntry(ctx context.Context, companyID int64, e household.Entry
 		}
 	}
 	if !e.Transfer() {
+		have := map[string]bool{}
 		for _, c := range cats {
-			if c.Name == e.Category {
-				return nil
+			have[c.Name] = true
+		}
+		for i, x := range e.Split {
+			if !have[x.Category] {
+				return vErr(fmt.Sprintf("split.%d", i), "Kategória „"+x.Category+"“ nie je v zozname")
 			}
 		}
-		return vErr("category", "Kategória „"+e.Category+"“ nie je v zozname — doplňte ju v kategóriách")
+		if !have[e.Category] {
+			return vErr("category", "Kategória „"+e.Category+"“ nie je v zozname — doplňte ju v kategóriách")
+		}
 	}
 	return nil
 }
@@ -265,8 +271,8 @@ func (a *App) SaveHouseholdEntry(ctx context.Context, companyID int64, e househo
 		}
 		before = &old
 		e.Source = old.Source // pôvod importu sa nemení
-	} else {
-		e.Source = ""
+	} else if !strings.HasPrefix(e.Source, "ekasa:") && !strings.HasPrefix(e.Source, "photo:") {
+		e.Source = "" // nový pohyb: pôvod iba z návrhu bločku (proti dvojitému zápisu)
 	}
 	s, err := a.householdSettings(ctx, companyID)
 	if err != nil {
@@ -275,7 +281,9 @@ func (a *App) SaveHouseholdEntry(ctx context.Context, companyID int64, e househo
 	if err := a.checkEntry(ctx, companyID, e, s.Categories); err != nil {
 		return e, err
 	}
-	if err := a.Store.SaveHHEntry(ctx, companyID, &e); err != nil {
+	if err := a.Store.SaveHHEntry(ctx, companyID, &e); errors.Is(err, store.ErrDuplicate) {
+		return e, vErr("source", "Tento bloček už je v domácnosti zapísaný")
+	} else if err != nil {
 		return e, err
 	}
 	a.record(ctx, companyID, audit.CatLedger, "save", "household_entry", e.ID, "Domácnosť: "+entrySummary(e), before, e)
