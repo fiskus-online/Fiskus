@@ -8,6 +8,7 @@ import InputText from 'primevue/inputtext'
 import Button from 'primevue/button'
 import { api } from '../lib/api.js'
 import { normalizeICO, validICO } from '../lib/registry.js'
+import { inBrowser } from '../lib/install.js'
 
 const props = defineProps({
   modelValue: { type: String, default: '' },
@@ -36,7 +37,8 @@ async function lookup() {
       life: c.terminated ? 6000 : 2500,
     })
   } catch (e) {
-    toast.add({ severity: e.status === 404 ? 'warn' : 'error', summary: e.message, life: 5000 })
+    // v prehliadači výzvu na inštaláciu zobrazí dialóg (status 501)
+    if (e.status !== 501) toast.add({ severity: e.status === 404 ? 'warn' : 'error', summary: e.message, life: 5000 })
   } finally {
     loading.value = false
   }
@@ -46,7 +48,8 @@ watch(
   () => props.modelValue,
   (v) => {
     const ico = normalizeICO(v)
-    if (props.auto && ico !== lastAuto && validICO(ico)) {
+    // v prehliadači register nie je — nevyhľadávať samo počas písania
+    if (props.auto && !inBrowser && ico !== lastAuto && validICO(ico)) {
       lastAuto = ico
       lookup()
     }

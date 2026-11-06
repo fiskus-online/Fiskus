@@ -16,6 +16,9 @@ etapách je v [pláne vývoja](./ROADMAP.md).
 - **Mzdy**: zamestnanci a dohodári, výpočet mzdy, odvodov po fondoch,
   zdravotného poistenia, preddavku na daň a daňového bonusu za roky 2025
   a 2026, výplatná listina so súčtami na úhradu a výplatné pásky.
+- **Fiškus v prehliadači**: bez inštalácie, údaje iba v úložisku prehliadača
+  na vašom počítači. Funkcie nainštalovaného programu ponúknu stiahnutie;
+  záloha a obnova súborom `.fbk` v oboch smeroch.
 - **Uzávierka roka** v jednoduchom účtovníctve: kontroly, uzamknutie roka,
   prenos stavov účtov do ďalšieho roka, otvorenie s dôvodom, tlač závierky.
 - **Daň z príjmov typ B — rodina a straty**: deti a daňový bonus, manžel/ka,
