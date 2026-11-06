@@ -13,6 +13,8 @@ etapách je v [pláne vývoja](./ROADMAP.md).
 
 ## Pripravuje sa (0.4)
 
+- **Uzávierka roka** v jednoduchom účtovníctve: kontroly, uzamknutie roka,
+  prenos stavov účtov do ďalšieho roka, otvorenie s dôvodom, tlač závierky.
 - **Daň z príjmov typ B — rodina a straty**: deti a daňový bonus, manžel/ka,
   straty z minulých rokov, bonus od zamestnávateľa a počet príloh priamo
   vo Fiškuse aj v XML pre eDane.

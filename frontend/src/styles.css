@@ -233,3 +233,14 @@ kbd {
     line-height: 42px;
   }
 }
+
+/* tlač: bez bočného menu a hlavičky, obsah na celú šírku */
+@media print {
+  .shell {
+    display: block !important;
+  }
+  .sidebar,
+  .topbar {
+    display: none !important;
+  }
+}

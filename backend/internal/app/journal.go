@@ -154,6 +154,9 @@ func (a *App) SetJournalOpening(ctx context.Context, companyID int64, year int, 
 	if year < 2000 || year > 2100 {
 		return mfaFieldErr("year", "Neplatný rok")
 	}
+	if err := a.checkOpenYear(ctx, companyID, year); err != nil {
+		return err
+	}
 	clean := map[string]money.Dec{}
 	for k, v := range bank {
 		k = normIBAN(k)
@@ -221,6 +224,16 @@ func (a *App) journalSources(ctx context.Context, companyID int64, year int) ([]
 	return out, nil
 }
 
+// closingYear vráti rok uzávierkovej operácie z kľúča close:ROK:N.
+func closingYear(key string) (int, bool) {
+	p := strings.Split(key, ":")
+	if len(p) < 2 || p[0] != "close" {
+		return 0, false
+	}
+	y, err := strconv.Atoi(p[1])
+	return y, err == nil
+}
+
 // closingPrefix je začiatok kľúča uzávierkovej operácie: close:ROK:N.
 func closingPrefix(year int) string { return "close:" + strconv.Itoa(year) + ":" }
 
@@ -245,6 +258,9 @@ func (a *App) AddClosing(ctx context.Context, companyID int64, year int, text st
 	}
 	if year < 2000 || year > 2100 {
 		return "", mfaFieldErr("year", "Neplatný rok")
+	}
+	if err := a.checkOpenYear(ctx, companyID, year); err != nil {
+		return "", err
 	}
 	overrides, err := a.Store.ListJournalOverrides(ctx, companyID)
 	if err != nil {
@@ -410,6 +426,15 @@ func (a *App) journalEntry(ctx context.Context, companyID int64, key string) (jo
 func (a *App) ClassifyJournal(ctx context.Context, companyID int64, key string, lines []journal.Line, note string) error {
 	if err := a.Require(ctx, companyID, auth.PermLedgerWrite); err != nil {
 		return err
+	}
+	if y, ok := closingYear(key); ok {
+		if err := a.checkOpenYear(ctx, companyID, y); err != nil {
+			return err
+		}
+	} else if e, err := a.journalEntry(ctx, companyID, key); err == nil {
+		if err := a.checkOpen(ctx, companyID, e.Date); err != nil {
+			return err
+		}
 	}
 	if strings.HasPrefix(key, "close:") {
 		overrides, err := a.Store.ListJournalOverrides(ctx, companyID)

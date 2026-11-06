@@ -259,6 +259,9 @@ func (a *App) CreateCash(ctx context.Context, companyID int64, d cash.Document) 
 		return d, err
 	}
 	d.ID, d.Cancelled = 0, false
+	if err := a.checkOpen(ctx, companyID, d.Date); err != nil {
+		return d, err
+	}
 	if err := a.prepareCash(ctx, companyID, &d); err != nil {
 		return d, err
 	}
@@ -336,6 +339,9 @@ func (a *App) UpdateCash(ctx context.Context, companyID, id int64, partner, purp
 	if err != nil {
 		return d, err
 	}
+	if err := a.checkOpen(ctx, companyID, d.Date); err != nil {
+		return d, err
+	}
 	before := d
 	d.Partner, d.Purpose, d.Note = strings.TrimSpace(partner), strings.TrimSpace(purpose), strings.TrimSpace(note)
 	if err := d.Validate(); err != nil {
@@ -355,6 +361,9 @@ func (a *App) CancelCash(ctx context.Context, companyID, id int64) (cash.Documen
 	}
 	d, err := a.Store.GetCashDocument(ctx, companyID, id)
 	if err != nil {
+		return d, err
+	}
+	if err := a.checkOpen(ctx, companyID, d.Date); err != nil {
 		return d, err
 	}
 	if d.Cancelled {
