@@ -50,6 +50,9 @@ import HouseholdEntries from './views/HouseholdEntries.vue'
 import HouseholdAccounts from './views/HouseholdAccounts.vue'
 import HouseholdBudget from './views/HouseholdBudget.vue'
 import HouseholdObligations from './views/HouseholdObligations.vue'
+import Employees from './views/Employees.vue'
+import Payroll from './views/Payroll.vue'
+import PayrollPrint from './views/PayrollPrint.vue'
 
 // Moduly z etapového plánu — zatiaľ prázdne stránky s popisom.
 export const modules = [
@@ -97,6 +100,13 @@ export const modules = [
       { path: '/kontrolny-vykaz', vat: true, label: 'Kontrolný výkaz', icon: 'pi-list-check', ready: true, perm: 'vat.read' },
       { path: '/suhrnny-vykaz', vat: true, label: 'Súhrnný výkaz', icon: 'pi-globe', ready: true, perm: 'vat.read' },
       { path: '/dan-z-prijmov', label: 'Daň z príjmov', icon: 'pi-calculator', ready: true, perm: 'ledger.read', book: 'simple' },
+    ],
+  },
+  {
+    group: 'Mzdy',
+    items: [
+      { path: '/mzdy', label: 'Mzdy', icon: 'pi-money-bill', ready: true, perm: 'ledger.read' },
+      { path: '/zamestnanci', label: 'Zamestnanci', icon: 'pi-users', ready: true, perm: 'ledger.read' },
     ],
   },
   {
@@ -172,6 +182,9 @@ export const router = createRouter({
     { path: '/sklad', component: StockView, meta: { title: 'Sklad', perm: 'purchases.read' } },
     { path: '/hlavna-kniha', component: LedgerBook, meta: { title: 'Účtovný denník a hlavná kniha', perm: 'ledger.read' } },
     { path: '/uctovy-rozvrh', component: ChartOfAccounts, meta: { title: 'Účtový rozvrh', perm: 'ledger.read' } },
+    { path: '/mzdy', component: Payroll, meta: { title: 'Mzdy', perm: 'ledger.read' } },
+    { path: '/mzdy/tlac', component: PayrollPrint, meta: { title: 'Výplatné pásky', bare: true, perm: 'ledger.read' } },
+    { path: '/zamestnanci', component: Employees, meta: { title: 'Zamestnanci', perm: 'ledger.read' } },
     { path: '/kniha-jazd', component: Logbook, meta: { title: 'Kniha jázd', perm: 'ledger.read' } },
     { path: '/kniha-jazd/:id(\\d+)/tlac', component: LogbookPrint, props: true, meta: { title: 'Kniha jázd', bare: true, perm: 'ledger.read' } },
     { path: '/majetok', component: Assets, meta: { title: 'Majetok', perm: 'ledger.read' } },

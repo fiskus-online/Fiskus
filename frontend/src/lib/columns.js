@@ -13,6 +13,7 @@ import { moveLabel } from './itemcard.js'
 import { kindLabel as calendarKind, repeatLabel, stateOf } from './calendar.js'
 import { docKindLabel, emailStatus } from './emails.js'
 import { addressText, personsText } from './contacts.js'
+import { contractLabel, employeeName, insurerLabel } from './payroll.js'
 import { eurBalance, eurSummary, isForeignCurrency, purchaseEUR, sourceLabel } from './fx.js'
 
 const t = (header, value, width) => ({ header, value, width })
@@ -647,4 +648,39 @@ export const householdObligationColumns = [
   t('VS', (r) => r.vs, 12),
   t('IBAN', (r) => r.iban, 26),
   t('Poznámka', (r) => r.note, 30),
+]
+
+export const employeeColumns = [
+  t('Meno', (r) => employeeName(r), 26),
+  t('Pozícia', (r) => r.position, 18),
+  t('Pracovný vzťah', (r) => contractLabel(r.contract), 30),
+  date('Nástup', (r) => r.start),
+  date('Koniec', (r) => r.end),
+  money('Mzda / sadzba €', (r) => r.wage),
+  t('Hodinová', (r) => yes(r.hourly), 9),
+  t('Zdravotná poisťovňa', (r) => insurerLabel(r.insurer), 16),
+  t('NČZD', (r) => yes(r.nczd), 6),
+  t('Daňový bonus', (r) => (r.bonus ? String(r.children?.length ?? 0) : ''), 8),
+  t('IBAN', (r) => r.iban, 26),
+]
+
+export const payrollColumns = [
+  t('Zamestnanec', (r) => employeeName(r.employee), 26),
+  t('Vzťah', (r) => contractLabel(r.employee.contract), 22),
+  money('Hrubá mzda €', (r) => r.result.gross),
+  money('Náhrada pri PN €', (r) => r.result.sickPay),
+  money('Sociálne zamestnanec €', (r) => r.result.socialEmployee),
+  money('Zdravotné zamestnanec €', (r) => r.result.healthEmployee),
+  money('Základ dane €', (r) => r.result.taxBase),
+  money('NČZD €', (r) => r.result.nczd),
+  money('Preddavok na daň €', (r) => r.result.taxPaid),
+  money('Daňový bonus €', (r) => r.result.taxBonus),
+  money('Čistá mzda €', (r) => r.result.net),
+  money('Zrážky €', (r) => r.result.deduction),
+  money('Na výplatu €', (r) => r.result.toPay),
+  money('Sociálne zamestnávateľ €', (r) => r.result.socialEmployer),
+  money('Zdravotné zamestnávateľ €', (r) => r.result.healthEmployer),
+  money('Cena práce €', (r) => r.result.cost),
+  t('Zdravotná poisťovňa', (r) => insurerLabel(r.employee.insurer), 16),
+  t('IBAN', (r) => r.employee.iban, 26),
 ]
