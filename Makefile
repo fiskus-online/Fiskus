@@ -30,10 +30,13 @@ build: web
 	cd backend && CGO_ENABLED=0 go build -ldflags "-s -w" -o ../bin/fiskus-mcp ./cmd/fiskus-mcp
 
 # Fiškus v prehliadači: statický web v frontend/dist-browser (nahrá sa na
-# ľubovoľný hosting s HTTPS, do koreňa domény, napr. app.fiskus.sk)
+# ľubovoľný hosting s HTTPS, do koreňa domény, napr. app.fiskus.sk).
+# Program ide skomprimovaný (fiskus.wasm.gz, rozbalí ho prehliadač) — nezáleží
+# na tom, či hosting komprimuje, a súbor je pod limitom 25 MiB Cloudflare Pages.
 browser:
 	cd backend && GOOS=js GOARCH=wasm CGO_ENABLED=0 go build -tags sqlite -trimpath \
 		-ldflags "-s -w -X main.version=$(VERSION)" -o ../frontend/src/browser/fiskus.wasm ./cmd/fiskus-web
+	gzip -9 -n -c frontend/src/browser/fiskus.wasm > frontend/src/browser/fiskus.wasm.gz
 	cp "$$(cd backend && go env GOROOT)/lib/wasm/wasm_exec.js" frontend/src/browser/wasm_exec.js
 	cd frontend && npx vite build --mode browser --emptyOutDir
 

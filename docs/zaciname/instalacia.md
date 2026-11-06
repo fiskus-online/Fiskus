@@ -68,6 +68,17 @@ obnovíte v časti **Obnoviť zo zálohy**.
 Zostavenie zo zdrojového kódu: `make browser` vytvorí statický web
 v `frontend/dist-browser`. Nahrá sa na ľubovoľný hosting s HTTPS do koreňa
 domény (napr. `app.fiskus.sk`); server nič nepočíta, iba posiela súbory.
+Program je v ňom už skomprimovaný (asi 6 MB) a súčasťou sú `404.html`
+(hosting bez presmerovania adries) a `_headers` (cache).
+
+Nasadenie na Cloudflare Pages (pripojenie repozitára z GitHubu):
+
+| Nastavenie | Hodnota |
+|---|---|
+| Build command | `cd frontend && npm ci && cd .. && make browser` |
+| Build output directory | `frontend/dist-browser` |
+| Premenné prostredia | `GO_VERSION` = verzia z `backend/go.mod`, `NODE_VERSION` = `22` |
+| Vlastná doména | `app.fiskus.sk` |
 
 ## Ukážková firma
 

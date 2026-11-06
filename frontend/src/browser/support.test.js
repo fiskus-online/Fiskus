@@ -3,6 +3,7 @@ import { missingFeatures, progressShare, progressText } from './support.js'
 
 const full = {
   WebAssembly: {},
+  DecompressionStream: function () {},
   Worker: function () {},
   navigator: { serviceWorker: {}, storage: { getDirectory() {} }, locks: {} },
 }
@@ -11,7 +12,7 @@ describe('Fiškus v prehliadači', () => {
   it('zistí, čo prehliadaču chýba', () => {
     expect(missingFeatures(full)).toEqual([])
     expect(missingFeatures({ ...full, navigator: { serviceWorker: {}, locks: {} } })).toEqual(['úložisko súborov (OPFS)'])
-    expect(missingFeatures({})).toHaveLength(5)
+    expect(missingFeatures({})).toHaveLength(6)
   })
 
   it.each([
