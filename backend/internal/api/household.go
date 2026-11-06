@@ -1,12 +1,15 @@
 package api
 
 import (
+	"errors"
 	"io"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/palo-krnac/fiscus/backend/internal/app"
 	"github.com/palo-krnac/fiscus/backend/internal/household"
+	"github.com/palo-krnac/fiscus/backend/internal/store"
 )
 
 // Domácnosť: /api/companies/{cid}/household/…
@@ -237,4 +240,102 @@ func (s *Server) hhPay(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusCreated, out)
+}
+
+// ---- bločky ----
+
+// hhReceiptQR: POST …/household/receipt/qr {qr} — návrh pohybu z bločku eKasa.
+func (s *Server) hhReceiptQR(w http.ResponseWriter, r *http.Request) {
+	cid, ok := s.company(w, r)
+	if !ok {
+		return
+	}
+	var in struct {
+		QR string `json:"qr"`
+	}
+	if !decode(w, r, &in) {
+		return
+	}
+	out, err := s.App.HouseholdReceiptQR(r.Context(), cid, in.QR)
+	if err != nil {
+		failEshop(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, out)
+}
+
+// readPhoto prečíta fotku z tela požiadavky (najviac 3 MB).
+func readPhoto(w http.ResponseWriter, r *http.Request) ([]byte, bool) {
+	data, err := io.ReadAll(http.MaxBytesReader(w, r.Body, app.MaxReceiptPhoto+1))
+	if err != nil || len(data) > app.MaxReceiptPhoto {
+		writeErr(w, http.StatusRequestEntityTooLarge, "Fotka je príliš veľká (najviac 3 MB)", nil)
+		return nil, false
+	}
+	return data, true
+}
+
+// hhReceiptPhoto: POST …/household/receipt/photo (telo = fotka) — návrh z fotky cez Claude API.
+func (s *Server) hhReceiptPhoto(w http.ResponseWriter, r *http.Request) {
+	cid, ok := s.company(w, r)
+	if !ok {
+		return
+	}
+	data, ok := readPhoto(w, r)
+	if !ok {
+		return
+	}
+	out, err := s.App.HouseholdReceiptPhoto(r.Context(), cid, data)
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, out)
+}
+
+// hhSavePhoto: PUT …/household/entries/{id}/photo (telo = fotka, Content-Type).
+func (s *Server) hhSavePhoto(w http.ResponseWriter, r *http.Request) {
+	cid, ok := s.company(w, r)
+	if !ok {
+		return
+	}
+	id, ok := pathID(w, r, "id")
+	if !ok {
+		return
+	}
+	data, ok := readPhoto(w, r)
+	if !ok {
+		return
+	}
+	ct := strings.TrimSpace(strings.Split(r.Header.Get("Content-Type"), ";")[0])
+	if err := s.App.SaveHouseholdPhoto(r.Context(), cid, id, ct, data); err != nil {
+		fail(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
+// hhPhoto: GET …/household/entries/{id}/photo
+func (s *Server) hhPhoto(w http.ResponseWriter, r *http.Request) {
+	cid, ok := s.company(w, r)
+	if !ok {
+		return
+	}
+	id, ok := pathID(w, r, "id")
+	if !ok {
+		return
+	}
+	p, err := s.App.HouseholdPhoto(r.Context(), cid, id)
+	if errors.Is(err, store.ErrNotFound) {
+		writeErr(w, http.StatusNotFound, "Pohyb nemá fotku bločku", nil)
+		return
+	}
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	w.Header().Set("Content-Type", p.ContentType)
+	w.Header().Set("Cache-Control", "private, max-age=3600")
+	w.Header().Set("X-Content-Type-Options", "nosniff")
+	w.Header().Set("Content-Security-Policy", "default-src 'none'")
+	_, _ = w.Write(p.Data)
 }

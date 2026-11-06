@@ -140,15 +140,28 @@ func MediaType(data []byte) (string, error) {
 
 // Extract pošle doklad modelu a vráti prečítané údaje.
 func (c Client) Extract(ctx context.Context, data []byte) (Result, error) {
+	raw, err := c.call(ctx, data, "zapis_fakturu", "Zapíše údaje prijatej faktúry do účtovníctva.", schema, prompt, 2048)
+	if err != nil {
+		return Result{}, err
+	}
+	var r Result
+	if err := json.Unmarshal(raw, &r); err != nil {
+		return Result{}, fmt.Errorf("Claude API vrátilo nečitateľné údaje: %w", err)
+	}
+	return r, nil
+}
+
+// call pošle súbor modelu s jedným nástrojom a vráti jeho vstup.
+func (c Client) call(ctx context.Context, data []byte, tool, desc string, inputSchema map[string]any, text string, maxTokens int) (json.RawMessage, error) {
 	if strings.TrimSpace(c.Settings.APIKey) == "" {
-		return Result{}, ErrOff
+		return nil, ErrOff
 	}
 	if len(data) > MaxBytes {
-		return Result{}, fmt.Errorf("súbor je príliš veľký (najviac %d MB)", MaxBytes>>20)
+		return nil, fmt.Errorf("súbor je príliš veľký (najviac %d MB)", MaxBytes>>20)
 	}
 	mt, err := MediaType(data)
 	if err != nil {
-		return Result{}, err
+		return nil, err
 	}
 	block := map[string]any{"type": "image", "source": map[string]any{"type": "base64", "media_type": mt, "data": base64.StdEncoding.EncodeToString(data)}}
 	if mt == "application/pdf" {
@@ -159,13 +172,11 @@ func (c Client) Extract(ctx context.Context, data []byte) (Result, error) {
 		model = DefaultModel
 	}
 	body, _ := json.Marshal(map[string]any{
-		"model":      model,
-		"max_tokens": 2048,
-		"tools": []map[string]any{{
-			"name": "zapis_fakturu", "description": "Zapíše údaje prijatej faktúry do účtovníctva.", "input_schema": schema,
-		}},
-		"tool_choice": map[string]any{"type": "tool", "name": "zapis_fakturu"},
-		"messages":    []map[string]any{{"role": "user", "content": []any{block, map[string]any{"type": "text", "text": prompt}}}},
+		"model":       model,
+		"max_tokens":  maxTokens,
+		"tools":       []map[string]any{{"name": tool, "description": desc, "input_schema": inputSchema}},
+		"tool_choice": map[string]any{"type": "tool", "name": tool},
+		"messages":    []map[string]any{{"role": "user", "content": []any{block, map[string]any{"type": "text", "text": text}}}},
 	})
 	base := c.BaseURL
 	if base == "" {
@@ -173,7 +184,7 @@ func (c Client) Extract(ctx context.Context, data []byte) (Result, error) {
 	}
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, strings.TrimRight(base, "/")+"/v1/messages", bytes.NewReader(body))
 	if err != nil {
-		return Result{}, err
+		return nil, err
 	}
 	req.Header.Set("content-type", "application/json")
 	req.Header.Set("x-api-key", c.Settings.APIKey)
@@ -184,7 +195,7 @@ func (c Client) Extract(ctx context.Context, data []byte) (Result, error) {
 	}
 	res, err := hc.Do(req)
 	if err != nil {
-		return Result{}, fmt.Errorf("Claude API neodpovedá: %w", err)
+		return nil, fmt.Errorf("Claude API neodpovedá: %w", err)
 	}
 	defer res.Body.Close()
 	raw, _ := io.ReadAll(io.LimitReader(res.Body, 1<<20))
@@ -203,26 +214,22 @@ func (c Client) Extract(ctx context.Context, data []byte) (Result, error) {
 	if res.StatusCode != http.StatusOK {
 		switch res.StatusCode {
 		case http.StatusUnauthorized:
-			return Result{}, errors.New("Claude API odmietlo kľúč — skontrolujte ho v časti Prístup pre AI")
+			return nil, errors.New("Claude API odmietlo kľúč — skontrolujte ho v časti Prístup pre AI")
 		case http.StatusTooManyRequests, 529:
-			return Result{}, errors.New("Claude API je preťažené alebo je prekročený limit — skúste o chvíľu")
+			return nil, errors.New("Claude API je preťažené alebo je prekročený limit — skúste o chvíľu")
 		}
 		msg := out.Error.Message
 		if msg == "" {
 			msg = res.Status
 		}
-		return Result{}, fmt.Errorf("Claude API: %s", msg)
+		return nil, fmt.Errorf("Claude API: %s", msg)
 	}
 	for _, b := range out.Content {
-		if b.Type == "tool_use" && b.Name == "zapis_fakturu" {
-			var r Result
-			if err := json.Unmarshal(b.Input, &r); err != nil {
-				return Result{}, fmt.Errorf("Claude API vrátilo nečitateľné údaje: %w", err)
-			}
-			return r, nil
+		if b.Type == "tool_use" && b.Name == tool {
+			return b.Input, nil
 		}
 	}
-	return Result{}, errors.New("z dokladu sa nepodarilo prečítať údaje")
+	return nil, errors.New("z dokladu sa nepodarilo prečítať údaje")
 }
 
 // num prečíta sumu od modelu („1234.50“, „1 234,50“).

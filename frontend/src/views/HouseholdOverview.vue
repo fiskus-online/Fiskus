@@ -13,6 +13,7 @@ import {
 } from '../lib/household.js'
 import HouseholdEntryDialog from '../components/HouseholdEntryDialog.vue'
 import ObligationPayDialog from '../components/ObligationPayDialog.vue'
+import HouseholdReceiptDialog from '../components/HouseholdReceiptDialog.vue'
 
 const router = useRouter()
 const canWrite = computed(() => can('ledger.write'))
@@ -60,6 +61,7 @@ const incomeCats = computed(() => (ov.value?.categories ?? []).filter((c) => c.i
 const payees = computed(() => [...new Set(entries.value.map((e) => e.payee).filter(Boolean))])
 
 const editing = ref(null)
+const receiptOpen = ref(false)
 function add(type) {
   editing.value = newEntry(type, accounts.value)
 }
@@ -86,6 +88,7 @@ function pay(d) {
       <template v-if="canWrite && openAccounts.length">
         <Button label="Výdavok" icon="pi pi-minus" size="small" @click="add('expense')" />
         <Button label="Príjem" icon="pi pi-plus" size="small" severity="secondary" outlined @click="add('income')" />
+        <Button label="Bloček" icon="pi pi-receipt" size="small" severity="secondary" outlined @click="receiptOpen = true" />
         <Button label="Prevod" icon="pi pi-arrow-right-arrow-left" size="small" severity="secondary" text @click="add('transfer')" />
       </template>
     </header>
@@ -208,6 +211,7 @@ function pay(d) {
 
     <HouseholdEntryDialog :entry="editing" :accounts="accounts" :categories="categories" :payees="payees" :can-write="canWrite"
       @close="editing = null" @saved="load" />
+    <HouseholdReceiptDialog v-model:visible="receiptOpen" :accounts="accounts" :categories="categories" @saved="load" />
     <ObligationPayDialog :target="paying" :accounts="accounts" @close="paying = null" @paid="load" />
   </div>
 </template>
