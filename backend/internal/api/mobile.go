@@ -54,6 +54,9 @@ func (s *Server) LANHandler(base http.Handler) http.Handler {
 		}
 		if !strings.HasPrefix(r.URL.Path, "/api/") || r.URL.Path == "/api/mobile/pair" {
 			// stránky programu (bez dát) a spárovanie
+			if !strings.HasPrefix(r.URL.Path, "/assets/") {
+				s.App.NoteLANRequest(clientIP(r), r.URL.Path, false)
+			}
 			base.ServeHTTP(w, r)
 			return
 		}
@@ -63,6 +66,7 @@ func (s *Server) LANHandler(base http.Handler) http.Handler {
 			token = c.Value
 		}
 		actor, err := s.App.MobileActor(r.Context(), token, clientIP(r))
+		s.App.NoteLANRequest(clientIP(r), r.URL.Path, err == nil)
 		if err != nil {
 			// 403, nie 401: rozhranie nemá ukázať prihlásenie, ale výzvu na spárovanie
 			writeErr(w, http.StatusForbidden, err.Error(), nil)
@@ -74,6 +78,24 @@ func (s *Server) LANHandler(base http.Handler) http.Handler {
 
 func (s *Server) mobileStatus(w http.ResponseWriter, r *http.Request) {
 	out, err := s.App.MobileStatus(r.Context())
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, out)
+}
+
+func (s *Server) mobileFirewall(w http.ResponseWriter, r *http.Request) {
+	out, err := s.App.MobileFirewallState(r.Context())
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, out)
+}
+
+func (s *Server) allowMobileFirewall(w http.ResponseWriter, r *http.Request) {
+	out, err := s.App.AllowMobileFirewall(r.Context())
 	if err != nil {
 		fail(w, err)
 		return
