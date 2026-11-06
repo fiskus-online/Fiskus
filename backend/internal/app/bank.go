@@ -110,6 +110,20 @@ func (a *App) ImportStatement(ctx context.Context, companyID int64, fileName str
 	if own != "" && isIBAN(res.Account) && !strings.EqualFold(own, res.Account) {
 		res.Warnings = append(res.Warnings, "Výpis je z účtu "+res.Account+", v nastaveniach firmy je iný IBAN. Skontrolujte, či ide o správnu firmu.")
 	}
+	// pohyby v uzavretom roku sa neimportujú (denník roka je uzamknutý)
+	keep := txs[:0]
+	closed := map[int]int{}
+	for _, t := range txs {
+		if a.YearClosed(ctx, companyID, t.Date.Year()) {
+			closed[t.Date.Year()]++
+			continue
+		}
+		keep = append(keep, t)
+	}
+	txs = keep
+	for y, n := range closed {
+		res.Warnings = append(res.Warnings, fmt.Sprintf("%d pohybov z uzavretého roka %d sa neimportovalo", n, y))
+	}
 	saved, dup, err := a.Store.SaveBankTransactions(ctx, companyID, txs)
 	if err != nil {
 		return res, err
@@ -254,6 +268,9 @@ func (a *App) MatchTransaction(ctx context.Context, companyID, id int64, kind st
 	if err != nil {
 		return t, err
 	}
+	if err := a.checkOpen(ctx, companyID, t.Date); err != nil {
+		return t, err
+	}
 	if t.Status == bank.StatusMatched {
 		return t, ErrAlreadyMatched
 	}
@@ -265,6 +282,9 @@ func (a *App) MatchTransaction(ctx context.Context, companyID, id int64, kind st
 func (a *App) UnmatchTransaction(ctx context.Context, companyID, id int64) (bank.Transaction, error) {
 	t, err := a.bankTx(ctx, companyID, id, auth.PermBankWrite)
 	if err != nil {
+		return t, err
+	}
+	if err := a.checkOpen(ctx, companyID, t.Date); err != nil {
 		return t, err
 	}
 	if t.Status != bank.StatusMatched || t.Match == nil {
@@ -294,6 +314,9 @@ func (a *App) UnmatchTransaction(ctx context.Context, companyID, id int64) (bank
 func (a *App) IgnoreTransaction(ctx context.Context, companyID, id int64, ignore bool, note string) (bank.Transaction, error) {
 	t, err := a.bankTx(ctx, companyID, id, auth.PermBankWrite)
 	if err != nil {
+		return t, err
+	}
+	if err := a.checkOpen(ctx, companyID, t.Date); err != nil {
 		return t, err
 	}
 	if t.Status == bank.StatusMatched {

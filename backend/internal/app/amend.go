@@ -50,6 +50,8 @@ func (a *App) AmendBlock(ctx context.Context, companyID int64, inv invoice.Invoi
 		return "Faktúra je naviazaná na zálohu — opravuje sa dobropisom"
 	case len(inv.Payments) > 0 || inv.PaidAmount.Sign() != 0:
 		return "Faktúra má zaplatenú časť — opravuje sa dobropisom"
+	case a.YearClosed(ctx, companyID, inv.IssueDate.Year()):
+		return fmt.Sprintf("Rok %d je uzavretý — opravuje sa dobropisom", inv.IssueDate.Year())
 	}
 	if sent, err := a.Store.ListEInvoices(ctx, companyID, store.EInvoiceFilter{Direction: "out", DocID: inv.ID}); err == nil {
 		for _, e := range sent {

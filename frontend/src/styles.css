@@ -311,3 +311,13 @@ kbd {
 .boot-link {
   color: var(--blue);
 }
+/* tlač: bez bočného menu a hlavičky, obsah na celú šírku */
+@media print {
+  .shell {
+    display: block !important;
+  }
+  .sidebar,
+  .topbar {
+    display: none !important;
+  }
+}
