@@ -43,13 +43,17 @@ export function newEntry(type = 'expense', accounts = [], today = new Date()) {
 
 /** Pohyb z API → formulár (suma bez znamienka a druh zvlášť). */
 export function toForm(e) {
-  return { ...e, type: entryType(e), amount: unsigned(e.amount), toAccountId: e.toAccountId || null }
+  return { ...e, type: entryType(e), amount: unsigned(e.amount).replace('.', ','), toAccountId: e.toAccountId || null, split: e.split?.map((x) => ({ ...x })) }
 }
 
 /** Formulár → pohyb pre API (výdavok so záporným znamienkom). */
 export function fromForm(f) {
   const amount = String(f.amount ?? '').trim().replace(/\s/g, '').replace(',', '.')
   const e = { id: f.id || 0, date: f.date, accountId: f.accountId, amount, category: f.category, payee: f.payee, note: f.note, obligationId: f.obligationId || 0 }
+  if (f.split?.length && f.type !== 'transfer') {
+    e.split = f.split.map((x) => ({ category: x.category, amount: x.amount, note: x.note, quantity: x.quantity }))
+    e.source = f.source || ''
+  }
   if (f.type === 'transfer') {
     e.toAccountId = f.toAccountId
     e.category = ''
@@ -67,7 +71,10 @@ export const accountName = (accounts, id) => accounts.find((a) => a.id === id)?.
 
 /** Popis kategórie v zozname (prevod: „Prevod → Peňaženka“). */
 export function entryCategory(e, accounts) {
-  return e.toAccountId ? `Prevod → ${accountName(accounts, e.toAccountId)}` : e.category
+  if (e.toAccountId) return `Prevod → ${accountName(accounts, e.toAccountId)}`
+  const others = new Set((e.split ?? []).map((x) => x.category))
+  others.delete(e.category)
+  return others.size ? `${e.category} + ${others.size} ďalš${others.size === 1 ? 'ia' : others.size < 5 ? 'ie' : 'ích'}` : e.category
 }
 
 /** Filter pohybov: účet (aj prevody naň), kategória, druh a hľadanie. */
@@ -75,10 +82,11 @@ export function filterEntries(rows, f, accounts = []) {
   const terms = searchTerms(f.search)
   return rows.filter((e) => {
     if (f.accountId && e.accountId !== f.accountId && e.toAccountId !== f.accountId) return false
-    if (f.category && e.category !== f.category) return false
+    if (f.category && e.category !== f.category && !(e.split ?? []).some((x) => x.category === f.category)) return false
     if (f.type && entryType(e) !== f.type) return false
     if (f.month && Number(String(e.date).slice(5, 7)) !== f.month) return false
-    return matches(terms, [formatDate(e.date), e.date, entryCategory(e, accounts), e.payee, e.note, accountName(accounts, e.accountId), e.amount])
+    return matches(terms, [formatDate(e.date), e.date, entryCategory(e, accounts), e.payee, e.note, accountName(accounts, e.accountId), e.amount,
+      ...(e.split ?? []).flatMap((x) => [x.note, x.category])])
   })
 }
 
@@ -195,3 +203,15 @@ export function filterObligations(list, { all = false, search = '' } = {}) {
 export const toAmount = (v) => String(v ?? '').replace(/\s/g, '').replace(',', '.')
 /** Suma z API do vstupu (1234.50 → 1234,50; nula → prázdne). */
 export const fromAmount = (v) => (Number(v) ? String(v).replace('.', ',') : '')
+
+// ---- bločky ----
+
+/** Súčty položiek bločku po kategóriách (už vypočítané sumy), najväčšie prvé. */
+export function splitByCategory(split = []) {
+  const by = new Map()
+  for (const x of split) by.set(x.category, (by.get(x.category) ?? 0) + Math.round(Number(x.amount) * 100))
+  return [...by.entries()].map(([category, c]) => ({ category, amount: (c / 100).toFixed(2) })).sort((a, b) => Math.abs(b.amount) - Math.abs(a.amount))
+}
+
+/** Zaradí všetky položky do jednej kategórie. */
+export const setAllCategory = (split, category) => split.map((x) => ({ ...x, category }))

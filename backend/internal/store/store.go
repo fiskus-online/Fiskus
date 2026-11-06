@@ -86,6 +86,14 @@ const (
 	VATPeriodQuarter = "quarter"
 )
 
+// HHPhoto je fotka bločku k pohybu domácnosti.
+type HHPhoto struct {
+	CompanyID   int64
+	EntryID     int64
+	ContentType string
+	Data        []byte
+}
+
 // DefaultUnits je predvolený číselník merných jednotiek.
 var DefaultUnits = []string{"ks", "hod", "m", "m²", "m³", "kg", "t", "l", "km", "bal", "súb", "deň", "mes", "paušál"}
 
@@ -390,6 +398,10 @@ type Store interface {
 	GetHHEntry(ctx context.Context, companyID, id int64) (household.Entry, error)
 	SaveHHEntry(ctx context.Context, companyID int64, e *household.Entry) error
 	DeleteHHEntry(ctx context.Context, companyID, id int64) error
+	// Fotka bločku k pohybu domácnosti (jedna na pohyb; uloženie prepíše
+	// starú, zmazanie pohybu zmaže aj fotku). GetHHPhoto vráti ErrNotFound.
+	SaveHHPhoto(ctx context.Context, p HHPhoto) error
+	GetHHPhoto(ctx context.Context, companyID, entryID int64) (HHPhoto, error)
 	// Záväzky domácnosti (pôžičky, dlhy, exekúcie, pravidelné platby).
 	ListHHObligations(ctx context.Context, companyID int64) ([]household.Obligation, error)
 	SaveHHObligation(ctx context.Context, companyID int64, o *household.Obligation) error

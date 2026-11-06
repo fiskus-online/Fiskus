@@ -34,3 +34,39 @@ export const payments = [
   { label: 'Hotovosť', value: 'cash' },
   { label: 'Karta', value: 'card' },
 ]
+
+/** Načíta obrázok zo súboru (v prehliadači). Vráti { img, url } — url treba uvoľniť. */
+export function loadImage(file) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file)
+    const img = new Image()
+    img.onload = () => resolve({ img, url })
+    img.onerror = () => {
+      URL.revokeObjectURL(url)
+      reject(new Error('Fotka sa nedá otvoriť'))
+    }
+    img.src = url
+  })
+}
+
+/** Zmenší fotku na JPEG (dlhšia strana najviac max px). */
+export function shrinkImage(img, max = 1600) {
+  const { w, h } = fitSize(img.naturalWidth, img.naturalHeight, max)
+  const c = document.createElement('canvas')
+  c.width = w
+  c.height = h
+  c.getContext('2d').drawImage(img, 0, 0, w, h)
+  return new Promise((resolve) => c.toBlob(resolve, 'image/jpeg', 0.82))
+}
+
+/** Čítačka pixelov obrázka pre findQR. */
+export function imageReader(img) {
+  const c = document.createElement('canvas')
+  const ctx = c.getContext('2d', { willReadFrequently: true })
+  return (w, h) => {
+    c.width = w
+    c.height = h
+    ctx.drawImage(img, 0, 0, w, h)
+    return ctx.getImageData(0, 0, w, h)
+  }
+}
