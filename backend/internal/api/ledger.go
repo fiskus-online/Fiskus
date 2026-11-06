@@ -174,6 +174,33 @@ func (s *Server) postFXRevaluation(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, doc)
 }
 
+// accDepreciation: GET …/ledger/{year}/depreciation — návrh zaúčtovania účtovných odpisov
+func (s *Server) accDepreciation(w http.ResponseWriter, r *http.Request) {
+	cid, ok := s.company(w, r)
+	if !ok {
+		return
+	}
+	dp, err := s.App.AccDepreciationFor(r.Context(), cid, pathYear(r))
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, dp)
+}
+
+func (s *Server) postAccDepreciation(w http.ResponseWriter, r *http.Request) {
+	cid, ok := s.company(w, r)
+	if !ok {
+		return
+	}
+	doc, err := s.App.PostAccDepreciation(r.Context(), cid, pathYear(r))
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, doc)
+}
+
 // importOpening: POST …/ledger/opening/import — tabuľka zostatkov účtov
 // (CSV/Excel) → návrh počiatočných stavov (nič sa neukladá).
 func (s *Server) importOpening(w http.ResponseWriter, r *http.Request) {

@@ -22,6 +22,11 @@ type AssetItem struct {
 	Opening  money.Dec    `json:"opening"`  // zostatková cena na začiatku roka
 	Residual money.Dec    `json:"residual"` // zostatková cena na konci roka
 	Plan     []asset.Year `json:"plan"`
+	// účtovné odpisy (podvojné účtovníctvo)
+	Account    string          `json:"accountOrDefault"`
+	DepAccount string          `json:"depAccount"`
+	Acc        asset.AccYear   `json:"accYear"`
+	AccPlan    []asset.AccYear `json:"accPlan"`
 }
 
 // AssetTotals sú súčty registra za rok.
@@ -82,8 +87,11 @@ func (a *App) Assets(ctx context.Context, companyID int64, year int) (AssetRegis
 		if x.Acquired.Year() == year {
 			opening = x.Cost // zaradený v roku: na začiatku je vstupná cena
 		}
+		accPlan, _ := x.AccSchedule()
+		acc := x.AccountOrDefault()
 		out.Items = append(out.Items, AssetItem{Asset: x, Period: x.Period(), Year: x.InYear(year),
-			Opening: opening, Residual: x.ResidualAt(year), Plan: plan})
+			Opening: opening, Residual: x.ResidualAt(year), Plan: plan,
+			Account: acc, DepAccount: asset.DepAccount(acc), Acc: x.AccInYear(year), AccPlan: accPlan})
 	}
 	overrides, err := a.Store.ListJournalOverrides(ctx, companyID)
 	if err != nil {
