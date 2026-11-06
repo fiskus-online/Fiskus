@@ -3,7 +3,7 @@
 // posiela stránka (boot.js) zo service workera.
 import sqlite3InitModule from '@sqlite.org/sqlite-wasm'
 import './wasm_exec.js' // z inštalácie Go (make browser), definuje globalThis.Go
-import fiskusWasm from './fiskus.wasm?url'
+import fiskusWasm from './fiskus.wasm.gz?url'
 import { createBridge } from './sqlbridge.js'
 
 /* global __WASM_SIZE__ */
@@ -55,15 +55,18 @@ async function start() {
     }
   }
   postMessage({ type: 'progress', loaded, total: loaded })
-  const bytes = new Uint8Array(loaded)
-  let off = 0
-  for (const c of chunks) {
-    bytes.set(c, off)
-    off += c.length
-  }
+  const bytes = await unpack(new Blob(chunks))
   const go = new globalThis.Go()
   const { instance } = await WebAssembly.instantiate(bytes, go.importObject)
   go.run(instance).then(() => postMessage({ type: 'failed', message: 'Fiškus sa neočakávane ukončil. Načítajte stránku znova.' }))
+}
+
+// Program je uložený skomprimovaný (gzip). Ak ho hosting poslal už
+// rozbalený (Content-Encoding), použije sa tak, ako prišiel.
+async function unpack(blob) {
+  const head = new Uint8Array(await blob.slice(0, 2).arrayBuffer())
+  if (head[0] !== 0x1f || head[1] !== 0x8b) return new Uint8Array(await blob.arrayBuffer())
+  return new Uint8Array(await new Response(blob.stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer())
 }
 
 const errorResponse = (message) => ({

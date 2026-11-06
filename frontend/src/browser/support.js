@@ -8,6 +8,7 @@ export function missingFeatures(g = globalThis) {
   if (!g.navigator?.serviceWorker) out.push('Service Worker')
   if (typeof g.navigator?.storage?.getDirectory !== 'function') out.push('úložisko súborov (OPFS)')
   if (!g.navigator?.locks) out.push('Web Locks')
+  if (typeof g.DecompressionStream !== 'function') out.push('DecompressionStream')
   return out
 }
 
