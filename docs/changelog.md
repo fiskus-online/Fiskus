@@ -13,6 +13,9 @@ etapách je v [pláne vývoja](./ROADMAP.md).
 
 ## Pripravuje sa (0.4)
 
+- **Mzdy**: zamestnanci a dohodári, výpočet mzdy, odvodov po fondoch,
+  zdravotného poistenia, preddavku na daň a daňového bonusu za roky 2025
+  a 2026, výplatná listina so súčtami na úhradu a výplatné pásky.
 - **Uzávierka roka** v jednoduchom účtovníctve: kontroly, uzamknutie roka,
   prenos stavov účtov do ďalšieho roka, otvorenie s dôvodom, tlač závierky.
 - **Daň z príjmov typ B — rodina a straty**: deti a daňový bonus, manžel/ka,

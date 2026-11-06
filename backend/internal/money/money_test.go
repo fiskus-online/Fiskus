@@ -136,3 +136,22 @@ func TestCeilCents(t *testing.T) {
 		}
 	}
 }
+
+func TestFloorCents(t *testing.T) {
+	tests := []struct{ in, pct, floor, pctFloor string }{
+		{"1234.56", "1.4", "1234.56", "17.28"},  // 17,28384
+		{"915", "5", "915", "45.75"},            // presne
+		{"1999.99", "4.75", "1999.99", "94.99"}, // 94,999525 — nie 95,00
+		{"0.019", "100", "0.01", "0.01"},        //
+		{"-12.345", "10", "-12.34", "-1.23"},    // k nule
+		{"16764", "0.25", "16764", "41.91"},     // 41,91
+	}
+	for _, tt := range tests {
+		if got := MustParse(tt.in).FloorCents(); got.String() != MustParse(tt.floor).String() {
+			t.Errorf("FloorCents(%s) = %s", tt.in, got)
+		}
+		if got := MustParse(tt.in).PctFloorCents(MustParse(tt.pct)); got.String() != MustParse(tt.pctFloor).String() {
+			t.Errorf("PctFloorCents(%s, %s) = %s, chcem %s", tt.in, tt.pct, got, tt.pctFloor)
+		}
+	}
+}
