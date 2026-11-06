@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Fiškus – účtovný program pre živnostníkov a malé firmy</title>
-  <meta name="description" content="Faktúry, DPH, kontrolný výkaz, banka a pokladňa. Desktopová verzia zadarmo, dáta ostávajú vo vašom počítači.">
+  <meta name="description" content="Faktúry, DPH, kontrolný výkaz, banka a pokladňa. Vždy zadarmo, dáta ostávajú vo vašom počítači.">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="style.css">
 </head>
@@ -17,7 +17,7 @@
       </a>
       <nav aria-label="Hlavná ponuka">
         <a href="#co-vie" class="secondary">Čo vie</a>
-        <a href="#cennik">Cenník</a>
+        <a href="#zadarmo">Zadarmo</a>
         <a href="#stiahnut">Stiahnuť</a>
         <a href="https://docs.fiskus.online/">Návod</a>
       </nav>
@@ -28,8 +28,8 @@
     <section class="hero">
       <div class="wrap">
         <div class="hero-text">
-          <h1>Faktúry a DPH bez predplatného</h1>
-          <p>Fiškus je slovenský účtovný program pre živnostníkov a malé firmy. Vystavíte faktúru, spárujete výpis z banky a pripravíte priznanie k DPH s kontrolným výkazom. Desktopová verzia je zadarmo a dáta ostávajú vo vašom počítači.</p>
+          <h1>Faktúry a DPH zadarmo</h1>
+          <p>Fiškus je slovenský účtovný program pre živnostníkov a malé firmy. Vystavíte faktúru, spárujete výpis z banky a pripravíte priznanie k DPH s kontrolným výkazom. Je celý zadarmo a dáta ostávajú vo vašom počítači.</p>
           <div class="actions">
             <a class="btn btn-primary" href="#stiahnut" data-hero-download>Stiahnuť zadarmo</a>
             <a class="btn btn-ghost" href="https://app.fiskus.online/">Vyskúšať v prehliadači</a>
@@ -72,37 +72,18 @@
       </div>
     </section>
 
-    <section class="block" id="cennik">
+    <section class="block" id="zadarmo">
       <div class="wrap">
-        <h2>Cenník</h2>
-        <p class="lead">Všetky verzie majú rovnaké funkcie. Platí sa iba vtedy, keď na jednom serveri vediete viac firiem, napríklad v účtovnej kancelárii.</p>
+        <h2>Vždy zadarmo</h2>
+        <p class="lead">Fiškus je zadarmo celý a natrvalo. Nie sú v ňom licencie, predplatné ani obmedzenie počtu firiem. Spôsoby spustenia sa líšia iba tým, kde program beží.</p>
         <table class="editions">
-          <thead><tr><th scope="col">Verzia</th><th scope="col">Cena</th><th scope="col">Pre koho</th></tr></thead>
+          <thead><tr><th scope="col">Spustenie</th><th scope="col">Pre koho</th></tr></thead>
           <tbody>
-            <tr><th scope="row">Desktop</th><td class="price">zadarmo</td><td><p>Jedna firma na vlastnom počítači, funguje aj offline.</p></td></tr>
-            <tr><th scope="row">Server – jedna firma</th><td class="price">zadarmo</td><td><p>Prístup z prehliadača pre viac ľudí, používatelia a roly, audit zmien.</p></td></tr>
-            <tr><th scope="row">Server – viac firiem</th><td class="price">99 €<span>ročne</span></td><td><p>Účtovné kancelárie a poskytovatelia služieb: neobmedzený počet firiem, klienti s vlastným prístupom do svojej firmy.</p></td></tr>
+            <tr><th scope="row">Desktop</th><td><p>Na vlastnom počítači, funguje aj offline. Firmy aj domácnosti vediete vedľa seba.</p></td></tr>
+            <tr><th scope="row">V prehliadači</th><td><p>Bez inštalácie na <a href="https://app.fiskus.online/">app.fiskus.online</a>. Údaje zostávajú vo vašom prehliadači.</p></td></tr>
+            <tr><th scope="row">Server</th><td><p>Prístup z prehliadača pre viac ľudí, používatelia a roly, audit zmien. Aj pre účtovné kancelárie s mnohými klientmi.</p></td></tr>
           </tbody>
         </table>
-
-        <div class="buy" id="kupit">
-          <div>
-            <h3>Ako kúpiť licenciu</h3>
-            <ol>
-              <li>Vyplňte obchodné meno a e-mail. Na e-mail pošleme licenčný kľúč.</li>
-              <li>Zaplaťte kartou alebo inou metódou v platobnom okne Paddle. Paddle je predajca, vystaví faktúru a postará sa o DPH.</li>
-              <li>Kľúč vložte vo Fiškuse v časti <em>Firmy a licencia</em>. Platí 12 mesiacov, obnova nadväzuje na koniec platnosti.</li>
-            </ol>
-          </div>
-          <form id="kupit-form" novalidate>
-            <label>Obchodné meno <input name="company" autocomplete="organization" required></label>
-            <label>E-mail na licenčný kľúč <input name="email" type="email" autocomplete="email" required></label>
-            <div class="total"><span>Server – viac firiem, 1 rok</span><strong>99,00 €</strong></div>
-            <p class="hint">Konečnú cenu s DPH podľa krajiny a IČ DPH ukáže platobné okno.</p>
-            <button class="btn btn-ink" type="submit">Pokračovať na platbu</button>
-            <p class="msg" role="status" aria-live="polite"></p>
-          </form>
-        </div>
       </div>
     </section>
 
@@ -118,7 +99,7 @@
           </tbody>
         </table>
         <p><strong>Bez inštalácie:</strong> <a href="https://app.fiskus.online/">Fiškus v prehliadači</a> beží celý vo vašom prehliadači a údaje zostávajú vo vašom počítači. Funkcie, ktoré potrebujú pripojenie na iné služby (vyhľadanie podľa IČO, e-maily, e-faktúry, mobil), sú iba v nainštalovanom Fiškuse.</p>
-        <p>Serverovú verziu spustíte rovnakým programom s parametrom <code>-mode server</code>. Návod a samostatné binárky pošleme na požiadanie.</p>
+        <p>Serverovú verziu spustíte rovnakým programom s parametrom <code>-mode server</code>. Postup je v <a href="https://docs.fiskus.online/zaciname/instalacia/">návode</a>, samostatné programy bez inštalátora sú pri každom vydaní na GitHube.</p>
       </div>
     </section>
   </main>
@@ -127,9 +108,7 @@
     <div class="wrap">
       <span>Fiškus · Pavol Krnáč, Banská Bystrica</span>
       <nav aria-label="Právne informácie">
-        <a href="obchodne-podmienky.html">Obchodné podmienky</a>
         <a href="ochrana-osobnych-udajov.html">Ochrana osobných údajov</a>
-        <a href="vratenie-platby.html">Vrátenie platby</a>
       </nav>
     </div>
   </footer>

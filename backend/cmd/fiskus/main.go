@@ -77,7 +77,6 @@ func main() {
 	ecbURL := flag.String("ecb-url", fx.ECB90, "adresa kurzov ECB (posledných 90 dní); prázdne = vypnuté, kurzy sa zadávajú ručne")
 	claudeURL := flag.String("claude-url", "", "adresa Claude API na čítanie dokladov (prázdne = api.anthropic.com)")
 	restoreFile := flag.String("restore", "", "pred spustením obnoviť databázu zo zálohy (.fbk); pôvodná sa premenuje na .pred-obnovou")
-	licensePath := flag.String("license", "", "súbor s licenčným kľúčom (server, viac firiem); predvolene fiskus.license vedľa databázy")
 	publicURL := flag.String("public-url", "", "server: verejná adresa https://… (pripojenie Claude cez OAuth za reverznou proxy); prázdne = podľa požiadavky")
 	adminEmail := flag.String("admin-email", "", "e-mail prvého správcu (server); heslo v FISKUS_ADMIN_PASSWORD")
 	showVersion := flag.Bool("version", false, "vypíše verziu a skončí")
@@ -174,9 +173,6 @@ func main() {
 	}
 	if *demoData {
 		a.BackupsOff = "Ukážkové dáta sú iba v pamäti a nezálohujú sa. Pre ostrú prácu spustite Fiškus s parametrami -db a -backup-dir."
-	}
-	if caps.Mode == edition.Server {
-		setupLicense(a, *licensePath, *dbPath)
 	}
 	if *demoData {
 		c, err := demo.Seed(context.Background(), a)
@@ -298,36 +294,6 @@ func main() {
 	stopRecurring()
 	_ = srv.Shutdown(ctx)
 	cleanup() // pri SQLite: záverečná záloha
-}
-
-// setupLicense načíta licenciu (súbor alebo FISKUS_LICENSE) a nastaví, kam sa uloží nová.
-func setupLicense(a *app.App, path, dbPath string) {
-	if path == "" && dbPath != "" {
-		path = filepath.Join(filepath.Dir(dbPath), "fiskus.license")
-	}
-	if path != "" {
-		a.SaveLicense = func(key string) error { return os.WriteFile(path, []byte(key+"\n"), 0o600) }
-	}
-	key := os.Getenv("FISKUS_LICENSE")
-	if key == "" && path != "" {
-		if b, err := os.ReadFile(path); err == nil {
-			key = string(b)
-		}
-	}
-	if key == "" {
-		log.Print("licencia: bezplatná verzia pre jednu firmu")
-		return
-	}
-	if err := a.LoadLicense(key); err != nil {
-		log.Printf("licencia: %v — beží bezplatná verzia pre jednu firmu", err)
-		return
-	}
-	if st := a.Capabilities().License; st != nil {
-		log.Printf("licencia: %s, platná do %s", st.Customer, st.Expires.Format("2. 1. 2006"))
-		if st.Warning != "" {
-			log.Printf("licencia: %s", st.Warning)
-		}
-	}
 }
 
 // ratesLoop sťahuje kurzy ECB: krátko po štarte a potom každých 6 hodín

@@ -12,7 +12,8 @@ Komunikácia a texty v rozhraní sú po slovensky. Kód (identifikátory) je po 
 - Každý zoznam má vždy hľadanie (`lib/search.js`, bez diakritiky, viac slov) a export do Excelu aj CSV (`components/ExportButton.vue`, stĺpce v `lib/columns.js`). Exportuje sa to, čo je po filtri a hľadaní.
 - SQLite kód je za build tagom `sqlite`: `go test -tags sqlite ./...`.
 - QR platba PAY by square sa skladá z hotových súm z API: v prehliadači `lib/payqr.js` (knižnica bysquare), v PDF zo servera `internal/payqr` (Go). Pravidlá, kedy sa QR zobrazí, musia byť rovnaké. Vzorky zo servera (`internal/payqr/testdata/golden.json`, `go test -update`) dekóduje frontendový test knižnicami bysquare a jsQR.
-- Kontaktné e-maily sa nikde neuvádzajú (web, program, inštalátory, návod). Automatické e-maily Fiškusa (napr. licencie z `fiskus-shop`) odchádzajú z `palo@ctrl32.com`.
+- Fiškus je vždy zadarmo: žiadne licencie, platby, predplatné ani obmedzenie počtu firiem.
+- Kontaktné e-maily sa nikde neuvádzajú (web, program, inštalátory, návod). Ak Fiškus niečo posiela automaticky e-mailom od autora, odosielateľ je `palo@ctrl32.com`.
 
 ## Príkazy
 - `make test`: všetky testy
