@@ -4,6 +4,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/palo-krnac/fiscus/backend/internal/dpfo"
 	"github.com/palo-krnac/fiscus/backend/internal/edition"
 	"github.com/palo-krnac/fiscus/backend/internal/money"
 )
@@ -50,6 +51,27 @@ func TestTaxReturn(t *testing.T) {
 	// bez príjmov je daň nula a preddavok sa vráti
 	if !saved.Rows["136"].Equal(money.MustParse("500")) {
 		t.Errorf("preplatok %s", saved.Rows["136"])
+	}
+	// rodina a straty: chyby
+	fam := saved.Input
+	fam.Children = []dpfo.Child{{Name: "Eva", RC: "130620/0006"}, {RC: "130620/0005"}, {}}
+	fam.Spouse = &dpfo.Spouse{Months: 13, OwnIncome: money.MustParse("-1")}
+	fam.Losses = []dpfo.Loss{{Year: 2019, Amount: money.MustParse("100")}, {Year: 2024, Amount: money.MustParse("100"), Used: money.MustParse("200")}}
+	fam.Attachments = -1
+	_, err = a.SaveTaxReturn(ctx, c.ID, 2026, fam)
+	for _, f := range []string{"children.0.rc", "children.1.name", "spouse.name", "spouse.months", "spouse.ownIncome", "losses.0.year", "losses.1.used", "attachments"} {
+		if !fieldErr(err, f) {
+			t.Errorf("chýba chyba %s: %v", f, err)
+		}
+	}
+	// v poriadku: prázdne riadky sa vynechajú, manžel/ka bez mena a mesiacov = neuplatňuje
+	fam.Children = []dpfo.Child{{Name: "Nováková Eva", RC: "130620/0005"}, {}}
+	fam.Spouse = &dpfo.Spouse{}
+	fam.Losses = []dpfo.Loss{{Year: 2024, Amount: money.MustParse("100")}, {Year: 2023}}
+	fam.Attachments = 1
+	saved, err = a.SaveTaxReturn(ctx, c.ID, 2026, fam)
+	if err != nil || len(saved.Input.Children) != 1 || saved.Input.Spouse != nil || len(saved.Input.Losses) != 1 {
+		t.Fatalf("rodina: %+v %v", saved.Input, err)
 	}
 	data, name, err := a.TaxReturnXML(ctx, c.ID, 2026)
 	if err != nil || name != "DPFOB-2026.xml" || !strings.Contains(string(data), "<k1>43</k1>") || !strings.Contains(string(data), "<r133>500.00</r133>") {

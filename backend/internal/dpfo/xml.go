@@ -180,9 +180,42 @@ func XML(in Input, res Result) ([]byte, error) {
 			[2]string{fmt.Sprintf("telo/tabulka1a/t1r%d/s1", i+1), amount(row[0])},
 			[2]string{fmt.Sprintf("telo/tabulka1a/t1r%d/s2", i+1), amount(row[1])})
 	}
-	for _, code := range []string{"36", "37", "38", "39", "40", "41", "42", "45", "46", "55", "57", "72", "73", "75", "77", "78", "80", "81",
-		"90", "91", "92", "94", "95", "96", "105", "116", "118", "124", "131", "133", "135", "136", "152"} {
+	for _, code := range []string{"36", "37", "38", "39", "40", "41", "42", "45", "46", "51", "52", "53", "54", "54a", "55", "57", "72", "73", "74", "75", "77", "78", "80", "81",
+		"90", "91", "92", "94", "95", "96", "105", "116", "116a", "117", "118", "119", "120", "121", "122", "124", "131", "133", "135", "136", "152"} {
 		vals = append(vals, [2]string{"telo/r" + code, amount(res.Rows[code])})
+	}
+	// straty z predchádzajúcich rokov (r. 47 – 50a): rok, strata, odpočítaná, zostatok
+	for i, row := range lossRows {
+		r := row[0]
+		vals = append(vals, [2]string{"telo/r" + r + "/rok", fmt.Sprint(in.Year - 5 + i)},
+			[2]string{"telo/r" + r + "/udaje/r02", amount(res.Rows["l"+r+".02"])},
+			[2]string{"telo/r" + r + "/udaje/r04", amount(res.Rows["l"+r+".04"])})
+		if r != "50a" {
+			vals = append(vals, [2]string{"telo/r" + r + "/udaje/r03", amount(res.Rows["l"+r+".03"])})
+		}
+	}
+	// manžel/ka (r. 31, 32)
+	if sp := in.Spouse; sp != nil && strings.TrimSpace(sp.Name) != "" {
+		vals = append(vals, [2]string{"telo/r31/priezviskoMeno", strings.TrimSpace(sp.Name)}, [2]string{"telo/r31/rodneCislo", rcDigits(sp.RC)})
+		if sp.Months > 0 {
+			vals = append(vals, [2]string{"telo/r32/uplatnujemNCZDNaManzela", "1"},
+				[2]string{"telo/r32/vlastnePrijmy", amount(sp.OwnIncome)},
+				[2]string{"telo/r32/pocetMesiacov", fmt.Sprint(min(sp.Months, 12))})
+			if sp.OwnIncome.IsZero() {
+				vals = append(vals, [2]string{"telo/r32/vlastnePrijmy", "0.00"})
+			}
+		}
+	}
+	vals = append(vals, [2]string{"telo/r154", fmt.Sprint(max(in.Attachments, 0))})
+	// daňový bonus na vyplatenie (r. 121)
+	if res.BonusPaid.Sign() > 0 {
+		vals = append(vals, [2]string{"telo/danovyPreplatokBonus/vyplatitDanovyBonus", "1"}, [2]string{"telo/danovyPreplatokBonus/datum", in.Date})
+		if in.RefundIBAN != "" {
+			vals = append(vals, [2]string{"telo/danovyPreplatokBonus/sposobPlatby/ucet", "1"},
+				[2]string{"telo/danovyPreplatokBonus/bankovyUcet/IBAN", strings.ReplaceAll(strings.ToUpper(in.RefundIBAN), " ", "")})
+		} else {
+			vals = append(vals, [2]string{"telo/danovyPreplatokBonus/sposobPlatby/poukazka", "1"})
+		}
 	}
 	// r. 95 (príjmy na účely sadzby 15 %) sa vypĺňa aj nulou, ak je vyplnený r. 39
 	if res.Rows["95"].IsZero() && !res.T1Income.IsZero() {
@@ -200,6 +233,37 @@ func XML(in Input, res Result) ([]byte, error) {
 			return nil, err
 		}
 	}
+	// deti (r. 33): najviac 4; celý rok = m00
+	if kids := root.find("telo/r33"); kids != nil {
+		slots := []*node{}
+		for _, c := range kids.children {
+			if c.name == "dieta" {
+				slots = append(slots, c)
+			}
+		}
+		for i, ch := range in.Children {
+			if i >= len(slots) {
+				break
+			}
+			slot := slots[i]
+			put := func(name, v string) {
+				for _, c := range slot.children {
+					if c.name == name {
+						c.text = v
+					}
+				}
+			}
+			put("priezviskoMeno", strings.TrimSpace(ch.Name))
+			put("rodneCislo", rcDigits(ch.RC))
+			if ch.allYear() {
+				put("m00", "1")
+			} else {
+				for mo, on := range ch.Months {
+					put(fmt.Sprintf("m%02d", mo+1), flag(on))
+				}
+			}
+		}
+	}
 	if name := strings.TrimSpace(in.NGOName); name != "" && in.NGOICO != "" {
 		if rows := root.find("telo/r151/obchodneMeno"); rows != nil && len(rows.children) > 0 {
 			first, rest := splitLine(name, 37)
@@ -214,6 +278,9 @@ func XML(in Input, res Result) ([]byte, error) {
 	root.write(&b, 0)
 	return b.Bytes(), nil
 }
+
+// rcDigits: rodné číslo bez lomky.
+func rcDigits(s string) string { return digits(s) }
 
 func digits(s string) string {
 	return strings.Map(func(r rune) rune {
