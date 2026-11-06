@@ -698,11 +698,39 @@ func Run(t *testing.T, newStore Factory) {
 		if err := s.DeleteHHAccount(ctx, a.ID, wallet.ID); err != nil {
 			t.Fatal(err)
 		}
+		// záväzky
+		loan := household.Obligation{Kind: household.Loan, Name: "Pôžička", Creditor: "Home Credit", Principal: m.MustParse("1200"),
+			Installment: m.MustParse("100"), Frequency: household.Monthly, FirstDue: invoice.MustDate("2026-01-15"), AccountID: bank.ID, VS: "123"}
+		if err := s.SaveHHObligation(ctx, a.ID, &loan); err != nil || loan.ID == 0 {
+			t.Fatalf("záväzok: %v", err)
+		}
+		if list, _ := s.ListHHObligations(ctx, a.ID); len(list) != 1 || !reflect.DeepEqual(list[0], loan) {
+			t.Fatalf("záväzky: %+v", list)
+		}
+		if err := s.SaveHHObligation(ctx, b.ID, &loan); !errors.Is(err, store.ErrNotFound) {
+			t.Fatal("úprava záväzku inej domácnosti")
+		}
+		if list, _ := s.ListHHObligations(ctx, b.ID); len(list) != 0 {
+			t.Fatal("záväzky inej domácnosti")
+		}
+		paidEntry := household.Entry{Date: invoice.MustDate("2026-01-15"), AccountID: bank.ID, Amount: m.MustParse("-100"), Category: "Splátky a dlhy", ObligationID: loan.ID}
+		if err := s.SaveHHEntry(ctx, a.ID, &paidEntry); err != nil {
+			t.Fatal(err)
+		}
+		if got, _ := s.GetHHEntry(ctx, a.ID, paidEntry.ID); got.ObligationID != loan.ID {
+			t.Fatalf("splátka bez záväzku: %+v", got)
+		}
+		if err := s.DeleteHHObligation(ctx, b.ID, loan.ID); !errors.Is(err, store.ErrNotFound) {
+			t.Fatal("zmazanie záväzku inej domácnosti")
+		}
 		if err := s.DeleteCompany(ctx, a.ID); err != nil {
 			t.Fatalf("zmazanie domácnosti: %v", err)
 		}
 		if list, _ := s.ListHHEntries(ctx, a.ID, 0); len(list) != 0 {
 			t.Fatalf("pohyby po zmazaní domácnosti: %d", len(list))
+		}
+		if list, _ := s.ListHHObligations(ctx, a.ID); len(list) != 0 {
+			t.Fatalf("záväzky po zmazaní domácnosti: %d", len(list))
 		}
 		if list, _ := s.ListHHEntries(ctx, b.ID, 0); len(list) != 1 {
 			t.Fatal("zmazanie domácnosti zmazalo pohyby inej")

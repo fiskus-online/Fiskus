@@ -174,3 +174,67 @@ func (s *Server) hhImportDraws(w http.ResponseWriter, r *http.Request) {
 	}
 	writeJSON(w, http.StatusOK, res)
 }
+
+// ---- záväzky ----
+
+func (s *Server) hhObligations(w http.ResponseWriter, r *http.Request) {
+	cid, ok := s.company(w, r)
+	if !ok {
+		return
+	}
+	out, err := s.App.HouseholdObligations(r.Context(), cid)
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, out)
+}
+
+func (s *Server) hhObligation(w http.ResponseWriter, r *http.Request) {
+	cid, ok := s.company(w, r)
+	if !ok {
+		return
+	}
+	id, ok := pathID(w, r, "id")
+	if !ok {
+		return
+	}
+	out, err := s.App.HouseholdObligation(r.Context(), cid, id)
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, out)
+}
+
+func (s *Server) hhSaveObligation(w http.ResponseWriter, r *http.Request) {
+	saveEntity(s, w, r, func(o *household.Obligation, id int64) { o.ID = id }, func(cid int64, o household.Obligation) (household.Obligation, error) {
+		return s.App.SaveHouseholdObligation(r.Context(), cid, o)
+	})
+}
+
+func (s *Server) hhDeleteObligation(w http.ResponseWriter, r *http.Request) {
+	s.deleteEntity(w, r, func(cid, id int64) error { return s.App.DeleteHouseholdObligation(r.Context(), cid, id) })
+}
+
+// hhPay: POST …/household/obligations/{id}/pay {date, accountId, amount, note}
+func (s *Server) hhPay(w http.ResponseWriter, r *http.Request) {
+	cid, ok := s.company(w, r)
+	if !ok {
+		return
+	}
+	id, ok := pathID(w, r, "id")
+	if !ok {
+		return
+	}
+	var in app.PayRequest
+	if !decode(w, r, &in) {
+		return
+	}
+	out, err := s.App.PayObligation(r.Context(), cid, id, in)
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	writeJSON(w, http.StatusCreated, out)
+}

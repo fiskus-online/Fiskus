@@ -12,6 +12,14 @@ export const kinds = [
 
 export const kindLabel = (k) => kinds.find((x) => x.id === k)?.label ?? k
 
+/** Druhy termínov podľa firmy: domácnosť má iba vlastné a splátky (na úhradu, má vrátiť). */
+export function kindsFor(company) {
+  if (company?.bookkeeping !== 'household') return kinds
+  return kinds
+    .filter((k) => ['own', 'pay', 'receive'].includes(k.id))
+    .map((k) => (k.id === 'pay' ? { ...k, label: 'Splátky' } : k.id === 'receive' ? { ...k, label: 'Majú vrátiť' } : k))
+}
+
 export const monthNames = ['január', 'február', 'marec', 'apríl', 'máj', 'jún', 'júl', 'august', 'september', 'október', 'november', 'december']
 export const weekdays = ['Po', 'Ut', 'St', 'Št', 'Pi', 'So', 'Ne']
 

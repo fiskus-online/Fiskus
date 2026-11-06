@@ -65,5 +65,5 @@ export function migrationNote(company) {
 export function pathFits(path, bookkeeping, isSettings = () => false) {
   const home = path === '/domacnost' || path.startsWith('/domacnost/')
   if (bookkeeping !== 'household') return !home
-  return home || path === '/audit' || path === '/nastavenia' || isSettings(path)
+  return home || path === '/audit' || path === '/kalendar' || path === '/nastavenia' || isSettings(path)
 }

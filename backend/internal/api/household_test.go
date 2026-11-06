@@ -40,4 +40,20 @@ func TestHouseholdAPI(t *testing.T) {
 	e.do("PUT", base+"/categories", `[{"name":"Príjem","income":true},{"name":"Jedlo","budget":"300"}]`, 200, nil)
 	e.do("GET", base+"/draws?year=2026", nil, 200, nil)
 	e.do("DELETE", fmt.Sprintf("%s/accounts/%d", base, acc.ID), nil, 422, nil) // má pohyby
+
+	// záväzky
+	var o struct{ ID int64 }
+	e.do("POST", base+"/obligations", `{"kind":"loan","name":"Pôžička"}`, 422, nil)
+	e.do("POST", base+"/obligations", `{"kind":"loan","name":"Pôžička","principal":"600","installment":"100","firstDue":"2026-11-10","category":"Jedlo"}`, 201, &o)
+	e.do("POST", fmt.Sprintf("%s/obligations/%d/pay", base, o.ID), fmt.Sprintf(`{"date":"2026-11-09","accountId":%d}`, acc.ID), 201, nil)
+	var det struct {
+		State    struct{ Remaining string }
+		Schedule []struct{ Status string }
+	}
+	e.do("GET", fmt.Sprintf("%s/obligations/%d", base, o.ID), nil, 200, &det)
+	if det.State.Remaining != "500.00" || len(det.Schedule) != 6 || det.Schedule[0].Status != "paid" {
+		t.Fatalf("záväzok: %+v", det)
+	}
+	e.do("GET", base+"/obligations", nil, 200, nil)
+	e.do("DELETE", fmt.Sprintf("%s/obligations/%d", base, o.ID), nil, 422, nil)
 }

@@ -34,17 +34,20 @@ const filter = ref({ accountId: Number(route.query.ucet) || null, type: null, ca
 const rows = shallowRef([])
 const accounts = ref([])
 const categories = ref([])
+const obligations = ref([])
 const loading = ref(true)
 const loadError = ref('')
 
 async function load() {
   loading.value = true
   try {
-    const [es, accs, cats] = await Promise.all([
+    const [es, accs, cats, obls] = await Promise.all([
       api.hhEntries(session.companyId, year.value),
       api.hhAccounts(session.companyId),
       api.hhCategories(session.companyId),
+      api.hhObligations(session.companyId),
     ])
+    obligations.value = obls
     rows.value = es
     accounts.value = accs
     categories.value = cats
@@ -83,7 +86,7 @@ const columnDefs = computed(() => [
     type: 'rightAligned',
     width: 110,
   },
-  { colId: 'source', headerName: '', valueGetter: (p) => (p.data.source?.startsWith('bank:') ? 'výpis' : p.data.source?.startsWith('biz:') ? 'živnosť' : ''), width: 74, cellClass: 'cell-src' },
+  { colId: 'source', headerName: '', valueGetter: (p) => (p.data.obligationId ? 'splátka' : p.data.source?.startsWith('bank:') ? 'výpis' : p.data.source?.startsWith('biz:') ? 'živnosť' : ''), width: 74, cellClass: 'cell-src' },
 ])
 const gridApi = shallowRef(null)
 const narrow = window.matchMedia('(max-width: 760px)')
@@ -222,7 +225,7 @@ async function importDraws() {
       <small>bez prevodov medzi účtami</small>
     </footer>
 
-    <HouseholdEntryDialog :entry="editing" :accounts="accounts" :categories="categories" :payees="payees" :can-write="canWrite"
+    <HouseholdEntryDialog :entry="editing" :accounts="accounts" :categories="categories" :payees="payees" :obligations="obligations" :can-write="canWrite"
       @close="editing = null" @saved="load" />
 
     <Dialog v-model:visible="importOpen" header="Nahrať výpis z banky" modal :style="{ width: '30rem' }" :breakpoints="{ '560px': '94vw' }">
