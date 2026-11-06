@@ -11,7 +11,7 @@
 //	PADDLE_API_KEY         nepovinné: dočítanie e-mailu zákazníka (customer.read)
 //	PADDLE_SANDBOX=1       sandbox namiesto ostrého Paddle
 //	SMTP_HOST, SMTP_PORT, SMTP_SECURITY (starttls|tls|none), SMTP_USER, SMTP_PASSWORD,
-//	SMTP_FROM, SMTP_FROM_NAME   odosielanie licencie e-mailom (bez nich sa kľúč pošle ručne)
+//	SMTP_FROM, SMTP_FROM_NAME   odosielanie licencie e-mailom (bez SMTP_FROM z palo@ctrl32.com)
 //
 // Webhook: POST /paddle/webhook (udalosť transaction.completed). Kontrola: GET /healthz.
 package main
@@ -30,6 +30,9 @@ import (
 	"github.com/palo-krnac/fiscus/backend/internal/mail"
 	"github.com/palo-krnac/fiscus/backend/internal/shop"
 )
+
+// autoFrom je odosielateľ automatických e-mailov Fiškusa, ak SMTP_FROM nie je zadané.
+const autoFrom = "palo@ctrl32.com"
 
 func main() {
 	addr := flag.String("addr", "127.0.0.1:8090", "adresa HTTP servera (za reverznou proxy s HTTPS)")
@@ -56,6 +59,9 @@ func main() {
 	smtp := mail.Settings{Host: os.Getenv("SMTP_HOST"), Port: port, Security: mail.Security(os.Getenv("SMTP_SECURITY")),
 		Username: os.Getenv("SMTP_USER"), Password: os.Getenv("SMTP_PASSWORD"),
 		FromEmail: os.Getenv("SMTP_FROM"), FromName: os.Getenv("SMTP_FROM_NAME")}
+	if smtp.FromEmail == "" {
+		smtp.FromEmail = autoFrom // automatické e-maily Fiškusa (licencie)
+	}
 	smtp.Normalize()
 	if !smtp.Configured() {
 		log.Print("upozornenie: SMTP nie je nastavené — licencie sa vystavia, kľúč treba poslať ručne (súbor evidencie)")

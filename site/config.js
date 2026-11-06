@@ -9,7 +9,6 @@ window.FISKUS = {
     token: '', // client-side token (test_… / live_…)
     priceId: '', // cena „Server – viac firiem“, 99 € ročne (pri_…)
   },
-  contact: 'info@fiskus.online',
   app: 'https://app.fiskus.online/', // Fiškus v prehliadači
   docs: 'https://docs.fiskus.online/', // návod
 }

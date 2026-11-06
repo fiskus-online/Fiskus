@@ -41,7 +41,7 @@
   const button = form.querySelector('button')
   if (!ready) {
     button.disabled = true
-    msg.textContent = `Online predaj spúšťame. Licenciu zatiaľ objednáte e-mailom na ${cfg.contact}.`
+    msg.textContent = 'Online predaj spúšťame čoskoro.'
     return
   }
 
