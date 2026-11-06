@@ -24,7 +24,7 @@ import { fiskusGridTheme, skGridLocale, gridRows } from '../lib/grid.js'
 import { assetColumns } from '../lib/columns.js'
 import {
   assetStatus, blankAsset, canAccelerate, disposalOptions, filterAssets, fixMethod, groupOptions, kindOptions,
-  methodOptions, periodLabel, postingState,
+  methodOptions, periodLabel, postingState, accountOptions, accPeriodLabel,
 } from '../lib/assets.js'
 
 const props = defineProps({ id: String })
@@ -32,6 +32,7 @@ const router = useRouter()
 const toast = useToast()
 const confirm = useConfirm()
 const canWrite = computed(() => can('ledger.write'))
+const double = computed(() => session.company?.bookkeeping === 'double')
 
 const thisYear = new Date().getFullYear()
 const year = ref(thisYear)
@@ -79,12 +80,13 @@ watch(year, async () => {
 // formulár: dátumy ako Date pre DatePicker, sumy ako čísla pre InputNumber
 function toForm(a) {
   return { ...a, acquired: fromISODate(a.acquired), disposed: a.disposed ? fromISODate(a.disposed) : null,
-    cost: a.cost == null || a.cost === '' ? null : Number(a.cost), purchaseId: a.purchaseId || null }
+    cost: a.cost == null || a.cost === '' ? null : Number(a.cost), purchaseId: a.purchaseId || null,
+    account: a.account ?? '', accMonths: a.accMonths || null }
 }
 function fromForm(f) {
   return { ...f, acquired: f.acquired ? toISODate(f.acquired) : '', disposed: f.disposed ? toISODate(f.disposed) : '',
     disposal: f.disposed ? f.disposal : '', cost: f.cost == null ? '' : String(f.cost), years: f.years ?? 0,
-    purchaseId: f.purchaseId ?? 0 }
+    purchaseId: f.purchaseId ?? 0, accMonths: f.accMonths ?? 0, account: f.account ?? '' }
 }
 function openFromRoute() {
   errors.value = {}
@@ -345,6 +347,14 @@ onBeforeUnmount(() => {
             <Select v-model="form.disposal" :options="disposalOptions" option-label="label" option-value="value" size="small"
               :invalid="!!errors.disposal" :disabled="!canWrite" />
           </FormField>
+          <template v-if="double">
+            <FormField label="Účet majetku" :span="2" :error="errors.account">
+              <Select v-model="form.account" :options="accountOptions" option-label="label" option-value="value" size="small" :disabled="!canWrite" />
+            </FormField>
+            <FormField label="Účtovné odpisy (mesiace)" :span="2" :error="errors.accMonths" hint="prázdne = ako daňové odpisy">
+              <InputNumber v-model="form.accMonths" :min="1" :max="1200" size="small" :invalid="!!errors.accMonths" :disabled="!canWrite" />
+            </FormField>
+          </template>
           <FormField label="Poznámka" :span="4">
             <Textarea v-model="form.note" rows="2" auto-resize :disabled="!canWrite" />
           </FormField>
@@ -366,6 +376,25 @@ onBeforeUnmount(() => {
             </tbody>
           </table>
           <p v-if="current.share < 100" class="plan-note">Uplatnený odpis je {{ current.share }} % ročného — zvyšok pripadá na súkromné používanie.</p>
+        </section>
+
+        <section v-if="double && current?.accPlan?.length" class="plan" aria-label="Účtovný odpisový plán">
+          <h3>Účtovné odpisy — {{ current.accountOrDefault }} / {{ current.depAccount }}, {{ accPeriodLabel(current.accMonths) }}</h3>
+          <table>
+            <thead>
+              <tr><th>Rok</th><th class="num">Odpis</th><th class="num">Oprávky</th><th class="num">ZC na konci</th><th class="num">Rozdiel k daňovým</th></tr>
+            </thead>
+            <tbody>
+              <tr v-for="y in current.accPlan" :key="y.year" :class="{ now: y.year === year }">
+                <td>{{ y.year }}<small v-if="y.months"> {{ y.months }} mes.</small></td>
+                <td class="num">{{ Number(y.disposal) ? '' : formatAmount(y.amount) }}<small v-if="Number(y.disposal)">ZC {{ formatAmount(y.disposal) }}</small></td>
+                <td class="num">{{ formatAmount(y.accumulated) }}</td>
+                <td class="num">{{ formatAmount(y.residual) }}</td>
+                <td class="num">{{ Number(y.diff) ? (Number(y.diff) > 0 ? '+' : '') + formatAmount(y.diff) : '' }}</td>
+              </tr>
+            </tbody>
+          </table>
+          <p class="plan-note">Zaúčtujú sa v Účtovnej knihe tlačidlom Účtovné odpisy (551 / {{ current.depAccount }}). Kladný rozdiel sa v daňovom priznaní pripočíta, záporný odpočíta.</p>
         </section>
       </div>
       <footer class="panel-foot">

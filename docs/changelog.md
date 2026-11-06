@@ -11,6 +11,12 @@ tags: [prehľad]
 Verzie sú značky v repozitári (`v0.2.0`). Podrobný zoznam funkcií po
 etapách je v [pláne vývoja](./ROADMAP.md).
 
+## Pripravuje sa (0.5)
+
+- **Účtovné odpisy** v podvojnom účtovníctve: účet majetku, doba
+  odpisovania v mesiacoch, účtovný odpisový plán s rozdielom k daňovým
+  odpisom a zaúčtovanie za rok jedným interným dokladom.
+
 ## 0.4.0
 
 - **Mzdy**: zamestnanci a dohodári, výpočet mzdy, odvodov po fondoch,
