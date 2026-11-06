@@ -49,10 +49,11 @@ export function toForm(e) {
 /** Formulár → pohyb pre API (výdavok so záporným znamienkom). */
 export function fromForm(f) {
   const amount = String(f.amount ?? '').trim().replace(/\s/g, '').replace(',', '.')
-  const e = { id: f.id || 0, date: f.date, accountId: f.accountId, amount, category: f.category, payee: f.payee, note: f.note }
+  const e = { id: f.id || 0, date: f.date, accountId: f.accountId, amount, category: f.category, payee: f.payee, note: f.note, obligationId: f.obligationId || 0 }
   if (f.type === 'transfer') {
     e.toAccountId = f.toAccountId
     e.category = ''
+    e.obligationId = 0
   } else if (f.type === 'expense' && amount && !amount.startsWith('-')) {
     e.amount = '-' + amount
   }
@@ -130,3 +131,67 @@ export function listTotals(rows) {
   }
   return { income: fromCents(inc), expense: fromCents(out), count: rows.length }
 }
+
+// ---- záväzky ----
+
+export const obligationKinds = [
+  { value: 'loan', label: 'Pôžička, úver', icon: 'pi-building-columns', hint: 'Banka, nebanková spoločnosť, hypotéka, leasing, nákup na splátky' },
+  { value: 'debt', label: 'Dlh', icon: 'pi-user-minus', hint: 'Dlžíte niekomu — známemu, firme, štátu' },
+  { value: 'execution', label: 'Exekúcia', icon: 'pi-exclamation-triangle', hint: 'Splátky exekútorovi podľa dohody alebo zrážky' },
+  { value: 'regular', label: 'Pravidelná platba', icon: 'pi-replay', hint: 'Nájom, zálohy na energie, poistka, predplatné — bez dlžnej sumy' },
+  { value: 'lent', label: 'Požičal som', icon: 'pi-user-plus', hint: 'Niekto vám vracia peniaze — splátky sú príjem' },
+]
+export const obligationKindLabel = (k) => obligationKinds.find((x) => x.value === k)?.label ?? k
+export const obligationIcon = (k) => obligationKinds.find((x) => x.value === k)?.icon ?? 'pi-file'
+
+export const frequencies = [
+  { value: 'monthly', label: 'Mesačne' },
+  { value: 'quarterly', label: 'Štvrťročne' },
+  { value: 'halfyear', label: 'Polročne' },
+  { value: 'yearly', label: 'Ročne' },
+  { value: 'once', label: 'Jednorazovo' },
+]
+export const frequencyLabel = (f) => frequencies.find((x) => x.value === f)?.label ?? f
+
+export const dueStatuses = {
+  paid: { label: 'zaplatená', tone: 'paid' },
+  partial: { label: 'čiastočne', tone: 'draft' },
+  overdue: { label: 'po splatnosti', tone: 'overdue' },
+  upcoming: { label: 'čaká', tone: 'issued' },
+}
+export const dueStatus = (s) => dueStatuses[s] ?? { label: s, tone: 'cancelled' }
+
+/** Nový záväzok pre formulár. */
+export function newObligation(kind = 'loan', accounts = [], today = new Date()) {
+  const acc = accounts.find((a) => !a.closed && a.kind === 'bank') ?? accounts.find((a) => !a.closed)
+  return {
+    id: 0, kind, name: '', creditor: '', principal: '', paidBefore: '', installment: '', frequency: kind === 'regular' ? 'monthly' : 'monthly',
+    firstDue: toISODate(today), count: 0, category: '', accountId: acc?.id ?? 0, reference: '', vs: '', iban: '', closed: false, note: '',
+  }
+}
+
+/** Splatené v percentách (na pruh); pri pravidelnej platbe null. */
+export function paidPercent(o) {
+  const total = Number(o.principal)
+  if (!(total > 0)) return null
+  return Math.max(0, Math.min(100, Math.round((Number(o.state?.paid) / total) * 100)))
+}
+
+/** Stav záväzku na zobrazenie. */
+export function obligationTone(o) {
+  if (o.closed) return { label: 'ukončený', tone: 'cancelled' }
+  if (o.state?.paidOff) return { label: 'splatený', tone: 'paid' }
+  if (o.state?.overdue > 0) return { label: o.state.overdue === 1 ? '1 splátka po splatnosti' : `${o.state.overdue} splátky po splatnosti`, tone: 'overdue' }
+  return { label: 'splácam', tone: 'issued' }
+}
+
+/** Filter záväzkov: otvorené / všetky a hľadanie. */
+export function filterObligations(list, { all = false, search = '' } = {}) {
+  const terms = searchTerms(search)
+  return list.filter((o) => (all || (!o.closed && !o.state?.paidOff)) && matches(terms, [o.name, o.creditor, obligationKindLabel(o.kind), o.reference, o.vs, o.note]))
+}
+
+/** Suma zo vstupu (1 234,50 → 1234.50) pre API. */
+export const toAmount = (v) => String(v ?? '').replace(/\s/g, '').replace(',', '.')
+/** Suma z API do vstupu (1234.50 → 1234,50; nula → prázdne). */
+export const fromAmount = (v) => (Number(v) ? String(v).replace('.', ',') : '')

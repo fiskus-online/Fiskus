@@ -390,6 +390,10 @@ type Store interface {
 	GetHHEntry(ctx context.Context, companyID, id int64) (household.Entry, error)
 	SaveHHEntry(ctx context.Context, companyID int64, e *household.Entry) error
 	DeleteHHEntry(ctx context.Context, companyID, id int64) error
+	// Záväzky domácnosti (pôžičky, dlhy, exekúcie, pravidelné platby).
+	ListHHObligations(ctx context.Context, companyID int64) ([]household.Obligation, error)
+	SaveHHObligation(ctx context.Context, companyID int64, o *household.Obligation) error
+	DeleteHHObligation(ctx context.Context, companyID, id int64) error
 
 	// ListRecurring vráti šablóny pravidelnej fakturácie firmy zoradené podľa ID.
 	ListRecurring(ctx context.Context, companyID int64) ([]recurring.Template, error)

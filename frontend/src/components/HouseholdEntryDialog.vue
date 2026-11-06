@@ -23,6 +23,7 @@ const props = defineProps({
   accounts: { type: Array, default: () => [] },
   categories: { type: Array, default: () => [] },
   payees: { type: Array, default: () => [] }, // obchody z histórie (návrhy)
+  obligations: { type: Array, default: () => [] }, // záväzky (pohyb môže byť splátkou)
   canWrite: { type: Boolean, default: true },
 })
 const emit = defineEmits(['close', 'saved'])
@@ -46,6 +47,18 @@ watch(
 const open = computed({ get: () => !!form.value, set: (v) => !v && emit('close') })
 const cats = computed(() => categoriesFor(props.categories, form.value?.type))
 const openAccounts = computed(() => props.accounts.filter((a) => !a.closed || a.id === form.value?.accountId || a.id === form.value?.toAccountId))
+// záväzky pre druh pohybu: výdavok — dlhy a platby, príjem — požičané
+const obligationOptions = computed(() =>
+  props.obligations.filter((o) => (o.kind === 'lent') === (form.value?.type === 'income') && (!o.closed || o.id === form.value?.obligationId)),
+)
+function pickObligation(id) {
+  const o = props.obligations.find((x) => x.id === id)
+  if (!o || !form.value) return
+  if (o.category) form.value.category = o.category
+  if (!form.value.payee && o.creditor) form.value.payee = o.creditor
+  if (!form.value.amount && Number(o.state?.nextAmount)) form.value.amount = String(o.state.nextAmount).replace('.', ',')
+  suggested.value = false
+}
 const targets = computed(() => openAccounts.value.filter((a) => a.id !== form.value?.accountId))
 
 // pri zmene druhu sa kategória iného druhu vymaže
@@ -85,7 +98,7 @@ async function save(again = false) {
     emit('saved', saved)
     if (again) {
       // ďalší pohyb: rovnaký dátum, účet a druh
-      form.value = { ...f, id: 0, amount: '', payee: '', note: '', category: '' }
+      form.value = { ...f, id: 0, amount: '', payee: '', note: '', category: '', obligationId: 0 }
       errors.value = {}
       suggested.value = false
     } else emit('close')
@@ -142,6 +155,10 @@ function remove() {
           <AutoComplete v-model="form.payee" :suggestions="payeeHits" size="small" fluid :disabled="!canWrite"
             :placeholder="form.type === 'income' ? 'napr. zamestnávateľ' : 'napr. Lidl, ZSE, nájomca'" @complete="(e) => searchPayee(e.query)" @blur="suggest"
             @option-select="suggest" />
+        </FormField>
+        <FormField v-if="obligationOptions.length" label="Splátka záväzku" :span="2" :error="errors.obligationId" hint="nepovinné — započíta sa do splátkového kalendára">
+          <Select v-model="form.obligationId" :options="obligationOptions" option-label="name" option-value="id" size="small" fluid show-clear
+            placeholder="nie je splátka" :disabled="!canWrite" @change="(e) => pickObligation(e.value)" />
         </FormField>
         <FormField label="Kategória" :span="2" :error="errors.category" :hint="suggested ? 'navrhnutá podľa obchodu' : ''">
           <Select v-model="form.category" :options="cats" size="small" fluid filter :disabled="!canWrite" placeholder="Vyberte kategóriu"
