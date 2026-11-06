@@ -105,6 +105,7 @@ Referenčný prehľad funkcií pochádza z českých systémov MyInvoice (MIT) a
 - [x] Uzávierkové operácie k 31. 12. (odpisy, zostatková cena predaného majetku, úpravy príjmov a výdavkov) v peňažnom denníku, bez vplyvu na stavy peňazí; prenesú sa do výkazov
 - [x] Podklady pre DP FO typ B (DPFOBv25, VI. oddiel): tabuľka č. 1 r. 2, r. 39–42, tabuľka č. 1a na začiatku a na konci obdobia, zaplatené poistné na kontrolu
 - [x] Daňové priznanie FO typ B pre živnostníka: tabuľka 1 a 1a z kníh, skutočné alebo paušálne výdavky, zamestnanie, NČZD (2025 aj 2026 — tretina základu), sadzba 15 % do 100 000 € príjmov alebo pásma 19/25/30/35 %, DDS, preddavky, podiel dane 2 %/3 %, vrátenie preplatku; XML v štruktúre formulára DPFOB na načítanie na portáli
+- [x] Uzávierka roka v JÚ: kontroly, uzamknutie roka, prenos stavov účtov do ďalšieho roka, otvorenie s dôvodom, tlač závierky Úč FO
 - [x] DP typ B: deti a daňový bonus (vek z rodného čísla, mesiace, zníženie nad hranicou, strop podľa počtu detí, vyplatenie), manžel/ka, straty z predchádzajúcich 5 rokov, bonus od zamestnávateľa, počet príloh
 - [ ] Jednoduché účtovníctvo ďalej: elektronické uloženie závierky do RÚZ; priznanie typu B s deťmi, manželom/kou a stratou z minulých rokov priamo vo Fiškuse
 - [x] Účtový rozvrh: rámcová účtová osnova pre podnikateľov (syntetické účty, druh, nedaňové náklady), analytické účty firmy, skrytie nepoužívaných, strediská a zákazky

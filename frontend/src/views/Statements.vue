@@ -13,6 +13,7 @@ import { formatAmount } from '../lib/format.js'
 import { session, can } from '../lib/session.js'
 import { statementColumns } from '../lib/columns.js'
 import ExportButton from '../components/ExportButton.vue'
+import YearClosePanel from '../components/YearClosePanel.vue'
 
 const toast = useToast()
 const canWrite = computed(() => can('ledger.write'))
@@ -28,6 +29,7 @@ const busy = ref(false)
 async function load() {
   try {
     st.value = await api.statements(session.companyId, year.value)
+    closed.value = !!(await api.yearClose(session.companyId, year.value).catch(() => null))?.close?.closed
     inputs.value = Object.fromEntries(Object.entries(st.value.inputs).map(([k, v]) => [k, Number(v) ? String(v) : '']))
     loadError.value = ''
   } catch (e) {
@@ -44,7 +46,13 @@ const prevText = (r) => (st.value?.previousEmpty ? '' : euro(r.previous))
 const factOf = { r08x: 'receivables', r17x: 'payables', r01: 'intangible', r02: 'tangible' }
 const fromDocs = (r) => (factOf[r.input] ? st.value.facts[factOf[r.input]] ?? '0' : null)
 const docsLabel = (r) => (r.input === 'r01' || r.input === 'r02' ? 'z registra majetku' : 'z dokladov')
-const editable = (r) => canWrite.value && !!r.input
+const closed = ref(false)
+const panel = ref(null)
+const editable = (r) => canWrite.value && !!r.input && !closed.value
+function onClose(v) {
+  closed.value = v
+  load()
+}
 
 async function save() {
   busy.value = true
@@ -92,6 +100,12 @@ const printIt = () => window.print()
     <p v-if="loadError" class="error">{{ loadError }}</p>
 
     <template v-if="st">
+      <div class="print-only print-head">
+        <strong>Účtovná závierka v jednoduchom účtovníctve (Úč FO) k 31. 12. {{ year }}</strong>
+        <span>{{ session.company?.name }} · {{ session.company?.street }}, {{ session.company?.zip }} {{ session.company?.city }}</span>
+        <span>IČO {{ session.company?.ico || '—' }} · DIČ {{ session.company?.dic || '—' }} · riadna účtovná závierka · v celých eurách</span>
+      </div>
+      <YearClosePanel v-if="year < thisYear" ref="panel" :year="year" @changed="onClose" />
       <p v-if="st.unclassified" class="warn">
         <i class="pi pi-exclamation-triangle" /> V peňažnom denníku za {{ year }} je {{ st.unclassified }} nerozpísaných pohybov — výkaz o príjmoch
         a výdavkoch ich nezahŕňa. <RouterLink to="/dennik">Rozpísať v denníku</RouterLink>
@@ -149,12 +163,12 @@ const printIt = () => window.print()
             </template>
           </tbody>
         </table>
-        <div v-if="canWrite" class="sheet-foot">
+        <div v-if="canWrite && !closed" class="sheet-foot">
           <span class="muted">Zásoby, úvery a rezervy zadajte podľa inventúry k 31. 12. Pri r. 01, 02 doplňte iba majetok mimo registra, pri r. 08 a 17 zadajte iba to, čo nie je vo faktúrach (napr. DPH, odvody, mzdy).</span>
           <Button label="Uložiť zadané riadky" icon="pi pi-check" size="small" :loading="busy" @click="save" />
         </div>
       </section>
-      <section class="sheet" aria-labelledby="dp-title">
+      <section class="sheet no-print" aria-labelledby="dp-title">
         <header class="sheet-head">
           <h2 id="dp-title">Podklady pre daňové priznanie typu B</h2>
           <span>VI. oddiel · zdaňovacie obdobie {{ year }} · v eurách s centami</span>
@@ -188,6 +202,10 @@ const printIt = () => window.print()
       </section>
 
       <p class="muted legal">Podľa opatrenia MF SR č. MF/27076/2007-74 v znení č. MF/15523/2014-74. Závierku podnikateľ – fyzická osoba ukladá do registra účtovných závierok v lehote na podanie daňového priznania.</p>
+      <div class="print-only print-sign">
+        <span>Zostavená dňa: {{ new Date().toLocaleDateString('sk-SK') }}</span>
+        <span>Podpisový záznam: ..................................</span>
+      </div>
     </template>
   </div>
 </template>
@@ -364,12 +382,30 @@ input.cell-input {
     width: 6.5rem;
   }
 }
+.print-only {
+  display: none;
+}
 @media print {
+  .print-only {
+    display: flex;
+  }
+  .print-head {
+    flex-direction: column;
+    gap: 2px;
+    margin-bottom: 10px;
+    font-size: 11pt;
+  }
+  .print-sign {
+    justify-content: space-between;
+    margin-top: 24px;
+    font-size: 10pt;
+  }
   :global(.sidebar),
   :global(.topbar),
   .head :deep(.p-button),
   .head :deep(.p-select),
   .sheet-foot,
+  .no-print,
   .warn,
   .note {
     display: none !important;

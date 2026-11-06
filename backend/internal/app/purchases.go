@@ -79,6 +79,9 @@ func (a *App) SavePurchase(ctx context.Context, companyID int64, p purchase.Purc
 	if err != nil {
 		return p, nil, err
 	}
+	if err := a.checkOpen(ctx, companyID, p.IssueDate); err != nil {
+		return p, nil, err
+	}
 	var before any
 	if p.ID != 0 {
 		old, err := a.Store.GetPurchase(ctx, companyID, p.ID)
@@ -86,6 +89,9 @@ func (a *App) SavePurchase(ctx context.Context, companyID int64, p purchase.Purc
 			return p, nil, err
 		}
 		before = old
+		if err := a.checkOpen(ctx, companyID, old.IssueDate); err != nil {
+			return p, nil, err
+		}
 		if old.Status == purchase.StatusPaid {
 			return p, nil, purchase.ErrPaid
 		}
@@ -188,6 +194,9 @@ func (a *App) DeletePurchase(ctx context.Context, companyID, id int64) error {
 	}
 	if p.Status == purchase.StatusPaid {
 		return purchase.ErrPaid
+	}
+	if err := a.checkOpen(ctx, companyID, p.IssueDate); err != nil {
+		return err
 	}
 	if err := a.Store.DeletePurchase(ctx, companyID, id); err != nil {
 		return err
