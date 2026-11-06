@@ -74,6 +74,11 @@ type MobileStatus struct {
 	Addresses []LANAddress `json:"addresses"`
 	Address   string       `json:"address"`
 	Error     string       `json:"error,omitempty"` // počúvanie sa nepodarilo
+	// LastRequest je posledná požiadavka zo siete (nil = telefón sa ešte
+	// nepripojil, kým Fiškus beží).
+	LastRequest *LANRequest `json:"lastRequest"`
+	// FirewallManaged: Fiškus vie zistiť a povoliť bránu firewall (Windows).
+	FirewallManaged bool `json:"firewallManaged"`
 }
 
 // MobilePairing je jednorazový kód na spárovanie.
@@ -89,6 +94,38 @@ type mobileState struct {
 	failures []time.Time
 	seen     map[string]time.Time // zariadenie → posledný zápis LastSeen
 	listenEr string
+	lastReq  *LANRequest // posledná požiadavka zo siete (diagnostika)
+}
+
+// LANRequest je posledná požiadavka, ktorá prišla na počítač zo siete —
+// ukazuje, či sa telefón k počítaču vôbec dostane.
+type LANRequest struct {
+	At     time.Time `json:"at"`
+	IP     string    `json:"ip"`
+	Path   string    `json:"path"`
+	Paired bool      `json:"paired"` // zo spárovaného telefónu
+}
+
+// FirewallState je stav brány firewall pre mobil v sieti.
+type FirewallState struct {
+	Supported bool     `json:"supported"`
+	Blocked   bool     `json:"blocked"`
+	Allowed   bool     `json:"allowed"`
+	Public    []string `json:"public"`
+	Error     string   `json:"error,omitempty"`
+}
+
+// MobileFirewall zistí a nastaví bránu firewall (Windows).
+type MobileFirewall interface {
+	Check(ctx context.Context, port int) FirewallState
+	Allow(ctx context.Context, port int) error
+}
+
+// NoteLANRequest zaznamená požiadavku zo siete (volá API pri mobile v sieti).
+func (a *App) NoteLANRequest(ip, path string, paired bool) {
+	a.mobile.mu.Lock()
+	a.mobile.lastReq = &LANRequest{At: a.now(), IP: ip, Path: path, Paired: paired}
+	a.mobile.mu.Unlock()
 }
 
 func (a *App) loadMobile(ctx context.Context) (mobileConfig, error) {
@@ -172,8 +209,52 @@ func (a *App) mobileStatus(c mobileConfig) MobileStatus {
 	}
 	a.mobile.mu.Lock()
 	st.Error = a.mobile.listenEr
+	if r := a.mobile.lastReq; r != nil {
+		cp := *r
+		st.LastRequest = &cp
+	}
 	a.mobile.mu.Unlock()
+	st.FirewallManaged = a.Firewall != nil
 	return st
+}
+
+// MobileFirewallState zistí stav brány firewall pre port mobilu.
+func (a *App) MobileFirewallState(ctx context.Context) (FirewallState, error) {
+	if err := a.requireMobileAdmin(ctx); err != nil {
+		return FirewallState{}, err
+	}
+	if a.Firewall == nil {
+		return FirewallState{Public: []string{}}, nil
+	}
+	c, err := a.loadMobile(ctx)
+	if err != nil {
+		return FirewallState{}, err
+	}
+	st := a.Firewall.Check(ctx, c.Port)
+	if st.Public == nil {
+		st.Public = []string{}
+	}
+	return st, nil
+}
+
+// AllowMobileFirewall povolí port mobilu v bráne firewall (Windows sa
+// opýta na práva správcu) a vráti nový stav.
+func (a *App) AllowMobileFirewall(ctx context.Context) (FirewallState, error) {
+	if err := a.requireMobileAdmin(ctx); err != nil {
+		return FirewallState{}, err
+	}
+	if a.Firewall == nil {
+		return FirewallState{}, mfaFieldErr("firewall", "Bránu firewall Fiškus nastavuje iba vo Windows")
+	}
+	c, err := a.loadMobile(ctx)
+	if err != nil {
+		return FirewallState{}, err
+	}
+	if err := a.Firewall.Allow(ctx, c.Port); err != nil {
+		return FirewallState{}, mfaFieldErr("firewall", err.Error())
+	}
+	a.record(ctx, 0, audit.CatSettings, "update", "mobile", 0, fmt.Sprintf("Mobil v sieti: povolený port %d v bráne firewall", c.Port), nil, nil)
+	return a.MobileFirewallState(ctx)
 }
 
 // MobileStatus vráti nastavenie mobilu v sieti.

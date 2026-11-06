@@ -45,6 +45,17 @@ func TestLANHandler(t *testing.T) {
 	if code, body, _ := call("GET", "/api/companies", "", ""); code != 403 || !strings.Contains(body, "nie je spárovaný") {
 		t.Fatalf("nespárovaný: %d %s", code, body)
 	}
+	// požiadavka zo siete sa zaznamená (diagnostika „telefón sa iba načítava“)
+	var ms struct {
+		LastRequest *struct {
+			Path   string `json:"path"`
+			Paired bool   `json:"paired"`
+		} `json:"lastRequest"`
+	}
+	e.do("GET", "/api/mobile", nil, 200, &ms)
+	if ms.LastRequest == nil || ms.LastRequest.Path != "/api/companies" || ms.LastRequest.Paired {
+		t.Fatalf("posledná požiadavka: %+v", ms.LastRequest)
+	}
 	// spárovanie → trvalá cookie
 	code, body, res := call("POST", "/api/mobile/pair", `{"code":"`+p.Code+`","name":"Telefón"}`, "")
 	if code != 200 {

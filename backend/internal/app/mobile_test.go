@@ -1,6 +1,8 @@
 package app
 
 import (
+	"context"
+	"errors"
 	"strings"
 	"testing"
 	"time"
@@ -93,5 +95,68 @@ func TestMobileServerMode(t *testing.T) {
 	}
 	if _, err := a.PairMobile(ctx, "ABCDEF", "x"); err != ErrDesktopOnly {
 		t.Errorf("server párovanie: %v", err)
+	}
+}
+
+type fakeFirewall struct {
+	blocked bool
+	allowed []int
+	err     error
+}
+
+func (f *fakeFirewall) Check(_ context.Context, port int) FirewallState {
+	return FirewallState{Supported: true, Blocked: f.blocked, Allowed: len(f.allowed) > 0 && f.allowed[len(f.allowed)-1] == port}
+}
+
+func (f *fakeFirewall) Allow(_ context.Context, port int) error {
+	if f.err != nil {
+		return f.err
+	}
+	f.blocked = false
+	f.allowed = append(f.allowed, port)
+	return nil
+}
+
+func TestMobileDiagnostics(t *testing.T) {
+	a, _ := newApp(t, edition.Desktop)
+	now := time.Date(2026, 11, 6, 19, 0, 0, 0, time.UTC)
+	a.Now = func() time.Time { return now }
+	a.OnMobile = func(bool, int) error { return nil }
+	admin := auth.WithActor(ctx, auth.Local)
+	if _, err := a.SetMobile(admin, true, 48090); err != nil {
+		t.Fatal(err)
+	}
+	st, _ := a.MobileStatus(admin)
+	if st.LastRequest != nil || st.FirewallManaged {
+		t.Fatalf("na začiatku: %+v", st)
+	}
+	if fw, err := a.MobileFirewallState(admin); err != nil || fw.Supported {
+		t.Fatalf("bez správy firewallu: %+v %v", fw, err)
+	}
+	if _, err := a.AllowMobileFirewall(admin); !fieldErr(err, "firewall") {
+		t.Fatalf("povolenie bez Windows: %v", err)
+	}
+
+	a.NoteLANRequest("192.168.1.35", "/parovanie", false)
+	st, _ = a.MobileStatus(admin)
+	if st.LastRequest == nil || st.LastRequest.IP != "192.168.1.35" || !st.LastRequest.At.Equal(now) {
+		t.Fatalf("posledná požiadavka: %+v", st.LastRequest)
+	}
+
+	fw := &fakeFirewall{blocked: true}
+	a.Firewall = fw
+	if s, _ := a.MobileFirewallState(admin); !s.Blocked || s.Allowed || s.Public == nil {
+		t.Fatalf("zablokovaný: %+v", s)
+	}
+	s, err := a.AllowMobileFirewall(admin)
+	if err != nil || s.Blocked || !s.Allowed || fw.allowed[0] != 48090 {
+		t.Fatalf("povolený port: %+v %v %v", s, err, fw.allowed)
+	}
+	fw.err = errors.New("povolenie sa nepotvrdilo")
+	if _, err := a.AllowMobileFirewall(admin); !fieldErr(err, "firewall") {
+		t.Fatalf("zrušené UAC: %v", err)
+	}
+	if _, err := a.MobileFirewallState(ctx); err == nil {
+		t.Error("bez správcu")
 	}
 }

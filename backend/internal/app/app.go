@@ -71,6 +71,9 @@ type App struct {
 	// zistenie adries počítača v testoch.
 	OnMobile     func(enabled bool, port int) error
 	LANAddresses func() []string
+	// Firewall zistí a nastaví bránu firewall pre mobil v sieti (Windows;
+	// nil = program bránu nespravuje).
+	Firewall MobileFirewall
 	// EKasaURL je adresa služby eKasa na vyhľadanie bločku ("" = ekasa.DefaultURL).
 	EKasaURL string
 	// AIBaseURL je adresa Claude API ("" = api.anthropic.com; v testoch falošný server).
