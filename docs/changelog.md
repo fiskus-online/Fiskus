@@ -13,6 +13,9 @@ etapách je v [pláne vývoja](./ROADMAP.md).
 
 ## Pripravuje sa (0.4)
 
+- **Fiškus v prehliadači**: bez inštalácie, údaje iba v úložisku prehliadača
+  na vašom počítači. Funkcie nainštalovaného programu ponúknu stiahnutie;
+  záloha a obnova súborom `.fbk` v oboch smeroch.
 - **Daň z príjmov typ B — rodina a straty**: deti a daňový bonus, manžel/ka,
   straty z minulých rokov, bonus od zamestnávateľa a počet príloh priamo
   vo Fiškuse aj v XML pre eDane.

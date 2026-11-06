@@ -33,7 +33,7 @@ async function check() {
       toast.add({ severity: 'warn', summary: `IČ DPH ${id.toUpperCase()} nie je platné`, detail: 'Podľa VIES nie je registrované pre DPH — prenesenie daňovej povinnosti sa naň nevzťahuje.', life: 7000 })
     }
   } catch (e) {
-    toast.add({ severity: 'error', summary: e.message, life: 6000 })
+    if (e.status !== 501) toast.add({ severity: 'error', summary: e.message, life: 6000 }) // 501: výzva na inštaláciu
   } finally {
     loading.value = false
   }

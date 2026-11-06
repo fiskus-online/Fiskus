@@ -6,6 +6,7 @@ import (
 	"context"
 	"database/sql"
 	"path/filepath"
+	"runtime"
 	"testing"
 	"time"
 
@@ -51,6 +52,9 @@ func TestReopenKeepsData(t *testing.T) {
 }
 
 func TestBackupRestoreRealDatabase(t *testing.T) {
+	if runtime.GOOS == "js" {
+		t.Skip("v prehliadači sa záloha robí exportom z úložiska prehliadača (cmd/fiskus-web)")
+	}
 	ctx := context.Background()
 	dir := t.TempDir()
 	dbPath := filepath.Join(dir, "fiskus.db")

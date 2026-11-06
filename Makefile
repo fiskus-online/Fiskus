@@ -3,7 +3,7 @@
 WEB_DIST := backend/internal/web/dist
 VERSION  ?= dev
 
-.PHONY: test test-go test-web web build demo dev-api dev-web
+.PHONY: test test-go test-web test-browser web build browser demo dev-api dev-web
 
 test: test-go test-web
 
@@ -14,6 +14,11 @@ test-go:
 test-web:
 	cd frontend && npm test
 
+# úložisko SQLite v prehliadači (WebAssembly) musí prejsť tými istými testami
+test-browser:
+	cd backend && GOOS=js GOARCH=wasm go test -tags sqlite \
+		-exec $(CURDIR)/frontend/scripts/go-wasm-exec.sh ./internal/store/sqlite/
+
 # zostaví frontend priamo do Go balíka web (vloží sa do binárky)
 web:
 	cd frontend && npx vite build --outDir ../$(WEB_DIST) --emptyOutDir
@@ -23,6 +28,14 @@ build: web
 	cd backend && CGO_ENABLED=0 go build -tags sqlite \
 		-ldflags "-s -w -X main.version=$(VERSION)" -o ../bin/fiskus ./cmd/fiskus
 	cd backend && CGO_ENABLED=0 go build -ldflags "-s -w" -o ../bin/fiskus-mcp ./cmd/fiskus-mcp
+
+# Fiškus v prehliadači: statický web v frontend/dist-browser (nahrá sa na
+# ľubovoľný hosting s HTTPS, do koreňa domény, napr. app.fiskus.sk)
+browser:
+	cd backend && GOOS=js GOARCH=wasm CGO_ENABLED=0 go build -tags sqlite -trimpath \
+		-ldflags "-s -w -X main.version=$(VERSION)" -o ../frontend/src/browser/fiskus.wasm ./cmd/fiskus-web
+	cp "$$(cd backend && go env GOROOT)/lib/wasm/wasm_exec.js" frontend/src/browser/wasm_exec.js
+	cd frontend && npx vite build --mode browser --emptyOutDir
 
 # ukážka s demo dátami: http://127.0.0.1:8080
 demo: web
