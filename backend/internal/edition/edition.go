@@ -43,6 +43,9 @@ type Capabilities struct {
 	MaxCompanies int             `json:"maxCompanies"` // 0 = bez obmedzenia
 	License      *license.Status `json:"license,omitempty"`
 	Price        string          `json:"price,omitempty"` // cena licencie (iba server)
+	// Browser: Fiškus beží v prehliadači (údaje v úložisku prehliadača).
+	// Je to desktopová verzia bez funkcií, ktoré potrebujú inštaláciu.
+	Browser bool `json:"browser,omitempty"`
 }
 
 // For vráti schopnosti pre daný režim bez licencie.
@@ -54,6 +57,13 @@ func For(m Mode) (Capabilities, error) {
 		return Capabilities{Mode: Server, Plan: PlanFree, MaxCompanies: 1, Price: PriceMulti}, nil
 	}
 	return Capabilities{}, fmt.Errorf("neznámy režim %q (desktop | server)", m)
+}
+
+// ForBrowser vráti schopnosti Fiškusa v prehliadači.
+func ForBrowser() Capabilities {
+	c, _ := For(Desktop)
+	c.Browser = true
+	return c
 }
 
 // WithLicense uplatní licenciu k času now. Licencia platí iba pre serverovú

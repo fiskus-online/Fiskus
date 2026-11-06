@@ -14,6 +14,7 @@ import { fillFromRegistry } from '../lib/registry.js'
 import { api, ApiError } from '../lib/api.js'
 import { session, replaceCompany } from '../lib/session.js'
 import { afterSetup, bookkeepingOptions, setupSteps, stepErrors } from '../lib/setup.js'
+import { inBrowser } from '../lib/install.js'
 
 const router = useRouter()
 const toast = useToast()
@@ -76,7 +77,7 @@ async function finish(skip = false) {
 
     <section v-if="step === 0" class="wz-body">
       <h2>Údaje firmy</h2>
-      <p class="hint">Po zadaní IČO sa názov a adresa doplnia z registra.</p>
+      <p class="hint">{{ inBrowser ? 'Názov a adresu doplňte ručne — vyhľadanie v registri je v nainštalovanom Fiškuse.' : 'Po zadaní IČO sa názov a adresa doplnia z registra.' }}</p>
       <div class="form-grid">
         <FormField label="IČO" :error="errors.ico">
           <IcoInput v-model="form.ico" :invalid="!!errors.ico" @found="(c) => (form = fillFromRegistry(form, c))" />

@@ -73,6 +73,8 @@ Referenčný prehľad funkcií pochádza z českých systémov  (MIT) a  ([docs/
 - [x] Nastavenie priečinka a hesla záloh priamo v rozhraní, návrh priečinka synchronizovaného do cloudu (OneDrive, Dropbox, Google Disk, iCloud)
 - [x] Záloha priamo do cloudového úložiska (S3, WebDAV) — kópia po každej zálohe s rovnakou rotáciou, overenie spojenia skúšobným súborom, stav poslednej kópie, stiahnutie zálohy z cloudu na novom počítači
 - [x] Inštalačky: Inno Setup (Windows), DMG s Fiškus.app (macOS), .deb a .rpm (Linux); aplikácia s dátami v priečinku používateľa, otvorí prehliadač, skončí po zatvorení okna
+- [x] Fiškus v prehliadači bez inštalácie: program v Go ako WebAssembly, SQLite v úložisku prehliadača (OPFS), funkcie nainštalovaného programu s výzvou na inštaláciu, šifrovaná záloha a obnova `.fbk` kompatibilná s nainštalovaným Fiškusom
+- [ ] Fiškus v prehliadači: nasadenie na `app.fiskus.sk`, odkaz „Otvoriť v prehliadači“ na fiskus.sk
 - [ ] Podpísané inštalačky (Authenticode, notarizácia Apple), automatická aktualizácia, AppImage
 - [x] Licencia pre serverovú verziu s viacerými firmami (offline overenie podpisu Ed25519)
 - [x] Web fiskus.sk (priečinok `site/`): funkcie, cenník, stiahnutie podľa systému, nákup cez Paddle (pripravené, vypnuté), návrhy obchodných podmienok, ochrany údajov a vrátenia platby

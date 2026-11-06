@@ -63,3 +63,10 @@ func TestUnknownMode(t *testing.T) {
 		t.Fatal("neznámy režim mal zlyhať")
 	}
 }
+
+func TestBrowser(t *testing.T) {
+	c := ForBrowser()
+	if !c.Browser || c.Mode != Desktop || c.MultiCompany || !c.CanAddCompany(0) || c.CanAddCompany(1) {
+		t.Fatalf("prehliadač: %+v", c)
+	}
+}
