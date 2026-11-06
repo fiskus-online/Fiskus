@@ -1,0 +1,101 @@
+name: Web na Cloudflare
+
+# Tri statické weby na Cloudflare Pages:
+#   fiskus.sk       ← site/ (verzia a odkazy na inštalátory z posledného vydania)
+#   docs.fiskus.sk  ← docs/ cez MkDocs
+#   app.fiskus.sk   ← Fiškus v prehliadači (make browser), iba pri vydaní
+# Nasadzuje sa, iba keď je v repozitári premenná CLOUDFLARE_ACCOUNT_ID
+# a tajomstvo CLOUDFLARE_API_TOKEN (práva Cloudflare Pages: Edit).
+# Nič sa neukladá ako artifact — zostavenie aj nahratie sú v jednom kroku.
+
+on:
+  push:
+    branches: [main]
+    paths: ['site/**', 'docs/**', 'mkdocs.yml', '.github/workflows/pages.yml']
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages-${{ github.workflow }}
+  cancel-in-progress: false
+
+env:
+  CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+  CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
+jobs:
+  site:
+    name: fiskus.sk
+    if: vars.CLOUDFLARE_ACCOUNT_ID != ''
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node site/check.mjs
+      - name: Verzia a odkazy z posledného vydania
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag=$(gh release view --repo "$GITHUB_REPOSITORY" --json tagName -q .tagName || true)
+          if [ -n "$tag" ]; then
+            v=${tag#v}
+            sed -i "s|version: '[^']*'|version: '$v'|; s|downloads: '[^']*'|downloads: 'https://github.com/$GITHUB_REPOSITORY/releases/download/$tag/'|" site/config.js
+          fi
+          grep -n "version\|downloads" site/config.js
+      - name: Nasadenie
+        run: |
+          npx --yes wrangler@3 pages project create fiskus --production-branch=main >/dev/null 2>&1 || true
+          npx --yes wrangler@3 pages deploy site --project-name=fiskus --branch=main --commit-dirty=true
+
+  docs:
+    name: docs.fiskus.sk
+    if: vars.CLOUDFLARE_ACCOUNT_ID != ''
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: pip install mkdocs-material
+      - run: mkdocs build --strict -d _docs
+      - name: Nasadenie
+        run: |
+          npx --yes wrangler@3 pages project create fiskus-docs --production-branch=main >/dev/null 2>&1 || true
+          npx --yes wrangler@3 pages deploy _docs --project-name=fiskus-docs --branch=main --commit-dirty=true
+
+  app:
+    name: app.fiskus.sk (Fiškus v prehliadači)
+    # iba vydaná verzia — dáta používateľov sú v prehliadači a prechádzajú
+    # migráciami, preto nie každá zmena v main
+    if: vars.CLOUDFLARE_ACCOUNT_ID != '' && github.event_name != 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: backend/go.mod
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+        working-directory: frontend
+      - name: Zostavenie
+        run: |
+          v=dev
+          [ "$GITHUB_EVENT_NAME" = release ] && v=${GITHUB_REF_NAME#v}
+          make browser VERSION="$v"
+      - name: Nasadenie
+        run: |
+          npx --yes wrangler@3 pages project create fiskus-app --production-branch=main >/dev/null 2>&1 || true
+          npx --yes wrangler@3 pages deploy frontend/dist-browser --project-name=fiskus-app --branch=main --commit-dirty=true
