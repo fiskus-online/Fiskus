@@ -37,6 +37,41 @@ a výsledok hospodárenia sa počíta bez nej.
   majetku, úpravy — bez vplyvu na stav peňazí.
 - **Podklady pre DP FO typ B** — VI. oddiel, tabuľky 1 a 1a.
 
+## Uzávierka roka
+
+Vo **Výkazoch (závierka)** pri minulom roku je panel **Uzávierka roka**.
+Fiškus pred uzávierkou skontroluje:
+
+| Kontrola | Blokuje uzávierku |
+|---|---|
+| rok skončil | áno |
+| všetky pohyby v peňažnom denníku sú rozpísané | áno |
+| zadané riadky výkazu (zásoby po inventúre, ceniny, úvery, rezervy) sú uložené | nie, upozorní |
+| predchádzajúci rok je uzavretý | nie, upozorní |
+| pokladnica nemá záporný zostatok | nie, upozorní |
+
+Tlačidlo **Uzavrieť rok**:
+
+- uloží súhrn (príjmy, výdavky, rozdiel) a konečné stavy pokladníc a účtov,
+- prenesie konečné stavy bankových účtov ako počiatočné stavy ďalšieho
+  roka (pokladnice nadväzujú samy z dokladov),
+- uzamkne rok: pokladničné doklady, import a párovanie bankových pohybov,
+  úhrady, vystavenie a úprava faktúr a prijatých faktúr, rozpis denníka,
+  uzávierkové operácie a zadané riadky výkazu s dátumom v uzavretom roku
+  sa už nedajú zmeniť. Pohyby z uzavretého roka sa pri importe výpisu
+  vynechajú.
+
+Ak treba v uzavretom roku niečo opraviť, rok otvoríte tlačidlom **Otvoriť
+rok** s uvedením dôvodu (zapíše sa do auditu aj do histórie uzávierky).
+Po oprave rok znova uzavriete — stavy účtov sa prenesú nanovo. Rok sa dá
+otvoriť, iba ak nasledujúci rok nie je uzavretý.
+
+**Tlačiť** vytlačí účtovnú závierku (Úč FO 1-01 a Úč FO 2-01) s hlavičkou
+účtovnej jednotky a miestom na podpis. Účtovná závierka **nie je prílohou
+daňového priznania** — fyzická osoba ju ukladá do registra účtovných
+závierok v lehote na podanie priznania, elektronicky formulárom *UZFOv14*
+na portáli finančnej správy.
+
 ## Daňové priznanie typ B
 
 Obrazovka **Dane → Daň z príjmov** zostaví priznanie živnostníka za rok:

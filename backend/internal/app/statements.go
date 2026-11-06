@@ -137,6 +137,9 @@ func (a *App) SetStatementInputs(ctx context.Context, companyID int64, year int,
 	if year < 2000 || year > 2100 {
 		return mfaFieldErr("year", "Neplatný rok")
 	}
+	if err := a.checkOpenYear(ctx, companyID, year); err != nil {
+		return err
+	}
 	for _, v := range []money.Dec{in.IntangibleDM, in.TangibleDM, in.FinancialDM, in.Material, in.Goods, in.OtherStock, in.OtherCashEq,
 		in.AdjustAsset, in.Reserves, in.OtherLiab, in.Loans, in.AdjustLiab, in.OtherRecv} {
 		if !v.Equal(v.RoundCents()) {
