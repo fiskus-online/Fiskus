@@ -110,5 +110,71 @@ func (s *Store) DeleteHHEntry(_ context.Context, companyID, id int64) error {
 		return store.ErrNotFound
 	}
 	delete(s.hhEntries, id)
+	delete(s.hhPhotos, id)
+	return nil
+}
+
+func (s *Store) SaveHHPhoto(_ context.Context, p store.HHPhoto) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	e, ok := s.hhEntries[p.EntryID]
+	if !ok || e.CompanyID != p.CompanyID {
+		return store.ErrNotFound
+	}
+	if s.hhPhotos == nil {
+		s.hhPhotos = map[int64]store.HHPhoto{}
+	}
+	p.Data = append([]byte(nil), p.Data...)
+	s.hhPhotos[p.EntryID] = p
+	return nil
+}
+
+func (s *Store) GetHHPhoto(_ context.Context, companyID, entryID int64) (store.HHPhoto, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	p, ok := s.hhPhotos[entryID]
+	if !ok || p.CompanyID != companyID {
+		return store.HHPhoto{}, store.ErrNotFound
+	}
+	return p, nil
+}
+
+func (s *Store) ListHHObligations(_ context.Context, companyID int64) ([]household.Obligation, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	out := []household.Obligation{}
+	for _, o := range s.hhObligations {
+		if o.CompanyID == companyID {
+			out = append(out, o)
+		}
+	}
+	sort.Slice(out, func(i, j int) bool { return out[i].ID < out[j].ID })
+	return out, nil
+}
+
+func (s *Store) SaveHHObligation(_ context.Context, companyID int64, o *household.Obligation) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.hhObligations == nil {
+		s.hhObligations = map[int64]household.Obligation{}
+	}
+	if o.ID == 0 {
+		o.ID = s.id()
+	} else if old, ok := s.hhObligations[o.ID]; !ok || old.CompanyID != companyID {
+		return store.ErrNotFound
+	}
+	o.CompanyID = companyID
+	s.hhObligations[o.ID] = *o
+	return nil
+}
+
+func (s *Store) DeleteHHObligation(_ context.Context, companyID, id int64) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	o, ok := s.hhObligations[id]
+	if !ok || o.CompanyID != companyID {
+		return store.ErrNotFound
+	}
+	delete(s.hhObligations, id)
 	return nil
 }

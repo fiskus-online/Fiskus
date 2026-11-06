@@ -22,6 +22,7 @@ import {
 } from '../lib/household.js'
 import ExportButton from '../components/ExportButton.vue'
 import HouseholdEntryDialog from '../components/HouseholdEntryDialog.vue'
+import HouseholdReceiptDialog from '../components/HouseholdReceiptDialog.vue'
 
 const route = useRoute()
 const toast = useToast()
@@ -34,17 +35,20 @@ const filter = ref({ accountId: Number(route.query.ucet) || null, type: null, ca
 const rows = shallowRef([])
 const accounts = ref([])
 const categories = ref([])
+const obligations = ref([])
 const loading = ref(true)
 const loadError = ref('')
 
 async function load() {
   loading.value = true
   try {
-    const [es, accs, cats] = await Promise.all([
+    const [es, accs, cats, obls] = await Promise.all([
       api.hhEntries(session.companyId, year.value),
       api.hhAccounts(session.companyId),
       api.hhCategories(session.companyId),
+      api.hhObligations(session.companyId),
     ])
+    obligations.value = obls
     rows.value = es
     accounts.value = accs
     categories.value = cats
@@ -83,7 +87,7 @@ const columnDefs = computed(() => [
     type: 'rightAligned',
     width: 110,
   },
-  { colId: 'source', headerName: '', valueGetter: (p) => (p.data.source?.startsWith('bank:') ? 'výpis' : p.data.source?.startsWith('biz:') ? 'živnosť' : ''), width: 74, cellClass: 'cell-src' },
+  { colId: 'source', headerName: '', valueGetter: (p) => (p.data.obligationId ? 'splátka' : p.data.source?.startsWith('bank:') ? 'výpis' : p.data.source?.startsWith('biz:') ? 'živnosť' : ''), width: 74, cellClass: 'cell-src' },
 ])
 const gridApi = shallowRef(null)
 const narrow = window.matchMedia('(max-width: 760px)')
@@ -93,6 +97,8 @@ function applyResponsive() {
 }
 narrow.addEventListener('change', applyResponsive)
 onBeforeUnmount(() => narrow.removeEventListener('change', applyResponsive))
+
+const receiptOpen = ref(false)
 
 // ---- pohyb ----
 const editing = ref(null)
@@ -178,6 +184,7 @@ async function importDraws() {
         <Button label="Výdavok" icon="pi pi-minus" size="small" @click="add('expense')" />
         <Button label="Príjem" icon="pi pi-plus" size="small" severity="secondary" outlined @click="add('income')" />
         <Button label="Prevod" icon="pi pi-arrow-right-arrow-left" size="small" severity="secondary" text @click="add('transfer')" />
+        <Button label="Bloček" icon="pi pi-receipt" size="small" severity="secondary" outlined @click="receiptOpen = true" />
         <Button label="Nahrať výpis" icon="pi pi-upload" size="small" severity="secondary" text @click="openImport" />
         <Button label="Zo živnosti" icon="pi pi-briefcase" size="small" severity="secondary" text @click="openDraws" />
       </template>
@@ -222,8 +229,10 @@ async function importDraws() {
       <small>bez prevodov medzi účtami</small>
     </footer>
 
-    <HouseholdEntryDialog :entry="editing" :accounts="accounts" :categories="categories" :payees="payees" :can-write="canWrite"
+    <HouseholdEntryDialog :entry="editing" :accounts="accounts" :categories="categories" :payees="payees" :obligations="obligations" :can-write="canWrite"
       @close="editing = null" @saved="load" />
+
+    <HouseholdReceiptDialog v-model:visible="receiptOpen" :accounts="accounts" :categories="categories" @saved="load" />
 
     <Dialog v-model:visible="importOpen" header="Nahrať výpis z banky" modal :style="{ width: '30rem' }" :breakpoints="{ '560px': '94vw' }">
       <p class="dlg-p">

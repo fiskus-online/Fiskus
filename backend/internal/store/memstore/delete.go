@@ -60,8 +60,13 @@ func (s *Store) DeleteCompany(_ context.Context, id int64) error {
 	}
 	s.companies = companies
 	for _, m := range []any{&s.invoices, &s.contacts, &s.purchases, &s.bankTx, &s.apiKeys, &s.cashDocs, &s.quotes, &s.assets,
-		&s.vehicles, &s.trips, &s.fuel, &s.recurring, &s.reminders, &s.items, &s.stockDocs, &s.emails, &s.einvoices, &s.files, &s.images, &s.hhAccounts, &s.hhEntries} {
+		&s.vehicles, &s.trips, &s.fuel, &s.recurring, &s.reminders, &s.items, &s.stockDocs, &s.emails, &s.einvoices, &s.files, &s.images, &s.hhAccounts, &s.hhEntries, &s.hhObligations} {
 		dropCompany(m, id)
+	}
+	for k, p := range s.hhPhotos {
+		if p.CompanyID == id {
+			delete(s.hhPhotos, k)
+		}
 	}
 	delete(s.journal, id)
 	delete(s.logos, id)

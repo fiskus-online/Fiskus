@@ -149,7 +149,95 @@ func (s *Store) SaveHHEntry(ctx context.Context, companyID int64, e *household.E
 }
 
 func (s *Store) DeleteHHEntry(ctx context.Context, companyID, id int64) error {
-	res, err := s.db.ExecContext(ctx, "DELETE FROM hh_entries WHERE id = ? AND company_id = ?", id, companyID)
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+	res, err := tx.ExecContext(ctx, "DELETE FROM hh_entries WHERE id = ? AND company_id = ?", id, companyID)
+	if err != nil {
+		return err
+	}
+	if n, _ := res.RowsAffected(); n == 0 {
+		return store.ErrNotFound
+	}
+	if _, err := tx.ExecContext(ctx, "DELETE FROM hh_photos WHERE entry_id = ? AND company_id = ?", id, companyID); err != nil {
+		return err
+	}
+	return tx.Commit()
+}
+
+func (s *Store) SaveHHPhoto(ctx context.Context, p store.HHPhoto) error {
+	var n int
+	if err := s.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM hh_entries WHERE id = ? AND company_id = ?", p.EntryID, p.CompanyID).Scan(&n); err != nil {
+		return err
+	}
+	if n == 0 {
+		return store.ErrNotFound
+	}
+	_, err := s.db.ExecContext(ctx, `INSERT INTO hh_photos (entry_id, company_id, content_type, data) VALUES (?, ?, ?, ?)
+		ON CONFLICT (entry_id) DO UPDATE SET content_type = excluded.content_type, data = excluded.data`, p.EntryID, p.CompanyID, p.ContentType, p.Data)
+	return err
+}
+
+func (s *Store) GetHHPhoto(ctx context.Context, companyID, entryID int64) (store.HHPhoto, error) {
+	p := store.HHPhoto{CompanyID: companyID, EntryID: entryID}
+	err := s.db.QueryRowContext(ctx, "SELECT content_type, data FROM hh_photos WHERE entry_id = ? AND company_id = ?", entryID, companyID).Scan(&p.ContentType, &p.Data)
+	if errors.Is(err, sql.ErrNoRows) {
+		return p, store.ErrNotFound
+	}
+	return p, err
+}
+
+func (s *Store) ListHHObligations(ctx context.Context, companyID int64) ([]household.Obligation, error) {
+	rows, err := s.db.QueryContext(ctx, "SELECT id, data FROM hh_obligations WHERE company_id = ? ORDER BY id", companyID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	out := []household.Obligation{}
+	for rows.Next() {
+		var o household.Obligation
+		var id int64
+		var data string
+		if err := rows.Scan(&id, &data); err != nil {
+			return nil, err
+		}
+		if err := json.Unmarshal([]byte(data), &o); err != nil {
+			return nil, err
+		}
+		o.ID, o.CompanyID = id, companyID
+		out = append(out, o)
+	}
+	return out, rows.Err()
+}
+
+func (s *Store) SaveHHObligation(ctx context.Context, companyID int64, o *household.Obligation) error {
+	o.CompanyID = companyID
+	data, err := json.Marshal(o)
+	if err != nil {
+		return err
+	}
+	if o.ID == 0 {
+		res, err := s.db.ExecContext(ctx, "INSERT INTO hh_obligations (company_id, data) VALUES (?, ?)", companyID, string(data))
+		if err != nil {
+			return err
+		}
+		o.ID, err = res.LastInsertId()
+		return err
+	}
+	res, err := s.db.ExecContext(ctx, "UPDATE hh_obligations SET data = ? WHERE id = ? AND company_id = ?", string(data), o.ID, companyID)
+	if err != nil {
+		return err
+	}
+	if n, _ := res.RowsAffected(); n == 0 {
+		return store.ErrNotFound
+	}
+	return nil
+}
+
+func (s *Store) DeleteHHObligation(ctx context.Context, companyID, id int64) error {
+	res, err := s.db.ExecContext(ctx, "DELETE FROM hh_obligations WHERE id = ? AND company_id = ?", id, companyID)
 	if err != nil {
 		return err
 	}
