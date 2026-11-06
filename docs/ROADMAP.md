@@ -151,7 +151,12 @@ Referenčný prehľad funkcií pochádza z českých systémov MyInvoice (MIT) a
 - [x] Riadenie obchodu pre PrestaShop: skupiny daňových pravidiel (SK), produkty aj kombinácie, zákazníci; úprava celého produktu v XML (iba cena, DPH, aktívnosť, jednojazyčný názov), nový produkt neaktívny v domovskej kategórii
 
 ## Etapa 4 — mzdy (samostatný návrh)
-- [ ] Sociálna poisťovňa, zdravotné poisťovne, preddavky na daň, ročné zúčtovanie
+- [x] Zamestnanci a dohodári (PP, DoPČ, DoVP, DoBPŠ, pravidelný/nepravidelný príjem, dôchodcovia, ZŤP, výnimka 200 €, NČZD, daňový bonus)
+- [x] Výpočet mzdy 2025 a 2026: sociálne poistenie po fondoch s maximom, zdravotné poistenie, preddavok na daň s pásmami 19/25/30/35 %, daňový bonus, čistá mzda, cena práce; výplatná listina so súčtami na úhradu podľa inštitúcií, výplatné pásky, uzavretie mesiaca
+- [ ] Mesačný výkaz pre Sociálnu poisťovňu, výkazy zdravotných poisťovní, registračné listy (XML)
+- [ ] Mesačný prehľad a ročné hlásenie pre finančnú správu, potvrdenie o príjmoch, ročné zúčtovanie
+- [ ] Priemerný zárobok: náhrada mzdy za dovolenku, náhrada príjmu pri PN (dni 1 – 14), evidencia dochádzky a dovoleniek
+- [ ] Zaúčtovanie miezd do peňažného denníka a podvojného účtovníctva, príkazy na úhradu výplat a odvodov
 
 ## Odlíšenie od konkurencie
 Slovenské špecifiká, ktoré MyÚčto nemá: RÚZ, tri identifikátory (IČO / DIČ / IČ DPH), 2 % dane pre neziskovky, slovenská e-fakturácia, PAY by square.

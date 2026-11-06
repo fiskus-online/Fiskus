@@ -34,6 +34,7 @@ const (
 	CatCash      Category = "cash"      // pokladňa
 	CatLedger    Category = "ledger"    // účtovníctvo: peňažný denník
 	CatAI        Category = "ai"        // volania AI asistentov cez MCP a API kľúče
+	CatPayroll   Category = "payroll"   // zamestnanci a mzdy
 )
 
 // Categories je číselník kategórií pre filter.
@@ -48,6 +49,7 @@ var Categories = []struct {
 	{CatContacts, "Adresár"},
 	{CatSettings, "Nastavenia"},
 	{CatUsers, "Používatelia"},
+	{CatPayroll, "Mzdy"},
 	{CatAuth, "Prihlásenia"},
 	{CatBank, "Banka"},
 	{CatCash, "Pokladňa"},

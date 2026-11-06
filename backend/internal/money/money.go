@@ -138,6 +138,22 @@ func (d Dec) CeilCents() Dec {
 	return Dec{q * step}
 }
 
+// FloorCents zaokrúhli na centy smerom k nule (poistné a preddavky na daň
+// sa zaokrúhľujú na eurocent nadol).
+func (d Dec) FloorCents() Dec {
+	const step = unit / 100
+	return Dec{d.v / step * step}
+}
+
+// PctFloorCents vypočíta pct % z d presne a zaokrúhli na centy smerom k nule
+// (napr. poistné 1,4 % z vymeriavacieho základu).
+func (d Dec) PctFloorCents(pct Dec) Dec {
+	const step = unit / 100
+	n := new(big.Int).Mul(big.NewInt(d.v), big.NewInt(pct.v))
+	n.Quo(n, big.NewInt(100*unit*step)) // Quo = smerom k nule
+	return Dec{n.Int64() * step}
+}
+
 // RoundTo zaokrúhli na zadaný počet desatinných miest (0–4).
 func (d Dec) RoundTo(places int) Dec {
 	if places >= Scale {
