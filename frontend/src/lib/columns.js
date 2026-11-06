@@ -427,6 +427,9 @@ export const assetColumns = [
   t('Dôvod vyradenia', (r) => disposalOptions.find((o) => o.value === r.disposal)?.label ?? '', 14),
   t('Stav', (r) => assetStatus(r, r.thisYear?.year).label, 12),
   t('Prijatá faktúra', (r) => r.purchaseNumber, 14),
+  t('Účet', (r) => r.accountOrDefault, 6),
+  money('Účtovný odpis v roku', (r) => r.accYear?.amount),
+  money('Účtovná ZC na konci roka', (r) => r.accYear?.residual),
   t('Poznámka', (r) => r.note, 30),
 ]
 
