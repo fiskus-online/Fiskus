@@ -6,12 +6,14 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:browser": "vite build --mode browser",
     "preview": "vite preview",
     "test": "vitest run"
   },
   "dependencies": {
     "@fontsource/source-sans-3": "^5.3.1",
     "@primeuix/themes": "^2.0.3",
+    "@sqlite.org/sqlite-wasm": "^3.54.1-build1",
     "ag-grid-community": "^34.3.1",
     "ag-grid-vue3": "^34.3.1",
     "bysquare": "^4.1.0",

@@ -26,6 +26,8 @@ import Bank from './views/Bank.vue'
 import AiAccess from './views/AiAccess.vue'
 import Cash from './views/Cash.vue'
 import Backups from './views/Backups.vue'
+import BrowserBackups from './views/BrowserBackups.vue'
+import { inBrowser } from './lib/install.js'
 import CashPrint from './views/CashPrint.vue'
 import QuoteList from './views/QuoteList.vue'
 import RecurringList from './views/RecurringList.vue'
@@ -131,7 +133,7 @@ const placeholderRoutes = modules
   }))
 
 export const router = createRouter({
-  history: createWebHistory(),
+  history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     { path: '/', redirect: '/faktury' },
     { path: '/oauth/povolit', component: OAuthConsent, meta: { title: 'Pripojenie aplikácie', consent: true } },
@@ -189,7 +191,7 @@ export const router = createRouter({
     { path: '/ai', component: AiAccess, meta: { settings: true, title: 'Prístup pre AI', noCompany: true } },
     { path: '/kurzy', component: Rates, meta: { settings: true, title: 'Kurzy mien', perm: 'invoices.read' } },
     { path: '/legislativa', component: Legal, meta: { settings: true, title: 'Legislatíva', superAdmin: true, noCompany: true } },
-    { path: '/zalohy', component: Backups, meta: { settings: true, title: 'Zálohy', superAdmin: true, noCompany: true } },
+    { path: '/zalohy', component: inBrowser ? BrowserBackups : Backups, meta: { settings: true, title: 'Zálohy', superAdmin: true, noCompany: true } },
     { path: '/pokladna', component: Cash, meta: { title: 'Pokladňa', perm: 'cash.read' } },
     { path: '/pokladna/:id(\\d+)/tlac', component: CashPrint, props: true, meta: { title: 'Pokladničný doklad', bare: true, perm: 'cash.read' } },
     { path: '/banka', component: Bank, meta: { title: 'Banka', perm: 'bank.read' } },

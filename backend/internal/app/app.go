@@ -51,6 +51,8 @@ type App struct {
 	BackupsOff string
 	// BackupSetup umožní nastaviť priečinok a heslo záloh v programe (nil = iba parametrami).
 	BackupSetup *BackupSetup
+	// Browser je databáza v úložisku prehliadača (iba Fiškus v prehliadači).
+	Browser BrowserDB
 	// ECBURL je adresa kurzov ECB ("" = nesťahovať); FetchRates ju v testoch nahradí.
 	ECBURL string
 	// CalSync sú prihlasovacie údaje aplikácie pre Google Kalendár
