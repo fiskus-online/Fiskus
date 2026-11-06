@@ -16,6 +16,9 @@ etapách je v [pláne vývoja](./ROADMAP.md).
 - **Domácnosť**: domáce účtovníctvo v samostatnej domácnosti — účty
   so zostatkami, výdavky a príjmy podľa kategórií, prevody, mesačný
   rozpočet, import výpisu a prenos výberov zo živnosti.
+- **Záväzky domácnosti**: pôžičky, dlhy, exekúcie, pravidelné platby
+  a požičané peniaze so splátkovým kalendárom, splátky v kalendári
+  a pripomenutie e-mailom.
 
 ## Pripravuje sa (0.2)
 

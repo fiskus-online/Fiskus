@@ -112,3 +112,43 @@ func (s *Store) DeleteHHEntry(_ context.Context, companyID, id int64) error {
 	delete(s.hhEntries, id)
 	return nil
 }
+
+func (s *Store) ListHHObligations(_ context.Context, companyID int64) ([]household.Obligation, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	out := []household.Obligation{}
+	for _, o := range s.hhObligations {
+		if o.CompanyID == companyID {
+			out = append(out, o)
+		}
+	}
+	sort.Slice(out, func(i, j int) bool { return out[i].ID < out[j].ID })
+	return out, nil
+}
+
+func (s *Store) SaveHHObligation(_ context.Context, companyID int64, o *household.Obligation) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.hhObligations == nil {
+		s.hhObligations = map[int64]household.Obligation{}
+	}
+	if o.ID == 0 {
+		o.ID = s.id()
+	} else if old, ok := s.hhObligations[o.ID]; !ok || old.CompanyID != companyID {
+		return store.ErrNotFound
+	}
+	o.CompanyID = companyID
+	s.hhObligations[o.ID] = *o
+	return nil
+}
+
+func (s *Store) DeleteHHObligation(_ context.Context, companyID, id int64) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	o, ok := s.hhObligations[id]
+	if !ok || o.CompanyID != companyID {
+		return store.ErrNotFound
+	}
+	delete(s.hhObligations, id)
+	return nil
+}

@@ -128,7 +128,11 @@ func daysText(n int) string {
 
 func (a *App) deadlineBody(co store.Company, es []calendar.Event) string {
 	var b strings.Builder
-	fmt.Fprintf(&b, "Dobrý deň,\n\nblížia sa termíny firmy %s:\n\n", co.Name)
+	who := "firmy"
+	if co.Bookkeeping == store.BookkeepingHousehold {
+		who = "domácnosti"
+	}
+	fmt.Fprintf(&b, "Dobrý deň,\n\nblížia sa termíny %s %s:\n\n", who, co.Name)
 	for _, e := range es {
 		line := fmt.Sprintf("• %d. %d. %d — %s", e.Date.Day(), e.Date.Month(), e.Date.Year(), e.Title)
 		if e.Amount != nil && !e.Amount.IsZero() {

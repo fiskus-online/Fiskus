@@ -12,6 +12,7 @@ import {
   accountIcon, budgetTone, budgetWidth, chartBars, entryCategory, entryType, monthNames, newEntry,
 } from '../lib/household.js'
 import HouseholdEntryDialog from '../components/HouseholdEntryDialog.vue'
+import ObligationPayDialog from '../components/ObligationPayDialog.vue'
 
 const router = useRouter()
 const canWrite = computed(() => can('ledger.write'))
@@ -66,6 +67,13 @@ function show(cat) {
   router.push({ path: '/domacnost/pohyby', query: { kategoria: cat, rok: year.value } })
 }
 const amountClass = (e) => entryType(e)
+
+// najbližšie splátky záväzkov (do mesiaca, aj po splatnosti)
+const upcoming = computed(() => ov.value?.upcoming ?? [])
+const paying = ref(null)
+function pay(d) {
+  paying.value = { id: d.obligationId, name: d.name, kind: d.kind, creditor: d.creditor, accountId: d.accountId, amount: d.rest }
+}
 </script>
 
 <template>
@@ -103,6 +111,26 @@ const amountClass = (e) => entryType(e)
           <span class="acc-name">Spolu</span>
           <span class="acc-bal num"><span class="ledger">{{ formatMoney(ov.total) }}</span></span>
         </div>
+      </section>
+
+      <!-- najbližšie platby -->
+      <section v-if="upcoming.length" class="panel upcoming" aria-label="Najbližšie platby">
+        <header>
+          <h2>Najbližšie platby</h2>
+          <router-link to="/domacnost/zavazky" class="link">Záväzky a platby</router-link>
+        </header>
+        <table class="moves">
+          <tbody>
+            <tr v-for="d in upcoming" :key="d.obligationId + '-' + d.n" :class="{ late: d.status === 'overdue' }" @click="router.push(`/domacnost/zavazky/${d.obligationId}`)">
+              <td class="d">{{ formatDate(d.date) }}</td>
+              <td class="w"><span class="who">{{ d.name }}</span><small>{{ d.status === 'overdue' ? 'po splatnosti' : d.kind === 'lent' ? 'má vrátiť' : d.creditor }}</small></td>
+              <td class="num amt" :class="d.kind === 'lent' ? 'income' : 'expense'">{{ formatAmount(d.rest) }}</td>
+              <td class="pay" @click.stop>
+                <Button v-if="canWrite" :label="d.kind === 'lent' ? 'Prijať' : 'Zaplatiť'" size="small" text @click="pay(d)" />
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </section>
 
       <div class="cols">
@@ -180,6 +208,7 @@ const amountClass = (e) => entryType(e)
 
     <HouseholdEntryDialog :entry="editing" :accounts="accounts" :categories="categories" :payees="payees" :can-write="canWrite"
       @close="editing = null" @saved="load" />
+    <ObligationPayDialog :target="paying" :accounts="accounts" @close="paying = null" @paid="load" />
   </div>
 </template>
 
@@ -514,6 +543,16 @@ const amountClass = (e) => entryType(e)
 }
 .amt.income {
   color: var(--tone-paid);
+}
+.upcoming tr.late .d,
+.upcoming tr.late small {
+  color: var(--tone-overdue);
+  font-weight: 600;
+}
+.moves .pay {
+  width: 1%;
+  white-space: nowrap;
+  text-align: right;
 }
 .amt.transfer {
   color: var(--ink-faint);
