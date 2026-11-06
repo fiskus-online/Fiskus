@@ -13,6 +13,8 @@ etapách je v [pláne vývoja](./ROADMAP.md).
 
 ## Pripravuje sa (0.4)
 
+- **Uzávierka roka** v jednoduchom účtovníctve: kontroly, uzamknutie roka,
+  prenos stavov účtov do ďalšieho roka, otvorenie s dôvodom, tlač závierky.
 - **Domácnosť**: domáce účtovníctvo v samostatnej domácnosti — účty
   so zostatkami, výdavky a príjmy podľa kategórií, prevody, mesačný
   rozpočet, import výpisu a prenos výberov zo živnosti.
