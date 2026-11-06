@@ -3,7 +3,6 @@
 // alebo čítanie fotky cez Claude API → položky s kategóriami na kontrolu →
 // pohyb rozdelený na položky s fotkou bločku. Kategórie navrhne server.
 import { computed, ref, watch } from 'vue'
-import jsQR from 'jsqr'
 import { useToast } from 'primevue/usetoast'
 import Dialog from 'primevue/dialog'
 import Button from 'primevue/button'
@@ -15,7 +14,8 @@ import { api, ApiError } from '../lib/api.js'
 import { session } from '../lib/session.js'
 import { formatAmount, formatMoney, fromISODate, toISODate } from '../lib/format.js'
 import { categoriesFor, setAllCategory, splitByCategory } from '../lib/household.js'
-import { findQR, imageReader, loadImage, receiptId, shrinkImage } from '../lib/receipt.js'
+import { imageReader, loadImage, receiptId, shrinkImage } from '../lib/receipt.js'
+import { decodeQR } from '../lib/qrscan.js'
 
 const props = defineProps({
   visible: { type: Boolean, default: false },
@@ -75,7 +75,7 @@ async function onPhoto(ev) {
     loaded = await loadImage(file)
     photo.value = await shrinkImage(loaded.img)
     photoUrl.value = URL.createObjectURL(photo.value)
-    const text = findQR(jsQR, loaded.img.naturalWidth, loaded.img.naturalHeight, imageReader(loaded.img))
+    const text = await decodeQR(loaded.img.naturalWidth, loaded.img.naturalHeight, imageReader(loaded.img))
     if (receiptId(text)) {
       busyText.value = 'Načítavam bloček z eKasa…'
       showDraft(await api.hhReceiptQR(session.companyId, text))
