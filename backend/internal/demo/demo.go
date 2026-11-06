@@ -912,6 +912,31 @@ func seedHousehold(ctx context.Context, a *app.App) error {
 	}
 	today := a.Today()
 	first := invoice.NewDate(today.Year(), time.Month(today.Month()), 1)
+	// záväzky: splátky sú pohyby s odkazom na záväzok
+	obl := func(o household.Obligation) (int64, error) {
+		o, err := a.SaveHouseholdObligation(ctx, h.ID, o)
+		return o.ID, err
+	}
+	loanID, err := obl(household.Obligation{Kind: household.Loan, Name: "Chladnička na splátky", Creditor: "Home Credit", Principal: m.MustParse("1800"),
+		Installment: m.MustParse("150"), FirstDue: first.AddMonths(-2).AddDays(15), AccountID: bank.ID, Reference: "zmluva 4471023", VS: "4471023"})
+	if err != nil {
+		return err
+	}
+	rentID, err := obl(household.Obligation{Kind: household.Regular, Name: "Byt – zálohy a fond opráv", Creditor: "Spoločenstvo vlastníkov",
+		Installment: m.MustParse("520"), FirstDue: first.AddMonths(-2).AddDays(1), AccountID: bank.ID, Category: "Bývanie"})
+	if err != nil {
+		return err
+	}
+	if _, err := obl(household.Obligation{Kind: household.Execution, Name: "Exekúcia EX 845/2024", Creditor: "Exekútorský úrad JUDr. Kováč",
+		Principal: m.MustParse("1240"), PaidBefore: m.MustParse("400"), Installment: m.MustParse("120"), FirstDue: first.AddMonths(1).AddDays(19),
+		AccountID: bank.ID, Reference: "EX 845/2024", VS: "8452024", IBAN: "SK6807200002891987426353"}); err != nil {
+		return err
+	}
+	if _, err := obl(household.Obligation{Kind: household.Lent, Name: "Požičané Mišovi na auto", Creditor: "Michal", Principal: m.MustParse("300"),
+		Installment: m.MustParse("100"), FirstDue: first, AccountID: wallet.ID}); err != nil {
+		return err
+	}
+	byPayee := map[string]int64{"Home Credit": loanID, "Spoločenstvo vlastníkov": rentID}
 	type mv struct {
 		day         int
 		acc         int64
@@ -950,11 +975,29 @@ func seedHousehold(ctx context.Context, a *app.App) error {
 			if back == 1 && x.cat == "Potraviny" {
 				amt = amt.Add(m.MustParse("-40")) // minulý mesiac viac — rozpočet prekročený
 			}
-			e := household.Entry{Date: d, AccountID: x.acc, ToAccountID: x.to, Amount: amt, Category: x.cat, Payee: x.payee, Note: x.note}
+			e := household.Entry{Date: d, AccountID: x.acc, ToAccountID: x.to, Amount: amt, Category: x.cat, Payee: x.payee, Note: x.note,
+				ObligationID: byPayee[x.payee]}
 			if _, err := a.SaveHouseholdEntry(ctx, h.ID, e); err != nil {
 				return err
 			}
 		}
+	}
+	// bloček rozdelený na položky (potraviny aj drogéria)
+	items := []household.ReceiptItem{
+		{Name: "ROZOK KLASIK 40G", Quantity: "8", Amount: m.MustParse("0.72"), Category: "Potraviny"},
+		{Name: "MLIEKO POLOTUCNE 1L", Quantity: "2", Amount: m.MustParse("1.98"), Category: "Potraviny"},
+		{Name: "EIDAM 30% 250G", Amount: m.MustParse("2.49"), Category: "Potraviny"},
+		{Name: "KURACIE PRSIA 1KG", Amount: m.MustParse("7.99"), Category: "Potraviny"},
+		{Name: "BANANY", Quantity: "1,24", Amount: m.MustParse("1.48"), Category: "Potraviny"},
+		{Name: "SAMPON HEAD&SHOULDERS", Amount: m.MustParse("4.99"), Category: "Drogéria a domácnosť"},
+		{Name: "TOAL. PAPIER 8KS", Amount: m.MustParse("3.29"), Category: "Drogéria a domácnosť"},
+		{Name: "PRACI GEL 2L", Amount: m.MustParse("8.99"), Category: "Drogéria a domácnosť"},
+		{Name: "ZLAVA LIDL PLUS", Amount: m.MustParse("-1.00"), Category: "Potraviny"},
+	}
+	split, amt := household.ReceiptSplit(items, m.MustParse("30.93"), "Potraviny")
+	if _, err := a.SaveHouseholdEntry(ctx, h.ID, household.Entry{Date: today.AddDays(-1), AccountID: wallet.ID, Amount: amt, Payee: "Lidl",
+		Split: split, Source: "ekasa:O-DEMO0000000000000000000000000001"}); err != nil {
+		return err
 	}
 	return nil
 }

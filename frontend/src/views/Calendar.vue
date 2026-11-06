@@ -20,7 +20,7 @@ import { matches, searchTerms } from '../lib/search.js'
 import { calendarColumns } from '../lib/columns.js'
 import { refreshCalendar } from '../lib/attention.js'
 import {
-  badgeRange, byDate, dayLabel, kinds, kindLabel, monthGrid, monthNames, monthRange, relative, searchText, shiftMonth, soonCount, stateOf, weekdays,
+  badgeRange, byDate, dayLabel, kindsFor, kindLabel, monthGrid, monthNames, monthRange, relative, searchText, shiftMonth, soonCount, stateOf, weekdays,
 } from '../lib/calendar.js'
 
 const router = useRouter()
@@ -185,7 +185,7 @@ const fmtShort = (iso) => {
 
     <div class="toolbar">
       <div class="chips" role="group" aria-label="Druhy termínov">
-        <button v-for="k in kinds" :key="k.id" type="button" class="chip" :class="['k-' + k.id, { off: hidden.has(k.id) }]"
+        <button v-for="k in kindsFor(session.company)" :key="k.id" type="button" class="chip" :class="['k-' + k.id, { off: hidden.has(k.id) }]"
           :aria-pressed="!hidden.has(k.id)" @click="toggle(k.id)">
           <span class="swatch" aria-hidden="true" />{{ k.label }}<span class="cnt">{{ counts[k.id] ?? 0 }}</span>
         </button>

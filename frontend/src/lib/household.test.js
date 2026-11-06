@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
-  budgetTone, budgetWidth, listTotals, categoriesFor, categoryErrors, chartBars, entryCategory, entryType, filterEntries, fromForm, newEntry, toForm,
+  budgetTone, budgetWidth, listTotals, setAllCategory, splitByCategory, filterObligations, fromAmount, newObligation, obligationTone, paidPercent, toAmount, categoriesFor, categoryErrors, chartBars, entryCategory, entryType, filterEntries, fromForm, newEntry, toForm,
 } from './household.js'
 
 const accounts = [
@@ -26,8 +26,9 @@ describe('domácnosť', () => {
     expect(fromForm({ type: 'expense', amount: '12,5', category: 'Potraviny', accountId: 1 }).amount).toBe('-12.5')
     expect(fromForm({ type: 'income', amount: '1 800', category: 'Mzda', accountId: 1 }).amount).toBe('1800')
     const t = fromForm({ type: 'transfer', amount: '100', category: 'Potraviny', accountId: 1, toAccountId: 2 })
-    expect(t).toMatchObject({ amount: '100', category: '', toAccountId: 2 })
-    expect(toForm(rows[0])).toMatchObject({ type: 'expense', amount: '45.20' })
+    expect(t).toMatchObject({ amount: '100', category: '', toAccountId: 2, obligationId: 0 })
+    expect(fromForm({ type: 'expense', amount: '150', category: 'Splátky', accountId: 1, obligationId: 4 }).obligationId).toBe(4)
+    expect(toForm(rows[0])).toMatchObject({ type: 'expense', amount: '45,20' })
     expect(fromForm(toForm(rows[0])).amount).toBe('-45.20')
   })
 
@@ -86,5 +87,55 @@ describe('domácnosť', () => {
 
   it('kontrola kategórií', () => {
     expect(categoryErrors([{ name: 'A' }, { name: ' ' }, { name: 'a' }])).toEqual({ 1: 'Zadajte názov', 2: 'Kategória je dvakrát' })
+  })
+
+  it.each([
+    [{ principal: '1000', state: { paid: '250' } }, 25],
+    [{ principal: '100', state: { paid: '150' } }, 100],
+    [{ principal: '0', state: { paid: '10' } }, null],
+  ])('splatené %o → %s %%', (o, want) => expect(paidPercent(o)).toBe(want))
+
+  it.each([
+    [{ closed: true, state: {} }, 'cancelled'],
+    [{ state: { paidOff: true } }, 'paid'],
+    [{ state: { overdue: 2 } }, 'overdue'],
+    [{ state: { overdue: 0 } }, 'issued'],
+  ])('stav záväzku %o', (o, tone) => expect(obligationTone(o).tone).toBe(tone))
+
+  it('filter záväzkov', () => {
+    const list = [
+      { id: 1, name: 'Hypotéka', creditor: 'VÚB', kind: 'loan', state: {} },
+      { id: 2, name: 'Exekúcia EX 1/2024', creditor: 'JUDr. Kováč', kind: 'execution', state: {} },
+      { id: 3, name: 'Splatená', kind: 'debt', state: { paidOff: true } },
+      { id: 4, name: 'Zrušená', kind: 'regular', closed: true, state: {} },
+    ]
+    expect(filterObligations(list).map((o) => o.id)).toEqual([1, 2])
+    expect(filterObligations(list, { all: true }).map((o) => o.id)).toEqual([1, 2, 3, 4])
+    expect(filterObligations(list, { search: 'kovac' }).map((o) => o.id)).toEqual([2])
+    expect(filterObligations(list, { search: 'exekúcia' }).map((o) => o.id)).toEqual([2])
+  })
+
+  it('nový záväzok a sumy', () => {
+    const o = newObligation('regular', accounts, new Date(2026, 10, 6))
+    expect(o).toMatchObject({ kind: 'regular', accountId: 1, firstDue: '2026-11-06', frequency: 'monthly' })
+    expect(toAmount('1 234,50')).toBe('1234.50')
+    expect(fromAmount('1234.50')).toBe('1234,50')
+    expect(fromAmount('0.00')).toBe('')
+  })
+
+  it('bloček: kategórie položiek, popis, filter a hľadanie', () => {
+    const e = { id: 9, date: '2026-10-27', accountId: 2, amount: '-6.29', category: 'Potraviny', payee: 'Lidl', split: [
+      { category: 'Potraviny', amount: '-0.60', note: 'ROZOK KLASIK' },
+      { category: 'Drogéria a domácnosť', amount: '-4.20', note: 'SAMPON' },
+      { category: 'Potraviny', amount: '-1.49', note: 'MLIEKO' },
+    ] }
+    expect(splitByCategory(e.split)).toEqual([{ category: 'Drogéria a domácnosť', amount: '-4.20' }, { category: 'Potraviny', amount: '-2.09' }])
+    expect(entryCategory(e, accounts)).toBe('Potraviny + 1 ďalšia')
+    expect(filterEntries([e], { category: 'Drogéria a domácnosť' }, accounts)).toHaveLength(1)
+    expect(filterEntries([e], { search: 'sampon' }, accounts)).toHaveLength(1)
+    expect(setAllCategory(e.split, 'Iné výdavky').every((x) => x.category === 'Iné výdavky')).toBe(true)
+    const back = fromForm({ ...toForm(e), source: 'ekasa:O-1' })
+    expect(back.split).toHaveLength(3)
+    expect(back).toMatchObject({ amount: '-6.29', source: 'ekasa:O-1' })
   })
 })

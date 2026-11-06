@@ -235,13 +235,24 @@ func (a *App) checkEntry(ctx context.Context, companyID int64, e household.Entry
 	if e.Transfer() && !have[e.ToAccountID] {
 		return vErr("toAccountId", "Účet neexistuje")
 	}
+	if e.ObligationID != 0 {
+		if _, err := a.obligation(ctx, companyID, e.ObligationID); err != nil {
+			return vErr("obligationId", "Záväzok neexistuje")
+		}
+	}
 	if !e.Transfer() {
+		have := map[string]bool{}
 		for _, c := range cats {
-			if c.Name == e.Category {
-				return nil
+			have[c.Name] = true
+		}
+		for i, x := range e.Split {
+			if !have[x.Category] {
+				return vErr(fmt.Sprintf("split.%d", i), "Kategória „"+x.Category+"“ nie je v zozname")
 			}
 		}
-		return vErr("category", "Kategória „"+e.Category+"“ nie je v zozname — doplňte ju v kategóriách")
+		if !have[e.Category] {
+			return vErr("category", "Kategória „"+e.Category+"“ nie je v zozname — doplňte ju v kategóriách")
+		}
 	}
 	return nil
 }
@@ -260,8 +271,8 @@ func (a *App) SaveHouseholdEntry(ctx context.Context, companyID int64, e househo
 		}
 		before = &old
 		e.Source = old.Source // pôvod importu sa nemení
-	} else {
-		e.Source = ""
+	} else if !strings.HasPrefix(e.Source, "ekasa:") && !strings.HasPrefix(e.Source, "photo:") {
+		e.Source = "" // nový pohyb: pôvod iba z návrhu bločku (proti dvojitému zápisu)
 	}
 	s, err := a.householdSettings(ctx, companyID)
 	if err != nil {
@@ -270,7 +281,9 @@ func (a *App) SaveHouseholdEntry(ctx context.Context, companyID int64, e househo
 	if err := a.checkEntry(ctx, companyID, e, s.Categories); err != nil {
 		return e, err
 	}
-	if err := a.Store.SaveHHEntry(ctx, companyID, &e); err != nil {
+	if err := a.Store.SaveHHEntry(ctx, companyID, &e); errors.Is(err, store.ErrDuplicate) {
+		return e, vErr("source", "Tento bloček už je v domácnosti zapísaný")
+	} else if err != nil {
 		return e, err
 	}
 	a.record(ctx, companyID, audit.CatLedger, "save", "household_entry", e.ID, "Domácnosť: "+entrySummary(e), before, e)
@@ -312,6 +325,8 @@ type HouseholdOverview struct {
 	Budget   []household.MonthBudget `json:"budget"`
 	Accounts []HouseholdAccount      `json:"accounts"`
 	Total    money.Dec               `json:"total"` // súčet zostatkov otvorených účtov
+	// Upcoming sú nezaplatené splátky záväzkov do mesiaca (aj po splatnosti).
+	Upcoming []UpcomingDue `json:"upcoming"`
 }
 
 // HouseholdSummary zostaví prehľad roka a rozpočet mesiaca (0 = aktuálny,
@@ -340,7 +355,11 @@ func (a *App) HouseholdSummary(ctx context.Context, companyID int64, year, month
 		return HouseholdOverview{}, err
 	}
 	ov := household.Summarize(year, s.Categories, es)
-	out := HouseholdOverview{Overview: ov, Month: month, Budget: household.Budget(ov, month), Accounts: accs}
+	up, err := a.obligationDues(ctx, companyID, today.AddDays(31))
+	if err != nil {
+		return HouseholdOverview{}, err
+	}
+	out := HouseholdOverview{Overview: ov, Month: month, Budget: household.Budget(ov, month), Accounts: accs, Upcoming: up}
 	for _, x := range accs {
 		if !x.Closed {
 			out.Total = out.Total.Add(x.Balance)

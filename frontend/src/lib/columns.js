@@ -8,7 +8,7 @@ import { levelShort } from './reminders.js'
 import { kindLabel } from './advance.js'
 import { assetStatus, disposalOptions, periodLabel } from './assets.js'
 import { tripTime } from './logbook.js'
-import { accountKindLabel, accountName, entryCategory, typeLabel, entryType } from './household.js'
+import { accountKindLabel, accountName, entryCategory, typeLabel, entryType, frequencyLabel, obligationKindLabel, obligationTone } from './household.js'
 import { moveLabel } from './itemcard.js'
 import { kindLabel as calendarKind, repeatLabel, stateOf } from './calendar.js'
 import { docKindLabel, emailStatus } from './emails.js'
@@ -628,4 +628,23 @@ export const householdAccountColumns = [
   money('Počiatočný stav €', (r) => r.opening),
   money('Zostatok €', (r) => r.balance),
   t('Zrušený', (r) => yes(r.closed), 8),
+]
+
+export const householdObligationColumns = [
+  t('Záväzok', (r) => r.name, 28),
+  t('Druh', (r) => obligationKindLabel(r.kind), 16),
+  t('Komu / kto', (r) => r.creditor, 24),
+  money('Celkom €', (r) => (Number(r.principal) ? r.principal : '')),
+  money('Splátka €', (r) => r.installment),
+  t('Opakovanie', (r) => frequencyLabel(r.frequency), 12),
+  money('Zaplatené €', (r) => r.state?.paid),
+  money('Zostáva €', (r) => (Number(r.principal) ? r.state?.remaining : '')),
+  date('Najbližšia splátka', (r) => r.state?.nextDue),
+  money('Najbližšia suma €', (r) => r.state?.nextAmount),
+  money('Po splatnosti €', (r) => r.state?.overdueAmount),
+  t('Stav', (r) => obligationTone(r).label, 20),
+  t('Zmluva / spis', (r) => r.reference, 18),
+  t('VS', (r) => r.vs, 12),
+  t('IBAN', (r) => r.iban, 26),
+  t('Poznámka', (r) => r.note, 30),
 ]

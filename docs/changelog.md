@@ -15,9 +15,17 @@ etapách je v [pláne vývoja](./ROADMAP.md).
 
 - **Uzávierka roka** v jednoduchom účtovníctve: kontroly, uzamknutie roka,
   prenos stavov účtov do ďalšieho roka, otvorenie s dôvodom, tlač závierky.
+- **Daň z príjmov typ B — rodina a straty**: deti a daňový bonus, manžel/ka,
+  straty z minulých rokov, bonus od zamestnávateľa a počet príloh priamo
+  vo Fiškuse aj v XML pre eDane.
 - **Domácnosť**: domáce účtovníctvo v samostatnej domácnosti — účty
   so zostatkami, výdavky a príjmy podľa kategórií, prevody, mesačný
   rozpočet, import výpisu a prenos výberov zo živnosti.
+- **Záväzky domácnosti**: pôžičky, dlhy, exekúcie, pravidelné platby
+  a požičané peniaze so splátkovým kalendárom, splátky v kalendári
+  a pripomenutie e-mailom.
+- **Bločky v domácnosti**: z QR kódu eKasa alebo z fotky (Claude API),
+  každá položka v svojej kategórii, fotka pri pohybe.
 
 ## Pripravuje sa (0.2)
 

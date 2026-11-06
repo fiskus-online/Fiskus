@@ -69,8 +69,16 @@ func (a *App) Calendar(ctx context.Context, companyID int64, from, to invoice.Da
 		}
 		add(es...)
 	}
-	if can(auth.PermLedgerRead) {
+	household := co.Bookkeeping == store.BookkeepingHousehold
+	if can(auth.PermLedgerRead) && !household {
 		es, err := a.yearDeadlines(ctx, companyID, from, to, days)
+		if err != nil {
+			return CalendarView{}, err
+		}
+		add(es...)
+	}
+	if can(auth.PermLedgerRead) && household {
+		es, err := a.householdEvents(ctx, companyID, to)
 		if err != nil {
 			return CalendarView{}, err
 		}
