@@ -1,9 +1,9 @@
 name: Web na Cloudflare
 
 # Tri statické weby na Cloudflare Pages:
-#   fiskus.sk       ← site/ (verzia a odkazy na inštalátory z posledného vydania)
-#   docs.fiskus.sk  ← docs/ cez MkDocs
-#   app.fiskus.sk   ← Fiškus v prehliadači (make browser), iba pri vydaní
+#   fiskus.online       ← site/ (verzia a odkazy na inštalátory z posledného vydania)
+#   docs.fiskus.online  ← docs/ cez MkDocs
+#   app.fiskus.online   ← Fiškus v prehliadači (make browser), iba pri vydaní
 # Nasadzuje sa, iba keď je v repozitári premenná CLOUDFLARE_ACCOUNT_ID
 # a tajomstvo CLOUDFLARE_API_TOKEN (práva Cloudflare Pages: Edit).
 # Nič sa neukladá ako artifact — zostavenie aj nahratie sú v jednom kroku.
@@ -29,7 +29,7 @@ env:
 
 jobs:
   site:
-    name: fiskus.sk
+    name: fiskus.online
     if: vars.CLOUDFLARE_ACCOUNT_ID != ''
     runs-on: ubuntu-latest
     steps:
@@ -54,7 +54,7 @@ jobs:
           npx --yes wrangler@3 pages deploy site --project-name=fiskus --branch=main --commit-dirty=true
 
   docs:
-    name: docs.fiskus.sk
+    name: docs.fiskus.online
     if: vars.CLOUDFLARE_ACCOUNT_ID != ''
     runs-on: ubuntu-latest
     steps:
@@ -73,7 +73,7 @@ jobs:
           npx --yes wrangler@3 pages deploy _docs --project-name=fiskus-docs --branch=main --commit-dirty=true
 
   app:
-    name: app.fiskus.sk (Fiškus v prehliadači)
+    name: app.fiskus.online (Fiškus v prehliadači)
     # iba vydaná verzia — dáta používateľov sú v prehliadači a prechádzajú
     # migráciami, preto nie každá zmena v main
     if: vars.CLOUDFLARE_ACCOUNT_ID != '' && github.event_name != 'push'

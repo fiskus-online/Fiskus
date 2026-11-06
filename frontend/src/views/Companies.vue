@@ -170,7 +170,7 @@ async function create() {
           <strong>Server – viac firiem</strong>
           <span class="price">99 € <small>ročne</small></span>
           <small>pre účtovné kancelárie a poskytovateľov služieb</small>
-          <a class="buy" href="https://fiskus.sk" target="_blank" rel="noopener">Kúpiť na fiskus.sk</a>
+          <a class="buy" href="https://fiskus.online" target="_blank" rel="noopener">Kúpiť na fiskus.online</a>
         </div>
       </div>
     </section>

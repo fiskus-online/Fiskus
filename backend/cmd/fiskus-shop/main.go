@@ -1,6 +1,6 @@
 // fiskus-shop prijíma notifikácie Paddle a po platbe pošle zákazníkovi
 // licenčný kľúč (serverová verzia pre viac firiem). Beží oddelene od
-// Fiškusa, napr. na fiskus.sk za reverznou proxy s HTTPS.
+// Fiškusa, napr. na fiskus.online za reverznou proxy s HTTPS.
 //
 //	fiskus-shop -addr 127.0.0.1:8090 -key licencia.key -store licencie.jsonl
 //

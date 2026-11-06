@@ -36,7 +36,7 @@ type env struct {
 }
 
 const (
-	adminEmail = "spravca@fiskus.sk"
+	adminEmail = "spravca@fiskus.online"
 	adminPass  = "spravca-heslo-1"
 )
 
