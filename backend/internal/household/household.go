@@ -7,6 +7,7 @@ package household
 
 import (
 	"fmt"
+	"github.com/palo-krnac/fiscus/backend/internal/ekasa"
 	"sort"
 	"strings"
 	"unicode"
@@ -59,6 +60,10 @@ type Entry struct {
 	// Source je pôvod pohybu z importu ("bank:<odtlačok>", "biz:<firma>:<pohyb>");
 	// pohyb s rovnakým pôvodom sa druhýkrát neuloží.
 	Source string `json:"source,omitempty"`
+	// Receipt sú údaje bločku (z eKasy alebo prečítané z fotky) — predajca,
+	// predajňa, pokladnica, položky s cenou za kus a DPH, rekapitulácia DPH.
+	// Ukladajú sa pri zápise bločku a ďalej sa nemenia.
+	Receipt *ekasa.Receipt `json:"receipt,omitempty"`
 }
 
 // Split je položka rozdeleného pohybu (suma so znamienkom ako pohyb).

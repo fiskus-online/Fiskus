@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/palo-krnac/fiscus/backend/internal/audit"
 	"github.com/palo-krnac/fiscus/backend/internal/auth"
@@ -31,7 +32,7 @@ type ReceiptDraft struct {
 }
 
 // receiptDraft doplní kategórie položiek a zostaví pohyb.
-func (a *App) receiptDraft(ctx context.Context, companyID int64, date invoice.Date, shop string, total money.Dec, items []household.ReceiptItem, source string) (ReceiptDraft, error) {
+func (a *App) receiptDraft(ctx context.Context, companyID int64, date invoice.Date, shop string, total money.Dec, items []household.ReceiptItem, source string, info *ekasa.Receipt) (ReceiptDraft, error) {
 	s, err := a.householdSettings(ctx, companyID)
 	if err != nil {
 		return ReceiptDraft{}, err
@@ -65,7 +66,7 @@ func (a *App) receiptDraft(ctx context.Context, companyID int64, date invoice.Da
 		}
 	}
 	split, amt := household.ReceiptSplit(items, total, shopCat)
-	d := ReceiptDraft{Entry: household.Entry{Date: date, Amount: amt, Payee: shop, Split: split, Source: source}, Warnings: []string{}}
+	d := ReceiptDraft{Entry: household.Entry{Date: date, Amount: amt, Payee: shop, Split: split, Source: source, Receipt: info}, Warnings: []string{}}
 	d.Entry.Normalize()
 	if len(split) == 0 {
 		d.Entry.Category = shopCat
@@ -138,7 +139,7 @@ func (a *App) HouseholdReceiptQR(ctx context.Context, companyID int64, qr string
 	if !r.Issued.IsZero() {
 		date = invoice.NewDate(r.Issued.Year(), r.Issued.Month(), r.Issued.Day())
 	}
-	d, err := a.receiptDraft(ctx, companyID, date, r.Seller.Name, r.Total, items, "ekasa:"+id)
+	d, err := a.receiptDraft(ctx, companyID, date, r.Seller.Name, r.Total, items, "ekasa:"+id, &r)
 	d.From = "ekasa"
 	return d, err
 }
@@ -184,7 +185,19 @@ func (a *App) HouseholdReceiptPhoto(ctx context.Context, companyID int64, photo 
 	total, _ := extract.Num(r.Total)
 	date, _ := invoice.ParseDate(strings.TrimSpace(r.Date))
 	sum := sha256.Sum256(photo)
-	d, err := a.receiptDraft(ctx, companyID, date, strings.TrimSpace(r.Store), total, items, "photo:"+hex.EncodeToString(sum[:8]))
+	// údaje bločku z fotky (bez kódu pokladnice a DPH, tie fotka nemusí mať)
+	info := &ekasa.Receipt{Seller: ekasa.Seller{Name: strings.TrimSpace(r.Store)}, Total: total}
+	if !date.IsZero() {
+		info.Issued = time.Date(date.Year(), time.Month(date.Month()), date.Day(), 0, 0, 0, 0, time.UTC)
+	}
+	for _, it := range items {
+		q, ok := extract.Num(it.Quantity)
+		if !ok || q.IsZero() {
+			q = money.FromInt(1)
+		}
+		info.Items = append(info.Items, ekasa.Item{Name: it.Name, Quantity: q, Price: it.Amount, UnitPrice: ekasa.UnitPrice(it.Amount, q)})
+	}
+	d, err := a.receiptDraft(ctx, companyID, date, strings.TrimSpace(r.Store), total, items, "photo:"+hex.EncodeToString(sum[:8]), info)
 	d.From = "photo"
 	if err == nil {
 		a.record(ctx, companyID, audit.CatAI, "extract", "household_receipt", 0,
