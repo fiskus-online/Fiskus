@@ -5,7 +5,7 @@ platform: linux
 version: __VERSION__
 section: misc
 priority: optional
-maintainer: Pavol Krnáč <info@fiskus.online>
+maintainer: Pavol Krnáč
 description: |
   Fiškus — slovenský účtovný program: faktúry, DPH, kontrolný výkaz,
   banka a pokladňa. Beží v prehliadači, dáta ostávajú v počítači.
