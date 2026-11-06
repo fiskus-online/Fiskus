@@ -65,7 +65,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: pip install mkdocs-material
+      - run: pip install "mkdocs<2" mkdocs-material
       - run: mkdocs build --strict -d _docs
       - name: Nasadenie
         run: |
