@@ -1,6 +1,7 @@
 package household
 
 import (
+	"sort"
 	"strings"
 
 	"github.com/palo-krnac/fiscus/backend/internal/invoice"
@@ -21,6 +22,7 @@ const (
 	Execution ObligationKind = "execution" // exekúcia
 	Regular   ObligationKind = "regular"   // pravidelná platba bez dlhu (nájom, energie, poistka)
 	Lent      ObligationKind = "lent"      // požičané niekomu — splátky sú príjem
+	Fine      ObligationKind = "fine"      // pokuta, poplatok, jednorazová platba (škola, krúžok)
 )
 
 // Frequency je opakovanie splátok.
@@ -72,12 +74,49 @@ type Obligation struct {
 	Reference string `json:"reference"` // číslo zmluvy, spisová značka
 	VS        string `json:"vs"`
 	IBAN      string `json:"iban"`
-	Closed    bool   `json:"closed"` // ukončený (splatený, zrušený)
-	Note      string `json:"note"`
+	Address   string `json:"address"` // adresa príjemcu (poštová poukážka, šek)
+	// Months sú mesiace (1 – 12), v ktorých sa pri mesačnom opakovaní platí
+	// (napr. škola september – jún); prázdne = každý mesiac.
+	Months []int `json:"months,omitempty"`
+	// RemindDays je koľko dní vopred pripomenúť splátku (0 = podľa
+	// nastavenia upozornení, v kalendári v telefóne 3 a 1 deň vopred).
+	RemindDays int    `json:"remindDays"`
+	Closed     bool   `json:"closed"` // ukončený (splatený, zrušený)
+	Note       string `json:"note"`
 }
 
 // Income: splátky záväzku sú príjem (požičané niekomu).
 func (o Obligation) Income() bool { return o.Kind == Lent }
+
+// normMonths zoradí mesiace bez opakovania; všetkých 12 = prázdne.
+func normMonths(ms []int) []int {
+	seen := map[int]bool{}
+	out := []int{}
+	for _, m := range ms {
+		if !seen[m] {
+			seen[m] = true
+			out = append(out, m)
+		}
+	}
+	sort.Ints(out)
+	if len(out) == 0 || len(out) == 12 {
+		return nil
+	}
+	return out
+}
+
+// paysIn: platí sa v mesiaci (1 – 12)?
+func (o Obligation) paysIn(month int) bool {
+	if len(o.Months) == 0 || o.Frequency != Monthly {
+		return true
+	}
+	for _, m := range o.Months {
+		if m == month {
+			return true
+		}
+	}
+	return false
+}
 
 // Normalize upraví záväzok pred uložením.
 func (o *Obligation) Normalize() {
@@ -87,6 +126,11 @@ func (o *Obligation) Normalize() {
 	o.VS = strings.TrimSpace(o.VS)
 	o.IBAN = strings.ToUpper(strings.ReplaceAll(strings.TrimSpace(o.IBAN), " ", ""))
 	o.Note = strings.TrimSpace(o.Note)
+	o.Address = strings.TrimSpace(o.Address)
+	o.Months = normMonths(o.Months)
+	if o.Frequency != "" && o.Frequency != Monthly {
+		o.Months = nil
+	}
 	o.Principal = o.Principal.RoundCents()
 	o.PaidBefore = o.PaidBefore.RoundCents()
 	o.Installment = o.Installment.RoundCents()
@@ -103,7 +147,7 @@ func (o Obligation) Validate() error {
 	var fe []FieldError
 	add := func(f, m string) { fe = append(fe, FieldError{Field: f, Message: m}) }
 	switch o.Kind {
-	case Loan, Debt, Execution, Regular, Lent:
+	case Loan, Debt, Execution, Regular, Lent, Fine:
 	default:
 		add("kind", "Neznámy druh záväzku")
 	}
@@ -129,6 +173,15 @@ func (o Obligation) Validate() error {
 	}
 	if o.Count < 0 || o.Count > 1200 {
 		add("count", "Počet splátok je 0 až 1200")
+	}
+	for _, m := range o.Months {
+		if m < 1 || m > 12 {
+			add("months", "Mesiace sú 1 až 12")
+			break
+		}
+	}
+	if o.RemindDays < 0 || o.RemindDays > 60 {
+		add("remindDays", "Pripomenúť sa dá 0 až 60 dní vopred")
 	}
 	if o.Kind != Regular && o.Principal.IsZero() && o.Count == 0 {
 		add("principal", "Zadajte dlžnú sumu alebo počet splátok")
@@ -185,6 +238,7 @@ func Schedule(o Obligation, paid money.Dec, today, until invoice.Date) []Due {
 	left := paid.Sub(o.PaidBefore)
 	principal := o.Principal.Sub(o.PaidBefore)
 	total := money.Zero // naplánované spolu
+	k := -1             // poradie obdobia od prvej splátky (aj vynechané mesiace)
 	for n := 1; n <= 1200; n++ {
 		if o.Count > 0 && n > o.Count {
 			break
@@ -202,7 +256,15 @@ func Schedule(o Obligation, paid money.Dec, today, until invoice.Date) []Due {
 				amt = rest // posledná splátka doplatí zvyšok
 			}
 		}
-		d := o.FirstDue.AddMonths((n - 1) * step)
+		d, ok := invoice.Date{}, false
+		for tries := 0; tries < 12 && !ok; tries++ {
+			k++
+			d = o.FirstDue.AddMonths(k * step)
+			ok = o.paysIn(d.Month())
+		}
+		if !ok {
+			break
+		}
 		unbounded := o.Count == 0 && o.Principal.IsZero()
 		if unbounded && d.After(until) && left.Sign() <= 0 {
 			break

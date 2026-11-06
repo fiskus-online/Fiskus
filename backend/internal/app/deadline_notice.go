@@ -27,13 +27,22 @@ func noticeKey(companyID int64) string { return fmt.Sprintf("deadline.notified.%
 // nebolo upozornenie (kľúč = ID termínu + dátum).
 func (a *App) dueEvents(ctx context.Context, companyID int64, days int, sent map[string]string) ([]calendar.Event, error) {
 	today := a.Today()
-	v, err := a.Calendar(ctx, companyID, today, today.AddDays(days))
+	v, err := a.Calendar(ctx, companyID, today, today.AddDays(max(days, 60)))
 	if err != nil {
 		return nil, err
 	}
 	var out []calendar.Event
 	for _, e := range v.Events {
 		if !noticeKinds[e.Kind] || e.Done {
+			continue
+		}
+		// termín s vlastnou pripomienkou (splátka domácnosti) sa pripomenie
+		// toľko dní vopred, ostatné podľa nastavenia
+		limit := days
+		if e.RemindDays > 0 {
+			limit = e.RemindDays
+		}
+		if e.Date.After(today.AddDays(limit)) {
 			continue
 		}
 		if _, ok := sent[e.ID+"@"+e.Date.String()]; ok {

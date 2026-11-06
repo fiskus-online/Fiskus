@@ -1,6 +1,7 @@
 package calendar
 
 import (
+	"fmt"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -44,7 +45,7 @@ func ICS(name string, events []Event, now time.Time) []byte {
 		line("CATEGORIES:" + escape(kindLabel[e.Kind]))
 		line("TRANSP:TRANSPARENT")
 		if !e.Done && (e.Kind == KindTax || e.Kind == KindOwn || e.Kind == KindPay) {
-			for _, before := range []string{"-P3D", "-P1D"} {
+			for _, before := range alarms(e.RemindDays) {
 				line("BEGIN:VALARM")
 				line("ACTION:DISPLAY")
 				line("DESCRIPTION:" + escape(e.Title))
@@ -56,6 +57,17 @@ func ICS(name string, events []Event, now time.Time) []byte {
 	}
 	line("END:VCALENDAR")
 	return []byte(b.String())
+}
+
+// alarms: pripomienky pred termínom (predvolene 3 a 1 deň vopred).
+func alarms(days int) []string {
+	switch {
+	case days <= 0:
+		return []string{"-P3D", "-P1D"}
+	case days == 1:
+		return []string{"-P1D"}
+	}
+	return []string{fmt.Sprintf("-P%dD", days), "-P1D"}
 }
 
 var kindLabel = map[Kind]string{
