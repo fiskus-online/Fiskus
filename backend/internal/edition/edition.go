@@ -3,58 +3,34 @@
 // Rozhoduje backend — frontend sa len pýta /api/capabilities a podľa toho
 // zobrazí alebo skryje prvky. Obísť sa to teda nedá úpravou rozhrania.
 //
-// Ceny Fiškusa:
-//   - desktopová verzia: zadarmo (jedna firma)
-//   - serverová verzia pre jednu firmu: zadarmo (s používateľmi a rolami)
-//   - serverová verzia pre viac firiem: licencia 99 € ročne (Paddle)
+// Fiškus je vždy zadarmo — bez licencií a bez obmedzenia počtu firiem.
+// Režimy sa líšia iba tým, kde program beží (desktop, server, prehliadač).
 package edition
 
-import (
-	"fmt"
-	"time"
-
-	"github.com/palo-krnac/fiscus/backend/internal/license"
-)
+import "fmt"
 
 // Mode je režim behu programu.
 type Mode string
 
 const (
-	Desktop Mode = "desktop" // lokálna inštalácia, jedna firma
+	Desktop Mode = "desktop" // lokálna inštalácia
 	Server  Mode = "server"  // beh na serveri, prístup cez prehliadač
 )
 
-// Plan je cenový plán.
-type Plan string
-
-const (
-	PlanFree  Plan = "free"  // zadarmo: jedna firma
-	PlanMulti Plan = "multi" // licencia: viac firiem
-)
-
-// PriceMulti je cena licencie pre viac firiem (na zobrazenie).
-const PriceMulti = "99 € ročne"
-
 // Capabilities sú povolené funkcie.
 type Capabilities struct {
-	Mode         Mode            `json:"mode"`
-	Plan         Plan            `json:"plan"`
-	MultiCompany bool            `json:"multiCompany"` // dajú sa zakladať ďalšie firmy
-	MaxCompanies int             `json:"maxCompanies"` // 0 = bez obmedzenia
-	License      *license.Status `json:"license,omitempty"`
-	Price        string          `json:"price,omitempty"` // cena licencie (iba server)
+	Mode         Mode `json:"mode"`
+	MultiCompany bool `json:"multiCompany"` // dajú sa zakladať ďalšie firmy (vždy)
 	// Browser: Fiškus beží v prehliadači (údaje v úložisku prehliadača).
 	// Je to desktopová verzia bez funkcií, ktoré potrebujú inštaláciu.
 	Browser bool `json:"browser,omitempty"`
 }
 
-// For vráti schopnosti pre daný režim bez licencie.
+// For vráti schopnosti pre daný režim.
 func For(m Mode) (Capabilities, error) {
 	switch m {
-	case Desktop:
-		return Capabilities{Mode: Desktop, Plan: PlanFree, MaxCompanies: 1}, nil
-	case Server:
-		return Capabilities{Mode: Server, Plan: PlanFree, MaxCompanies: 1, Price: PriceMulti}, nil
+	case Desktop, Server:
+		return Capabilities{Mode: m, MultiCompany: true}, nil
 	}
 	return Capabilities{}, fmt.Errorf("neznámy režim %q (desktop | server)", m)
 }
@@ -64,26 +40,4 @@ func ForBrowser() Capabilities {
 	c, _ := For(Desktop)
 	c.Browser = true
 	return c
-}
-
-// WithLicense uplatní licenciu k času now. Licencia platí iba pre serverovú
-// verziu. Po vypršaní (a dobe na obnovenie) sa nové firmy zakladať nedajú,
-// existujúce firmy a ich dáta zostávajú prístupné.
-func (c Capabilities) WithLicense(l *license.License, now time.Time) Capabilities {
-	if l == nil || c.Mode != Server {
-		return c
-	}
-	st := l.StatusAt(now)
-	c.License = &st
-	if st.Valid {
-		c.Plan = PlanMulti
-		c.MultiCompany = true
-		c.MaxCompanies = l.Companies
-	}
-	return c
-}
-
-// CanAddCompany vráti true, ak sa dá založiť ďalšia firma.
-func (c Capabilities) CanAddCompany(existing int) bool {
-	return c.MaxCompanies == 0 || existing < c.MaxCompanies
 }

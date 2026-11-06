@@ -232,49 +232,12 @@ h2 {
 .does dt { font-weight: 700; font-size: 1.125rem; margin-bottom: 4px; }
 .does dd { margin: 0; color: var(--ink-soft); max-width: 52ch; }
 
-/* edície: tabuľka ako v programe */
+/* režimy: tabuľka ako v programe */
 .editions { width: 100%; border-collapse: collapse; background: var(--sheet); border: 1px solid var(--rule); }
 .editions th, .editions td { padding: 14px 18px; text-align: left; vertical-align: top; border-top: 1px solid var(--rule); }
 .editions thead th { border-top: 0; font-size: 0.875rem; color: var(--ink-faint); font-weight: 600; background: var(--paper); }
 .editions tbody th { font-size: 1.125rem; width: 28%; }
-.editions .price { white-space: nowrap; font-weight: 700; font-size: 1.125rem; width: 16%; }
-.editions .price span { display: block; font-weight: 400; font-size: 0.875rem; color: var(--ink-faint); }
 .editions td p { margin: 0; color: var(--ink-soft); }
-
-/* nákup licencie */
-.buy {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 420px);
-  gap: 48px;
-  margin-top: 40px;
-  align-items: start;
-}
-.buy h3 { font-size: 1.25rem; margin: 0 0 12px; }
-.buy ol { margin: 0; padding-left: 1.2em; color: var(--ink-soft); max-width: 52ch; }
-.buy ol li { margin-bottom: 8px; }
-.buy form {
-  background: var(--sheet);
-  border: 1px solid var(--rule);
-  border-top: 3px solid var(--blue-deep);
-  padding: 22px;
-  display: grid;
-  gap: 14px;
-}
-.buy label { display: grid; gap: 4px; font-weight: 600; font-size: 0.9375rem; }
-.buy input {
-  font: inherit;
-  font-weight: 400;
-  padding: 9px 11px;
-  border: 1px solid #b9c2cf;
-  border-radius: 4px;
-  background: #fff;
-}
-.buy input:focus { border-color: var(--blue); outline: none; box-shadow: 0 0 0 2px var(--blue-wash); }
-.buy .total { display: flex; justify-content: space-between; align-items: baseline; border-top: 1px solid var(--ink); padding-top: 10px; }
-.buy .total strong { font-size: 1.375rem; border-bottom: 3px double var(--ink); }
-.buy .hint { margin: 0; font-size: 0.875rem; color: var(--ink-faint); }
-.buy .msg { margin: 0; font-size: 0.9375rem; }
-.buy .msg.err { color: var(--red-ink); }
 
 /* stiahnutie */
 .downloads { width: 100%; border-collapse: collapse; }
@@ -303,7 +266,7 @@ footer.bottom .wrap { display: flex; flex-wrap: wrap; gap: 10px 24px; align-item
 footer.bottom nav { display: flex; flex-wrap: wrap; gap: 6px 20px; margin-left: auto; }
 
 @media (max-width: 860px) {
-  .hero .wrap, .buy { grid-template-columns: 1fr; gap: 32px; }
+  .hero .wrap { grid-template-columns: 1fr; gap: 32px; }
   .hero-text { padding-bottom: 0; }
   .does { grid-template-columns: 1fr; }
   .top nav { gap: 14px; }

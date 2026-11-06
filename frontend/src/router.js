@@ -212,7 +212,7 @@ export const router = createRouter({
     { path: '/kontrolny-vykaz', component: VatReturn, props: { tab: 'kv' }, meta: { title: 'Kontrolný výkaz', perm: 'vat.read' } },
     { path: '/dan-z-prijmov', component: TaxReturn, meta: { title: 'Daň z príjmov FO (typ B)', perm: 'ledger.read' } },
     { path: '/suhrnny-vykaz', component: VatReturn, props: { tab: 'sv' }, meta: { title: 'Súhrnný výkaz', perm: 'vat.read' } },
-    { path: '/firmy', component: Companies, meta: { settings: true, title: 'Firmy a licencia', superAdmin: true, noCompany: true } },
+    { path: '/firmy', component: Companies, meta: { settings: true, title: 'Firmy a domácnosti', superAdmin: true, noCompany: true } },
     { path: '/audit', component: AuditLog, meta: { title: 'Audit', perm: 'audit.read' } },
     ...placeholderRoutes,
     { path: '/:pathMatch(.*)*', redirect: '/faktury' },

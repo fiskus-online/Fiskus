@@ -101,10 +101,10 @@ fiskus -mode server -addr :8080 -db /data/fiskus.db
 ```
 
 Serverová verzia má prihlasovanie, povinné dvojfázové overenie, roly
-používateľov a pri licencii aj viac firiem. Za reverznou proxy ju spustite
+používateľov a ľubovoľný počet firiem. Za reverznou proxy ju spustite
 s `-public-url https://vas-server`, aby odkazy (ponuky pre zákazníkov,
 pripojenie AI asistenta) mali správnu adresu.
 
-!!! note "Jedna firma je zadarmo"
-    Desktop aj server s jednou firmou sú zadarmo. Licencia je potrebná iba
-    pre server s viacerými firmami (účtovné kancelárie).
+!!! note "Vždy zadarmo"
+    Desktop, server aj Fiškus v prehliadači sú zadarmo, bez licencií
+    a bez obmedzenia počtu firiem.

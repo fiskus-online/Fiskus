@@ -76,11 +76,8 @@ Referenčný prehľad funkcií pochádza z českých systémov MyInvoice (MIT) a
 - [x] Fiškus v prehliadači bez inštalácie: program v Go ako WebAssembly, SQLite v úložisku prehliadača (OPFS), funkcie nainštalovaného programu s výzvou na inštaláciu, šifrovaná záloha a obnova `.fbk` kompatibilná s nainštalovaným Fiškusom
 - [ ] Fiškus v prehliadači: nasadenie na `app.fiskus.online`, odkaz „Otvoriť v prehliadači“ na fiskus.online
 - [ ] Podpísané inštalačky (Authenticode, notarizácia Apple), automatická aktualizácia, AppImage
-- [x] Licencia pre serverovú verziu s viacerými firmami (offline overenie podpisu Ed25519)
-- [x] Web fiskus.online (priečinok `site/`): funkcie, cenník, stiahnutie podľa systému, nákup cez Paddle (pripravené, vypnuté), návrhy obchodných podmienok, ochrany údajov a vrátenia platby
-- [x] Predaj cez Paddle (pripravené): `fiskus-shop` overí podpis webhooku, vystaví licenciu (obnova nadväzuje), pošle ju e-mailom, evidencia bez zdvojenia
-- [ ] Spustiť predaj: overenie domény v Paddle, ostrý kľúč, doplnené právne texty, hosting webu a `fiskus-shop`
-- [ ] Ostrý licenčný kľúč (`fiskus-license keygen`) namiesto vývojového
+- [x] Fiškus je vždy zadarmo: licencie, predaj cez Paddle a limit počtu firiem zrušené
+- [x] Web fiskus.online (priečinok `site/`): funkcie, stiahnutie podľa systému, Fiškus v prehliadači, ochrana údajov
 - [x] E-faktúra UBL 2.1 (EN 16931, Peppol BIS Billing 3.0): vytvorenie z vystavenej faktúry a dobropisu (adresa 0245:DIČ), načítanie prijatej e-faktúry ako nákladu
 - [x] E-faktúra: všeobecné napojenie na digitálneho poštára — priečinky (synchronizácia aplikáciou poskytovateľa) alebo HTTP API adaptéra; odoslanie, schránka prijatých, zoznam odoslaných a prevzatých
 - [x] E-faktúra: národné rozhranie SAPI-SK 1.0 (ePošťák, Verteco a ďalší prístupoví body): prihlásenie client_credentials, odoslanie s Idempotency-Key, schránka so stránkovaním, potvrdenie prevzatia, overenie spojenia

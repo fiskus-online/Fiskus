@@ -11,7 +11,7 @@ import (
 
 // Mobil v sieti (desktop): telefóny sa pripájajú na adresu počítača v sieti.
 // LANHandler pustí dnu iba spárované telefóny (cookie s tokenom) a zakáže
-// im správu programu (párovanie, zálohy, licencia, PIN, ukončenie).
+// im správu programu (párovanie, zálohy, PIN, ukončenie).
 
 const deviceCookie = "fiskus_device"
 
@@ -29,7 +29,7 @@ func lanDenied(r *http.Request) bool {
 	switch {
 	case p == "/api/mobile/pair":
 		return false
-	case strings.HasPrefix(p, "/api/mobile"), strings.HasPrefix(p, "/api/backups"), strings.HasPrefix(p, "/api/license"),
+	case strings.HasPrefix(p, "/api/mobile"), strings.HasPrefix(p, "/api/backups"),
 		strings.HasPrefix(p, "/api/desktop"), strings.HasPrefix(p, "/api/auth"), strings.HasPrefix(p, "/api/security"),
 		strings.HasPrefix(p, "/api/legal"), strings.HasPrefix(p, "/mcp"), strings.HasPrefix(p, "/oauth"),
 		strings.HasPrefix(p, "/api/calendar-sync"), strings.HasPrefix(p, "/api/users"):
