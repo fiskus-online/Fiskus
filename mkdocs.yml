@@ -4,6 +4,7 @@
 # fabrikaERP). Ak sa tu niektorá stránka prestane zostavovať, dialekt je
 # porušený.
 site_name: Fiškus
+site_url: https://docs.fiskus.sk/
 site_description: Slovenský účtovný program na štúdium a výučbu účtovníctva.
 docs_dir: docs
 exclude_docs: |
