@@ -234,6 +234,83 @@ kbd {
   }
 }
 
+/* Fiškus v prehliadači: úvodná obrazovka pri spúšťaní (src/browser/boot.js) */
+.boot {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 24px 16px;
+  text-align: center;
+  background: var(--paper);
+  color: var(--ink);
+}
+.boot h1 {
+  font-size: 1.5rem;
+  margin: 4px 0 10px;
+  color: var(--blue-deep);
+}
+.boot p {
+  margin: 0;
+  max-width: 30rem;
+  color: var(--ink-soft);
+}
+.boot .boot-title {
+  font-size: var(--fs-md);
+  font-weight: 600;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.boot-bar {
+  width: min(18rem, 80vw);
+  height: 3px;
+  margin: 8px 0;
+  background: var(--rule);
+  overflow: hidden;
+}
+.boot-bar span {
+  display: block;
+  height: 100%;
+  background: var(--blue-deep);
+  transition: width 0.2s;
+}
+.boot-bar-busy span {
+  animation: boot-busy 1.2s ease-in-out infinite;
+}
+@keyframes boot-busy {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(340%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .boot-bar-busy span {
+    animation: none;
+  }
+}
+.boot .boot-note {
+  font-size: var(--fs-sm);
+}
+.boot-actions {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 12px !important;
+}
+.boot-btn {
+  font: inherit;
+  font-weight: 600;
+  padding: 6px 14px;
+  border: 0;
+  background: var(--blue-deep);
+  color: #fff;
+  cursor: pointer;
+}
+.boot-link {
+  color: var(--blue);
+}
 /* tlač: bez bočného menu a hlavičky, obsah na celú šírku */
 @media print {
   .shell {

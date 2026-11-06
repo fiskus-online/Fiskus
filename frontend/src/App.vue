@@ -14,12 +14,17 @@ import { visibleModules } from './lib/access.js'
 import Login from './views/Login.vue'
 import UserMenu from './components/UserMenu.vue'
 import MFADialog from './components/MFADialog.vue'
-import { api } from './lib/api.js'
+import { api, setInstallHandler } from './lib/api.js'
+import { inBrowser, requireInstall } from './lib/install.js'
+import InstallDialog from './components/InstallDialog.vue'
+import BrowserBackupBanner from './components/BrowserBackupBanner.vue'
 import { startHeartbeat } from './lib/desktop.js'
 import { attention, badgeText, refreshCalendar, refreshDrafts } from './lib/attention.js'
 import { badgeRange, soonCount } from './lib/calendar.js'
 
 const route = useRoute()
+// Fiškus v prehliadači: funkcia nainštalovaného programu → výzva na inštaláciu
+if (inBrowser) setInstallHandler(requireInstall)
 const router = useRouter()
 const navOpen = ref(false)
 
@@ -205,6 +210,7 @@ watch(
         <UserMenu />
       </header>
       <MFADialog v-if="session.me?.mfaRequired" :visible="true" forced @done="loadSession" />
+      <BrowserBackupBanner v-if="inBrowser && session.ready && session.companyId" />
 
       <main class="content">
         <div v-if="session.error" class="fatal">
@@ -236,6 +242,7 @@ watch(
     <Toast position="bottom-right" />
     <ConfirmDialog />
   </div>
+  <InstallDialog v-if="inBrowser" />
 </template>
 
 <style scoped>

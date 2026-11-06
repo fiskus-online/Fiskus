@@ -62,10 +62,13 @@ type Launcher interface {
 // musia mať hlavičku X-Fiskus — obrana proti CSRF, aj pre lokálny desktop.
 func (s *Server) Handler() http.Handler {
 	mux := http.NewServeMux()
-	public := func(pattern string, h http.HandlerFunc) { mux.HandleFunc(pattern, s.csrf(h)) }
-	open := func(pattern string, h http.HandlerFunc) { mux.HandleFunc(pattern, s.csrf(s.authed(h))) }
+	// s.guard: v prehliadači funkcia, ktorá potrebuje inštaláciu → výzva (browser.go)
+	public := func(pattern string, h http.HandlerFunc) { mux.HandleFunc(pattern, s.csrf(s.guard(pattern, h))) }
+	open := func(pattern string, h http.HandlerFunc) {
+		mux.HandleFunc(pattern, s.csrf(s.authed(s.guard(pattern, h))))
+	}
 	need := func(pattern string, p auth.Perm, h http.HandlerFunc) {
-		mux.HandleFunc(pattern, s.csrf(s.authed(s.need(p, h))))
+		mux.HandleFunc(pattern, s.csrf(s.authed(s.need(p, s.guard(pattern, h)))))
 	}
 
 	public("GET /api/capabilities", s.capabilities)
@@ -405,6 +408,7 @@ func (s *Server) Handler() http.Handler {
 		writeErr(w, http.StatusNotFound, "neznáma adresa API", nil)
 	})
 	s.routeOAuth(mux, open)
+	s.routeBrowser(open)
 	if s.Web != nil {
 		mux.Handle("/", spa(s.Web))
 	}

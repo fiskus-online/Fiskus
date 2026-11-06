@@ -2,6 +2,8 @@
 
 // Package sqlite je úložisko nad SQLite (ovládač modernc.org/sqlite — čisté Go,
 // bez C kompilátora, takže sa dá krížovo kompilovať pre Windows/macOS/Linux).
+// Vo verzii pre prehliadač (GOOS=js) ide o SQLite skompilované do WebAssembly
+// (@sqlite.org/sqlite-wasm) cez ovládač v driver_js.go.
 //
 // Kompiluje sa s tagom: go build -tags sqlite
 package sqlite
@@ -14,8 +16,6 @@ import (
 	"errors"
 	"fmt"
 	"sort"
-
-	_ "modernc.org/sqlite"
 
 	"github.com/palo-krnac/fiscus/backend/internal/invoice"
 	"github.com/palo-krnac/fiscus/backend/internal/money"
