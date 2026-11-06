@@ -14,6 +14,16 @@ export class ApiError extends Error {
 }
 
 let onUnauthorized = null
+let onInstall = null
+
+/** Zavolá sa, keď funkcia vyžaduje nainštalovaný Fiškus (verzia v prehliadači). */
+export function setInstallHandler(fn) {
+  onInstall = fn
+}
+
+function installNeeded(res, data) {
+  if (res.status === 501 && typeof data?.install === 'string' && onInstall) onInstall(data.install)
+}
 
 /** Zavolá sa pri odpovedi 401 (vypršaná relácia) — aplikácia zobrazí prihlásenie. */
 export function setUnauthorizedHandler(fn) {
@@ -53,6 +63,7 @@ export async function request(method, path, body, fetchImpl = globalThis.fetch) 
   }
   if (!res.ok) {
     if (res.status === 401 && onUnauthorized && !path.startsWith('/api/auth/')) onUnauthorized()
+    installNeeded(res, data)
     throw new ApiError(res.status, data?.error ?? `Chyba servera (${res.status})`, data?.fields ?? [])
   }
   return data
@@ -73,6 +84,7 @@ export async function download(path, fallbackName, fetchImpl = globalThis.fetch,
     } catch {
       /* telo nie je JSON */
     }
+    installNeeded(res, data)
     throw new ApiError(res.status, data?.error ?? `Chyba servera (${res.status})`, data?.fields ?? [])
   }
   const name = /filename="([^"]+)"/.exec(res.headers.get('Content-Disposition') ?? '')?.[1] ?? fallbackName
@@ -107,6 +119,15 @@ export const api = {
   fetchRemoteBackup: (name) => request('POST', `/api/backups/remote/${encodeURIComponent(name)}/fetch`),
   vatCoefficient: (cid, year) => request('GET', `/api/companies/${cid}/vat/coefficient/${year}`),
   setVATCoefficient: (cid, year, c) => request('PUT', `/api/companies/${cid}/vat/coefficient/${year}`, c),
+  // Fiškus v prehliadači: záloha stiahnutím súboru a obnova zo súboru
+  browserBackup: () => request('GET', '/api/browser/backup'),
+  downloadBrowserBackup: (password) => download('/api/browser/backup', 'fiskus.fbk', globalThis.fetch, { password }),
+  restoreBrowserBackup: (file, password) => {
+    const f = new FormData()
+    f.append('file', file)
+    f.append('password', password)
+    return request('POST', '/api/browser/restore', f)
+  },
   backupURL: (name) => `/api/backups/${encodeURIComponent(name)}`,
   calendar: (cid, from, to) => request('GET', `/api/companies/${cid}/calendar${query({ from, to })}`),
   calendarICSURL: (cid) => `/api/companies/${cid}/calendar.ics`,

@@ -18,13 +18,22 @@ import { FiskusPreset, skLocale } from './theme.js'
 
 ModuleRegistry.registerModules([AllCommunityModule])
 
-createApp(App)
-  .use(router)
-  .use(PrimeVue, {
-    theme: { preset: FiskusPreset, options: { darkModeSelector: '.fiskus-dark' } },
-    locale: skLocale,
-  })
-  .use(ToastService)
-  .use(ConfirmationService)
-  .directive('tooltip', Tooltip)
-  .mount('#app')
+function mount() {
+  createApp(App)
+    .use(router)
+    .use(PrimeVue, {
+      theme: { preset: FiskusPreset, options: { darkModeSelector: '.fiskus-dark' } },
+      locale: skLocale,
+    })
+    .use(ToastService)
+    .use(ConfirmationService)
+    .directive('tooltip', Tooltip)
+    .mount('#app')
+}
+
+if (import.meta.env.MODE === 'browser') {
+  // Fiškus v prehliadači: najprv spustiť program (WebAssembly) a databázu
+  import('./browser/boot.js').then(({ boot }) => boot(document.getElementById('app')).then((ok) => ok && mount()))
+} else {
+  mount()
+}
