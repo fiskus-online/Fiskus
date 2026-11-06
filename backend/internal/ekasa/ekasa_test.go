@@ -33,6 +33,8 @@ func TestParseQR(t *testing.T) {
 
 const sample = `{"returnValue":0,"receipt":{"receiptId":"O-7DBCDA8A56EE426DBCDA8A56EE426D1A","receiptNumber":42,
  "issueDate":"31.10.2026 10:15:30","createDate":"31.10.2026 10:15:31","customerId":null,
+ "cashRegisterCode":"88812345678900001","receiptType":"PD","paragon":false,
+ "unit":{"streetName":"Námestie SNP","buildingNumber":"5","municipality":"Zvolen","postalCode":"960 01"},
  "totalPrice":15.75,"taxBaseBasic":10.00,"vatAmountBasic":2.30,"vatRateBasic":23,"taxBaseReduced":3.24,"vatAmountReduced":0.21,"vatRateReduced":5,"freeTaxAmount":0,
  "items":[{"name":"Kábel","itemType":"K","quantity":2,"vatRate":23,"price":12.30},{"name":"Kniha","itemType":"K","quantity":1,"vatRate":5,"price":3.45}],
  "organization":{"name":"ELEKTRO s.r.o.","ico":"36000001","dic":"2020000001","icDph":"SK2020000001","streetName":"Hlavná","buildingNumber":"12","municipality":"Banská Bystrica","postalCode":"974 01"}},
@@ -60,6 +62,12 @@ func TestFind(t *testing.T) {
 	if r.Number != "42" || r.Seller.Name != "ELEKTRO s.r.o." || r.Seller.Street != "Hlavná 12" || r.Seller.Zip != "97401" || r.Seller.ICDPH != "SK2020000001" ||
 		r.Issued.Format("2006-01-02 15:04") != "2026-10-31 10:15" || !r.Total.Equal(money.MustParse("15.75")) || len(r.Items) != 2 {
 		t.Errorf("doklad %+v", r)
+	}
+	if r.CashRegister != "88812345678900001" || r.Type != "PD" || r.Unit != "Námestie SNP 5, 96001 Zvolen" {
+		t.Errorf("pokladnica a predajňa: %q %q %q", r.CashRegister, r.Type, r.Unit)
+	}
+	if !r.Items[0].UnitPrice.Equal(money.MustParse("6.15")) || r.Items[0].Type != "K" || !r.Items[1].UnitPrice.Equal(money.MustParse("3.45")) {
+		t.Errorf("cena za kus: %+v", r.Items)
 	}
 	if len(r.VAT) != 2 || r.VAT[0].Rate != 23 || !r.VAT[0].Base.Equal(money.FromInt(10)) || r.VAT[1].Rate != 5 || !r.VAT[1].VAT.Equal(money.MustParse("0.21")) {
 		t.Errorf("DPH %+v", r.VAT)

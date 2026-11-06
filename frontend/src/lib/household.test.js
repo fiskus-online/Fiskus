@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
-  budgetTone, budgetWidth, listTotals, setAllCategory, splitByCategory, filterObligations, fromAmount, newObligation, obligationTone, paidPercent, toAmount, categoriesFor, categoryErrors, chartBars, entryCategory, entryType, filterEntries, fromForm, newEntry, toForm, monthsLabel, planMonthLabel, filterPlan, ibanGroups,
+  budgetTone, budgetWidth, receiptFacts, receiptRows, listTotals, setAllCategory, splitByCategory, filterObligations, fromAmount, newObligation, obligationTone, paidPercent, toAmount, categoriesFor, categoryErrors, chartBars, entryCategory, entryType, filterEntries, fromForm, newEntry, toForm, monthsLabel, planMonthLabel, filterPlan, ibanGroups,
 } from './household.js'
 
 const accounts = [
@@ -178,5 +178,41 @@ describe('plán platieb', () => {
     expect(s.total.pay).toBe('64.80')
     expect(s.overdue).toEqual([])
     expect(s.months[1].items).toHaveLength(1)
+  })
+})
+
+describe('detail bločku', () => {
+  const receipt = {
+    id: 'O-7DBCDA8A56EE426DBCDA8A56EE426D1A', number: '42', issued: '2026-10-31T10:15:30+01:00', type: 'PD', cashRegister: '88812345678900001',
+    unit: 'Námestie SNP 5, 96001 Zvolen', customer: '',
+    seller: { name: 'ELEKTRO s.r.o.', ico: '36000001', dic: '2020000001', icDph: 'SK2020000001', street: 'Hlavná 12', city: 'Banská Bystrica', zip: '97401' },
+    items: [{ name: 'Kábel', quantity: '2.00', unitPrice: '6.15', price: '12.30', vatRate: 23, type: 'K' }, { name: 'ZĽAVA', quantity: '1.00', unitPrice: '-1.00', price: '-1.00', vatRate: 23, type: 'Z' }],
+    vat: [{ rate: 23, base: '9.19', vat: '2.11' }],
+  }
+  const split = [{ note: 'Kábel', amount: '-12.30', category: 'Domácnosť', quantity: '2' }, { note: 'ZĽAVA', amount: '1.00', category: 'Domácnosť' }]
+
+  it('položky s cenou za kus a DPH', () => {
+    const rows = receiptRows(split, receipt)
+    expect(rows[0]).toMatchObject({ name: 'Kábel', quantity: '2.00', unitPrice: '6.15', vatRate: '23 %', kind: '', amount: '12.30' })
+    expect(receiptRows(split, null)[0].amount).toBe('-12.30')
+    expect(rows[1].kind).toBe('zľava')
+  })
+
+  it('bez údajov bločku alebo s iným počtom položiek', () => {
+    expect(receiptRows(split, null)[0]).toMatchObject({ name: 'Kábel', quantity: '2', unitPrice: '' })
+    expect(receiptRows([...split, { note: 'Rozdiel', amount: '0.01' }], receipt)[0].unitPrice).toBe('')
+  })
+
+  it('údaje dokladu', () => {
+    const f = Object.fromEntries(receiptFacts(receipt))
+    expect(f).toMatchObject({ Predajca: 'ELEKTRO s.r.o.', Sídlo: 'Hlavná 12, 97401 Banská Bystrica', Predajňa: 'Námestie SNP 5, 96001 Zvolen', 'IČ DPH': 'SK2020000001',
+      'Číslo dokladu': '42', 'Druh dokladu': 'pokladničný doklad', 'Kód pokladnice': '88812345678900001' })
+    expect(f.Kupujúci).toBeUndefined()
+    expect(f.Vystavený).toMatch(/2026/)
+    expect(receiptFacts(null)).toEqual([])
+  })
+
+  it('formulár ponechá údaje bločku', () => {
+    expect(fromForm({ type: 'expense', amount: '12,30', split, receipt }).receipt).toBe(receipt)
   })
 })

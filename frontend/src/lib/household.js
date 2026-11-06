@@ -53,6 +53,7 @@ export function fromForm(f) {
   if (f.split?.length && f.type !== 'transfer') {
     e.split = f.split.map((x) => ({ category: x.category, amount: x.amount, note: x.note, quantity: x.quantity }))
     e.source = f.source || ''
+    if (f.receipt) e.receipt = f.receipt // údaje bločku z eKasy/fotky (server ich pri úprave ponechá)
   }
   if (f.type === 'transfer') {
     e.toAccountId = f.toAccountId
@@ -269,3 +270,52 @@ export function splitByCategory(split = []) {
 
 /** Zaradí všetky položky do jednej kategórie. */
 export const setAllCategory = (split, category) => split.map((x) => ({ ...x, category }))
+
+/** Druhy položiek eKasa (K = bežná položka). */
+const itemTypes = { Z: 'zľava', V: 'vrátenie', VO: 'vratný obal', O: 'odpočet zálohy', OZ: 'odpočet zálohy', VP: 'výmena poukazu', PP: 'platba poukazom' }
+const receiptTypes = { PD: 'pokladničný doklad', UF: 'úhrada faktúry', 'ÚF': 'úhrada faktúry', VK: 'vklad', VY: 'výber', ND: 'neplatný doklad' }
+
+/**
+ * Riadky bločku na zobrazenie: položka pohybu (kategória) spojená s položkou
+ * bločku (množstvo, cena za kus, DPH) — spájajú sa podľa poradia, ak počet sedí.
+ */
+export function receiptRows(split = [], receipt = null) {
+  const items = receipt?.items ?? []
+  const paired = items.length === split.length
+  return split.map((x, i) => {
+    const it = paired ? items[i] : null
+    return {
+      index: i,
+      name: x.note || it?.name || '—',
+      quantity: it ? it.quantity : x.quantity || '',
+      unitPrice: it?.unitPrice ?? '',
+      vatRate: it && it.vatRate != null && receipt?.vat?.length ? `${it.vatRate} %` : '',
+      kind: it?.type ? itemTypes[it.type] ?? '' : '',
+      amount: it?.price ?? x.amount, // suma ako na bločku (kladná), inak suma pohybu
+    }
+  })
+}
+
+/** Údaje bločku ako zoznam „popis — hodnota“ (prázdne sa vynechajú). */
+export function receiptFacts(r) {
+  if (!r) return []
+  const s = r.seller ?? {}
+  const seat = [s.street, [s.zip, s.city].filter(Boolean).join(' ')].filter(Boolean).join(', ')
+  const issued = r.issued && !r.issued.startsWith('0001') ? new Date(r.issued) : null
+  const time = issued && (issued.getHours() || issued.getMinutes()) ? issued.toLocaleString('sk-SK', { dateStyle: 'long', timeStyle: 'short' }) : issued?.toLocaleDateString('sk-SK', { dateStyle: 'long' })
+  return [
+    ['Predajca', s.name],
+    ['Sídlo', seat],
+    ['Predajňa', r.unit],
+    ['IČO', s.ico],
+    ['DIČ', s.dic],
+    ['IČ DPH', s.icDph],
+    ['Vystavený', time],
+    ['Číslo dokladu', r.number],
+    ['Druh dokladu', receiptTypes[r.type] ?? r.type],
+    ['Kód pokladnice', r.cashRegister],
+    ['ID dokladu eKasa', r.id],
+    ['Kupujúci', r.customer],
+    ['Paragón', r.paragon ? 'áno — dodatočne zaevidovaný' : ''],
+  ].filter(([, v]) => v)
+}

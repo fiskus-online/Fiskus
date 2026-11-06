@@ -270,9 +270,13 @@ func (a *App) SaveHouseholdEntry(ctx context.Context, companyID int64, e househo
 			return e, err
 		}
 		before = &old
-		e.Source = old.Source // pôvod importu sa nemení
+		e.Source = old.Source   // pôvod importu sa nemení
+		e.Receipt = old.Receipt // údaje bločku sú záznam z eKasy/fotky, neupravujú sa
 	} else if !strings.HasPrefix(e.Source, "ekasa:") && !strings.HasPrefix(e.Source, "photo:") {
 		e.Source = "" // nový pohyb: pôvod iba z návrhu bločku (proti dvojitému zápisu)
+		e.Receipt = nil
+	} else if e.Receipt != nil && len(e.Receipt.Items) > 1000 {
+		return e, vErr("receipt", "Bloček má priveľa položiek")
 	}
 	s, err := a.householdSettings(ctx, companyID)
 	if err != nil {
