@@ -14,7 +14,7 @@ import AutoComplete from 'primevue/autocomplete'
 import FormField from './FormField.vue'
 import { api, ApiError } from '../lib/api.js'
 import { session } from '../lib/session.js'
-import { formatAmount, formatMoney, fromISODate, toISODate } from '../lib/format.js'
+import { formatAmount, fromISODate, toISODate } from '../lib/format.js'
 import { categoriesFor, entryTypes, fromForm, receiptFacts, receiptRows, toForm } from '../lib/household.js'
 import { fold } from '../lib/search.js'
 
@@ -198,6 +198,13 @@ function remove() {
                   <td class="ct"><Select v-model="form.split[r.index].category" :options="cats" size="small" fluid :disabled="!canWrite" :aria-label="`Kategória ${r.name}`" /></td>
                 </tr>
               </tbody>
+              <tfoot v-if="form.receipt">
+                <tr class="tot">
+                  <td :colspan="hasVAT ? 4 : 3">Spolu</td>
+                  <td class="num"><strong class="ledger">{{ formatAmount(form.receipt.total) }}</strong></td>
+                  <td></td>
+                </tr>
+              </tfoot>
             </table>
           </div>
 
@@ -212,7 +219,6 @@ function remove() {
                 <tr v-for="v in form.receipt.vat" :key="v.rate"><td>{{ v.rate }} %</td><td class="num">{{ formatAmount(v.base) }}</td><td class="num">{{ formatAmount(v.vat) }}</td></tr>
               </tbody>
             </table>
-            <p class="tot">Spolu <strong class="num"><span class="ledger">{{ formatMoney(form.receipt.total) }}</span></strong></p>
           </section>
           <a v-if="form.id && hasPhoto" :href="api.hhPhotoUrl(session.companyId, form.id)" target="_blank" rel="noopener" class="ph">
             <img :src="api.hhPhotoUrl(session.companyId, form.id)" alt="Fotka bločku" loading="lazy" />
@@ -333,11 +339,10 @@ function remove() {
   margin-bottom: 6px;
   background: var(--sheet);
 }
-.tot {
-  margin: 0;
-  display: flex;
-  gap: 12px;
-  justify-content: flex-end;
+.tot td {
+  border-top: 1px solid var(--ink);
+  font-weight: 600;
+  white-space: nowrap;
 }
 .ledger {
   border-bottom: 3px double currentColor;
