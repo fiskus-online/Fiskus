@@ -179,6 +179,67 @@ func (a *App) SaveTaxReturn(ctx context.Context, companyID int64, year int, in d
 			bad(x.f, "Suma nemôže byť záporná")
 		}
 	}
+	// deti, manžel/ka, straty
+	if len(in.Children) > 10 {
+		bad("children", "Najviac 10 detí")
+	}
+	kids := in.Children[:0]
+	for i, c := range in.Children {
+		c.Name, c.RC = strings.TrimSpace(c.Name), strings.TrimSpace(c.RC)
+		if c.Name == "" && c.RC == "" {
+			continue
+		}
+		if c.Name == "" {
+			bad(fmt.Sprintf("children.%d.name", i), "Zadajte meno a priezvisko dieťaťa")
+		}
+		if _, err := dpfo.BirthDate(c.RC); err != nil {
+			bad(fmt.Sprintf("children.%d.rc", i), "Rodné číslo: "+err.Error())
+		}
+		kids = append(kids, c)
+	}
+	in.Children = kids
+	if sp := in.Spouse; sp != nil {
+		sp.Name, sp.RC = strings.TrimSpace(sp.Name), strings.TrimSpace(sp.RC)
+		switch {
+		case sp.Name == "" && sp.Months == 0:
+			in.Spouse = nil
+		case sp.Name == "":
+			bad("spouse.name", "Zadajte meno a priezvisko manžela/ky")
+		}
+		if in.Spouse != nil {
+			if sp.Months < 0 || sp.Months > 12 {
+				bad("spouse.months", "Počet mesiacov je 0 až 12")
+			}
+			if sp.OwnIncome.Sign() < 0 {
+				bad("spouse.ownIncome", "Suma nemôže byť záporná")
+			}
+			if sp.RC != "" {
+				if _, err := dpfo.BirthDate(sp.RC); err != nil {
+					bad("spouse.rc", "Rodné číslo: "+err.Error())
+				}
+			}
+		}
+	}
+	losses := in.Losses[:0]
+	for i, l := range in.Losses {
+		if l.Amount.IsZero() && l.Used.IsZero() {
+			continue
+		}
+		if l.Year < year-5 || l.Year >= year {
+			bad(fmt.Sprintf("losses.%d.year", i), fmt.Sprintf("Strata sa odpočítava iba za roky %d až %d", year-5, year-1))
+		}
+		if l.Amount.Sign() < 0 || l.Used.Sign() < 0 || l.Used.Cmp(l.Amount) > 0 {
+			bad(fmt.Sprintf("losses.%d.used", i), "Odpočítané skôr nemôže byť viac ako strata")
+		}
+		losses = append(losses, l)
+	}
+	in.Losses = losses
+	if in.EmpBonus.Sign() < 0 {
+		bad("empBonus", "Suma nemôže byť záporná")
+	}
+	if in.Attachments < 0 || in.Attachments > 99 {
+		bad("attachments", "Počet príloh je 0 až 99")
+	}
 	if len(fe) > 0 {
 		return TaxReturn{}, &invoice.ValidationError{Fields: fe}
 	}

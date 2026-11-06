@@ -5,8 +5,9 @@
 // formulára DPFOBv25); sumy sa zaokrúhľujú matematicky na centy postupne.
 //
 // Fiškus vyplní to, čo vie z účtovníctva (VI. oddiel, tabuľky 1 a 1a,
-// základ dane, nezdaniteľné časti, daň, preddavky). Deti, manžel/ka,
-// zahraničné príjmy a prílohy daňovník doplní vo formulári po načítaní.
+// základ dane, nezdaniteľné časti, daň, preddavky), a z údajov daňovníka
+// deti a daňový bonus, manžela/ku, straty z predchádzajúcich rokov a počet
+// príloh. Zahraničné príjmy a ďalšie prílohy doplní daňovník vo formulári.
 package dpfo
 
 import (
@@ -39,24 +40,36 @@ type Params struct {
 	MinTax                     money.Dec // daň do tejto sumy sa nevyrubí
 	NoTaxIncome                money.Dec // pri príjmoch do tejto sumy sa daň nevyrubí (50 % NČZD)
 	Form                       string    // tlačivo, ktorého štruktúru XML používame
+	// manžel/ka (§ 11 ods. 3): plná suma do základu SpouseLimit, nad ním
+	// SpouseConst − základ / SpouseDiv; obe mínus vlastný príjem
+	SpouseFull, SpouseLimit, SpouseConst money.Dec
+	SpouseDiv                            int64
+	// daňový bonus (§ 33): mesačne do 15 rokov a od 15 do 18 rokov;
+	// BonusLimit je ročná hranica základu, nad ktorou sa bonus znižuje
+	BonusYoung, BonusOld, BonusLimit money.Dec
 }
 
 var m = money.MustParse
 
 // years sú overené hodnoty. Zdroje: kontroly polí formulára DPFOBv25
-// (za 2025) a podpora.financnasprava.sk 214187, 081400 (za 2026).
+// (za 2025) a podpora.financnasprava.sk 214187, 081400 (za 2026); manžel/ka
+// 426769, 614044; daňový bonus 790897, 215354.
 var years = map[int]Params{
 	2025: {
 		Year: 2025, NCZD: m("5753.79"), NCZDLimit: m("25426.27"), NCZDConst: m("12110.36"), NCZDDiv: 4, DDSMax: m("180"),
 		Brackets: []Bracket{{m("48441.43"), 19}, {money.Zero, 25}},
 		FlatRate: 15, FlatLimit: m("100000"), ExpensePct: 60, ExpenseMax: m("20000"),
 		MinTax: m("17"), NoTaxIncome: m("2876.90"), Form: "DPFOBv25",
+		SpouseFull: m("5260.61"), SpouseLimit: m("48441.43"), SpouseConst: m("17370.97"), SpouseDiv: 4,
+		BonusYoung: m("100"), BonusOld: m("50"), BonusLimit: m("25740"), // 1,5 × 12 × 1 430 € (priemerná mzda 2023)
 	},
 	2026: {
 		Year: 2026, NCZD: m("5966.73"), NCZDLimit: m("26083.13"), NCZDConst: m("14661.11"), NCZDDiv: 3, DDSMax: m("180"),
 		Brackets: []Bracket{{m("43983.32"), 19}, {m("60349.21"), 25}, {m("75010.32"), 30}, {money.Zero, 35}},
 		FlatRate: 15, FlatLimit: m("100000"), ExpensePct: 60, ExpenseMax: m("20000"),
 		MinTax: m("17"), NoTaxIncome: m("2983.37"), Form: "DPFOBv25",
+		SpouseFull: m("5455.30"), SpouseLimit: m("43983.32"), SpouseConst: m("20116.40"), SpouseDiv: 3,
+		BonusYoung: m("100"), BonusOld: m("50"), BonusLimit: m("27432"), // 1,5 × 12 × 1 524 € (priemerná mzda 2024)
 	},
 }
 
@@ -126,7 +139,13 @@ type Input struct {
 	NGOICO    string `json:"ngoIco"`
 	NGOName   string `json:"ngoName"`
 	Volunteer bool   `json:"volunteer"` // dobrovoľník — 3 %
-	// vrátenie preplatku na účet
+	// rodina a straty
+	Children    []Child   `json:"children"`    // vyživované deti (r. 33, najviac 4 vo formulári)
+	Spouse      *Spouse   `json:"spouse"`      // manžel/ka (r. 31, 32); nil = neuplatňuje
+	Losses      []Loss    `json:"losses"`      // straty z predchádzajúcich 5 rokov
+	EmpBonus    money.Dec `json:"empBonus"`    // bonus vyplatený zamestnávateľom (r. 119)
+	Attachments int       `json:"attachments"` // počet príloh (r. 154)
+	// vrátenie preplatku (a vyplatenie bonusu) na účet
 	RefundIBAN string `json:"refundIban"`
 	Date       string `json:"date"` // dátum vyhlásenia DD.MM.RRRR
 }
@@ -138,6 +157,7 @@ type Result struct {
 	// T1 je tabuľka č. 1, r. 2 a r. 10 (príjmy, výdavky).
 	T1Income, T1Expenses money.Dec
 	ToPay, Refund        money.Dec // r. 135 daň na úhradu, r. 136 daňový preplatok
+	BonusPaid            money.Dec // r. 121 daňový bonus, ktorý správca dane vyplatí
 	Notes                []string  `json:"notes"` // čo treba doplniť alebo skontrolovať
 }
 
@@ -220,7 +240,9 @@ func Compute(in Input) (Result, error) {
 	if diff.Sign() < 0 {
 		r["46"] = diff
 	}
-	r["55"] = r["45"]
+	// straty z predchádzajúcich rokov (r. 47 – 54a); mikrodaňovník do 100 000 € príjmov
+	lost := deductLosses(r, in.Losses, in.Year, inc.Cmp(p.FlatLimit) <= 0)
+	r["55"] = r["45"].Sub(lost)
 	r["57"] = r["55"]
 
 	// zamestnanie
@@ -230,11 +252,12 @@ func Compute(in Input) (Result, error) {
 	// nezdaniteľné časti (IV. oddiel)
 	r["72"] = maxDec(money.Zero, r["38"].Add(r["57"]))
 	r["73"] = nczd(r["72"], p)
+	r["74"] = spouseNCZD(in.Spouse, r["72"], p)
 	r["75"] = minDec(in.DDS.RoundCents(), p.DDSMax)
 	if r["72"].IsZero() {
 		r["75"] = money.Zero
 	}
-	r["77"] = minDec(r["72"], r["73"].Add(r["75"]))
+	r["77"] = minDec(r["72"], r["73"].Add(r["74"]).Add(r["75"]))
 	r["78"] = maxDec(money.Zero, r["38"].Sub(r["77"]))
 	r["80"] = r["78"]
 	r["81"] = progressive(r["80"], p.Brackets)
@@ -258,17 +281,34 @@ func Compute(in Input) (Result, error) {
 		tax = money.Zero
 	}
 	r["116"] = tax
-	r["118"] = tax
-	r["124"] = tax
+
+	// daňový bonus na deti (r. 116a – 122)
+	r["116a"] = r["38"].Add(r["45"])
+	bonus, err := Bonus(in.Children, r["116a"], p)
+	if err != nil {
+		res.Notes = append(res.Notes, "Daňový bonus sa nedá vypočítať: "+err.Error())
+		bonus = money.Zero
+	}
+	if len(in.Children) == 0 {
+		r["116a"] = money.Zero
+	}
+	r["117"] = bonus
+	r["118"] = tax.Sub(bonus)
+	r["119"] = in.EmpBonus.RoundCents()
+	r["120"] = maxDec(money.Zero, r["117"].Sub(r["119"]))
+	r["121"] = maxDec(money.Zero, r["120"].Sub(r["116"]))
+	r["122"] = maxDec(money.Zero, r["119"].Sub(r["117"]))
+	r["124"] = r["118"]
 	r["131"] = in.EmpPrepaid.RoundCents()
 	r["133"] = in.Prepaid.RoundCents()
-	due := tax.Sub(r["131"]).Sub(r["133"])
+	// r. 135/136 = r. 116 − r. 117 + r. 119 + r. 121 − r. 131 − r. 133
+	due := tax.Sub(r["117"]).Add(r["119"]).Add(r["121"]).Sub(r["131"]).Sub(r["133"])
 	r["135"] = maxDec(money.Zero, due)
 	r["136"] = maxDec(money.Zero, due.Neg())
-	res.ToPay, res.Refund = r["135"], r["136"]
+	res.ToPay, res.Refund, res.BonusPaid = r["135"], r["136"], r["121"]
 
-	// podiel dane pre prijímateľa (§ 50) — najmenej 3 €
-	if in.NGOICO != "" {
+	// podiel dane pre prijímateľa (§ 50) — najmenej 3 €, iba z kladnej dane
+	if in.NGOICO != "" && r["124"].Sign() > 0 {
 		share := pct(r["124"], 2)
 		if in.Volunteer {
 			share = pct(r["124"], 3)
@@ -282,6 +322,18 @@ func Compute(in Input) (Result, error) {
 
 	if in.FlatExpenses && in.Insurance.IsZero() {
 		res.Notes = append(res.Notes, "Pri paušálnych výdavkoch sa pripočítava zaplatené poistné — skontrolujte, či je zadané")
+	}
+	if len(in.Children) > 4 {
+		res.Notes = append(res.Notes, "Formulár má miesto na 4 deti — ďalšie uveďte v osobitných záznamoch (bonus je započítaný za všetky)")
+	}
+	if len(in.Children) > 0 && r["116a"].IsZero() {
+		res.Notes = append(res.Notes, "Daňový bonus sa neuplatní — nemáte základ dane zo zamestnania ani podnikania")
+	}
+	if in.Spouse != nil && in.Spouse.Months > 0 && r["74"].IsZero() {
+		res.Notes = append(res.Notes, "Nezdaniteľná časť na manžela/ku vychádza nulová — vlastný príjem je vyšší ako suma, alebo je základ dane vysoký")
+	}
+	if !r["121"].IsZero() && in.RefundIBAN == "" {
+		res.Notes = append(res.Notes, "Daňový bonus vyšší ako daň vám finančná správa vyplatí — zadajte IBAN, inak príde poštovou poukážkou")
 	}
 	if in.Taxpayer.DIC == "" && in.Taxpayer.BirthDate == "" {
 		res.Notes = append(res.Notes, "Chýba DIČ alebo dátum narodenia")

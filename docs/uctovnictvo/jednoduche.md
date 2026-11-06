@@ -45,12 +45,31 @@ Obrazovka **Dane → Daň z príjmov** zostaví priznanie živnostníka za rok:
 |---|---|
 | peňažný denník | príjmy a výdavky zo živnosti (tabuľka č. 1), zaplatené poistné |
 | výkaz o majetku a záväzkoch | tabuľka č. 1a (začiatok a koniec roka) |
-| zadáte vy | osobné údaje, SK NACE, skutočné alebo paušálne výdavky, preddavky, zamestnanie, DDS, 2 % / 3 %, IBAN |
-| vypočíta Fiškus | nezdaniteľnú časť, daň 15 % (príjmy do 100 000 €) alebo 19 – 35 %, daň na úhradu alebo preplatok |
+| zadáte vy | osobné údaje, SK NACE, skutočné alebo paušálne výdavky, preddavky, zamestnanie, DDS, deti, manžel/ka, straty z minulých rokov, 2 % / 3 %, IBAN, počet príloh |
+| vypočíta Fiškus | odpočet strát, nezdaniteľné časti (aj na manžela/ku), daň 15 % (príjmy do 100 000 €) alebo 19 – 35 %, daňový bonus na deti, daň na úhradu, preplatok alebo bonus na vyplatenie |
+
+**Deti.** Pri každom dieťati zadáte meno a rodné číslo; vek Fiškus určí
+z rodného čísla. Bonus je 100 € mesačne do mesiaca, v ktorom dieťa dovŕši
+15 rokov, potom 50 € do mesiaca dovŕšenia 18 rokov. Ak dieťa nežilo
+v domácnosti celý rok, vyberiete mesiace. Bonus sa znižuje o 1/10 sumy,
+o ktorú základ dane prevyšuje hranicu (25 740 € za 2025, 27 432 € za 2026),
+a spolu je najviac 29 – 64 % základu podľa počtu detí. Bonus vyšší ako daň
+vám finančná správa vyplatí — na IBAN alebo poštovou poukážkou.
+
+**Manžel/ka.** Nezdaniteľnú časť uplatníte, ak manžel/ka žil/a s vami
+v domácnosti a spĺňal/a niektorú zo zákonných podmienok (starostlivosť
+o malé dieťa, opatrovanie, evidencia na úrade práce, zdravotné
+postihnutie). Zadáte vlastný príjem manžela/ky a počet mesiacov.
+
+**Straty.** Stratu z priznaní za posledných 5 rokov zadáte s tým, čo ste
+z nej už odpočítali. Fiškus ju odpočíta od najstaršej — mikrodaňovník
+(príjmy do 100 000 €) až do výšky základu, inak najviac polovicu;
+stratu za rok 2020 najviac do polovice základu.
 
 **Stiahnuť XML pre eDane** vytvorí súbor v štruktúre formulára DPFOB.
-Načítate ho vo formulári na portáli finančnej správy (Načítať zo súboru),
-doplníte deti, manžela/ku či prílohy a formulár priznanie skontroluje.
+Načítate ho vo formulári na portáli finančnej správy (Načítať zo súboru)
+a formulár priznanie skontroluje. Zahraničné príjmy, prenájom a bonus na
+úroky z hypotéky doplníte priamo vo formulári.
 
 :::info[Prečo sa daň z podnikania počíta zvlášť]
 Základ dane z podnikania sa pri príjmoch do 100 000 € zdaňuje
