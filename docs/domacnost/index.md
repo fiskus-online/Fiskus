@@ -43,6 +43,28 @@ vašej živnosti — pohyby zaradené do stĺpcov *mimo základu dane*. Výber s
 v domácnosti zapíše ako príjem, vklad do živnosti ako výdavok. Prenesený
 pohyb sa druhýkrát neprenesie.
 
+## Záväzky a platby
+
+Sem patria pôžičky a úvery, dlhy, exekúcie, pravidelné platby (nájom,
+zálohy na energie, poistky) aj peniaze, ktoré ste niekomu požičali.
+
+| Údaj | Na čo slúži |
+|---|---|
+| Dlžná suma | celkom, pri exekúcii vrátane trov; pri pravidelnej platbe sa nezadáva |
+| Splatené skôr | čo ste zaplatili pred evidenciou vo Fiškuse |
+| Splátka, opakovanie, prvá splátka | z nich Fiškus zostaví splátkový kalendár |
+| Počet splátok | 0 = kým sa dlh nesplatí (pri pravidelnej platbe bez konca) |
+| Kategória a účet | predvyplnia sa pri zaplatení |
+
+Tlačidlom **Zaplatiť** zapíšete splátku ako výdavok (pri požičaných peniazoch
+**Prijať** ako príjem). Splátku môžete priradiť aj pri bežnom zápise pohybu
+v poli *Splátka záväzku*. Zaplatené sa započíta do splátok v poradí
+splatnosti; nezaplatená splátka po termíne je červená.
+
+Splátky sú v **Kalendári** a v prehľade domácnosti (najbližší mesiac
+a všetko po splatnosti). Ak máte v **Nastaveniach → E-mail** zapnuté
+upozornenia na lehoty, Fiškus pripomenie splátky e-mailom vopred.
+
 ## Rozpočet
 
 V časti **Kategórie a rozpočet** zadáte pri kategóriách výdavkov sumu na

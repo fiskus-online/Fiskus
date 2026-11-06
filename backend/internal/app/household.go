@@ -235,6 +235,11 @@ func (a *App) checkEntry(ctx context.Context, companyID int64, e household.Entry
 	if e.Transfer() && !have[e.ToAccountID] {
 		return vErr("toAccountId", "Účet neexistuje")
 	}
+	if e.ObligationID != 0 {
+		if _, err := a.obligation(ctx, companyID, e.ObligationID); err != nil {
+			return vErr("obligationId", "Záväzok neexistuje")
+		}
+	}
 	if !e.Transfer() {
 		for _, c := range cats {
 			if c.Name == e.Category {
@@ -312,6 +317,8 @@ type HouseholdOverview struct {
 	Budget   []household.MonthBudget `json:"budget"`
 	Accounts []HouseholdAccount      `json:"accounts"`
 	Total    money.Dec               `json:"total"` // súčet zostatkov otvorených účtov
+	// Upcoming sú nezaplatené splátky záväzkov do mesiaca (aj po splatnosti).
+	Upcoming []UpcomingDue `json:"upcoming"`
 }
 
 // HouseholdSummary zostaví prehľad roka a rozpočet mesiaca (0 = aktuálny,
@@ -340,7 +347,11 @@ func (a *App) HouseholdSummary(ctx context.Context, companyID int64, year, month
 		return HouseholdOverview{}, err
 	}
 	ov := household.Summarize(year, s.Categories, es)
-	out := HouseholdOverview{Overview: ov, Month: month, Budget: household.Budget(ov, month), Accounts: accs}
+	up, err := a.obligationDues(ctx, companyID, today.AddDays(31))
+	if err != nil {
+		return HouseholdOverview{}, err
+	}
+	out := HouseholdOverview{Overview: ov, Month: month, Budget: household.Budget(ov, month), Accounts: accs, Upcoming: up}
 	for _, x := range accs {
 		if !x.Closed {
 			out.Total = out.Total.Add(x.Balance)

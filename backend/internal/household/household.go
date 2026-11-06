@@ -49,6 +49,8 @@ type Entry struct {
 	Category    string       `json:"category"`
 	Payee       string       `json:"payee"` // obchod, firma, osoba
 	Note        string       `json:"note"`
+	// ObligationID je záväzok, ktorého splátkou pohyb je (0 = žiadny).
+	ObligationID int64 `json:"obligationId,omitempty"`
 	// Source je pôvod pohybu z importu ("bank:<odtlačok>", "biz:<firma>:<pohyb>");
 	// pohyb s rovnakým pôvodom sa druhýkrát neuloží.
 	Source string `json:"source,omitempty"`
