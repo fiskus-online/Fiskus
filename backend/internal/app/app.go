@@ -485,6 +485,9 @@ func (a *App) Issue(ctx context.Context, companyID, id int64) (invoice.Invoice, 
 	if !inv.Editable() {
 		return inv, invoice.ErrBadTransition
 	}
+	if err := a.checkOpen(ctx, companyID, inv.IssueDate); err != nil {
+		return inv, err
+	}
 	// Validovať pred pridelením čísla, aby v rade nevznikali diery.
 	if err := a.applyCompany(ctx, companyID, &inv); err != nil {
 		return inv, err
@@ -578,6 +581,9 @@ func (a *App) AddPayment(ctx context.Context, companyID, id int64, p invoice.Pay
 	inv, err := a.transition(ctx, companyID, id, "pay", "Úhrada ", func(inv *invoice.Invoice) error {
 		if p.Date.IsZero() {
 			p.Date = a.Today()
+		}
+		if err := a.checkOpen(ctx, companyID, p.Date); err != nil {
+			return err
 		}
 		if rest {
 			p.Amount = inv.Remaining()
