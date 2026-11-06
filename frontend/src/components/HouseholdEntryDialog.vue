@@ -14,8 +14,8 @@ import AutoComplete from 'primevue/autocomplete'
 import FormField from './FormField.vue'
 import { api, ApiError } from '../lib/api.js'
 import { session } from '../lib/session.js'
-import { formatAmount, fromISODate, toISODate } from '../lib/format.js'
-import { categoriesFor, entryTypes, fromForm, toForm } from '../lib/household.js'
+import { formatAmount, formatMoney, fromISODate, toISODate } from '../lib/format.js'
+import { categoriesFor, entryTypes, fromForm, receiptFacts, receiptRows, toForm } from '../lib/household.js'
 import { fold } from '../lib/search.js'
 
 const props = defineProps({
@@ -61,6 +61,12 @@ watch(
 )
 const open = computed({ get: () => !!form.value, set: (v) => !v && emit('close') })
 const cats = computed(() => categoriesFor(props.categories, form.value?.type))
+// bloček: položky s cenou za kus a DPH, údaje dokladu z eKasy alebo fotky
+const rows = computed(() => receiptRows(form.value?.split ?? [], form.value?.receipt))
+const facts = computed(() => receiptFacts(form.value?.receipt))
+const hasVAT = computed(() => !!form.value?.receipt?.vat?.length)
+// množstvo bez zbytočných núl: 2.000 → 2, 0.5 → 0,5
+const qty = (v) => (v === '' || v == null ? '' : String(v).replace(/\.?0+$/, '').replace('.', ','))
 const openAccounts = computed(() => props.accounts.filter((a) => !a.closed || a.id === form.value?.accountId || a.id === form.value?.toAccountId))
 // záväzky pre druh pohybu: výdavok — dlhy a platby, príjem — požičané
 const obligationOptions = computed(() =>
@@ -146,7 +152,7 @@ function remove() {
 </script>
 
 <template>
-  <Drawer v-model:visible="open" position="right" class="hh-panel" :header="form?.id ? 'Pohyb' : 'Nový pohyb'">
+  <Drawer v-model:visible="open" position="right" class="hh-panel" :class="{ 'hh-wide': form?.split?.length }" :header="form?.id ? 'Pohyb' : 'Nový pohyb'">
     <form v-if="form" class="form-grid hh-form" @submit.prevent="save(false)">
       <FormField label="Druh" :span="2">
         <SelectButton v-model="form.type" :options="entryTypes" option-label="label" option-value="value" :allow-empty="false" size="small" :disabled="!canWrite || !!form.split?.length" />
@@ -175,19 +181,43 @@ function remove() {
           <Select v-model="form.obligationId" :options="obligationOptions" option-label="name" option-value="id" size="small" fluid show-clear
             placeholder="nie je splátka" :disabled="!canWrite" @change="(e) => pickObligation(e.value)" />
         </FormField>
-        <div v-if="form.split?.length" class="split" :class="{ wide: true }">
+        <div v-if="form.split?.length" class="split">
           <span class="ff-l">Položky bločku <small v-if="errors.split" class="err">{{ errors.split }}</small></span>
-          <table>
-            <tbody>
-              <tr v-for="(x, i) in form.split" :key="i">
-                <td class="nm">{{ x.note || '—' }}<small v-if="x.quantity"> × {{ x.quantity }}</small></td>
-                <td class="ct"><Select v-model="x.category" :options="cats" size="small" fluid :disabled="!canWrite" :aria-label="`Kategória ${x.note}`" /></td>
-                <td class="num am">{{ formatAmount(x.amount) }}</td>
-              </tr>
-            </tbody>
-          </table>
+          <div class="tbl-wrap">
+            <table>
+              <thead>
+                <tr><th>Tovar</th><th class="num">Množstvo</th><th class="num">Cena/ks</th><th v-if="hasVAT" class="num">DPH</th><th class="num">Suma</th><th>Kategória</th></tr>
+              </thead>
+              <tbody>
+                <tr v-for="r in rows" :key="r.index">
+                  <td class="nm" :title="r.name">{{ r.name }}<small v-if="r.kind" class="kind">{{ r.kind }}</small></td>
+                  <td class="num">{{ qty(r.quantity) }}</td>
+                  <td class="num">{{ r.unitPrice === '' ? '' : formatAmount(r.unitPrice) }}</td>
+                  <td v-if="hasVAT" class="num">{{ r.vatRate }}</td>
+                  <td class="num am">{{ formatAmount(r.amount) }}</td>
+                  <td class="ct"><Select v-model="form.split[r.index].category" :options="cats" size="small" fluid :disabled="!canWrite" :aria-label="`Kategória ${r.name}`" /></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <section v-if="form.receipt" class="rcpt" aria-label="Údaje bločku">
+            <h4>Bloček {{ form.source?.startsWith('photo:') ? '(prečítaný z fotky)' : 'z eKasy' }}</h4>
+            <dl>
+              <template v-for="[k, v] in facts" :key="k"><dt>{{ k }}</dt><dd>{{ v }}</dd></template>
+            </dl>
+            <table v-if="form.receipt.vat?.length" class="vat">
+              <thead><tr><th>Sadzba DPH</th><th class="num">Základ</th><th class="num">DPH</th></tr></thead>
+              <tbody>
+                <tr v-for="v in form.receipt.vat" :key="v.rate"><td>{{ v.rate }} %</td><td class="num">{{ formatAmount(v.base) }}</td><td class="num">{{ formatAmount(v.vat) }}</td></tr>
+              </tbody>
+            </table>
+            <p class="tot">Spolu <strong class="num"><span class="ledger">{{ formatMoney(form.receipt.total) }}</span></strong></p>
+          </section>
           <a v-if="form.id && hasPhoto" :href="api.hhPhotoUrl(session.companyId, form.id)" target="_blank" rel="noopener" class="ph">
-            <i class="pi pi-image" aria-hidden="true" /> Fotka bločku</a>
+            <img :src="api.hhPhotoUrl(session.companyId, form.id)" alt="Fotka bločku" loading="lazy" />
+            <span><i class="pi pi-image" aria-hidden="true" /> Fotka bločku</span>
+          </a>
         </div>
         <template v-else>
           <FormField label="Kategória" :span="2" :error="errors.category" :hint="suggested ? 'navrhnutá podľa obchodu' : ''">
@@ -213,6 +243,9 @@ function remove() {
 .hh-form {
   grid-template-columns: 1fr 1fr;
 }
+.kind {
+  margin-left: 0.4rem;
+}
 .amount {
   font-variant-numeric: tabular-nums;
   font-size: var(--fs-lg);
@@ -235,31 +268,79 @@ function remove() {
   font-size: var(--fs-sm);
   color: var(--ink-soft);
 }
+.tbl-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--rule);
+}
 .split table {
   width: 100%;
-  table-layout: fixed;
   border-collapse: collapse;
   font-size: var(--fs-sm);
-  border: 1px solid var(--rule);
+}
+.split th {
+  text-align: left;
+  font-weight: 600;
+  color: var(--ink-soft);
+  padding: 4px 6px;
+  border-bottom: 1px solid var(--ink);
+  white-space: nowrap;
 }
 .split td {
   padding: 2px 6px;
   border-bottom: 1px solid var(--rule-soft);
+  white-space: nowrap;
+}
+.split .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 .split .nm small {
   color: var(--ink-faint);
 }
-.split .nm {
-  overflow-wrap: anywhere;
-}
 .split .ct {
-  width: 48%;
+  width: 13rem;
+  min-width: 11rem;
 }
 .split .ct :deep(.p-select) {
   max-width: 100%;
 }
-.split .am {
-  width: 64px;
+.rcpt {
+  margin-top: 10px;
+  padding: 10px 12px;
+  background: var(--paper);
+  font-size: var(--fs-sm);
+}
+.rcpt h4 {
+  margin: 0 0 6px;
+  font-size: var(--fs-sm);
+}
+.rcpt dl {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 2px 14px;
+  margin: 0 0 8px;
+}
+.rcpt dt {
+  color: var(--ink-soft);
+}
+.rcpt dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.rcpt .vat {
+  width: auto;
+  min-width: 18rem;
+  margin-bottom: 6px;
+  background: var(--sheet);
+}
+.tot {
+  margin: 0;
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+.ledger {
+  border-bottom: 3px double currentColor;
 }
 .split .err {
   color: var(--tone-overdue);
@@ -267,6 +348,16 @@ function remove() {
 .ph {
   font-size: var(--fs-sm);
   color: var(--blue);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+}
+.ph img {
+  width: 72px;
+  height: 96px;
+  object-fit: cover;
+  border: 1px solid var(--rule);
 }
 .actions {
   grid-column: 1 / -1;
@@ -283,6 +374,10 @@ function remove() {
 <style>
 .hh-panel.p-drawer {
   width: 26rem;
+}
+/* pohyb z bločku: širší panel, aby sa názvy tovaru nezalamovali */
+.hh-panel.hh-wide.p-drawer {
+  width: min(54rem, 100vw);
 }
 @media (max-width: 560px) {
   .hh-panel.p-drawer {
