@@ -10,4 +10,6 @@ window.FISKUS = {
     priceId: '', // cena „Server – viac firiem“, 99 € ročne (pri_…)
   },
   contact: 'info@fiskus.sk',
+  app: 'https://app.fiskus.sk/', // Fiškus v prehliadači
+  docs: 'https://docs.fiskus.sk/', // návod
 }
