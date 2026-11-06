@@ -1,16 +1,16 @@
 <script setup>
 // Mobil: odfotenie bločku eKasa. QR kód sa prečíta z fotky priamo v telefóne
-// (jsQR), na server ide iba kód a zmenšená fotka. Funguje aj cez http v sieti
+// (ZXing, záložne jsQR — lib/qrscan.js), na server ide iba kód a zmenšená fotka. Funguje aj cez http v sieti
 // (fotoaparát cez <input capture>, bez živého náhľadu kamery).
 import { computed, ref, watch } from 'vue'
-import jsQR from 'jsqr'
 import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
 import SelectButton from 'primevue/selectbutton'
 import { api, ApiError } from '../lib/api.js'
 import { can, session } from '../lib/session.js'
 import { formatMoney, formatDate } from '../lib/format.js'
-import { findQR, imageReader, loadImage, payments, receiptId, shrinkImage } from '../lib/receipt.js'
+import { imageReader, loadImage, payments, receiptId, shrinkImage } from '../lib/receipt.js'
+import { decodeQR } from '../lib/qrscan.js'
 
 const fileInput = ref(null)
 const busy = ref('')
@@ -87,7 +87,7 @@ async function onPhoto(e) {
   try {
     const loaded = await loadImage(file)
     url = loaded.url
-    const text = findQR(jsQR, loaded.img.naturalWidth, loaded.img.naturalHeight, imageReader(loaded.img))
+    const text = await decodeQR(loaded.img.naturalWidth, loaded.img.naturalHeight, imageReader(loaded.img))
     if (hh.value) {
       const photo = await shrinkImage(loaded.img)
       await sendHousehold(receiptId(text) ? text : '', photo)
