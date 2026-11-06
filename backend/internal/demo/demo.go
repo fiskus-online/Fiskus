@@ -284,6 +284,9 @@ func Seed(ctx context.Context, a *app.App) (store.Company, error) {
 	if err := seedLedger(ctx, a, c); err != nil {
 		return c, fmt.Errorf("demo účtovníctvo: %w", err)
 	}
+	if err := seedPayroll(ctx, a, c); err != nil {
+		return c, fmt.Errorf("demo mzdy: %w", err)
+	}
 	if err := seedHousehold(ctx, a); err != nil {
 		return c, fmt.Errorf("demo domácnosť: %w", err)
 	}
