@@ -1,6 +1,6 @@
 <script setup>
 // Mobil v sieti (desktop): zapnutie, spárovanie telefónu QR kódom, zoznam telefónov.
-import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import QRCode from 'qrcode'
 import Button from 'primevue/button'
 import InputNumber from 'primevue/inputnumber'
@@ -11,7 +11,7 @@ import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
 import FormField from './FormField.vue'
 import { api, ApiError } from '../lib/api.js'
-import { OTHER, addressOptions, remaining } from '../lib/mobile.js'
+import { OTHER, addressOptions, diagnose, remaining } from '../lib/mobile.js'
 import { formatDate } from '../lib/format.js'
 
 const toast = useToast()
@@ -30,9 +30,48 @@ const addrChoice = ref('')
 const addrOther = ref('')
 const addrError = ref('')
 
+// diagnostika „telefón sa iba načítava“: posledná požiadavka zo siete a brána firewall
+const fw = ref(null)
+const checks = computed(() => (st.value?.enabled ? diagnose(st.value, fw.value, nowTick.value) : []))
+const nowTick = ref(Date.now())
+async function loadFirewall() {
+  if (!st.value?.firewallManaged) return
+  try {
+    fw.value = await api.mobileFirewall()
+  } catch {
+    fw.value = null
+  }
+}
+async function allowFirewall() {
+  busy.value = 'fw'
+  try {
+    fw.value = await api.allowMobileFirewall()
+    toast.add({ severity: 'success', summary: 'Fiškus je povolený v bráne firewall', detail: 'Skúste telefón pripojiť znova.', life: 5000 })
+  } catch (e) {
+    toast.add({ severity: 'error', summary: 'Povolenie sa nepodarilo', detail: e instanceof ApiError && e.fields.length ? e.fields[0].message : e.message, life: 8000 })
+  } finally {
+    busy.value = ''
+  }
+}
+// kým je otvorené párovanie, stav sa obnovuje — pokus z telefónu sa ukáže hneď
+let poll = null
+function startPoll() {
+  clearInterval(poll)
+  poll = setInterval(async () => {
+    nowTick.value = Date.now()
+    try {
+      const s = await api.mobile()
+      st.value = { ...st.value, lastRequest: s.lastRequest, devices: s.devices }
+    } catch {
+      /* ďalší pokus o chvíľu */
+    }
+  }, 3000)
+}
+
 async function load() {
   try {
     st.value = await api.mobile()
+    loadFirewall()
     enabled.value = st.value.enabled
     port.value = st.value.port
     addrChoice.value = st.value.address ?? ''
@@ -42,7 +81,10 @@ async function load() {
   }
 }
 onMounted(load)
-onBeforeUnmount(() => clearInterval(timer))
+onBeforeUnmount(() => {
+  clearInterval(timer)
+  clearInterval(poll)
+})
 
 async function save() {
   busy.value = 'save'
@@ -99,6 +141,7 @@ async function pair() {
     }
     tick()
     timer = setInterval(tick, 1000)
+    startPoll()
   } catch (e) {
     toast.add({ severity: 'error', summary: 'Kód sa nevytvoril', detail: e instanceof ApiError && e.fields.length ? e.fields[0].message : e.message, life: 6000 })
   } finally {
@@ -133,7 +176,7 @@ function remove(d) {
     <div class="row">
       <label class="switch">
         <ToggleSwitch v-model="enabled" />
-        <span><strong>Povoliť telefóny v sieti</strong><small>Windows sa môže opýtať na povolenie v bráne firewall — povoľte súkromné siete.</small></span>
+        <span><strong>Povoliť telefóny v sieti</strong><small>Windows sa môže opýtať na povolenie v bráne firewall — povoľte ho; ak telefón nenačíta stránku, pozrite nižšie.</small></span>
       </label>
       <FormField label="Port">
         <InputNumber v-model="port" :min="1024" :max="65535" :use-grouping="false" size="small" />
@@ -147,7 +190,7 @@ function remove(d) {
       <div class="addr">
         <FormField label="Adresa počítača v sieti (do QR kódu)" :span="2" :error="addrError"
           hint="Telefón musí byť v tej istej Wi-Fi. Adresu Wi-Fi karty zistíte vo Windows príkazom ipconfig (IPv4 Address), na Macu v Nastaveniach → Sieť.">
-          <Select v-model="addrChoice" :options="addressOptions(st)" option-label="label" option-value="value" size="small" />
+          <Select v-model="addrChoice" :options="addressOptions(st)" option-label="label" option-value="value" size="small" :placeholder="addressOptions(st)[0].label" />
         </FormField>
         <FormField v-if="addrChoice === OTHER" label="Adresa" :error="addrError">
           <InputText v-model="addrOther" size="small" placeholder="192.168.1.20" inputmode="decimal" />
@@ -176,6 +219,24 @@ function remove(d) {
         <Button v-else label="Spárovať telefón" icon="pi pi-qrcode" size="small" :loading="busy === 'pair'" @click="pair" />
       </div>
 
+      <section class="diag" aria-label="Telefón sa nepripojí">
+        <h3>Telefón sa iba načítava?</h3>
+        <ul class="checks">
+          <li v-for="(c, i) in checks" :key="i" :data-tone="c.tone">
+            <i class="pi" :class="c.tone === 'ok' ? 'pi-check-circle' : c.tone === 'bad' ? 'pi-times-circle' : 'pi-exclamation-circle'" aria-hidden="true" />
+            <span>{{ c.text }}</span>
+            <Button v-if="c.fix" label="Povoliť vo firewalle" icon="pi pi-shield" size="small" severity="secondary" outlined :loading="busy === 'fw'" @click="allowFirewall" />
+          </li>
+        </ul>
+        <ol class="steps">
+          <li>Telefón musí byť pripojený na <strong>tú istú Wi-Fi</strong> ako počítač — nie na hosťovskú sieť a nie cez mobilné dáta. Vypnite v telefóne VPN.</li>
+          <li v-if="st.firewallManaged">Windows pripojenia z telefónu potichu zahodí, ak Fiškus nemá povolenie v bráne firewall. <strong>Povoliť vo firewalle</strong> pridá pravidlo iba pre port {{ st.port }} — Windows sa opýta na povolenie správcu.</li>
+          <li>Ak má počítač viac sietí, vyberte vyššie adresu Wi-Fi karty a spárujte znova.</li>
+          <li>Niektoré routery zakazujú spojenie medzi zariadeniami v Wi-Fi (izolácia klientov, „AP isolation“) — v routeri ju vypnite.</li>
+        </ol>
+        <p class="muted">Kým je QR kód otvorený, Fiškus každé 3 sekundy kontroluje, či z telefónu niečo prišlo.</p>
+      </section>
+
       <h3>Spárované telefóny</h3>
       <p v-if="!st.devices.length" class="muted">Zatiaľ žiadny.</p>
       <ul v-else class="devices">
@@ -191,6 +252,49 @@ function remove(d) {
 </template>
 
 <style scoped>
+.diag {
+  margin: 14px 0 4px;
+  padding: 10px 12px;
+  background: var(--paper);
+  border-left: 3px solid var(--blue);
+}
+.diag h3 {
+  margin: 0 0 6px;
+}
+.checks {
+  list-style: none;
+  margin: 0 0 8px;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+  font-size: var(--fs-sm);
+}
+.checks li {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.checks li span {
+  flex: 1 1 18rem;
+}
+.checks [data-tone='ok'] .pi {
+  color: var(--tone-paid);
+}
+.checks [data-tone='bad'] {
+  color: var(--tone-overdue);
+}
+.checks [data-tone='warn'] .pi {
+  color: var(--tone-draft);
+}
+.steps {
+  margin: 0 0 6px;
+  padding-left: 20px;
+  font-size: var(--fs-sm);
+  display: grid;
+  gap: 3px;
+  max-width: 75ch;
+}
 .lead {
   max-width: 70ch;
   margin-bottom: 10px;
