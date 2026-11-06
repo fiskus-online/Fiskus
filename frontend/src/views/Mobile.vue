@@ -23,7 +23,10 @@ const hh = computed(() => session.company?.bookkeeping === 'household')
 const canWrite = computed(() => can(hh.value ? 'ledger.write' : 'purchases.write'))
 const accounts = ref([])
 const account = ref(null)
-watch(hh, async (on) => {
+// účty domácnosti sa načítajú pri každom prepnutí (aj medzi dvoma domácnosťami)
+watch([hh, () => session.companyId], async ([on]) => {
+  accounts.value = []
+  account.value = null
   if (!on) return
   try {
     accounts.value = (await api.hhAccounts(session.companyId)).filter((a) => !a.closed)
@@ -38,6 +41,21 @@ watch(hh, async (on) => {
     error.value = e.message
   }
 }, { immediate: true })
+// domácnosť bez účtu (založená pred verziou s automatickým účtom Hotovosť)
+async function addCash() {
+  busy.value = 'send'
+  try {
+    const a = await api.hhSaveAccount(session.companyId, { name: 'Hotovosť', kind: 'cash', opening: '0' })
+    accounts.value = [a]
+    account.value = a.id
+    rememberAccount(a.id)
+    error.value = ''
+  } catch (e) {
+    error.value = e instanceof ApiError && e.fields.length ? e.fields[0].message : e.message
+  } finally {
+    busy.value = ''
+  }
+}
 function rememberAccount(v) {
   try {
     localStorage.setItem('fiskus.hhAccount', String(v))
@@ -47,6 +65,10 @@ function rememberAccount(v) {
 }
 
 async function sendHousehold(qr, photo) {
+  if (!account.value) {
+    error.value = 'Domácnosť ešte nemá žiadny účet. Pridajte účet Hotovosť (tlačidlo vyššie) a bloček odfoťte znova.'
+    return
+  }
   busy.value = 'send'
   try {
     const d = qr ? await api.hhReceiptQR(session.companyId, qr) : await api.hhReceiptPhoto(session.companyId, photo)
@@ -159,7 +181,11 @@ function sendManual() {
     <main class="m-body">
       <p v-if="!canWrite" class="m-error">Na zapisovanie dokladov nemáte oprávnenie.</p>
       <template v-else>
-        <SelectButton v-if="hh" v-model="account" :options="accounts" option-label="name" option-value="id" :allow-empty="false" class="pay"
+        <div v-if="hh && !accounts.length" class="noacc">
+          <span>Domácnosť zatiaľ nemá účet, na ktorý by sa bločky zapísali.</span>
+          <Button label="Pridať účet Hotovosť" icon="pi pi-wallet" size="small" :loading="busy === 'send'" @click="addCash" />
+        </div>
+        <SelectButton v-else-if="hh" v-model="account" :options="accounts" option-label="name" option-value="id" :allow-empty="false" class="pay"
           aria-label="Zaplatené z účtu" @update:model-value="rememberAccount" />
         <SelectButton v-else v-model="payment" :options="payments" option-label="label" option-value="value" :allow-empty="false" class="pay"
           aria-label="Spôsob úhrady" @update:model-value="rememberPayment" />
@@ -229,6 +255,16 @@ function sendManual() {
 .m-head span {
   font-size: var(--fs-sm);
   color: #c9d5e3;
+}
+.noacc {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  background: var(--tone-draft-bg);
+  border-left: 3px solid var(--tone-draft);
+  font-size: var(--fs-sm);
+  margin-bottom: 12px;
 }
 .where {
   margin: 8px 2px 0;
