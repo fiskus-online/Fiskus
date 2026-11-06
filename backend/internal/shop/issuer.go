@@ -149,7 +149,7 @@ func LicenseMail(s mail.Settings, r Record) mail.Message {
 		"(Merchant of Record) a poslala ju na váš e-mail samostatne.",
 		"",
 		"S pozdravom",
-		"Fiškus – fiskus.sk",
+		"Fiškus – fiskus.online",
 	}, "\n")
 	return mail.Message{FromName: s.FromName, From: s.FromEmail, ReplyTo: s.ReplyTo, To: []string{r.Email},
 		Subject: "Licencia Fiškus – Server pre viac firiem", Body: body}

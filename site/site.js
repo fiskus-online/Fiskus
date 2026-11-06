@@ -1,4 +1,4 @@
-// fiskus.sk: odkazy na stiahnutie podľa systému a nákup licencie cez Paddle.
+// fiskus.online: odkazy na stiahnutie podľa systému a nákup licencie cez Paddle.
 ;(function () {
   const cfg = window.FISKUS || {}
   const v = cfg.version || ''

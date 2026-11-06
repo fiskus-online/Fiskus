@@ -77,7 +77,7 @@ func event(t *testing.T, typ, txn, price string, qty int, custom map[string]any)
 func issuer(t *testing.T, m *fakeMail) (*Issuer, ed25519.PublicKey) {
 	pub, priv, _ := license.GenerateKey()
 	return &Issuer{Key: priv, PriceID: "pri_multi", Store: &FileStore{Path: filepath.Join(t.TempDir(), "licencie.jsonl")},
-		Mail: m, SMTP: mail.Settings{Host: "smtp.example.sk", FromEmail: "predaj@fiskus.sk", FromName: "Fiškus"},
+		Mail: m, SMTP: mail.Settings{Host: "smtp.example.sk", FromEmail: "predaj@fiskus.online", FromName: "Fiškus"},
 		Now: func() time.Time { return now }}, pub
 }
 

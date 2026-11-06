@@ -62,7 +62,7 @@ func TestScanReceipt(t *testing.T) {
 	}{
 		{"už zapísaný", ReceiptScan{QR: "o-7dbcda8a56ee426dbcda8a56ee426d1a"}, "qr", "už zapísaný"},
 		{"offline", ReceiptScan{QR: "OKP:1:2:3"}, "qr", "offline"},
-		{"iný QR", ReceiptScan{QR: "https://fiskus.sk"}, "qr", "nie je z bločku"},
+		{"iný QR", ReceiptScan{QR: "https://fiskus.online"}, "qr", "nie je z bločku"},
 		{"nepozná", ReceiptScan{QR: "O-00000000000000000000000000000000"}, "qr", "nepozná"},
 		{"zlá fotka", ReceiptScan{QR: "O-00000000000000000000000000000000", Photo: []byte{1}, PhotoType: "application/pdf"}, "photo", "JPEG"},
 		{"veľká fotka", ReceiptScan{QR: "O-00000000000000000000000000000000", Photo: make([]byte, MaxReceiptPhoto+1), PhotoType: "image/jpeg"}, "photo", "veľká"},
