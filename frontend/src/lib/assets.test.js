@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { assetStatus, canAccelerate, filterAssets, fixMethod, groupOptions, periodLabel, postingState } from './assets.js'
+import { accPeriodLabel, accountOptions, assetStatus, canAccelerate, filterAssets, fixMethod, groupOptions, periodLabel, postingState } from './assets.js'
 
 const items = [
   { id: 1, number: 'M001', name: 'Dodávka Ford Transit', kind: 'tangible', group: 1, period: 4, method: 'straight',
@@ -69,4 +69,15 @@ describe('register majetku', () => {
     expect(s.tone).toBe(tone)
     expect(s.action).toBe(action)
   })
+})
+
+describe('účtovné odpisy', () => {
+  it.each([
+    [0, 'ako daňové odpisy'],
+    [12, '12 mesiacov (1 rok)'],
+    [48, '48 mesiacov (4 roky)'],
+    [60, '60 mesiacov (5 rokov)'],
+    [30, '30 mesiacov'],
+  ])('doba %i', (m, want) => expect(accPeriodLabel(m)).toBe(want))
+  it('účty', () => expect(accountOptions.map((o) => o.value)).toContain('022'))
 })

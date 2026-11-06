@@ -63,6 +63,8 @@ type InternalDoc struct {
 	ledger.Dims
 	// FX: kurzové rozdiely k 31. 12. (vytvára Fiškus).
 	FX bool `json:"fx,omitempty"`
+	// Dep: účtovné odpisy a vyradenie majetku za rok (vytvára Fiškus).
+	Dep bool `json:"dep,omitempty"`
 }
 
 // LedgerBook je účtovný denník a hlavná kniha za rok.

@@ -38,7 +38,7 @@ export function fixMethod(a) {
 
 export function blankAsset(today) {
   return { id: 0, number: '', name: '', kind: 'tangible', group: 1, years: null, method: 'straight', acquired: today,
-    cost: null, share: 100, purchaseId: 0, disposed: '', disposal: '', note: '' }
+    cost: null, share: 100, purchaseId: 0, disposed: '', disposal: '', note: '', account: '', accMonths: null }
 }
 
 /** Stav položky v roku: v užívaní, odpísaná, vyradená, zaradená neskôr. */
@@ -84,4 +84,25 @@ export function postingState(reg) {
   if (posted === 0) return { tone: 'overdue', label: 'Nezaúčtované v uzávierke', action: 'Zaúčtovať do uzávierky' }
   if (posted !== expense) return { tone: 'overdue', label: 'Register sa zmenil po zaúčtovaní', action: 'Zaúčtovať znova' }
   return { tone: 'paid', label: 'Zaúčtované v uzávierke (stĺpec e6)', action: 'Zaúčtovať znova' }
+}
+
+/** Účty dlhodobého majetku v podvojnom účtovníctve ('' = podľa druhu a skupiny). */
+export const accountOptions = [
+  { value: '', label: 'Podľa druhu a skupiny' },
+  { value: '013', label: '013 Softvér' },
+  { value: '014', label: '014 Oceniteľné práva' },
+  { value: '019', label: '019 Ostatný dlhodobý nehmotný majetok' },
+  { value: '021', label: '021 Stavby' },
+  { value: '022', label: '022 Samostatné hnuteľné veci' },
+  { value: '023', label: '023 Dopravné prostriedky' },
+  { value: '025', label: '025 Pestovateľské celky' },
+  { value: '026', label: '026 Základné stádo a ťažné zvieratá' },
+  { value: '029', label: '029 Ostatný dlhodobý hmotný majetok' },
+]
+
+/** Doba účtovného odpisovania na zobrazenie („48 mesiacov (4 roky)“, prázdna = ako daňové). */
+export function accPeriodLabel(months) {
+  if (!months) return 'ako daňové odpisy'
+  const y = months / 12
+  return Number.isInteger(y) ? `${months} mesiacov (${y} ${y === 1 ? 'rok' : y < 5 ? 'roky' : 'rokov'})` : `${months} mesiacov`
 }

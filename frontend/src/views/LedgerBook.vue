@@ -130,6 +130,7 @@ const drawerTitle = computed(() => {
   if (mode.value === 'opening') return `Počiatočné stavy k 1. 1. ${year.value}`
   if (mode.value === 'money') return 'Účty bánk a pokladníc'
   if (mode.value === 'fx') return `Kurzové rozdiely k 31. 12. ${year.value}`
+  if (mode.value === 'dep') return `Účtovné odpisy ${year.value}`
   if (mode.value === 'account') return `Účet ${accountDisplay(current.value?.account)}`
   if (mode.value === 'internal') return current.value?.id ? `Interný doklad ${current.value.number}` : 'Nový interný doklad'
   return `Zaúčtovanie ${current.value?.number || 'dokladu'}`
@@ -161,6 +162,18 @@ function openInternal(doc) {
   lines.value = editLines(d.lines)
   show('internal', d)
 }
+
+// účtovné odpisy z registra majetku
+const dep = ref(null)
+async function openDep() {
+  try {
+    dep.value = await api.accDepreciation(session.companyId, year.value)
+    show('dep', null)
+  } catch (e) {
+    toast.add({ severity: 'error', summary: 'Nepodarilo sa', detail: e.fields?.[0]?.message ?? e.message, life: 6000 })
+  }
+}
+const disposalLabel = { sale: 'predaj', liquidation: 'likvidácia', other: 'vyradenie' }
 
 // kurzové rozdiely k 31. 12.
 const fxr = ref(null)
@@ -242,6 +255,9 @@ async function save() {
         return
       }
       await api.saveInternal(cid, year.value, doc)
+    } else if (mode.value === 'dep') {
+      const doc = await api.postAccDepreciation(cid, year.value)
+      toast.add({ severity: 'success', summary: 'Odpisy zaúčtované', detail: doc.number, life: 4000 })
     } else if (mode.value === 'fx') {
       const doc = await api.postFXRevaluation(cid, year.value)
       toast.add({ severity: 'success', summary: 'Kurzové rozdiely zaúčtované', detail: doc.number, life: 4000 })
@@ -374,6 +390,7 @@ function removeInternal() {
           </p>
           <div class="toolbar">
             <Button v-if="canWrite" :label="`Kurzové rozdiely k 31. 12. ${year}`" icon="pi pi-euro" size="small" severity="secondary" outlined @click="openFX" />
+            <Button v-if="canWrite" :label="`Účtovné odpisy ${year}`" icon="pi pi-building" size="small" severity="secondary" outlined @click="openDep" />
             <div class="spacer" />
             <ExportButton :name="`${tab === 'balance' ? 'Súvaha' : 'Výkaz ziskov a strát'} ${year}`" :columns="ledgerStatementColumns(tab === 'balance', st.previousEmpty)" :rows="statementRows" />
           </div>
@@ -580,6 +597,41 @@ function removeInternal() {
           <Button v-if="current?.id" label="Zmazať" severity="danger" text size="small" @click="removeInternal" />
           <span class="spacer" />
           <Button type="submit" label="Uložiť" icon="pi pi-check" size="small" :loading="busy" />
+        </div>
+      </form>
+
+      <!-- účtovné odpisy z registra majetku -->
+      <form v-else-if="mode === 'dep' && dep" class="dform" @submit.prevent="save">
+        <p class="hint">
+          Odpisy podľa účtovného odpisového plánu z registra majetku: 551 / 08x (07x). Pri vyradení zostatková cena 541 (predaj) alebo 551
+          a oprávky proti obstarávacej cene. Zaúčtuje sa jeden interný doklad k 31. 12.
+        </p>
+        <p v-if="dep.posted" class="hint">Zaúčtované dokladom {{ dep.posted }}. Ďalšie zaúčtovanie ho nahradí.</p>
+        <p v-if="!dep.items.length" class="hint">V roku {{ year }} nie sú žiadne odpisy ani vyradený majetok.</p>
+        <div v-for="it in dep.items" :key="it.assetId" class="fx-item">
+          <span class="text"><b>{{ it.number }}</b> {{ it.name }}</span>
+          <span class="num">{{ formatAmount(it.amount) }}</span>
+          <span class="meta">
+            {{ it.account }} / {{ it.depAccount }} · daňový odpis {{ formatAmount(it.tax) }}<template v-if="Number(it.diff)">, rozdiel {{ Number(it.diff) > 0 ? '+' : '' }}{{ formatAmount(it.diff) }}</template>
+            <template v-if="it.disposalKind"> · {{ disposalLabel[it.disposalKind] }}, zostatková cena {{ formatAmount(it.disposal) }}</template>
+          </span>
+        </div>
+        <p v-if="Number(dep.diff)" class="hint">
+          Účtovné odpisy sú o {{ formatAmount(dep.diff).replace('-', '') }} € {{ Number(dep.diff) > 0 ? 'vyššie' : 'nižšie' }} ako daňové — rozdiel
+          {{ Number(dep.diff) > 0 ? 'pripočítajte k' : 'odpočítajte od' }} výsledku hospodárenia v daňovom priznaní.
+        </p>
+        <small v-if="errors.items || errors.lines" class="err">{{ errors.items || errors.lines }}</small>
+        <div v-if="dep.lines.length" class="preview">
+          <div v-for="(l, i) in dep.lines" :key="i" class="post-line">
+            <span class="acc"><b>{{ accountDisplay(l.account) }}</b></span>
+            <span class="num">{{ amt(l.debit) }}</span>
+            <span class="num">{{ amt(l.credit) }}</span>
+          </div>
+        </div>
+        <div class="actions">
+          <RouterLink to="/majetok" class="doclink"><i class="pi pi-building" /> Register majetku</RouterLink>
+          <span class="spacer" />
+          <Button v-if="canWrite" type="submit" :label="dep.posted ? 'Zaúčtovať znova' : 'Zaúčtovať'" icon="pi pi-check" size="small" :loading="busy" :disabled="!dep.lines.length" />
         </div>
       </form>
 

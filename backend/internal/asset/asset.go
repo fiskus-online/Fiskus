@@ -79,6 +79,10 @@ type Asset struct {
 	Disposed     invoice.Date `json:"disposed"` // vyradenie (prázdne = v užívaní)
 	DisposalKind Disposal     `json:"disposal,omitempty"`
 	Note         string       `json:"note"`
+	// Podvojné účtovníctvo: účet majetku (prázdny = podľa druhu a skupiny)
+	// a doba účtovného odpisovania v mesiacoch (0 = ako daňové odpisy).
+	Account   string `json:"account,omitempty"`
+	AccMonths int    `json:"accMonths,omitempty"`
 }
 
 // Period vráti dobu odpisovania v rokoch.
@@ -169,6 +173,7 @@ func (a *Asset) Validate() error {
 			add("disposal", "Vyberte dôvod vyradenia")
 		}
 	}
+	a.validateAccounting(add)
 	if len(fe) > 0 {
 		return &invoice.ValidationError{Fields: fe}
 	}
