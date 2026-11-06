@@ -8,6 +8,7 @@ import (
 
 	"github.com/palo-krnac/fiscus/backend/internal/edition"
 	"github.com/palo-krnac/fiscus/backend/internal/household"
+	"github.com/palo-krnac/fiscus/backend/internal/invoice"
 	m "github.com/palo-krnac/fiscus/backend/internal/money"
 	"github.com/palo-krnac/fiscus/backend/internal/store"
 )
@@ -65,6 +66,18 @@ func TestHouseholdReceiptQR(t *testing.T) {
 	saved, err := a.SaveHouseholdEntry(ctx, h.ID, e)
 	if err != nil || saved.Category != "Drogéria a domácnosť" {
 		t.Fatalf("uloženie: %+v %v", saved, err) // drogéria 5,20 > potraviny 1,09
+	}
+	// údaje bločku sa uložia s pohybom a pri úprave sa nestratia
+	if saved.Receipt == nil || saved.Receipt.Seller.Name == "" || len(saved.Receipt.Items) != 5 {
+		t.Fatalf("údaje bločku: %+v", saved.Receipt)
+	}
+	edit := saved
+	edit.Receipt, edit.Note = nil, "nákup na víkend"
+	if again, err := a.SaveHouseholdEntry(ctx, h.ID, edit); err != nil || again.Receipt == nil {
+		t.Fatalf("úprava stratila bloček: %+v %v", again.Receipt, err)
+	}
+	if manual, err := a.SaveHouseholdEntry(ctx, h.ID, household.Entry{Date: invoice.MustDate("2025-09-01"), AccountID: cash.ID, Amount: m.MustParse("-5"), Category: "Potraviny", Receipt: saved.Receipt}); err != nil || manual.Receipt != nil {
+		t.Fatalf("ručný pohyb bez bločku: %+v %v", manual.Receipt, err)
 	}
 	if err := a.SaveHouseholdPhoto(ctx, h.ID, saved.ID, "image/jpeg", []byte{0xff, 0xd8}); err != nil {
 		t.Fatal(err)

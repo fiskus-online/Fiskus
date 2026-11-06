@@ -59,10 +59,17 @@ type Seller struct {
 
 // Item je položka dokladu (cena s DPH za celý riadok).
 type Item struct {
-	Name     string    `json:"name"`
-	Quantity money.Dec `json:"quantity"`
-	Price    money.Dec `json:"price"`
-	VATRate  int       `json:"vatRate"`
+	Name      string    `json:"name"`
+	Quantity  money.Dec `json:"quantity"`
+	UnitPrice money.Dec `json:"unitPrice"` // cena za kus (cena riadku / množstvo)
+	Price     money.Dec `json:"price"`
+	VATRate   int       `json:"vatRate"`
+	Type      string    `json:"type,omitempty"` // druh položky eKasa: K kladná, Z zľava, V vrátenie, VO vrátený obal, O odpočet zálohy …
+}
+
+// ItemTypes sú názvy druhov položiek eKasa.
+var ItemTypes = map[string]string{
+	"K": "", "Z": "zľava", "V": "vrátenie", "VO": "vratný obal", "O": "odpočet zálohy", "OZ": "odpočet zálohy", "VP": "výmena poukazu", "PP": "platba poukazom",
 }
 
 // VATRow je základ a daň pre jednu sadzbu.
@@ -82,6 +89,11 @@ type Receipt struct {
 	Total    money.Dec `json:"total"`
 	VAT      []VATRow  `json:"vat"`
 	Customer string    `json:"customer"` // IČO/IČ DPH kupujúceho, ak ho pokladník zadal
+	// Predajňa (prevádzka), kód pokladnice a druh dokladu
+	Unit         string `json:"unit,omitempty"`         // adresa predajne, ak je iná ako sídlo
+	CashRegister string `json:"cashRegister,omitempty"` // kód pokladnice eKasa
+	Type         string `json:"type,omitempty"`         // PD pokladničný doklad, ÚF úhrada faktúry, VK vklad …
+	Paragon      bool   `json:"paragon,omitempty"`      // doklad dodatočne zaevidovaný z paragónu
 }
 
 // Client volá službu eKasa.
@@ -121,6 +133,9 @@ type rawReceipt struct {
 	VATRateBasic     num    `json:"vatRateBasic"`
 	VATRateReduced   num    `json:"vatRateReduced"`
 	FreeTaxAmount    num    `json:"freeTaxAmount"`
+	CashRegisterCode string `json:"cashRegisterCode"`
+	ReceiptType      string `json:"receiptType"`
+	Paragon          bool   `json:"paragon"`
 	Items            []struct {
 		Name     string `json:"name"`
 		ItemType string `json:"itemType"`
@@ -192,6 +207,26 @@ func (c Client) Find(ctx context.Context, id string) (Receipt, error) {
 	return out.Receipt.receipt(), nil
 }
 
+// address: „Hlavná 1, 97401 Banská Bystrica“ (prázdne časti vynechá).
+func address(street, zip, city string) string {
+	place := strings.TrimSpace(strings.ReplaceAll(strings.TrimSpace(zip), " ", "") + " " + strings.TrimSpace(city))
+	parts := []string{}
+	for _, p := range []string{strings.TrimSpace(street), place} {
+		if p != "" {
+			parts = append(parts, p)
+		}
+	}
+	return strings.Join(parts, ", ")
+}
+
+// UnitPrice je cena za jednotku (cena riadku / množstvo, na centy).
+func UnitPrice(price, qty money.Dec) money.Dec {
+	if qty.Sign() == 0 {
+		return price
+	}
+	return price.MulRatio(money.FromInt(1), qty).RoundCents()
+}
+
 func pct(n num) int { return int(n.RoundTo(0).Raw() / money.FromInt(1).Raw()) }
 
 func (r rawReceipt) receipt() Receipt {
@@ -213,8 +248,17 @@ func (r rawReceipt) receipt() Receipt {
 			break
 		}
 	}
+	out.CashRegister, out.Type, out.Paragon = strings.TrimSpace(r.CashRegisterCode), strings.TrimSpace(r.ReceiptType), r.Paragon
+	if u := r.Unit; u != nil {
+		unit := address(strings.TrimSpace(u.StreetName+" "+u.BuildingNumber), u.PostalCode, u.Municipality)
+		if unit != address(out.Seller.Street, out.Seller.Zip, out.Seller.City) {
+			out.Unit = unit
+		}
+	}
 	for _, it := range r.Items {
-		out.Items = append(out.Items, Item{Name: strings.TrimSpace(it.Name), Quantity: it.Quantity.Dec, Price: it.Price.Dec, VATRate: pct(it.VATRate)})
+		x := Item{Name: strings.TrimSpace(it.Name), Quantity: it.Quantity.Dec, Price: it.Price.Dec, VATRate: pct(it.VATRate), Type: strings.TrimSpace(it.ItemType)}
+		x.UnitPrice = UnitPrice(x.Price, x.Quantity)
+		out.Items = append(out.Items, x)
 	}
 	// rekapitulácia DPH z hlavičky dokladu; ak chýba, z položiek
 	add := func(rate num, base, vat num) {
