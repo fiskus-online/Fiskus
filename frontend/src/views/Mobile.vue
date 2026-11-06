@@ -8,7 +8,7 @@ import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
 import SelectButton from 'primevue/selectbutton'
 import { api, ApiError } from '../lib/api.js'
-import { can, session } from '../lib/session.js'
+import { can, selectCompany, session } from '../lib/session.js'
 import { formatMoney, formatDate } from '../lib/format.js'
 import { findQR, imageReader, loadImage, payments, receiptId, shrinkImage } from '../lib/receipt.js'
 
@@ -142,7 +142,16 @@ function sendManual() {
       </svg>
       <div>
         <strong>Bločky</strong>
-        <span>{{ session.company?.name }}</span>
+        <!-- kam sa bloček zapíše: firma (prijaté faktúry) alebo domácnosť (pohyby) -->
+        <label v-if="session.companies.length > 1" class="co">
+          <select aria-label="Zapisovať do" :value="session.companyId" @change="selectCompany(Number($event.target.value))">
+            <option v-for="c in session.companies" :key="c.id" :value="c.id">
+              {{ c.name }}{{ c.bookkeeping === 'household' ? ' — domácnosť' : '' }}
+            </option>
+          </select>
+          <i class="pi pi-chevron-down" aria-hidden="true" />
+        </label>
+        <span v-else>{{ session.company?.name }}</span>
       </div>
       <RouterLink :to="hh ? '/domacnost' : '/faktury'" class="full">Celý program</RouterLink>
     </header>
@@ -162,6 +171,14 @@ function sendManual() {
           <small v-else>Odfoťte QR kód na bločku — zvyšok sa doplní z eKasy</small>
         </button>
         <input ref="fileInput" type="file" accept="image/*" capture="environment" class="hidden" @change="onPhoto" />
+
+        <p class="where">
+          <template v-if="hh">V počítači: Domácnosť → Pohyby.</template>
+          <template v-else>V počítači: Nákup → Prijaté faktúry (uhradené, s fotkou).</template>
+          <template v-if="!session.companies.some((c) => c.bookkeeping === 'household')">
+            Bločky do domácnosti: v počítači si založte domácnosť v Nastaveniach → Firmy a domácnosti — potom ju vyberiete hore.
+          </template>
+        </p>
 
         <p v-if="error" class="m-error" role="alert"><i class="pi pi-exclamation-triangle" aria-hidden="true" /> {{ error }}</p>
 
@@ -212,6 +229,39 @@ function sendManual() {
 .m-head span {
   font-size: var(--fs-sm);
   color: #c9d5e3;
+}
+.where {
+  margin: 8px 2px 0;
+  font-size: var(--fs-sm);
+  color: var(--ink-soft);
+}
+.co {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  max-width: 62vw;
+}
+.co select {
+  appearance: none;
+  font: inherit;
+  font-size: var(--fs-sm);
+  color: #fff;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 4px;
+  padding: 3px 24px 3px 8px;
+  max-width: 100%;
+  text-overflow: ellipsis;
+}
+.co select option {
+  color: #1d2633;
+}
+.co .pi {
+  position: absolute;
+  right: 7px;
+  font-size: 0.65rem;
+  pointer-events: none;
+  color: #dbe4ee;
 }
 .full {
   margin-left: auto;
