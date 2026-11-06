@@ -23,6 +23,7 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"sync"
 	"syscall"
@@ -262,6 +263,9 @@ func main() {
 	if caps.Mode == edition.Desktop {
 		mob := &mobileListener{handler: apiSrv.LANHandler(apiSrv.Handler())}
 		a.OnMobile = mob.set
+		if runtime.GOOS == "windows" {
+			a.Firewall = winFirewall{}
+		}
 		if *lanIP != "" {
 			ips := strings.Split(*lanIP, ",")
 			a.LANAddresses = func() []string { return ips }
@@ -455,6 +459,17 @@ func (quietStderr) Write(p []byte) (int, error) {
 }
 
 // mobileListener zapína a vypína počúvanie pre telefóny v sieti.
+// winFirewall: brána Windows Defender Firewall pre mobil v sieti.
+type winFirewall struct{}
+
+func (winFirewall) Check(ctx context.Context, port int) app.FirewallState {
+	return app.FirewallState(desktop.FirewallCheck(ctx, port))
+}
+
+func (winFirewall) Allow(ctx context.Context, port int) error {
+	return desktop.FirewallAllow(ctx, port)
+}
+
 type mobileListener struct {
 	mu      sync.Mutex
 	handler http.Handler
