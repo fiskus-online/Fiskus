@@ -27,7 +27,17 @@ func TestHouseholdReceiptQR(t *testing.T) {
 	a.EKasaURL = srv.URL
 	h, _ := a.CreateCompany(ctx, store.Company{Name: "Domácnosť", Bookkeeping: store.BookkeepingHousehold})
 	_, _ = a.SaveHouseholdAccount(ctx, h.ID, household.Account{Name: "Účet", Kind: household.Bank})
-	cash, _ := a.SaveHouseholdAccount(ctx, h.ID, household.Account{Name: "Peňaženka", Kind: household.Cash})
+	// nová domácnosť má účet Hotovosť — bloček sa zapíše naň
+	accs, _ := a.Store.ListHHAccounts(ctx, h.ID)
+	var cash household.Account
+	for _, x := range accs {
+		if x.Kind == household.Cash {
+			cash = x
+		}
+	}
+	if cash.Name != "Hotovosť" {
+		t.Fatalf("predvolený účet: %+v", accs)
+	}
 
 	if _, err := a.HouseholdReceiptQR(ctx, h.ID, "nie je bloček"); !fieldErr(err, "qr") {
 		t.Fatalf("zlý QR: %v", err)

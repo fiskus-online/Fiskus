@@ -21,6 +21,7 @@ import (
 	"github.com/palo-krnac/fiscus/backend/internal/auth"
 	"github.com/palo-krnac/fiscus/backend/internal/edition"
 	"github.com/palo-krnac/fiscus/backend/internal/fx"
+	"github.com/palo-krnac/fiscus/backend/internal/household"
 	"github.com/palo-krnac/fiscus/backend/internal/invoice"
 	"github.com/palo-krnac/fiscus/backend/internal/legal"
 	"github.com/palo-krnac/fiscus/backend/internal/license"
@@ -131,6 +132,14 @@ func (a *App) CreateCompany(ctx context.Context, c store.Company) (store.Company
 	// zakladateľ (prihlásený používateľ) je správcom novej firmy
 	if act := auth.ActorFrom(ctx); act.UserID != 0 {
 		if err := a.Store.SetMembership(ctx, auth.Membership{UserID: act.UserID, CompanyID: c.ID, Role: auth.RoleAdmin}); err != nil {
+			return c, err
+		}
+	}
+	if c.Bookkeeping == store.BookkeepingHousehold {
+		// nová domácnosť má hneď účet na hotovosť — bločky a výdavky sa dajú
+		// zapisovať bez ďalšieho nastavovania
+		cash := household.Account{Name: "Hotovosť", Kind: household.Cash}
+		if err := a.Store.SaveHHAccount(ctx, c.ID, &cash); err != nil {
 			return c, err
 		}
 	}
