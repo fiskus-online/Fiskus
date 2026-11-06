@@ -11,7 +11,7 @@ tags: [prehľad]
 Verzie sú značky v repozitári (`v0.2.0`). Podrobný zoznam funkcií po
 etapách je v [pláne vývoja](./ROADMAP.md).
 
-## Pripravuje sa (0.4)
+## 0.4.0
 
 - **Mzdy**: zamestnanci a dohodári, výpočet mzdy, odvodov po fondoch,
   zdravotného poistenia, preddavku na daň a daňového bonusu za roky 2025
@@ -32,8 +32,10 @@ etapách je v [pláne vývoja](./ROADMAP.md).
   a pripomenutie e-mailom.
 - **Bločky v domácnosti**: z QR kódu eKasa alebo z fotky (Claude API),
   každá položka v svojej kategórii, fotka pri pohybe.
+- Opravy: spárovanie mobilu ponúkne správnu adresu počítača v miestnej
+  sieti; zmazanie firmy už neskončí internou chybou servera.
 
-## Pripravuje sa (0.2)
+## 0.2 a 0.3
 
 - **Karta produktu**: EAN, kategória, značka, dodávateľ, nákupná cena,
   hmotnosť, technické parametre, popis a až 10 obrázkov; stav po skladoch
