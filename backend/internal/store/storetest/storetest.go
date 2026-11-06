@@ -689,6 +689,35 @@ func Run(t *testing.T, newStore Factory) {
 		if err := s.SaveHHEntry(ctx, a.ID, &es[0]); err != nil {
 			t.Fatalf("úprava pohybu s pôvodom: %v", err)
 		}
+		// fotka bločku a rozdelený pohyb
+		split := household.Entry{Date: invoice.MustDate("2026-03-06"), AccountID: bank.ID, Amount: m.MustParse("-5"), Category: "Potraviny", Source: "ekasa:O-1",
+			Split: []household.Split{{Category: "Potraviny", Amount: m.MustParse("-3"), Note: "Rožok", Quantity: "4"}, {Category: "Drogéria", Amount: m.MustParse("-2"), Note: "Mydlo"}}}
+		if err := s.SaveHHEntry(ctx, a.ID, &split); err != nil {
+			t.Fatal(err)
+		}
+		if got, _ := s.GetHHEntry(ctx, a.ID, split.ID); !reflect.DeepEqual(got, split) {
+			t.Fatalf("rozdelený pohyb:\n got %+v\nwant %+v", got, split)
+		}
+		if err := s.SaveHHPhoto(ctx, store.HHPhoto{CompanyID: b.ID, EntryID: split.ID, ContentType: "image/jpeg", Data: []byte{1}}); !errors.Is(err, store.ErrNotFound) {
+			t.Fatal("fotka k pohybu inej domácnosti")
+		}
+		for _, data := range [][]byte{{1, 2}, {3, 4, 5}} { // druhá prepíše prvú
+			if err := s.SaveHHPhoto(ctx, store.HHPhoto{CompanyID: a.ID, EntryID: split.ID, ContentType: "image/jpeg", Data: data}); err != nil {
+				t.Fatal(err)
+			}
+		}
+		if p, err := s.GetHHPhoto(ctx, a.ID, split.ID); err != nil || len(p.Data) != 3 || p.ContentType != "image/jpeg" {
+			t.Fatalf("fotka: %+v %v", p, err)
+		}
+		if _, err := s.GetHHPhoto(ctx, b.ID, split.ID); !errors.Is(err, store.ErrNotFound) {
+			t.Fatal("fotka inej domácnosti")
+		}
+		if err := s.DeleteHHEntry(ctx, a.ID, split.ID); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := s.GetHHPhoto(ctx, a.ID, split.ID); !errors.Is(err, store.ErrNotFound) {
+			t.Fatal("fotka po zmazaní pohybu")
+		}
 		if err := s.DeleteHHEntry(ctx, b.ID, es[0].ID); !errors.Is(err, store.ErrNotFound) {
 			t.Fatal("zmazanie pohybu inej domácnosti")
 		}

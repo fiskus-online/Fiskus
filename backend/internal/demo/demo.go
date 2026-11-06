@@ -982,5 +982,22 @@ func seedHousehold(ctx context.Context, a *app.App) error {
 			}
 		}
 	}
+	// bloček rozdelený na položky (potraviny aj drogéria)
+	items := []household.ReceiptItem{
+		{Name: "ROZOK KLASIK 40G", Quantity: "8", Amount: m.MustParse("0.72"), Category: "Potraviny"},
+		{Name: "MLIEKO POLOTUCNE 1L", Quantity: "2", Amount: m.MustParse("1.98"), Category: "Potraviny"},
+		{Name: "EIDAM 30% 250G", Amount: m.MustParse("2.49"), Category: "Potraviny"},
+		{Name: "KURACIE PRSIA 1KG", Amount: m.MustParse("7.99"), Category: "Potraviny"},
+		{Name: "BANANY", Quantity: "1,24", Amount: m.MustParse("1.48"), Category: "Potraviny"},
+		{Name: "SAMPON HEAD&SHOULDERS", Amount: m.MustParse("4.99"), Category: "Drogéria a domácnosť"},
+		{Name: "TOAL. PAPIER 8KS", Amount: m.MustParse("3.29"), Category: "Drogéria a domácnosť"},
+		{Name: "PRACI GEL 2L", Amount: m.MustParse("8.99"), Category: "Drogéria a domácnosť"},
+		{Name: "ZLAVA LIDL PLUS", Amount: m.MustParse("-1.00"), Category: "Potraviny"},
+	}
+	split, amt := household.ReceiptSplit(items, m.MustParse("30.93"), "Potraviny")
+	if _, err := a.SaveHouseholdEntry(ctx, h.ID, household.Entry{Date: today.AddDays(-1), AccountID: wallet.ID, Amount: amt, Payee: "Lidl",
+		Split: split, Source: "ekasa:O-DEMO0000000000000000000000000001"}); err != nil {
+		return err
+	}
 	return nil
 }

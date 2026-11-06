@@ -586,7 +586,7 @@ h3 {
 }
 @media (max-width: 600px) {
   .obl-panel.p-drawer {
-    width: 100vw;
+    width: 100vw !important;
   }
 }
 </style>

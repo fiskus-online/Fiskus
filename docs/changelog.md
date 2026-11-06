@@ -19,6 +19,8 @@ etapách je v [pláne vývoja](./ROADMAP.md).
 - **Záväzky domácnosti**: pôžičky, dlhy, exekúcie, pravidelné platby
   a požičané peniaze so splátkovým kalendárom, splátky v kalendári
   a pripomenutie e-mailom.
+- **Bločky v domácnosti**: z QR kódu eKasa alebo z fotky (Claude API),
+  každá položka v svojej kategórii, fotka pri pohybe.
 
 ## Pripravuje sa (0.2)
 

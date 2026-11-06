@@ -22,6 +22,7 @@ import {
 } from '../lib/household.js'
 import ExportButton from '../components/ExportButton.vue'
 import HouseholdEntryDialog from '../components/HouseholdEntryDialog.vue'
+import HouseholdReceiptDialog from '../components/HouseholdReceiptDialog.vue'
 
 const route = useRoute()
 const toast = useToast()
@@ -96,6 +97,8 @@ function applyResponsive() {
 }
 narrow.addEventListener('change', applyResponsive)
 onBeforeUnmount(() => narrow.removeEventListener('change', applyResponsive))
+
+const receiptOpen = ref(false)
 
 // ---- pohyb ----
 const editing = ref(null)
@@ -181,6 +184,7 @@ async function importDraws() {
         <Button label="Výdavok" icon="pi pi-minus" size="small" @click="add('expense')" />
         <Button label="Príjem" icon="pi pi-plus" size="small" severity="secondary" outlined @click="add('income')" />
         <Button label="Prevod" icon="pi pi-arrow-right-arrow-left" size="small" severity="secondary" text @click="add('transfer')" />
+        <Button label="Bloček" icon="pi pi-receipt" size="small" severity="secondary" outlined @click="receiptOpen = true" />
         <Button label="Nahrať výpis" icon="pi pi-upload" size="small" severity="secondary" text @click="openImport" />
         <Button label="Zo živnosti" icon="pi pi-briefcase" size="small" severity="secondary" text @click="openDraws" />
       </template>
@@ -227,6 +231,8 @@ async function importDraws() {
 
     <HouseholdEntryDialog :entry="editing" :accounts="accounts" :categories="categories" :payees="payees" :obligations="obligations" :can-write="canWrite"
       @close="editing = null" @saved="load" />
+
+    <HouseholdReceiptDialog v-model:visible="receiptOpen" :accounts="accounts" :categories="categories" @saved="load" />
 
     <Dialog v-model:visible="importOpen" header="Nahrať výpis z banky" modal :style="{ width: '30rem' }" :breakpoints="{ '560px': '94vw' }">
       <p class="dlg-p">

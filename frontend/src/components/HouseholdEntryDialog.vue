@@ -14,7 +14,7 @@ import AutoComplete from 'primevue/autocomplete'
 import FormField from './FormField.vue'
 import { api, ApiError } from '../lib/api.js'
 import { session } from '../lib/session.js'
-import { fromISODate, toISODate } from '../lib/format.js'
+import { formatAmount, fromISODate, toISODate } from '../lib/format.js'
 import { categoriesFor, entryTypes, fromForm, toForm } from '../lib/household.js'
 import { fold } from '../lib/search.js'
 
@@ -43,6 +43,21 @@ watch(
     form.value = e ? { ...(e.type ? e : toForm(e)), date: fromISODate(e.date) } : null
   },
   { immediate: true },
+)
+// fotka bločku (iba overenie, že je; zobrazí sa v novom okne)
+const hasPhoto = ref(false)
+watch(
+  () => form.value?.id,
+  async (id) => {
+    hasPhoto.value = false
+    if (!id || !form.value?.split?.length) return
+    try {
+      const r = await fetch(api.hhPhotoUrl(session.companyId, id), { method: 'HEAD', credentials: 'same-origin' })
+      hasPhoto.value = r.ok
+    } catch {
+      hasPhoto.value = false
+    }
+  },
 )
 const open = computed({ get: () => !!form.value, set: (v) => !v && emit('close') })
 const cats = computed(() => categoriesFor(props.categories, form.value?.type))
@@ -134,10 +149,10 @@ function remove() {
   <Drawer v-model:visible="open" position="right" class="hh-panel" :header="form?.id ? 'Pohyb' : 'Nový pohyb'">
     <form v-if="form" class="form-grid hh-form" @submit.prevent="save(false)">
       <FormField label="Druh" :span="2">
-        <SelectButton v-model="form.type" :options="entryTypes" option-label="label" option-value="value" :allow-empty="false" size="small" :disabled="!canWrite" />
+        <SelectButton v-model="form.type" :options="entryTypes" option-label="label" option-value="value" :allow-empty="false" size="small" :disabled="!canWrite || !!form.split?.length" />
       </FormField>
       <FormField label="Suma" :error="errors.amount">
-        <InputText v-model="form.amount" size="small" inputmode="decimal" class="amount" :class="form.type" placeholder="0,00" autofocus :disabled="!canWrite" />
+        <InputText v-model="form.amount" size="small" inputmode="decimal" class="amount" :class="form.type" placeholder="0,00" autofocus :disabled="!canWrite || !!form.split?.length" />
       </FormField>
       <FormField label="Dátum" :error="errors.date">
         <DatePicker v-model="form.date" date-format="d. m. yy" size="small" fluid :disabled="!canWrite" />
@@ -160,10 +175,26 @@ function remove() {
           <Select v-model="form.obligationId" :options="obligationOptions" option-label="name" option-value="id" size="small" fluid show-clear
             placeholder="nie je splátka" :disabled="!canWrite" @change="(e) => pickObligation(e.value)" />
         </FormField>
-        <FormField label="Kategória" :span="2" :error="errors.category" :hint="suggested ? 'navrhnutá podľa obchodu' : ''">
+        <div v-if="form.split?.length" class="split" :class="{ wide: true }">
+          <span class="ff-l">Položky bločku <small v-if="errors.split" class="err">{{ errors.split }}</small></span>
+          <table>
+            <tbody>
+              <tr v-for="(x, i) in form.split" :key="i">
+                <td class="nm">{{ x.note || '—' }}<small v-if="x.quantity"> × {{ x.quantity }}</small></td>
+                <td class="ct"><Select v-model="x.category" :options="cats" size="small" fluid :disabled="!canWrite" :aria-label="`Kategória ${x.note}`" /></td>
+                <td class="num am">{{ formatAmount(x.amount) }}</td>
+              </tr>
+            </tbody>
+          </table>
+          <a v-if="form.id && hasPhoto" :href="api.hhPhotoUrl(session.companyId, form.id)" target="_blank" rel="noopener" class="ph">
+            <i class="pi pi-image" aria-hidden="true" /> Fotka bločku</a>
+        </div>
+        <template v-else>
+          <FormField label="Kategória" :span="2" :error="errors.category" :hint="suggested ? 'navrhnutá podľa obchodu' : ''">
           <Select v-model="form.category" :options="cats" size="small" fluid filter :disabled="!canWrite" placeholder="Vyberte kategóriu"
             @change="suggested = false" />
         </FormField>
+        </template>
       </template>
       <FormField label="Poznámka" :span="2" :error="errors.note">
         <InputText v-model="form.note" size="small" :disabled="!canWrite" />
@@ -194,6 +225,49 @@ function remove() {
 .amount.income {
   color: var(--tone-paid);
 }
+.split {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.ff-l {
+  font-size: var(--fs-sm);
+  color: var(--ink-soft);
+}
+.split table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  font-size: var(--fs-sm);
+  border: 1px solid var(--rule);
+}
+.split td {
+  padding: 2px 6px;
+  border-bottom: 1px solid var(--rule-soft);
+}
+.split .nm small {
+  color: var(--ink-faint);
+}
+.split .nm {
+  overflow-wrap: anywhere;
+}
+.split .ct {
+  width: 48%;
+}
+.split .ct :deep(.p-select) {
+  max-width: 100%;
+}
+.split .am {
+  width: 64px;
+}
+.split .err {
+  color: var(--tone-overdue);
+}
+.ph {
+  font-size: var(--fs-sm);
+  color: var(--blue);
+}
 .actions {
   grid-column: 1 / -1;
   display: flex;
@@ -212,7 +286,7 @@ function remove() {
 }
 @media (max-width: 560px) {
   .hh-panel.p-drawer {
-    width: 100vw;
+    width: 100vw !important;
   }
 }
 </style>
