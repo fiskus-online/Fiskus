@@ -148,6 +148,7 @@ export const obligationKinds = [
   { value: 'execution', label: 'Exekúcia', icon: 'pi-exclamation-triangle', hint: 'Splátky exekútorovi podľa dohody alebo zrážky' },
   { value: 'regular', label: 'Pravidelná platba', icon: 'pi-replay', hint: 'Nájom, zálohy na energie, poistka, predplatné — bez dlžnej sumy' },
   { value: 'lent', label: 'Požičal som', icon: 'pi-user-plus', hint: 'Niekto vám vracia peniaze — splátky sú príjem' },
+  { value: 'fine', label: 'Pokuta, poplatok', icon: 'pi-ticket', hint: 'Pokuta, poplatok, platba do školy, krúžok, výlet — jednorazovo alebo na splátky' },
 ]
 export const obligationKindLabel = (k) => obligationKinds.find((x) => x.value === k)?.label ?? k
 export const obligationIcon = (k) => obligationKinds.find((x) => x.value === k)?.icon ?? 'pi-file'
@@ -175,6 +176,7 @@ export function newObligation(kind = 'loan', accounts = [], today = new Date()) 
   return {
     id: 0, kind, name: '', creditor: '', principal: '', paidBefore: '', installment: '', frequency: kind === 'regular' ? 'monthly' : 'monthly',
     firstDue: toISODate(today), count: 0, category: '', accountId: acc?.id ?? 0, reference: '', vs: '', iban: '', closed: false, note: '',
+    address: '', months: [], remindDays: 0,
   }
 }
 
@@ -196,7 +198,59 @@ export function obligationTone(o) {
 /** Filter záväzkov: otvorené / všetky a hľadanie. */
 export function filterObligations(list, { all = false, search = '' } = {}) {
   const terms = searchTerms(search)
-  return list.filter((o) => (all || (!o.closed && !o.state?.paidOff)) && matches(terms, [o.name, o.creditor, obligationKindLabel(o.kind), o.reference, o.vs, o.note]))
+  return list.filter((o) => (all || (!o.closed && !o.state?.paidOff)) && matches(terms, [o.name, o.creditor, obligationKindLabel(o.kind), o.reference, o.vs, o.note, o.address, o.iban]))
+}
+
+// ---- mesiace platby a plán ----
+
+/** Voľba mesiacov vo formulári (skratky). */
+export const monthOptions = monthNames.map((n, i) => ({ value: i + 1, label: n.slice(0, 3) }))
+
+/** Mesiace platby slovne: [9..12, 1..6] → „september – jún“; prázdne = ''. */
+export function monthsLabel(months = []) {
+  const set = new Set(months ?? [])
+  if (!set.size || set.size === 12) return ''
+  // úseky po sebe idúcich mesiacov (aj cez prelom roka)
+  const start = [...set].filter((m) => !set.has(m === 1 ? 12 : m - 1)).sort((a, b) => a - b)
+  return start
+    .map((s) => {
+      let e = s
+      while (set.has(e === 12 ? 1 : e + 1) && (e === 12 ? 1 : e + 1) !== s) e = e === 12 ? 1 : e + 1
+      return e === s ? monthNames[s - 1] : `${monthNames[s - 1]} – ${monthNames[e - 1]}`
+    })
+    .join(', ')
+}
+
+/** IBAN po štvoriciach: SK3112000000198742637541 → SK31 1200 0000 1987 4263 7541. */
+export const ibanGroups = (v) => String(v ?? '').replace(/\s/g, '').replace(/(.{4})(?=.)/g, '$1 ')
+
+/** Názov mesiaca plánu: 2026-11 → „november 2026“. */
+export function planMonthLabel(ym) {
+  const [y, m] = String(ym).split('-').map(Number)
+  return `${monthNames[m - 1] ?? ''} ${y}`
+}
+
+/** Položky plánu (po splatnosti a mesiace) vyfiltrované hľadaním so súčtami zoznamu. */
+export function filterPlan(plan, search = '') {
+  const terms = searchTerms(search)
+  const ok = (it) => matches(terms, [it.name, it.creditor, obligationKindLabel(it.kind), it.vs, it.iban, it.address])
+  const sum = (items) => {
+    let pay = 0
+    let receive = 0
+    for (const it of items) {
+      const c = Math.round(Number(it.rest || 0) * 100)
+      if (it.income) receive += c
+      else pay += c
+    }
+    return { pay: fromCents(pay), receive: fromCents(receive) }
+  }
+  const overdue = (plan?.overdue ?? []).filter(ok)
+  const months = (plan?.months ?? []).map((m) => {
+    const items = m.items.filter(ok)
+    return { month: m.month, items, ...sum(items) }
+  })
+  const all = months.flatMap((m) => m.items)
+  return { overdue, overdueSum: sum(overdue), months, total: sum(all), rows: [...overdue.map((it) => ({ ...it, month: 'po splatnosti' })), ...months.flatMap((m) => m.items.map((it) => ({ ...it, month: planMonthLabel(m.month) })))] }
 }
 
 /** Suma zo vstupu (1 234,50 → 1234.50) pre API. */

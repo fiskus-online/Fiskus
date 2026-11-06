@@ -939,6 +939,17 @@ func seedHousehold(ctx context.Context, a *app.App) error {
 		Installment: m.MustParse("100"), FirstDue: first, AccountID: wallet.ID}); err != nil {
 		return err
 	}
+	// škola: obedy september – jún a jednorazová pokuta
+	if _, err := obl(household.Obligation{Kind: household.Regular, Name: "Obedy v škole – Janko", Creditor: "ZŠ Moyzesova",
+		Installment: m.MustParse("32.40"), FirstDue: first.AddMonths(1).AddDays(9), Months: []int{1, 2, 3, 4, 5, 6, 9, 10, 11, 12},
+		AccountID: bank.ID, Category: "Deti a škola", IBAN: "SK3112000000198742637541", VS: "20261", Address: "Moyzesova 5, 97401 Banská Bystrica", RemindDays: 5}); err != nil {
+		return err
+	}
+	if _, err := obl(household.Obligation{Kind: household.Fine, Name: "Pokuta za parkovanie", Creditor: "Mestská polícia Banská Bystrica",
+		Principal: m.MustParse("50"), Installment: m.MustParse("50"), Frequency: household.Once, FirstDue: first.AddDays(24), AccountID: bank.ID,
+		IBAN: "SK9809000000005028001234", VS: "1128834", Reference: "BL 112/2026", RemindDays: 7}); err != nil {
+		return err
+	}
 	byPayee := map[string]int64{"Home Credit": loanID, "Spoločenstvo vlastníkov": rentID}
 	type mv struct {
 		day         int

@@ -295,6 +295,7 @@ func (s *Server) Handler() http.Handler {
 	need("PUT /api/companies/{cid}/household/entries/{id}/photo", auth.PermLedgerWrite, s.hhSavePhoto)
 	need("GET /api/companies/{cid}/household/entries/{id}/photo", auth.PermLedgerRead, s.hhPhoto)
 	need("GET /api/companies/{cid}/household/obligations", auth.PermLedgerRead, s.hhObligations)
+	need("GET /api/companies/{cid}/household/plan", auth.PermLedgerRead, s.hhPlan)
 	need("POST /api/companies/{cid}/household/obligations", auth.PermLedgerWrite, s.hhSaveObligation)
 	need("GET /api/companies/{cid}/household/obligations/{id}", auth.PermLedgerRead, s.hhObligation)
 	need("PUT /api/companies/{cid}/household/obligations/{id}", auth.PermLedgerWrite, s.hhSaveObligation)

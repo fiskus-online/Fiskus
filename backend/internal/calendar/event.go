@@ -37,6 +37,8 @@ type Event struct {
 	Overdue bool         `json:"overdue,omitempty"` // po termíne a nesplnené
 	// Shifted je pôvodný dátum lehoty, ak sa posunula na pracovný deň.
 	Shifted invoice.Date `json:"shifted,omitzero"`
+	// RemindDays: pripomenúť toľko dní vopred (0 = predvolené).
+	RemindDays int `json:"remindDays,omitempty"`
 }
 
 // Sort zoradí termíny podľa dátumu, druhu a názvu.

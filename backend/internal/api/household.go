@@ -2,6 +2,7 @@ package api
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"strconv"
@@ -179,6 +180,31 @@ func (s *Server) hhImportDraws(w http.ResponseWriter, r *http.Request) {
 }
 
 // ---- záväzky ----
+
+// hhPlan: plán platieb po mesiacoch (?from=2026-11&months=12).
+func (s *Server) hhPlan(w http.ResponseWriter, r *http.Request) {
+	cid, ok := s.company(w, r)
+	if !ok {
+		return
+	}
+	var y, m int
+	if f := r.URL.Query().Get("from"); f != "" {
+		if _, err := fmt.Sscanf(f, "%d-%d", &y, &m); err != nil {
+			writeErr(w, http.StatusBadRequest, "Zadajte mesiac v tvare RRRR-MM", nil)
+			return
+		}
+	} else {
+		t := s.App.Today()
+		y, m = t.Year(), t.Month()
+	}
+	n, _ := strconv.Atoi(r.URL.Query().Get("months"))
+	out, err := s.App.HouseholdPlan(r.Context(), cid, y, m, n)
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, out)
+}
 
 func (s *Server) hhObligations(w http.ResponseWriter, r *http.Request) {
 	cid, ok := s.company(w, r)

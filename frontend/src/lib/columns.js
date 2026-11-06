@@ -8,7 +8,7 @@ import { levelShort } from './reminders.js'
 import { kindLabel } from './advance.js'
 import { assetStatus, disposalOptions, periodLabel } from './assets.js'
 import { tripTime } from './logbook.js'
-import { accountKindLabel, accountName, entryCategory, typeLabel, entryType, frequencyLabel, obligationKindLabel, obligationTone } from './household.js'
+import { accountKindLabel, accountName, entryCategory, typeLabel, entryType, frequencyLabel, obligationKindLabel, obligationTone, monthsLabel } from './household.js'
 import { moveLabel } from './itemcard.js'
 import { kindLabel as calendarKind, repeatLabel, stateOf } from './calendar.js'
 import { docKindLabel, emailStatus } from './emails.js'
@@ -634,6 +634,19 @@ export const householdAccountColumns = [
   t('Zrušený', (r) => yes(r.closed), 8),
 ]
 
+export const householdPlanColumns = [
+  t('Mesiac', (r) => r.month, 16),
+  date('Splatnosť', (r) => r.date),
+  t('Platba', (r) => r.name, 28),
+  t('Druh', (r) => obligationKindLabel(r.kind), 16),
+  t('Komu / kto', (r) => r.creditor, 24),
+  money('Zaplatiť €', (r) => (r.income ? '' : r.rest)),
+  money('Prijať €', (r) => (r.income ? r.rest : '')),
+  t('IBAN', (r) => r.iban, 26),
+  t('VS', (r) => r.vs, 12),
+  t('Adresa', (r) => r.address, 30),
+]
+
 export const householdObligationColumns = [
   t('Záväzok', (r) => r.name, 28),
   t('Druh', (r) => obligationKindLabel(r.kind), 16),
@@ -650,6 +663,8 @@ export const householdObligationColumns = [
   t('Zmluva / spis', (r) => r.reference, 18),
   t('VS', (r) => r.vs, 12),
   t('IBAN', (r) => r.iban, 26),
+  t('Adresa', (r) => r.address, 30),
+  t('Mesiace', (r) => monthsLabel(r.months), 20),
   t('Poznámka', (r) => r.note, 30),
 ]
 
