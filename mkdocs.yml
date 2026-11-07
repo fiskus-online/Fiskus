@@ -1,8 +1,6 @@
-# Tento súbor nie je spôsob zverejnenia dokumentácie — platforma si berie
-# `docs/` priamo z vetvy `main`. Je tu ako DÔKAZ: rovnaké súbory sa bez úprav
-# zostavia v MkDocs Material, čo sľubuje dialekt Sourcebook (pravidlá
-# fabrikaERP). Ak sa tu niektorá stránka prestane zostavovať, dialekt je
-# porušený.
+# Návod na docs.fiskus.online (workflow pages.yml). Stránky v docs/ sú
+# v dialekte Sourcebook (berie si ich aj platforma fabrikaERP); háčik
+# docs_hooks/sourcebook.py ich pri zostavení preloží do MkDocs Material.
 site_name: Fiškus
 site_url: https://docs.fiskus.online/
 site_description: Slovenský účtovný program na štúdium a výučbu účtovníctva.
@@ -12,13 +10,21 @@ exclude_docs: |
 
 theme:
   name: material
+  custom_dir: docs_theme # farby a písmo Fiškusa
   language: sk
+  font: false # písmo z docs_theme/assets/fonts, nič od tretích strán
+  logo: assets/favicon.svg
+  favicon: assets/favicon.svg
   features:
     - navigation.sections
     - navigation.top
     - content.code.copy
 
+hooks:
+  - docs_hooks/sourcebook.py # :::info a ```cards → Material
+
 markdown_extensions:
+  - md_in_html
   - admonition
   - tables
   - fenced_code
