@@ -338,7 +338,7 @@ func (c *docCache) propose(e journal.Entry, vatPayer bool) []journal.Line {
 			return nil
 		}
 		paidVAT := t.Summary.VAT
-		if p.ReverseCharge || !t.Summary.Total.Equal(t.Summary.Base.Add(t.Summary.VAT)) {
+		if p.Customs == nil && (p.ReverseCharge || !t.Summary.Total.Equal(t.Summary.Base.Add(t.Summary.VAT))) {
 			paidVAT = t.Summary.Total.Sub(t.Summary.Base) // dodávateľovi sa platí iba základ (prenesenie)
 		}
 		return journal.BuyLines(e.Amount, journal.Buy{Total: t.Summary.Total, VAT: paidVAT, Kind: p.Expense,

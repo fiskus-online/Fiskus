@@ -93,6 +93,20 @@ type Purchase struct {
 	FXDate   invoice.Date `json:"fxDate"`
 	FXManual bool         `json:"fxManual"`
 	Local    *Amounts     `json:"local,omitempty"` // sumy v eurách
+
+	// Customs: doklad je rozhodnutie colného úradu o dovoze (JCD). Rekapitulácia
+	// je základ a DPH z rozhodnutia, Customs.Duty clo; colnému úradu sa platí
+	// DPH a clo (clo je súčasť obstarávacej ceny tovaru).
+	Customs *Customs `json:"customs,omitempty"`
+}
+
+// Customs sú údaje rozhodnutia colného úradu.
+type Customs struct {
+	Duty money.Dec `json:"duty"` // clo
+	// ImportID je prijatá faktúra zahraničného dodávateľa za dovezený tovar
+	// (fakturuje bez DPH); ImportNumber jej číslo.
+	ImportID     int64  `json:"importId,omitempty"`
+	ImportNumber string `json:"importNumber,omitempty"`
 }
 
 // ExpenseKind je druh výdavku v peňažnom denníku (opatrenie MF SR
@@ -224,7 +238,12 @@ func (p *Purchase) Normalize() []Warning {
 		s.Base = s.Base.Add(r.Base)
 		s.VAT = s.VAT.Add(r.VAT)
 	}
-	if p.ReverseCharge || p.Import() {
+	if p.Customs != nil {
+		// rozhodnutie colného úradu: platí sa DPH a clo, vždy v eurách
+		p.Customs.Duty = p.Customs.Duty.RoundCents()
+		p.Currency, p.ReverseCharge, p.SupplyKind = "", false, invoice.SupplyGoods
+		s.Total = s.VAT.Add(p.Customs.Duty)
+	} else if p.ReverseCharge || p.Import() {
 		// dodávateľovi platíme bez DPH: DPH je samozdanenie alebo ju pri
 		// dovoze platíme colnému úradu
 		s.Total = s.Base
@@ -360,7 +379,15 @@ func (p *Purchase) Validate() error {
 	if p.DeductPercent < 0 || p.DeductPercent > 100 {
 		add("deductPercent", "Odpočet DPH musí byť 0 až 100 %")
 	}
-	if hasVAT && !p.NoDeduction && s.ICDPH == "" && !p.Import() {
+	if c := p.Customs; c != nil {
+		if c.Duty.Sign() < 0 {
+			add("customs.duty", "Clo nemôže byť záporné")
+		}
+		if neg {
+			add("rates", "Rozhodnutie colného úradu má kladné sumy")
+		}
+	}
+	if hasVAT && !p.NoDeduction && s.ICDPH == "" && !p.Import() && p.Customs == nil {
 		add("supplier.icdph", "Na odpočet DPH zadajte IČ DPH dodávateľa (potrebné do kontrolného výkazu)")
 	}
 	if len(errs) > 0 {

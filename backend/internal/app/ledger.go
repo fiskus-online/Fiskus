@@ -578,6 +578,9 @@ func (a *App) ledgerSources(ctx context.Context, companyID int64, year int, p *p
 			}
 			non := s.VAT.Sub(deduct)
 			switch {
+			case pu.Customs != nil:
+				// rozhodnutie colného úradu: clo do obstarávacej ceny, DPH na odpočet, D 379
+				p.set(key, chart.Amounts{Total: s.Total, Base: pu.Customs.Duty, VAT: deduct, VATNon: non})
 			case pu.Import() && !s.VAT.IsZero():
 				// dovoz: dodávateľovi sa platí základ, DPH vyrubí colný úrad
 				// (MD 343 odpočítateľná časť, neodpočítaná do nákladu / D 379)
@@ -676,6 +679,9 @@ func (a *App) ledgerSources(ctx context.Context, companyID int64, year int, p *p
 				}
 			case "purchase":
 				post.Template = "B-DODAVATEL"
+				if pu := getPur(t.Match.ID); pu != nil && pu.Customs != nil {
+					post.Template = "B-COLNY"
+				}
 				if pu := getPur(t.Match.ID); pu != nil && pu.Foreign() && single && pu.Status == purchase.StatusPaid {
 					if v, ok := revalued["purchase:"+strconv.FormatInt(pu.ID, 10)]; ok {
 						p.setFX(key, v)
@@ -723,6 +729,9 @@ func (a *App) ledgerSources(ctx context.Context, companyID int64, year int, p *p
 		case d.LinkKind == "purchase":
 			p.set(key, chart.Amounts{Total: abs(d.SignedEUR()), Base: abs(d.SignedEUR())})
 			post.Template = "P-DODAVATEL"
+			if pu, err := a.Store.GetPurchase(ctx, companyID, d.LinkID); err == nil && pu.Customs != nil {
+				post.Template = "P-COLNY"
+			}
 		case d.Tax != nil && len(d.Tax.Rows) > 0:
 			if d.Foreign() {
 				post.Problem = "Doklad v mene " + d.Currency + " s DPH — zaúčtujte ručne v eurách"
@@ -781,6 +790,9 @@ func abs(d money.Dec) money.Dec {
 
 // purchaseTemplate navrhne predkontáciu prijatej faktúry podľa druhu výdavku.
 func purchaseTemplate(p *purchase.Purchase) string {
+	if p.Customs != nil {
+		return "FP-CLO"
+	}
 	switch p.Expense {
 	case purchase.ExpenseStock:
 		return "FP-MATERIAL"

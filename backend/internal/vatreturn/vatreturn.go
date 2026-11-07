@@ -342,6 +342,13 @@ func Compute(in Input) Return {
 		}
 	}
 
+	// prijaté faktúry dovozu, ku ktorým je zaevidované rozhodnutie colného úradu
+	cleared := map[int64]bool{}
+	for _, p := range in.Purchases {
+		if p.Customs != nil && p.Customs.ImportID != 0 {
+			cleared[p.Customs.ImportID] = true
+		}
+	}
 	for _, p := range in.Purchases {
 		when := p.ReceivedDate
 		if p.DeliveryDate.After(when) {
@@ -364,6 +371,14 @@ func Compute(in Input) Return {
 				ret.Purchase++
 			}
 			continue
+		case p.Customs != nil:
+			// rozhodnutie colného úradu: DPH pri dovoze (r. 18 – 19 a 22 – 23)
+			if ret.addImport(p, tax, add) {
+				ret.Purchase++
+			}
+			continue
+		case foreign(s.Country) && p.SupplyKind == invoice.SupplyGoods && !party.IsEU(s.Country) && cleared[p.ID]:
+			continue // DPH je na rozhodnutí colného úradu
 		case foreign(s.Country) && p.SupplyKind == invoice.SupplyGoods && !party.IsEU(s.Country):
 			if p.ReverseCharge {
 				warn(doc, "purchase", p.ID, "Dovoz s uplatnením dane v priznaní (§ 84a ods. 3, r. 11c – 12e) zatiaľ nie je podporovaný — doplňte ručne")
@@ -732,9 +747,9 @@ func (ret *Return) addImport(p purchase.Purchase, tax purchase.Amounts, add func
 		add(importRow[r.Rate], deducted)
 		any = true
 	}
-	if !any {
+	if !any && p.Customs == nil {
 		ret.Warnings = append(ret.Warnings, Warning{p.Number, "purchase", p.ID,
-			"Dovoz z tretej krajiny: zadajte základ a DPH z rozhodnutia colného úradu (inak sa nič neodpočíta)"})
+			"Dovoz z tretej krajiny: zaevidujte rozhodnutie colného úradu (prijatá faktúra „Rozhodnutie colného úradu“ s DPH a clom) alebo tu zadajte základ a DPH z rozhodnutia, inak sa nič neodpočíta"})
 	}
 	return any
 }

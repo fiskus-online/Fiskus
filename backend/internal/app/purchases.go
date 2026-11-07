@@ -63,6 +63,29 @@ func (a *App) applyVehicleVAT(ctx context.Context, companyID int64, p *purchase.
 	return nil
 }
 
+// checkCustomsLink overí prijatú faktúru dovozu, ku ktorej patrí rozhodnutie
+// colného úradu (zahraničný dodávateľ z tretej krajiny, tovar).
+func (a *App) checkCustomsLink(ctx context.Context, companyID int64, p *purchase.Purchase) error {
+	c := p.Customs
+	if c == nil || c.ImportID == 0 {
+		if c != nil {
+			c.ImportNumber = ""
+		}
+		return nil
+	}
+	imp, err := a.Store.GetPurchase(ctx, companyID, c.ImportID)
+	if err != nil || !imp.Import() || imp.Customs != nil || imp.ID == p.ID {
+		return &invoice.ValidationError{Fields: []invoice.FieldError{{Field: "customs.importId",
+			Message: "Vyberte prijatú faktúru za tovar od dodávateľa z krajiny mimo EÚ"}}}
+	}
+	if imp.Summary.VAT.Sign() != 0 {
+		return &invoice.ValidationError{Fields: []invoice.FieldError{{Field: "customs.importId",
+			Message: "Faktúra " + imp.Number + " má zadanú DPH — keď DPH je na rozhodnutí colného úradu, faktúru dodávateľa zadajte bez DPH (sadzba 0 %)"}}}
+	}
+	c.ImportNumber = imp.Number
+	return nil
+}
+
 func normalizePurchase(p *purchase.Purchase) {
 	p.SupplierNumber = strings.TrimSpace(p.SupplierNumber)
 	p.CorrectsNumber = strings.TrimSpace(p.CorrectsNumber)
@@ -116,6 +139,9 @@ func (a *App) SavePurchase(ctx context.Context, companyID int64, p purchase.Purc
 	}
 	warns := p.Normalize()
 	if err := p.Validate(); err != nil {
+		return p, warns, err
+	}
+	if err := a.checkCustomsLink(ctx, companyID, &p); err != nil {
 		return p, warns, err
 	}
 	// rovnakú faktúru toho istého dodávateľa nezaevidovať dvakrát

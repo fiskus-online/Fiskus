@@ -13,6 +13,8 @@ etapách je v [pláne vývoja](./ROADMAP.md).
 
 ## Pripravuje sa (0.5)
 
+- **Clo pri dovoze**: rozhodnutie colného úradu ako prijatá faktúra s DPH
+  a clom, priradená faktúra za tovar, odpočet DPH pri dovoze a zaúčtovanie.
 - **Kurzové rozdiely k 31. 12.** aj pre zostatky pokladníc a bankových účtov
   v cudzej mene (analytické účty, zostatok podľa výpisu).
 - **Uzávierky e-kasy** v Pokladni: obrat podľa sadzieb a platby kartou sa
