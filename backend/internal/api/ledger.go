@@ -1,6 +1,7 @@
 package api
 
 import (
+	"github.com/fiskus-online/fiskus/backend/internal/money"
 	"io"
 	"net/http"
 	"strconv"
@@ -172,6 +173,27 @@ func (s *Server) postFXRevaluation(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusOK, doc)
+}
+
+// setFXStatement: PUT …/ledger/{year}/fx/statement {key, balance} — zostatok
+// bankového účtu v cudzej mene k 31. 12. podľa výpisu (balance null = podľa pohybov).
+func (s *Server) setFXStatement(w http.ResponseWriter, r *http.Request) {
+	cid, ok := s.company(w, r)
+	if !ok {
+		return
+	}
+	var body struct {
+		Key     string     `json:"key"`
+		Balance *money.Dec `json:"balance"`
+	}
+	if !decode(w, r, &body) {
+		return
+	}
+	if err := s.App.SetFXStatement(r.Context(), cid, pathYear(r), body.Key, body.Balance); err != nil {
+		fail(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
 }
 
 // accDepreciation: GET …/ledger/{year}/depreciation — návrh zaúčtovania účtovných odpisov
