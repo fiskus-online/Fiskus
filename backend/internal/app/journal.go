@@ -309,9 +309,14 @@ type docCache struct {
 // propose navrhne rozpis pohybu podľa spárovaného dokladu (nil = nevie).
 func (c *docCache) propose(e journal.Entry, vatPayer bool) []journal.Line {
 	if e.Doc == nil {
+		if strings.HasPrefix(e.Key, "bank:") {
+			return c.proposeBank(e)
+		}
 		return c.proposeCash(e, vatPayer)
 	}
 	switch e.Doc.Kind {
+	case cash.LinkClosing:
+		return c.proposeClosing(e, vatPayer)
 	case "invoice":
 		inv := c.invoice(e.Doc.ID)
 		if inv == nil {
@@ -361,6 +366,37 @@ func (c *docCache) proposeCash(e journal.Entry, vatPayer bool) []journal.Line {
 		return journal.SaleLines(e.Amount, journal.Sale{Total: gross, VAT: tax, Goods: d.Tax.Goods, VATPayer: vatPayer})
 	}
 	return journal.BuyLines(e.Amount, journal.Buy{Total: gross, VAT: tax, Kind: d.Tax.Expense, Deduct: vatPayer && !d.Tax.NoDeduction, Percent: d.Tax.DeductPercent, Mixed: d.Tax.Mixed, Coef: d.Tax.Coef})
+}
+
+// proposeBank: pripísané platby kartou z terminálu sú priebežná položka
+// (tržba je už v pokladni z uzávierky e-kasy).
+func (c *docCache) proposeBank(e journal.Entry) []journal.Line {
+	id, err := strconv.ParseInt(strings.TrimPrefix(e.Key, "bank:"), 10, 64)
+	if err != nil || e.Amount.Sign() <= 0 {
+		return nil
+	}
+	t, err := c.a.Store.GetBankTransaction(c.ctx, c.cid, id)
+	if err != nil || !reCard.MatchString(t.Message+" "+t.CounterName+" "+t.Note) {
+		return nil
+	}
+	return []journal.Line{{Column: journal.TransitIn, Amount: e.Amount}}
+}
+
+// proposeClosing rozpíše doklady uzávierky e-kasy: PPD je tržba (d1 tovar,
+// d2 služby, f DPH), VPD s platbami kartou priebežná položka (c).
+func (c *docCache) proposeClosing(e journal.Entry, vatPayer bool) []journal.Line {
+	if e.Amount.Sign() < 0 {
+		return []journal.Line{{Column: journal.TransitOut, Amount: e.Amount.Neg()}}
+	}
+	cl, err := c.a.Store.GetCashClosing(c.ctx, c.cid, e.Doc.ID)
+	if err != nil {
+		return nil
+	}
+	vat := money.Zero
+	for _, r := range cl.Rows {
+		vat = vat.Add(r.VAT)
+	}
+	return journal.SaleLines(e.Amount, journal.Sale{Total: cl.Total(), VAT: vat, Goods: cl.Goods, VATPayer: vatPayer})
 }
 
 func (c *docCache) invoice(id int64) *invoice.Invoice {

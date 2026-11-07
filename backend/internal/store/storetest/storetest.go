@@ -767,6 +767,51 @@ func Run(t *testing.T, newStore Factory) {
 		}
 	})
 
+	t.Run("uzávierky e-kasy", func(t *testing.T) {
+		s := newStore(t)
+		a, _ := s.CreateCompany(ctx, store.Company{Name: "Alfa"})
+		b, _ := s.CreateCompany(ctx, store.Company{Name: "Beta"})
+		c1 := cash.Closing{Date: invoice.MustDate("2026-11-06"), ORP: "88812345678900001", Number: "41", Receipts: 37,
+			Rows: []cash.VATRow{{Rate: 23, Gross: m.MustParse("123"), Base: m.MustParse("100"), VAT: m.MustParse("23")}}, Card: m.MustParse("40"), Goods: true}
+		c0 := cash.Closing{Date: invoice.MustDate("2025-12-31"), Rows: []cash.VATRow{{Gross: m.MustParse("10"), Base: m.MustParse("10")}}}
+		for _, c := range []*cash.Closing{&c1, &c0} {
+			if err := s.SaveCashClosing(ctx, a.ID, c); err != nil || c.ID == 0 {
+				t.Fatalf("uzávierka: %v", err)
+			}
+		}
+		c1.InID, c1.InNumber = 5, "PPD20260005"
+		if err := s.SaveCashClosing(ctx, a.ID, &c1); err != nil {
+			t.Fatal(err)
+		}
+		if got, err := s.GetCashClosing(ctx, a.ID, c1.ID); err != nil || !reflect.DeepEqual(got, c1) {
+			t.Fatalf("načítanie:\n got %+v\nwant %+v", got, c1)
+		}
+		if list, _ := s.ListCashClosings(ctx, a.ID, 2026); len(list) != 1 || list[0].InNumber != "PPD20260005" {
+			t.Fatalf("rok 2026: %+v", list)
+		}
+		if list, _ := s.ListCashClosings(ctx, a.ID, 0); len(list) != 2 || list[0].ID != c0.ID {
+			t.Fatalf("všetky podľa dátumu: %+v", list)
+		}
+		if _, err := s.GetCashClosing(ctx, b.ID, c1.ID); !errors.Is(err, store.ErrNotFound) {
+			t.Fatal("uzávierka inej firmy")
+		}
+		if err := s.SaveCashClosing(ctx, b.ID, &c1); !errors.Is(err, store.ErrNotFound) {
+			t.Fatal("úprava uzávierky inej firmy")
+		}
+		if err := s.DeleteCashClosing(ctx, b.ID, c0.ID); !errors.Is(err, store.ErrNotFound) {
+			t.Fatal("zmazanie uzávierky inej firmy")
+		}
+		if err := s.DeleteCashClosing(ctx, a.ID, c0.ID); err != nil {
+			t.Fatal(err)
+		}
+		if err := s.DeleteCompany(ctx, a.ID); err != nil {
+			t.Fatal(err)
+		}
+		if list, _ := s.ListCashClosings(ctx, a.ID, 0); len(list) != 0 {
+			t.Fatalf("po zmazaní firmy: %d", len(list))
+		}
+	})
+
 	t.Run("tlačivá", func(t *testing.T) {
 		s := newStore(t)
 		a, _ := s.CreateCompany(ctx, store.Company{Name: "Alfa"})

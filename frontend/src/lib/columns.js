@@ -727,3 +727,16 @@ export const formDocColumns = (forms) => [
   date('Upravené', (r) => r.updated),
   t('Pokladničný doklad', (r) => r.cashNumber ?? '', 18),
 ]
+
+// uzávierky e-kasy
+export const closingColumns = [
+  date('Dátum', (r) => r.date),
+  t('Číslo uzávierky', (r) => r.number, 12),
+  t('Kód pokladnice (ORP)', (r) => r.orp, 20),
+  money('Tržba €', (r) => (r.rows ?? []).reduce((s, x) => s + Number(x.gross), 0)),
+  money('DPH €', (r) => (r.rows ?? []).reduce((s, x) => s + Number(x.vat), 0)),
+  money('Kartou €', (r) => r.card),
+  t('PPD', (r) => r.inNumber, 14),
+  t('VPD', (r) => r.outNumber, 14),
+  t('Stav', (r) => (r.cancelled ? 'stornovaná' : ''), 10),
+]

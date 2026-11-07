@@ -25,6 +25,7 @@ import Checkbox from 'primevue/checkbox'
 import { codes, ratesOn } from '../lib/codes.js'
 import { emptyTax, taxErrors, taxLabel, taxPayload } from '../lib/cashvat.js'
 import ExportButton from '../components/ExportButton.vue'
+import CashClosings from '../components/CashClosings.vue'
 import { currencyOptions } from '../lib/fx.js'
 import { blankRegister, registerLocked, registerOptions, registersPayload } from '../lib/cashregisters.js'
 
@@ -33,6 +34,7 @@ const route = useRoute()
 const toast = useToast()
 const confirm = useConfirm()
 const canWrite = computed(() => can('cash.write'))
+const closingsOpen = ref(route.query.uzavierky !== undefined)
 
 const thisYear = new Date().getFullYear()
 const years = [thisYear, thisYear - 1, thisYear - 2].map((y) => ({ label: String(y), value: y }))
@@ -306,7 +308,7 @@ function cancelDoc() {
     },
   })
 }
-const docLink = (kind, id) => (kind === 'purchase' ? `/prijate/${id}` : `/faktury/${id}`)
+const docLink = (kind, id) => (kind === 'closing' ? '/pokladna?uzavierky' : kind === 'purchase' ? `/prijate/${id}` : `/faktury/${id}`)
 </script>
 
 <template>
@@ -317,6 +319,7 @@ const docLink = (kind, id) => (kind === 'purchase' ? `/prijate/${id}` : `/faktur
         aria-label="Pokladňa" class="reg-select" />
       <Select v-model="year" :options="years" option-label="label" option-value="value" size="small" aria-label="Rok" />
       <div class="spacer" />
+      <Button size="small" icon="pi pi-receipt" label="Uzávierky e-kasy" severity="secondary" outlined @click="closingsOpen = true" />
       <Button v-if="canWrite" size="small" icon="pi pi-cog" severity="secondary" text :label="regOptions.length > 1 ? undefined : 'Pokladne'"
         v-tooltip.bottom="'Pokladne – ďalšia pokladňa, cudzia mena'" aria-label="Pokladne" @click="openRegisters" />
       <template v-if="canWrite">
@@ -493,8 +496,11 @@ const docLink = (kind, id) => (kind === 'purchase' ? `/prijate/${id}` : `/faktur
               <span v-if="detail.tax.mixed && !detail.tax.noDeduction" class="vat-line">koeficient {{ detail.tax.coef }} % (§ 50)</span>
             </dd>
           </template>
-          <dt v-if="detail.linkNumber">Uhrádza</dt>
-          <dd v-if="detail.linkNumber"><RouterLink :to="docLink(detail.linkKind, detail.linkId)">{{ detail.linkNumber }}</RouterLink></dd>
+          <dt v-if="detail.linkNumber">{{ detail.linkKind === 'closing' ? 'Uzávierka' : 'Uhrádza' }}</dt>
+          <dd v-if="detail.linkNumber">
+            <a v-if="detail.linkKind === 'closing'" href="#" @click.prevent="closingsOpen = true">{{ detail.linkNumber }}</a>
+            <RouterLink v-else :to="docLink(detail.linkKind, detail.linkId)">{{ detail.linkNumber }}</RouterLink>
+          </dd>
         </dl>
         <div class="form-grid cash-form">
           <FormField :label="detail.kind === 'in' ? 'Prijaté od' : 'Vyplatené komu'" :span="2">
@@ -552,6 +558,8 @@ const docLink = (kind, id) => (kind === 'purchase' ? `/prijate/${id}` : `/faktur
         <Button label="Uložiť pokladne" icon="pi pi-check" size="small" :loading="busy" @click="saveRegisters" />
       </template>
     </Dialog>
+    <CashClosings v-model:visible="closingsOpen" :cid="session.companyId" :year="year" :register-id="registerId" :can-write="canWrite"
+      :vat-payer="!!session.company?.vatPayer" @changed="load" />
   </div>
 </template>
 
