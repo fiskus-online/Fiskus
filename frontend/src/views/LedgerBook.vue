@@ -186,6 +186,19 @@ async function openFX() {
   }
 }
 
+const fxKindLabel = (k) => ({ receivable: 'pohľadávka', payable: 'záväzok', cash: 'pokladnica', bank: 'bankový účet' })[k] ?? k
+// zostatok bankového účtu v cudzej mene podľa výpisu (prázdne = podľa pohybov)
+const fxStmt = ref({})
+async function saveFXStatement(key) {
+  const raw = String(fxStmt.value[key] ?? '').replace(/[\s\u00a0]/g, '').replace(',', '.')
+  try {
+    await api.setFXStatement(session.companyId, year.value, key, raw === '' ? null : raw)
+    fxr.value = await api.fxRevaluation(session.companyId, year.value)
+  } catch (e) {
+    toast.add({ severity: 'error', summary: 'Zostatok sa neuložil', detail: e.message, life: 6000 })
+  }
+}
+
 // analytické účty bánk a pokladníc
 const moneyForm = ref([])
 function openMoney() {
@@ -638,9 +651,10 @@ function removeInternal() {
       <!-- kurzové rozdiely k 31. 12. -->
       <form v-else-if="mode === 'fx' && fxr" class="dform" @submit.prevent="save">
         <p class="hint">
-          Neuhradené pohľadávky a záväzky v cudzej mene sa k 31. 12. prepočítajú kurzom ECB. Rozdiel je kurzový zisk (663) alebo strata (563);
-          prepočítaná suma platí aj pri úhrade v ďalšom roku.
+          Neuhradené pohľadávky a záväzky a zostatky pokladníc a bankových účtov v cudzej mene sa k 31. 12. prepočítajú kurzom ECB. Rozdiel je
+          kurzový zisk (663) alebo strata (563); prepočítaná suma pohľadávky a záväzku platí aj pri úhrade v ďalšom roku.
         </p>
+        <p v-for="w in fxr.warnings" :key="w" class="warn">{{ w }}</p>
         <p v-if="fxr.missing.length" class="warn">Chýba kurz k 31. 12. pre {{ fxr.missing.join(', ') }} — aktualizujte kurzy mien.</p>
         <p v-if="fxr.items.some((it) => it.rateDate < `${year}-12-24`)" class="warn">
           Kurz k 31. 12. {{ year }} ešte nie je vyhlásený — návrh používa posledný známy kurz. Zaúčtujte ho až po skončení roka.
@@ -651,8 +665,14 @@ function removeInternal() {
           <span class="text"><b>{{ it.number }}</b> {{ it.partner }}</span>
           <span class="num" :class="{ loss: Number(it.diff) < 0 }">{{ Number(it.diff) > 0 ? '+' : '' }}{{ formatAmount(it.diff) }}</span>
           <span class="meta">
-            {{ it.kind === 'receivable' ? 'pohľadávka' : 'záväzok' }} {{ formatAmount(it.remaining) }} {{ it.currency }} · kurz {{ it.rate }} z {{ formatDate(it.rateDate) }}
+            {{ fxKindLabel(it.kind) }} {{ accountDisplay(it.account) }}: {{ formatAmount(it.remaining) }} {{ it.currency }} · kurz {{ it.rate }} z {{ formatDate(it.rateDate) }}
             · {{ formatAmount(it.bookEur) }} → {{ formatAmount(it.newEur) }} €
+          </span>
+          <span v-if="it.kind === 'bank' && canWrite" class="meta stmt">
+            Zostatok podľa výpisu k 31. 12.
+            <InputText v-model="fxStmt[it.key]" size="small" inputmode="decimal" :placeholder="formatAmount(it.remaining)" :aria-label="`Zostatok ${it.number} podľa výpisu`"
+              @change="saveFXStatement(it.key)" />
+            {{ it.currency }}
           </span>
         </div>
         <small v-if="errors.rates || errors.items" class="err">{{ errors.rates || errors.items }}</small>
@@ -920,6 +940,16 @@ function removeInternal() {
   gap: 2px 8px;
   padding: 5px 0;
   border-bottom: 1px solid var(--rule-soft);
+}
+.fx-item .stmt {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+.fx-item .stmt :deep(input) {
+  width: 8rem;
+  text-align: right;
 }
 .fx-item .meta {
   grid-column: 1 / -1;

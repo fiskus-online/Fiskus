@@ -213,6 +213,7 @@ export const api = {
   setMoneyAccounts: (cid, m) => request('PUT', `/api/companies/${cid}/chart/money`, m),
   fxRevaluation: (cid, year) => request('GET', `/api/companies/${cid}/ledger/${year}/fx`),
   postFXRevaluation: (cid, year) => request('POST', `/api/companies/${cid}/ledger/${year}/fx`, {}),
+  setFXStatement: (cid, year, key, balance) => request('PUT', `/api/companies/${cid}/ledger/${year}/fx/statement`, { key, balance }),
   accDepreciation: (cid, year) => request('GET', `/api/companies/${cid}/ledger/${year}/depreciation`),
   postAccDepreciation: (cid, year) => request('POST', `/api/companies/${cid}/ledger/${year}/depreciation`, {}),
   ledgerStatements: (cid, year) => request('GET', `/api/companies/${cid}/ledger/${year}/statements`),
