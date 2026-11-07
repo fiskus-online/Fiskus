@@ -1,0 +1,1822 @@
+<!DOCTYPE html><html lang="sk" class="no-js"><head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Životný cyklus faktúry, úprava vystavenej faktúry, dobropis, PAY by square, e-mail a e-faktúra.">
+      
+      
+      
+        <link rel="canonical" href="https://docs.fiskus.online/predaj/faktury/">
+      
+      
+        <link rel="prev" href="../">
+      
+      
+        <link rel="next" href="../zalohy/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/favicon.svg">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Faktúry a dobropisy - Fiškus</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  <link rel="stylesheet" href="../../assets/fiskus.css">
+
+  <link href="../../assets/stylesheets/glightbox.min.css" rel="stylesheet"><script src="../../assets/javascripts/glightbox.min.js"></script><style id="glightbox-style">
+            html.glightbox-open { overflow: initial; height: 100%; }
+            .gslide-title { margin-top: 0px; user-select: text; }
+            .gslide-desc { color: #666; user-select: text; }
+            .gslide-image img { background: white; }
+            .gscrollbar-fixer { padding-right: 15px; }
+            .gdesc-inner { font-size: 0.75rem; }
+            body[data-md-color-scheme="slate"] .gdesc-inner { background: var(--md-default-bg-color); }
+            body[data-md-color-scheme="slate"] .gslide-title { color: var(--md-default-fg-color); }
+            body[data-md-color-scheme="slate"] .gslide-desc { color: var(--md-default-fg-color); }
+        </style></head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#faktury-a-dobropisy" class="md-skip">
+          Preskočiť na obsah
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Hlavička">
+    <a href="../.." title="Fiškus" class="md-header__button md-logo" aria-label="Fiškus" data-md-component="logo">
+      
+  <img src="../../assets/favicon.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"></path></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Fiškus
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Faktúry a dobropisy
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"></path></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Hľadať" placeholder="Hľadať" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required="">
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"></path></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"></path></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Vyhľadávanie">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Vyčistiť" aria-label="Vyčistiť" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"></path></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix="">
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Spúšťam hľadanie
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigácia" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Fiškus" class="md-nav__button md-logo" aria-label="Fiškus" data-md-component="logo">
+      
+  <img src="../../assets/favicon.svg" alt="logo">
+
+    </a>
+    Fiškus
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix="">
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Prehľad
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2">
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Začíname
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Začíname
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../zaciname/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Začíname
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../zaciname/instalacia/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Inštalácia
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../zaciname/uvodne-nastavenie/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Úvodné nastavenie
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../zaciname/prenos-dat/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Prenos dát z iného programu
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../vyucba/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Výučba
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked="">
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Predaj
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Predaj
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Predaj
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Faktúry a dobropisy
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Faktúry a dobropisy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Obsah">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Obsah
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
+      
+        <li class="md-nav__item">
+  <a href="#zivotny-cyklus" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Životný cyklus
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#uprava-vystavenej-faktury" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Úprava vystavenej faktúry
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dobropis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dobropis
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#platba-a-odoslanie" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Platba a odoslanie
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#e-faktura-a-digitalny-postar" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        E-faktúra a digitálny poštár
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#zahranicie-a-osobitne-rezimy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Zahraničie a osobitné režimy
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../zalohy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Zálohy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ponuky/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cenové ponuky a pravidelná fakturácia
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../upomienky/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Upomienky
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cennik/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cenník
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../nakup/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Nákup
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6">
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sklad
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Sklad
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../sklad/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sklad
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../sklad/karta-produktu/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Karta produktu
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../sklad/doklady/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Skladové doklady
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../sklad/ocenenie/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Ocenenie a účtovanie zásob
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../peniaze/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Peniaze
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../dane/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Dane
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9">
+        
+          
+          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Účtovníctvo
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Účtovníctvo
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../uctovnictvo/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Účtovníctvo
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../uctovnictvo/jednoduche/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Jednoduché účtovníctvo
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../uctovnictvo/podvojne/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Podvojné účtovníctvo
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../uctovnictvo/majetok/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Majetok a kniha jázd
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../eshopy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    E-shopy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../mzdy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Mzdy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../domacnost/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Domácnosť
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../mobil/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Mobil
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_14">
+        
+          
+          <label class="md-nav__link" for="__nav_14" id="__nav_14_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Nástroje
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_14_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_14">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Nástroje
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../nastroje/kalkulacky/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Kalkulačky
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../nastroje/tlaciva/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tlačivá
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../nastavenia/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Nastavenia a bezpečnosť
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../ROADMAP/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Plán vývoja
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Prehľad zmien
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Obsah">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Obsah
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
+      
+        <li class="md-nav__item">
+  <a href="#zivotny-cyklus" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Životný cyklus
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#uprava-vystavenej-faktury" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Úprava vystavenej faktúry
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dobropis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dobropis
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#platba-a-odoslanie" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Platba a odoslanie
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#e-faktura-a-digitalny-postar" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        E-faktúra a digitálny poštár
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#zahranicie-a-osobitne-rezimy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Zahraničie a osobitné režimy
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="faktury-a-dobropisy">Faktúry a dobropisy<a class="headerlink" href="#faktury-a-dobropisy" title="Permanent link">¶</a></h1>
+<h2 id="zivotny-cyklus">Životný cyklus<a class="headerlink" href="#zivotny-cyklus" title="Permanent link">¶</a></h2>
+<p><a class="glightbox" data-type="image" data-width="auto" data-height="auto" href="../../obrazky/faktura.webp" data-desc-position="bottom"><img alt="Vystavená faktúra s prenesením daňovej povinnosti pri položkách a rekapituláciou DPH" src="../../obrazky/faktura.webp"></a>
+<em>Vystavená faktúra s prenesením daňovej povinnosti pri položkách a rekapituláciou DPH</em></p>
+<table>
+<thead>
+<tr>
+<th>Stav</th>
+<th>Čo sa deje</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Koncept</td>
+<td>Ľubovoľne sa mení, nemá číslo, nikde sa nepočíta.</td>
+</tr>
+<tr>
+<td>Vystavená</td>
+<td>Dostane číslo z radu (bez dier), ide do DPH a kontrolného výkazu, vznikne pohľadávka.</td>
+</tr>
+<tr>
+<td>Uhradená</td>
+<td>Úhradu priradí banka, pokladňa alebo ručný zápis; čiastočné úhrady sa sčítajú.</td>
+</tr>
+<tr>
+<td>Stornovaná</td>
+<td>Iba ak ešte nikam nevstúpila; inak sa opravuje dobropisom.</td>
+</tr>
+</tbody>
+</table>
+<p>Sumy, DPH a rekapituláciu podľa sadzieb počíta server pri každej zmene
+riadku — rozhranie iba ukazuje výsledok. Konečná suma je dvojito podčiarknutá
+ako v účtovnej knihe.</p>
+<h2 id="uprava-vystavenej-faktury">Úprava vystavenej faktúry<a class="headerlink" href="#uprava-vystavenej-faktury" title="Permanent link">¶</a></h2>
+<p>Vystavenú faktúru možno opraviť (číslo ostane, zmena ide do auditu), kým:</p>
+<ul>
+<li>nie je uhradená,</li>
+<li>nie je priznaná v DPH (po 25. dni po skončení obdobia),</li>
+<li>nebola odoslaná ako e-faktúra,</li>
+<li>nemá dobropis.</li>
+</ul>
+<p>Potom sa opravuje <strong>iba dobropisom</strong>.</p>
+<div class="admonition info">
+<p class="admonition-title">Prečo také prísne pravidlo</p>
+<p>Faktúru, ktorú už odberateľ zaúčtoval alebo ktorá je v podanom priznaní,
+nemožno potichu prepísať — u odberateľa by ostala pôvodná verzia a v priznaní
+iné číslo než v knihách. Dobropis je stopa, ktorú vidia obe strany aj
+daňový úrad.</p>
+</div>
+<h2 id="dobropis">Dobropis<a class="headerlink" href="#dobropis" title="Permanent link">¶</a></h2>
+<p>Dobropis (opravná faktúra) môže byť na celú faktúru alebo na časť položiek.
+Fiškus stráži, aby dobropisy neprekročili pôvodnú faktúru, a použije sadzby
+DPH platné k pôvodnému dodaniu. Dobropis k neuhradenej faktúre sa s ňou
+započíta.</p>
+<h2 id="platba-a-odoslanie">Platba a odoslanie<a class="headerlink" href="#platba-a-odoslanie" title="Permanent link">¶</a></h2>
+<p><a class="glightbox" data-type="image" data-width="auto" data-height="auto" href="../../obrazky/faktura-tlac.webp" data-desc-position="bottom"><img alt="Faktúra na tlač a do PDF s QR kódom PAY by square" src="../../obrazky/faktura-tlac.webp"></a>
+<em>Faktúra na tlač a do PDF s QR kódom PAY by square</em></p>
+<p><a class="glightbox" data-type="image" data-width="auto" data-height="auto" href="../../obrazky/mobil-faktura.webp" data-desc-position="bottom"><img alt="Tá istá faktúra na mobile" src="../../obrazky/mobil-faktura.webp"></a>
+<em>Tá istá faktúra na mobile</em></p>
+<ul>
+<li><strong>PAY by square</strong> — QR kód na tlači aj v PDF, z hotových súm faktúry.</li>
+<li><strong>E-mail</strong> — PDF zo servera cez vlastný SMTP, história odoslaných e-mailov.</li>
+<li><strong>E-faktúra</strong> — UBL 2.1 (Peppol BIS Billing 3.0), adresa <code>0245:DIČ</code>;
+  odoslanie cez digitálneho poštára. Prijaté e-faktúry sa načítajú ako
+  nákup.</li>
+</ul>
+<h2 id="e-faktura-a-digitalny-postar">E-faktúra a digitálny poštár<a class="headerlink" href="#e-faktura-a-digitalny-postar" title="Permanent link">¶</a></h2>
+<p>Od 1. 1. 2027 si platitelia DPH posielajú faktúry cez sieť Peppol. Fiškus
+e-faktúru vytvorí, odošle a prijme ju certifikovaný <strong>digitálny poštár</strong>.
+Pripojenie je v <strong>Nastaveniach → E-faktúry</strong>:</p>
+<p><a class="glightbox" data-type="image" data-width="auto" data-height="auto" href="../../obrazky/e-faktury.webp" data-desc-position="bottom"><img alt="Nastavenia → E-faktúry: pripojenie na digitálneho poštára" src="../../obrazky/e-faktury.webp"></a>
+<em>Nastavenia → E-faktúry: pripojenie na digitálneho poštára</em></p>
+<table>
+<thead>
+<tr>
+<th>Spôsob</th>
+<th>Kedy</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>SAPI-SK</td>
+<td>odporúčané — národné rozhranie, ktoré spoločne podporujú slovenskí poštári (ePošťák, Verteco…); zadáte adresu API, Client ID a Client secret</td>
+</tr>
+<tr>
+<td>Priečinky</td>
+<td>poštár má aplikáciu, ktorá synchronizuje priečinky na počítači</td>
+</tr>
+<tr>
+<td>Vlastný adaptér</td>
+<td>iný poštár cez prekladový program</td>
+</tr>
+</tbody>
+</table>
+<p>Tlačidlo <strong>Overiť spojenie</strong> skontroluje prihlásenie a schránku firmy bez
+odoslania čohokoľvek. Ten istý doklad odoslaný dvakrát (napríklad po výpadku
+spojenia) poštár nezdvojí.</p>
+<table>
+<thead>
+<tr>
+<th>Krok</th>
+<th>Čo sa deje</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Kontrola</td>
+<td>ak ju poštár ponúka, skontroluje e-faktúru podľa pravidiel EN 16931 a Peppol; neplatná sa <strong>neodošle</strong> a pri faktúre uvidíte porušené pravidlá</td>
+</tr>
+<tr>
+<td>Odoslanie</td>
+<td>poštár potvrdí prevzatie</td>
+</tr>
+<tr>
+<td>Doručenie</td>
+<td>Fiškus sa poštára pýta každú hodinu (30 dní); pri faktúre vidíte „doručená 4. 1. 2027“, alebo použite <strong>Zistiť stav</strong></td>
+</tr>
+<tr>
+<td>Nedoručenie</td>
+<td>príjemca nie je v sieti Peppol alebo doručenie zlyhalo — zapíše sa do auditu a faktúru treba poslať inak</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition warning">
+<p class="admonition-title">Výber poštára na portáli finančnej správy</p>
+<p>Okrem nastavenia vo Fiškuse si poštára musíte vybrať aj na portáli finančnej
+správy (výber digitálneho poštára). Bez toho vám e-faktúry nebudú doručované.</p>
+</div>
+<h2 id="zahranicie-a-osobitne-rezimy">Zahraničie a osobitné režimy<a class="headerlink" href="#zahranicie-a-osobitne-rezimy" title="Permanent link">¶</a></h2>
+<table>
+<thead>
+<tr>
+<th>Prípad</th>
+<th>Ako to Fiškus rieši</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Faktúra v cudzej mene</td>
+<td>kurz ECB, DPH v eurách</td>
+</tr>
+<tr>
+<td>Tovar a služby do EÚ</td>
+<td>súhrnný výkaz, riadky 13–15 priznania</td>
+</tr>
+<tr>
+<td>Tuzemské prenesenie (§ 69 ods. 12)</td>
+<td>druhy a) až j), hranica 5 000 €, A.2 kontrolného výkazu</td>
+</tr>
+<tr>
+<td>Trojstranný obchod (§ 45)</td>
+<td>text na faktúre, SV kód 1</td>
+</tr>
+</tbody>
+</table>
+
+
+
+
+
+
+
+  
+  
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden="">
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"></path></svg>
+  Na začiatok
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.top", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Skop\u00edrovan\u00e9 do schr\u00e1nky", "clipboard.copy": "Kop\u00edrova\u0165 do schr\u00e1nky", "search.result.more.one": "1 \u010fal\u0161\u00ed na tejto str\u00e1nke", "search.result.more.other": "# \u010fal\u0161\u00edch na tejto str\u00e1nke", "search.result.none": "\u017diadne vyhovuj\u00face dokumenty", "search.result.one": "Vyhovuj\u00faci dokument: 1", "search.result.other": "Vyhovuj\u00face dokumenty: #", "search.result.placeholder": "Pre vyh\u013ead\u00e1vanie za\u010dni p\u00edsa\u0165", "search.result.term.missing": "Ch\u00fdbaj\u00faci", "select.version": "Vyberte verziu"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  
+<script id="init-glightbox">const lightbox = GLightbox({"touchNavigation": true, "loop": false, "zoomable": true, "draggable": true, "openEffect": "zoom", "closeEffect": "zoom", "slideEffect": "slide"});
+document$.subscribe(()=>{ lightbox.reload(); });
+</script></body></html>

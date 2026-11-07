@@ -299,6 +299,10 @@ export const api = {
     request('POST', `/api/companies/${cid}/bank/${id}/match`, { kind, id: docId, ...(foreignAmount ? { foreignAmount } : {}) }),
   bankUnmatch: (cid, id) => request('POST', `/api/companies/${cid}/bank/${id}/unmatch`),
   bankIgnore: (cid, id, ignore, note) => request('POST', `/api/companies/${cid}/bank/${id}/ignore`, { ignore, note }),
+  fioAccounts: (cid) => request('GET', `/api/companies/${cid}/bank/fio`),
+  saveFio: (cid, body) => request('POST', `/api/companies/${cid}/bank/fio`, body),
+  deleteFio: (cid, id) => request('DELETE', `/api/companies/${cid}/bank/fio/${id}`),
+  syncFio: (cid, id) => request('POST', `/api/companies/${cid}/bank/fio/${id}/sync`),
 
   vat: (cid, period, excess, opts = {}) => request('GET', `/api/companies/${cid}/vat` + query({ period, excess, ...opts })),
   vatFilings: (cid, period) => request('GET', `/api/companies/${cid}/vat/filings` + query({ period })),

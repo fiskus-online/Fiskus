@@ -434,6 +434,10 @@ func (s *Server) Handler() http.Handler {
 	need("POST /api/companies/{cid}/bank/{id}/match", auth.PermBankWrite, s.matchBank)
 	need("POST /api/companies/{cid}/bank/{id}/unmatch", auth.PermBankWrite, s.unmatchBank)
 	need("POST /api/companies/{cid}/bank/{id}/ignore", auth.PermBankWrite, s.ignoreBank)
+	need("GET /api/companies/{cid}/bank/fio", auth.PermBankRead, s.listFio)
+	need("POST /api/companies/{cid}/bank/fio", auth.PermBankWrite, s.saveFio)
+	need("DELETE /api/companies/{cid}/bank/fio/{id}", auth.PermBankWrite, s.deleteFio)
+	need("POST /api/companies/{cid}/bank/fio/{id}/sync", auth.PermBankWrite, s.syncFio)
 
 	need("GET /api/companies/{cid}/vat", auth.PermVATRead, s.vatReturn)
 	need("GET /api/companies/{cid}/vat/filings", auth.PermVATRead, s.vatFilings)

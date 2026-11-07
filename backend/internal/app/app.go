@@ -49,6 +49,8 @@ type App struct {
 	Browser BrowserDB
 	// ECBURL je adresa kurzov ECB ("" = nesťahovať); FetchRates ju v testoch nahradí.
 	ECBURL string
+	// FioURL je adresa Fio API ("" = bank.FioURL); v testoch sa nahradí.
+	FioURL string
 	// CalSync sú prihlasovacie údaje aplikácie pre Google Kalendár
 	// a Outlook zadané pri spustení (inak z nastavení); CalSyncEndpoints
 	// a HTTP nahradia testy.

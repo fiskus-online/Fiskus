@@ -104,6 +104,12 @@ func (a *App) ImportStatement(ctx context.Context, companyID int64, fileName str
 		return res, err
 	}
 	res.Format = format
+	return a.importTransactions(ctx, companyID, own, "výpisu "+fileName, txs, res)
+}
+
+// importTransactions uloží nové pohyby (okrem uzavretých rokov a už
+// importovaných) a jednoznačné spáruje s dokladmi.
+func (a *App) importTransactions(ctx context.Context, companyID int64, own, source string, txs []bank.Transaction, res ImportResult) (ImportResult, error) {
 	if len(txs) > 0 {
 		res.Account = txs[0].Account
 	}
@@ -131,8 +137,8 @@ func (a *App) ImportStatement(ctx context.Context, companyID int64, fileName str
 	}
 	res.Imported, res.Duplicates = len(saved), dup
 	a.record(ctx, companyID, audit.CatBank, "import", "statement", 0,
-		fmt.Sprintf("Import výpisu %s: %d nových pohybov, %d už importovaných", fileName, len(saved), dup), nil,
-		map[string]any{"file": fileName, "account": res.Account, "imported": len(saved), "duplicates": dup})
+		fmt.Sprintf("Import %s: %d nových pohybov, %d už importovaných", source, len(saved), dup), nil,
+		map[string]any{"source": source, "account": res.Account, "imported": len(saved), "duplicates": dup})
 
 	cands, err := a.candidates(ctx, companyID)
 	if err != nil {
