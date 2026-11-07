@@ -10,6 +10,10 @@ tags: [e-shop, sklad, predaj]
 Napojenie je v **Nastaveniach → E-shopy**. Kľúče a heslá k obchodu sa
 uložia na serveri a cez rozhranie sa už nikdy neukážu.
 
+![Nastavenia → E-shopy: napojené obchody](../obrazky/e-shopy.webp)
+*Nastavenia → E-shopy: napojené obchody*
+
+
 | Obchod | Objednávky → faktúry | Zásoby do obchodu | Riadenie obchodu |
 |---|---|---|---|
 | WooCommerce | áno | áno | áno |

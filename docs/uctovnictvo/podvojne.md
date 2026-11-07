@@ -16,7 +16,15 @@ vzory zaúčtovania — ktorý účet ide na MD, ktorý na D a akú časť sumy
 (základ, DPH, celok). Fiškus má predvolené vzory pre bežné doklady a stráži, aby každý vzor bol
 vyrovnaný (MD = D).
 
+![Účtový rozvrh podľa rámcovej účtovej osnovy](../obrazky/uctovy-rozvrh.webp)
+*Účtový rozvrh podľa rámcovej účtovej osnovy*
+
+
 ## Automatické účtovanie
+
+![Účtovný denník — doklady zaúčtované automaticky podľa predkontácií](../obrazky/hlavna-kniha.webp)
+*Účtovný denník — doklady zaúčtované automaticky podľa predkontácií*
+
 
 | Doklad | Napríklad |
 |---|---|
@@ -30,6 +38,16 @@ Každý zápis sa dá zmeniť (iná predkontácia, stredisko, zákazka) a prida�
 dajú ručné zápisy a interné doklady.
 
 ## Knihy a závierka
+
+![Hlavná kniha: obraty a konečné stavy](../obrazky/hlavna-kniha-ucty.webp)
+*Hlavná kniha: obraty a konečné stavy*
+
+![Súvaha mikro účtovnej jednotky](../obrazky/suvaha.webp)
+*Súvaha mikro účtovnej jednotky*
+
+![Výkaz ziskov a strát](../obrazky/vysledovka.webp)
+*Výkaz ziskov a strát*
+
 
 - **Účtovný denník** — zápisy v časovom poradí.
 - **Hlavná kniha** — obratová predvaha, obraty a zostatky účtov.

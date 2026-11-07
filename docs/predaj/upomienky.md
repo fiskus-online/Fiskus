@@ -11,6 +11,10 @@ tags: [predaj, upomienky]
 Zoznam faktúr po splatnosti je zoskupený podľa odberateľov. Upomienka má
 tri stupne (1., 2., posledná), vlastný číselný rad UP a tlač ako list.
 
+![Faktúry po splatnosti zoskupené podľa odberateľa, stupne upomienok](../obrazky/upomienky.webp)
+*Faktúry po splatnosti zoskupené podľa odberateľa, stupne upomienok*
+
+
 | Nárok | Výpočet |
 |---|---|
 | Úrok z omeškania – podnikateľ | základná sadzba ECB + 9 p. b., k prvému dňu omeškania |

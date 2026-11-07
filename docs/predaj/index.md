@@ -7,6 +7,10 @@ tags: [predaj]
 
 # Predaj
 
+![Zoznam vydaných faktúr so súčtami a stavmi](../obrazky/faktury.webp)
+*Zoznam vydaných faktúr so súčtami a stavmi*
+
+
 ```cards
 - title: Faktúry a dobropisy
   href: ./faktury.md

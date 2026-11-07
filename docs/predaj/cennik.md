@@ -13,6 +13,10 @@ cena **bez DPH alebo s DPH** a sadzba. Druhú cenu dopočíta server. Položku
 vyberiete vo faktúre, ponuke aj v pravidelnej faktúre; riadok faktúry sa dá
 naopak uložiť do cenníka.
 
+![Cenník s kódmi, EAN, kategóriami a stavom na sklade](../obrazky/cennik.webp)
+*Cenník s kódmi, EAN, kategóriami a stavom na sklade*
+
+
 V zozname vidíte náhľad hlavného obrázka, kategóriu, EAN a stav skladu.
 Hľadá sa aj podľa EAN, kategórie, značky a dodávateľa. Klik otvorí rýchly
 panel, dvojklik alebo tlačidlo **Karta produktu** celú kartu — pozri

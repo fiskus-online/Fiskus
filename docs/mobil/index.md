@@ -12,6 +12,10 @@ tags: [mobil, nákup]
 Na adrese `/m` je jednoduchá stránka pre telefón, ktorú si pridáte na
 plochu. Tlačidlo **Odfotiť bloček** otvorí fotoaparát:
 
+![Fiškus na mobile — domácnosť a tlačidlo Bloček](../obrazky/mobil-domacnost.webp)
+*Fiškus na mobile — domácnosť a tlačidlo Bloček*
+
+
 1. QR kód na bločku sa prečíta **priamo v telefóne**.
 2. Fiškus si podľa kódu stiahne doklad z eKasy Finančnej správy —
    dodávateľa, položky a DPH.
@@ -24,6 +28,10 @@ odfotiť, opíšete kód bločku (začína `O-`), ktorý je pod ním.
 
 Desktopový Fiškus beží na počítači a telefón sa k nemu pripojí cez domácu
 alebo firemnú Wi-Fi.
+
+![Nastavenia → Mobil v sieti: povolenie a párovanie telefónov](../obrazky/mobil-v-sieti.webp)
+*Nastavenia → Mobil v sieti: povolenie a párovanie telefónov*
+
 
 | Krok | Kde |
 |---|---|

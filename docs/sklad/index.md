@@ -11,6 +11,10 @@ Stav zásoby sa vo Fiškuse **nezadáva, ale skladá z pohybov**. Každé čísl
 karte sa dá vysvetliť príjemkou, výdajkou, presunom alebo inventúrou — a to je
 presne to, čo sa má študent naučiť.
 
+![Zásoby po skladoch s priemernou cenou a hodnotou](../obrazky/sklad.webp)
+*Zásoby po skladoch s priemernou cenou a hodnotou*
+
+
 :::info[Prečo nemožno prepísať množstvo]
 Lebo budúci mesiac sa niekto opýta, prečo je na sklade jedenásť kusov.
 Stav zostavený z pohybov má vždy odpoveď; stav, ktorý niekto prepísal, má
