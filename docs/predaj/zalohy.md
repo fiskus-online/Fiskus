@@ -33,3 +33,11 @@ z prvej polovice je v inom období než daň zo zvyšku.
 Fiškus pozná aj čiastočné úhrady zálohy, viac záloh na jedno vyúčtovanie,
 zálohy v cudzej mene, zálohy do zahraničia a zálohy s tuzemským prenesením
 daňovej povinnosti.
+
+**Vyúčtovanie ako e-faktúra.** Vyúčtovaciu faktúru odošlete cez digitálneho
+poštára rovnako ako bežnú faktúru. Na e-faktúre sú riadky celej dodávky
+a pod nimi odpočet každého daňového dokladu k platbe ako záporný riadok
+po sadzbách, takže rekapitulácia DPH ukáže iba zostatok — rovnako ako
+v priznaní. Záloha bez daňového dokladu k platbe (napr. do zahraničia) je
+na e-faktúre ako suma zaplatená vopred a zníži iba sumu na úhradu. Zálohová
+faktúra sama nie je daňový doklad, preto sa ako e-faktúra neposiela.

@@ -68,9 +68,6 @@ func Check(inv invoice.Invoice, s Seller) []Problem {
 	if inv.Kind != invoice.KindInvoice && inv.Kind != invoice.KindCreditNote {
 		add("kind", ErrKind.Error())
 	}
-	if inv.Advance != nil && len(inv.Advance.Deductions) > 0 {
-		add("advance", "Vyúčtovanie zálohy ako e-faktúra zatiaľ nie je podporované")
-	}
 	if digits(s.DIC) == "" {
 		add("seller.dic", "Doplňte DIČ firmy v nastaveniach — je to adresa v sieti Peppol (0245:DIČ)")
 	}
@@ -220,10 +217,11 @@ func Write(inv invoice.Invoice, s Seller) ([]byte, error) {
 	w.raw("</cac:Delivery>")
 	w.paymentMeans(inv, s, credit)
 
-	// rekapitulácia DPH
+	// rekapitulácia DPH (pri vyúčtovaní zálohy aj sadzby, ktoré záloha
+	// pokryla celé — riadky s nimi sú na e-faktúre, BR-S-08)
 	w.raw("<cac:TaxTotal>")
 	w.raw(fmt.Sprintf(`<cbc:TaxAmount currencyID="%s">%s</cbc:TaxAmount>`, cur, amt(inv.Summary.VAT)))
-	for _, r := range inv.Summary.Rates {
+	for _, r := range breakdown(inv) {
 		cat := taxCategory(inv, s, r.Rate, r.Reverse)
 		w.raw("<cac:TaxSubtotal>")
 		w.raw(fmt.Sprintf(`<cbc:TaxableAmount currencyID="%s">%s</cbc:TaxableAmount>`, cur, amt(r.Base)))
@@ -237,19 +235,27 @@ func Write(inv invoice.Invoice, s Seller) ([]byte, error) {
 		w.raw(fmt.Sprintf(`<cac:TaxTotal><cbc:TaxAmount currencyID="EUR">%s</cbc:TaxAmount></cac:TaxTotal>`, amt(inv.Local.VAT)))
 	}
 
+	// zálohy bez daňového dokladu k platbe znižujú iba sumu na úhradu (BT-113)
+	prepaid := money.Zero
+	if inv.Advance != nil {
+		prepaid = inv.Advance.Prepaid
+	}
 	w.raw("<cac:LegalMonetaryTotal>")
 	for _, m := range []struct {
 		el string
 		v  money.Dec
 	}{
 		{"LineExtensionAmount", inv.Summary.Base}, {"TaxExclusiveAmount", inv.Summary.Base},
-		{"TaxInclusiveAmount", inv.Summary.Total}, {"PayableAmount", inv.Summary.Total},
+		{"TaxInclusiveAmount", inv.Summary.Total}, {"PrepaidAmount", prepaid}, {"PayableAmount", inv.Summary.Total.Sub(prepaid)},
 	} {
+		if m.el == "PrepaidAmount" && m.v.IsZero() {
+			continue
+		}
 		w.raw(fmt.Sprintf(`<cbc:%s currencyID="%s">%s</cbc:%s>`, m.el, cur, amt(m.v), m.el))
 	}
 	w.raw("</cac:LegalMonetaryTotal>")
 
-	for i, l := range netLines(inv) {
+	for i, l := range append(netLines(inv), deductionLines(inv)...) {
 		lineEl, qtyEl := "cac:InvoiceLine", "cbc:InvoicedQuantity"
 		if credit {
 			lineEl, qtyEl = "cac:CreditNoteLine", "cbc:CreditedQuantity"
@@ -346,7 +352,11 @@ func netLines(inv invoice.Invoice) []netLine {
 	if !gross {
 		return out
 	}
-	for _, r := range inv.Summary.Rates {
+	rates := inv.Summary.Rates
+	if inv.Advance != nil && inv.Advance.Supply != nil {
+		rates = inv.Advance.Supply.Rates // riadky sú celá dodávka pred odpočtom záloh
+	}
+	for _, r := range rates {
 		last, sum := -1, money.Zero
 		for i, l := range inv.Lines {
 			if l.Rate != r.Rate || (l.Reverse != "") != r.Reverse {
@@ -484,4 +494,64 @@ func (w *xw) paymentMeans(inv invoice.Invoice, s Seller, credit bool) {
 		w.raw("</cac:PayeeFinancialAccount>")
 	}
 	w.raw("</cac:PaymentMeans>")
+}
+
+// deductionLines sú odpočty záloh s daňovým dokladom k platbe na vyúčtovacej
+// faktúre: záporný riadok za každú sadzbu dokladu k platbe (množstvo −1,
+// cena = základ), aby súčet riadkov po sadzbách sedel na rekapituláciu.
+func deductionLines(inv invoice.Invoice) []netLine {
+	if inv.Advance == nil {
+		return nil
+	}
+	var out []netLine
+	for _, d := range inv.Advance.Deductions {
+		if d.Untaxed != "" {
+			continue
+		}
+		for _, r := range d.Rates {
+			if r.Base.IsZero() {
+				continue
+			}
+			desc := "Odpočet zálohy – daňový doklad k platbe " + d.Number
+			if !d.Date.IsZero() {
+				desc += " zo dňa " + d.Date.Display()
+			}
+			var rev invoice.DomesticRC // prenesenie: druh z riadku dodávky s rovnakou sadzbou
+			if r.Reverse {
+				for _, l := range inv.Lines {
+					if l.Rate == r.Rate && l.Reverse != "" {
+						rev = l.Reverse
+						break
+					}
+				}
+			}
+			out = append(out, netLine{Line: invoice.Line{Description: desc, Quantity: money.FromInt(-1), Unit: "",
+				UnitPrice: r.Base, Rate: r.Rate, Reverse: rev}, net: r.Base.Neg()})
+		}
+	}
+	return out
+}
+
+// breakdown je rekapitulácia DPH pre e-faktúru: pri vyúčtovaní zálohy celá
+// dodávka mínus odpočty po sadzbách vrátane sadzieb so základom 0.
+func breakdown(inv invoice.Invoice) []vat.RateSummary {
+	if inv.Advance == nil || inv.Advance.Supply == nil {
+		return inv.Summary.Rates
+	}
+	out := []vat.RateSummary{}
+	for _, full := range inv.Advance.Supply.Rates {
+		r := full
+		for _, d := range inv.Advance.Deductions {
+			if d.Untaxed != "" {
+				continue
+			}
+			for _, x := range d.Rates {
+				if x.Key() == r.Key() {
+					r.Base, r.VAT, r.Total = r.Base.Sub(x.Base), r.VAT.Sub(x.VAT), r.Total.Sub(x.Total)
+				}
+			}
+		}
+		out = append(out, r)
+	}
+	return out
 }
