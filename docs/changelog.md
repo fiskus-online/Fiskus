@@ -13,6 +13,8 @@ etapách je v [pláne vývoja](./ROADMAP.md).
 
 ## Pripravuje sa (0.5)
 
+- **Fio banka priamo**: pohyby z účtu vo Fio sa stiahnu tlačidlom cez API
+  (token iba na čítanie) a spárujú s faktúrami ako z výpisu.
 - **Clo pri dovoze**: rozhodnutie colného úradu ako prijatá faktúra s DPH
   a clom, priradená faktúra za tovar, odpočet DPH pri dovoze a zaúčtovanie.
 - **Kurzové rozdiely k 31. 12.** aj pre zostatky pokladníc a bankových účtov
