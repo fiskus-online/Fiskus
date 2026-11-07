@@ -13,6 +13,9 @@ etapách je v [pláne vývoja](./ROADMAP.md).
 
 ## Pripravuje sa (0.5)
 
+- **Kniha jázd zo záznamu GPS**: trasa z mobilu alebo GPS jednotky (GPX,
+  CSV) sa rozdelí na jazdy podľa zastávok, s pomenovanými miestami,
+  nadväzujúcim tachometrom a kontrolou už zapísaných jázd.
 - **Účtovné odpisy** v podvojnom účtovníctve: účet majetku, doba
   odpisovania v mesiacoch, účtovný odpisový plán s rozdielom k daňovým
   odpisom a zaúčtovanie za rok jedným interným dokladom.

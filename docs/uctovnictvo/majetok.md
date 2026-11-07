@@ -67,6 +67,30 @@ preukazu, alebo paušál 80 % / 50 %; cestovné náhrady za súkromné auto.
 ![Kniha jázd — služobné a súkromné jazdy, tankovanie, výdavky na vozidlo](../obrazky/kniha-jazd.webp)
 *Kniha jázd — služobné a súkromné jazdy, tankovanie, výdavky na vozidlo*
 
+### Jazdy zo záznamu GPS
+
+Jazdy netreba prepisovať ručne. Trasu z mobilu (napr. aplikácia na
+záznam trás) alebo z GPS jednotky v aute uložte ako **GPX** alebo **CSV**
+so stĺpcami čas, zemepisná šírka a dĺžka a v knihe jázd kliknite na
+**Z GPS**.
+
+- Fiškus rozdelí trasu na jazdy podľa zastávok dlhších ako 10 minút
+  (aj pri výpadku záznamu) a navrhne dátum, čas odchodu a príchodu,
+  odkiaľ, kam a kilometre. Presuny kratšie ako 300 m a skoky GPS vynechá.
+- Miesto bez názvu sa ukáže ako súradnice — kliknite naň a pomenujte ho
+  (sídlo, sklad, stavba). Pomenované miesta platia pre všetky ďalšie
+  záznamy v okruhu 300 m.
+- Stav tachometra nadväzuje na poslednú jazdu v knihe. Keď kilometre
+  opravíte podľa tachometra, ďalšie jazdy sa posunú.
+- Jazda, ktorá už v knihe je (rovnaký deň a čas odchodu), je označená
+  „už v knihe“ a predvolene sa nezapíše — ten istý súbor tak môžete
+  načítať opakovane.
+- Doplňte účel služobných jázd a kliknite na **Zapísať jazdy**. Ak niečo
+  chýba, nezapíše sa nič a chybná jazda sa vyznačí.
+
+![Jazdy zo záznamu GPS — návrh jázd s miestami, kilometrami a stavom tachometra](../obrazky/kniha-jazd-gps.webp)
+*Jazdy zo záznamu GPS — návrh jázd s miestami, kilometrami a stavom tachometra*
+
 
 !!! note "DPH pri vozidlách od roku 2026"
     Pri osobnom aute (M1, L1e, L3e) sa z nákupov odpočíta 50 % DPH. Plný

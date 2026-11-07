@@ -80,6 +80,19 @@ async function main() {
     ['majetok', '/majetok', firm],
     ['majetok-karta', `/majetok/${car}`, firm],
     ['kniha-jazd', '/kniha-jazd', firm],
+    ['kniha-jazd-gps', '/kniha-jazd', firm, async (p) => {
+      await api(`${F}/logbook/places`, { method: 'PUT', body: JSON.stringify([
+        { name: 'Sídlo, Banská Bystrica', lat: 48.7363, lon: 19.1462 },
+        { name: 'Zvolen – Hotel Lesná', lat: 48.5767, lon: 19.1263 },
+      ]) })
+      await p.getByRole('button', { name: 'Jazdy zo záznamu GPS' }).click()
+      await p.setInputFiles('.gps-panel input[type=file]', path.join(__dirname, 'jazdy.gpx'))
+      await p.waitForSelector('.drafts li')
+      await p.locator('.purpose input').first().fill('Montáž rozvádzača – Hotel Lesná')
+      await p.locator('.purpose input').nth(1).fill('Návrat zo stavby')
+      await p.locator('.gps .lead').click()
+      await p.waitForTimeout(500)
+    }],
     // e-shopy, mobil, nastavenia
     ['e-shopy', '/nastavenia/e-shopy', firm],
     ['mobil-v-sieti', '/nastavenia/mobil', firm],
