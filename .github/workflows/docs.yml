@@ -2,10 +2,10 @@ name: Dokumentácia
 
 on:
   pull_request:
-    paths: ['docs/**', 'mkdocs.yml']
+    paths: ['docs/**', 'docs_hooks/**', 'docs_theme/**', 'mkdocs.yml']
   push:
     branches: [main]
-    paths: ['docs/**', 'mkdocs.yml']
+    paths: ['docs/**', 'docs_hooks/**', 'docs_theme/**', 'mkdocs.yml']
 
 permissions:
   contents: read
@@ -20,4 +20,6 @@ jobs:
         with:
           python-version: '3.12'
       - run: pip install "mkdocs<2" mkdocs-material
+      - run: python -m unittest -q test_sourcebook
+        working-directory: docs_hooks
       - run: mkdocs build --strict

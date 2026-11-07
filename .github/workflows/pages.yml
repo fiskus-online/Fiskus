@@ -11,7 +11,7 @@ name: Web na Cloudflare
 on:
   push:
     branches: [main]
-    paths: ['site/**', 'docs/**', 'mkdocs.yml', '.github/workflows/pages.yml']
+    paths: ['site/**', 'docs/**', 'docs_hooks/**', 'docs_theme/**', 'mkdocs.yml', '.github/workflows/pages.yml']
   release:
     types: [published]
   workflow_dispatch:
@@ -67,6 +67,8 @@ jobs:
         with:
           node-version: 22
       - run: pip install "mkdocs<2" mkdocs-material
+      - run: python -m unittest -q test_sourcebook
+        working-directory: docs_hooks
       - run: mkdocs build --strict -d _docs
       - name: Nasadenie
         run: |
