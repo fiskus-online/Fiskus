@@ -299,3 +299,87 @@ func TestReadErrors(t *testing.T) {
 		}
 	}
 }
+
+func TestWriteFinalWithAdvance(t *testing.T) {
+	sum := func(xml, el string) []string {
+		re := regexp.MustCompile(`<cbc:` + el + ` currencyID="EUR">([-0-9.]+)</cbc:` + el + `>`)
+		var out []string
+		for _, m := range re.FindAllStringSubmatch(xml, -1) {
+			out = append(out, m[1])
+		}
+		return out
+	}
+	tests := []struct {
+		name      string
+		deds      []invoice.Deduction
+		lineExt   []string // riadky (dodávka, potom odpočty)
+		subtotals []string // základy v rekapitulácii
+		payable   string
+		prepaid   []string
+	}{
+		{"záloha s dokladom k platbe",
+			[]invoice.Deduction{{ReceiptID: 7, Number: "DP2026001", Date: invoice.MustDate("2026-09-15"),
+				Rates: []vat.RateSummary{{Rate: vat.Rate23, Base: m.MustParse("400"), VAT: m.MustParse("92"), Total: m.MustParse("492")}}, Total: m.MustParse("492")}},
+			[]string{"1000.00", "-400.00"}, []string{"600.00"}, "738.00", nil},
+		{"záloha pokryla celú sadzbu",
+			[]invoice.Deduction{{ReceiptID: 7, Number: "DP2026002",
+				Rates: []vat.RateSummary{{Rate: vat.Rate23, Base: m.MustParse("1000"), VAT: m.MustParse("230"), Total: m.MustParse("1230")}}, Total: m.MustParse("1230")}},
+			[]string{"1000.00", "-1000.00"}, []string{"0.00"}, "0.00", nil},
+		{"záloha bez dokladu k platbe",
+			[]invoice.Deduction{{Number: "ZF2026001", Untaxed: invoice.UntaxedForeign, Total: m.MustParse("500")}},
+			[]string{"1000.00"}, []string{"1000.00"}, "730.00", []string{"500.00"}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			inv := issued(line("Montáž rozvádzača", "1", "ks", "1000", vat.Rate23))
+			inv.Advance = &invoice.Advance{Deductions: tt.deds}
+			if err := inv.Recalculate(); err != nil {
+				t.Fatal(err)
+			}
+			if ps := Check(inv, seller); len(ps) > 0 {
+				t.Fatalf("kontrola: %+v", ps)
+			}
+			b, err := Write(inv, seller)
+			if err != nil {
+				t.Fatal(err)
+			}
+			x := string(b)
+			lines := regexp.MustCompile(`<cac:InvoiceLine>.*?<cbc:LineExtensionAmount currencyID="EUR">([-0-9.]+)<`).FindAllStringSubmatch(x, -1)
+			var got []string
+			for _, l := range lines {
+				got = append(got, l[1])
+			}
+			if strings.Join(got, " ") != strings.Join(tt.lineExt, " ") {
+				t.Errorf("riadky %v, chcem %v", got, tt.lineExt)
+			}
+			if s := sum(x, "TaxableAmount"); strings.Join(s, " ") != strings.Join(tt.subtotals, " ") {
+				t.Errorf("rekapitulácia %v, chcem %v", s, tt.subtotals)
+			}
+			if p := sum(x, "PayableAmount"); len(p) != 1 || p[0] != tt.payable {
+				t.Errorf("na úhradu %v, chcem %s", p, tt.payable)
+			}
+			if p := sum(x, "PrepaidAmount"); strings.Join(p, " ") != strings.Join(tt.prepaid, " ") {
+				t.Errorf("zaplatené vopred %v, chcem %v", p, tt.prepaid)
+			}
+			// BR-CO-10: súčet riadkov = LineExtensionAmount dokladu
+			total := m.Zero
+			for _, v := range got {
+				total = total.Add(m.MustParse(v))
+			}
+			if le := sum(x, "LineExtensionAmount"); le[0] != total.RoundCents().String() {
+				t.Errorf("súčet riadkov %s ≠ %s", total, le[0])
+			}
+			if strings.Contains(x, "Odpočet zálohy") != (len(tt.lineExt) > 1) {
+				t.Errorf("riadok odpočtu: %v", strings.Contains(x, "Odpočet zálohy"))
+			}
+			// odberateľ vo Fiškuse načíta vyúčtovanie ako náklad so zostatkom DPH
+			got2, err := Read(b, invoice.MustDate("2026-10-22"))
+			if err != nil {
+				t.Fatal(err)
+			}
+			if base := got2.Purchase.Rates[0].Base.String(); base != tt.subtotals[0] {
+				t.Errorf("načítaný základ %s, chcem %s", base, tt.subtotals[0])
+			}
+		})
+	}
+}

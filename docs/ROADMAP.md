@@ -82,7 +82,8 @@ Referenčný prehľad funkcií pochádza z českých systémov  (MIT) a  ([docs/
 - [x] E-faktúra: všeobecné napojenie na digitálneho poštára — priečinky (synchronizácia aplikáciou poskytovateľa) alebo HTTP API adaptéra; odoslanie, schránka prijatých, zoznam odoslaných a prevzatých
 - [x] E-faktúra: národné rozhranie SAPI-SK 1.0 (ePošťák, Verteco a ďalší prístupoví body): prihlásenie client_credentials, odoslanie s Idempotency-Key, schránka so stránkovaním, potvrdenie prevzatia, overenie spojenia
 - [x] E-faktúra: kontrola pravidiel u poštára pred odoslaním (SAPI-SK validate — neplatná sa neodošle), stav doručenia (ručne aj každú hodinu, nedoručenie do auditu)
-- [ ] E-faktúra: vyúčtovanie zálohy ako e-faktúra, vlastná kontrola pravidiel Peppol bez poštára
+- [x] E-faktúra: vyúčtovanie zálohy — odpočet zálohy s dokladom k platbe ako záporný riadok po sadzbách (rekapitulácia so zostatkom DPH), záloha bez dokladu ako zaplatené vopred (PrepaidAmount)
+- [ ] E-faktúra: vlastná kontrola pravidiel Peppol bez poštára
 
 ## Používatelia, práva a audit (pre účtovné kancelárie a poskytovateľov služieb)
 - [x] Používatelia a prihlasovanie v serverovom režime (heslo PBKDF2, relácia v HttpOnly cookie, limit pokusov, ochrana CSRF)
