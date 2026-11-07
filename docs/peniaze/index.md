@@ -9,6 +9,10 @@ tags: [banka, pokladňa]
 
 ## Banka
 
+![Bankový výpis spárovaný s faktúrami podľa VS a sumy](../obrazky/banka.webp)
+*Bankový výpis spárovaný s faktúrami podľa VS a sumy*
+
+
 | Formát výpisu | Poznámka |
 |---|---|
 | camt.053 (XML) | štandard slovenských bánk |
@@ -31,6 +35,10 @@ políčkom by nevedela povedať, kedy a koľko prišlo.
 Príjmové a výdavkové pokladničné doklady (PPD, VPD) s tlačou a sumou slovom.
 Fiškus nedovolí, aby zostatok pokladne klesol pod nulu. Pokladničný doklad
 môže uhradiť faktúru v hotovosti.
+
+![Pokladňa — príjmové a výdavkové doklady, zostatok](../obrazky/pokladna.webp)
+*Pokladňa — príjmové a výdavkové doklady, zostatok*
+
 
 - **DPH na pokladničných dokladoch** — bloček ako zjednodušená faktúra
   (odpočet, KV B.3.1/B.3.2 podľa limitu 3 000 €), tržba z e-kasy (KV D.1).

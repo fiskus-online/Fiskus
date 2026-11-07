@@ -8,6 +8,10 @@ tags: [sklad, účtovanie, ocenenie]
 
 # Ocenenie a účtovanie zásob
 
+![Ocenenie zásob váženým aritmetickým priemerom](../obrazky/sklad.webp)
+*Ocenenie zásob váženým aritmetickým priemerom*
+
+
 ## Spôsob ocenenia úbytku
 
 | Spôsob | Ako sa ocení výdaj |

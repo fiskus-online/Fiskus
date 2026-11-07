@@ -11,6 +11,10 @@ Domáce účtovníctvo vediete v samostatnej **domácnosti** — vo Fiškuse je 
 zvláštny druh „firmy“ bez IČO, DPH a dokladov. Založíte ju v časti
 **Nastavenia → Firmy a domácnosti → Založiť domácnosť**. Medzi firmou a domácnosťou sa prepínate hore v hlavičke.
 
+![Prehľad domácnosti: účty, najbližšie platby, rozpočet a rok](../obrazky/domacnost.webp)
+*Prehľad domácnosti: účty, najbližšie platby, rozpočet a rok*
+
+
 ## Účty
 
 Účet je miesto, kde máte peniaze: bežný účet, peňaženka, kreditná karta,
@@ -18,7 +22,15 @@ sporenie. Pri účte zadáte **počiatočný stav** — zostatok v deň, od ktor
 zapisujete pohyby. Ďalej ho Fiškus počíta sám. Účet s pohybmi sa nedá
 zmazať; keď ho zrušíte v banke, označte ho ako zrušený.
 
+![Účty domácnosti so zostatkami](../obrazky/domacnost-ucty.webp)
+*Účty domácnosti so zostatkami*
+
+
 ## Pohyby
+
+![Pohyby — príjmy, výdavky a prevody s kategóriami](../obrazky/domacnost-pohyby.webp)
+*Pohyby — príjmy, výdavky a prevody s kategóriami*
+
 
 | Druh | Čo to je |
 |---|---|
@@ -38,6 +50,10 @@ nič nezdvojí. Platby v cudzej mene sa vynechajú.
 
 Tlačidlo **Bloček** (v prehľade aj v pohyboch) otvorí fotoaparát alebo výber
 fotky. Bloček odfoťte celý, aj s QR kódom.
+
+![Detail bločku z eKasy — položky, ceny za kus, DPH a kategórie](../obrazky/domacnost-blocek.webp)
+*Detail bločku z eKasy — položky, ceny za kus, DPH a kategórie*
+
 
 | Bloček | Odkiaľ sú položky |
 |---|---|
@@ -69,6 +85,13 @@ pohyb sa druhýkrát neprenesie.
 Sem patria pôžičky a úvery, dlhy, exekúcie, pravidelné platby (nájom,
 zálohy na energie, poistky) aj peniaze, ktoré ste niekomu požičali.
 
+![Záväzky a platby — pôžičky, exekúcie, pravidelné platby, pokuty](../obrazky/domacnost-zavazky.webp)
+*Záväzky a platby — pôžičky, exekúcie, pravidelné platby, pokuty*
+
+![Plán po mesiacoch: čo a kedy zaplatiť a koľko treba za mesiac](../obrazky/domacnost-plan.webp)
+*Plán po mesiacoch: čo a kedy zaplatiť a koľko treba za mesiac*
+
+
 | Údaj | Na čo slúži |
 |---|---|
 | Dlžná suma | celkom, pri exekúcii vrátane trov; pri pravidelnej platbe sa nezadáva |
@@ -91,3 +114,7 @@ upozornenia na lehoty, Fiškus pripomenie splátky e-mailom vopred.
 V časti **Kategórie a rozpočet** zadáte pri kategóriách výdavkov sumu na
 mesiac. Prehľad ukáže, koľko z rozpočtu v mesiaci ostáva; prekročené
 kategórie sú červené. Kategórie si môžete premenovať, pridať aj odobrať.
+
+![Kategórie a mesačný rozpočet](../obrazky/domacnost-rozpocet.webp)
+*Kategórie a mesačný rozpočet*
+

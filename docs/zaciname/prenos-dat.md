@@ -11,6 +11,10 @@ tags: [začíname, import]
 Prenos je v **Nastaveniach → Prenos dát**. Vždy najprv uvidíte náhľad: čo
 pribudne, čo sa zmení a čo sa preskočí a prečo. Až potom sa zapíše.
 
+![Prenos dát: výber programu a súboru, najprv náhľad, potom zápis](../obrazky/prenos-dat.webp)
+*Prenos dát: výber programu a súboru, najprv náhľad, potom zápis*
+
+
 | Program | Formát | Čo sa prenesie |
 |---|---|---|
 | POHODA | XML export (aj Windows-1250) | adresár, zásoby do cenníka, vydané faktúry a dobropisy s pôvodnými číslami a úhradami, prijaté faktúry |

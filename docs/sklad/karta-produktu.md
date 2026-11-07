@@ -11,6 +11,10 @@ tags: [sklad, cenník, karta]
 Kartu otvoríte z cenníka (dvojklik alebo **Karta produktu**) alebo zo Skladu
 klikom na zásobu — vtedy sa pohyby rovno vyfiltrujú na daný sklad.
 
+![Karta produktu: obrázky, ceny, nákup, parametre a sklad](../obrazky/karta-produktu.webp)
+*Karta produktu: obrázky, ceny, nákup, parametre a sklad*
+
+
 ## Súhrn
 
 Pod názvom je riadok ako v účtovnej knihe: predajná cena bez DPH a s DPH,

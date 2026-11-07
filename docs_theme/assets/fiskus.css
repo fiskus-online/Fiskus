@@ -55,3 +55,25 @@ body, input { font-feature-settings: 'tnum' 1; }
 .md-typeset { font-size: 0.8rem; }
 .md-typeset h1 { color: #1f3a5c; font-weight: 700; }
 .md-nav__link--active { box-shadow: inset 3px 0 0 #d9a441; padding-left: 6px; }
+
+/* snímky obrazovky s popisom pod obrázkom */
+.md-typeset p > img,
+.md-typeset p > a.glightbox > img {
+  display: block;
+  border: 1px solid #dce1e8;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(31, 58, 92, 0.12);
+  max-width: 100%;
+  height: auto;
+}
+.md-typeset p > img + em,
+.md-typeset p > a.glightbox + em {
+  display: block;
+  margin-top: 6px;
+  font-style: normal;
+  font-size: 0.68rem;
+  color: #6b7685;
+}
+.md-typeset p img[src*="mobil-"] {
+  max-width: 320px;
+}

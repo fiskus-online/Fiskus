@@ -10,6 +10,10 @@ tags: [predaj, faktúra, dph]
 
 ## Životný cyklus
 
+![Vystavená faktúra s prenesením daňovej povinnosti pri položkách a rekapituláciou DPH](../obrazky/faktura.webp)
+*Vystavená faktúra s prenesením daňovej povinnosti pri položkách a rekapituláciou DPH*
+
+
 | Stav | Čo sa deje |
 |---|---|
 | Koncept | Ľubovoľne sa mení, nemá číslo, nikde sa nepočíta. |
@@ -48,6 +52,13 @@ započíta.
 
 ## Platba a odoslanie
 
+![Faktúra na tlač a do PDF s QR kódom PAY by square](../obrazky/faktura-tlac.webp)
+*Faktúra na tlač a do PDF s QR kódom PAY by square*
+
+![Tá istá faktúra na mobile](../obrazky/mobil-faktura.webp)
+*Tá istá faktúra na mobile*
+
+
 - **PAY by square** — QR kód na tlači aj v PDF, z hotových súm faktúry.
 - **E-mail** — PDF zo servera cez vlastný SMTP, história odoslaných e-mailov.
 - **E-faktúra** — UBL 2.1 (Peppol BIS Billing 3.0), adresa `0245:DIČ`;
@@ -59,6 +70,10 @@ započíta.
 Od 1. 1. 2027 si platitelia DPH posielajú faktúry cez sieť Peppol. Fiškus
 e-faktúru vytvorí, odošle a prijme ju certifikovaný **digitálny poštár**.
 Pripojenie je v **Nastaveniach → E-faktúry**:
+
+![Nastavenia → E-faktúry: pripojenie na digitálneho poštára](../obrazky/e-faktury.webp)
+*Nastavenia → E-faktúry: pripojenie na digitálneho poštára*
+
 
 | Spôsob | Kedy |
 |---|---|
