@@ -702,3 +702,20 @@ export const payrollColumns = [
   t('Zdravotná poisťovňa', (r) => insurerLabel(r.employee.insurer), 16),
   t('IBAN', (r) => r.employee.iban, 26),
 ]
+
+// kalkulačky
+export const loanScheduleColumns = [
+  t('Splátka', (r) => r.n, 10),
+  money('Splátka €', (r) => r.payment),
+  money('Istina €', (r) => r.principal),
+  money('Úrok €', (r) => r.interest),
+  money('Poplatok €', (r) => r.fee),
+  money('Zostatok €', (r) => r.balance),
+]
+
+export const savingsYearColumns = [
+  t('Rok', (r) => r.year, 8),
+  money('Vklady €', (r) => r.deposits),
+  money('Čisté úroky €', (r) => r.interest),
+  money('Zostatok €', (r) => r.balance),
+]
