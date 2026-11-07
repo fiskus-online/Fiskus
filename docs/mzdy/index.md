@@ -16,6 +16,10 @@ a 2026 podľa sadzieb a limitov platných v danom roku.
 
 V časti **Mzdy → Zamestnanci** zadáte pri každom:
 
+![Zamestnanci — pracovný pomer aj dohody](../obrazky/zamestnanci.webp)
+*Zamestnanci — pracovný pomer aj dohody*
+
+
 | Údaj | Na čo sa použije |
 |---|---|
 | Druh vzťahu | pracovný pomer, DoPČ, DoVP, DoBPŠ — určuje fondy sociálneho poistenia |
@@ -34,6 +38,10 @@ V časti **Mzdy** je výplatná listina mesiaca. Kliknutím na zamestnanca
 zadáte mesačné údaje — odpracované hodiny, inú základnú mzdu (časť
 mesiaca), odmeny, náhradu mzdy za dovolenku alebo sviatok, náhradu príjmu
 pri PN a zrážky — a uvidíte celú výplatnú pásku.
+
+![Výplatná listina za mesiac s odvodmi a daňou](../obrazky/mzdy.webp)
+*Výplatná listina za mesiac s odvodmi a daňou*
+
 
 Hore sú súčty na úhradu: **Sociálna poisťovňa** (zamestnanci aj firma),
 **zdravotné poisťovne** zvlášť, **daňový úrad** (preddavky po daňovom

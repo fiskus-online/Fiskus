@@ -1,0 +1,149 @@
+// Snímky obrazovky do návodu (docs/obrazky) a na web (site/obrazky) z ukážkových
+// dát. Spustenie: make snimky (zostaví Fiškus, spustí ukážku a tento skript).
+// Ručne: BASE=http://127.0.0.1:8110 node tools/snimky/snimky.cjs
+const { chromium } = require('playwright')
+const fs = require('node:fs')
+const path = require('node:path')
+
+const BASE = process.env.BASE || 'http://127.0.0.1:8110'
+const ROOT = path.resolve(__dirname, '../..')
+const DOCS = path.join(ROOT, 'docs/obrazky')
+const SITE = path.join(ROOT, 'site/obrazky')
+const only = process.argv.slice(2)
+
+async function api(p, opts = {}) {
+  const r = await fetch(BASE + p, { ...opts, headers: { 'X-Fiskus': '1', 'Content-Type': 'application/json', ...(opts.headers || {}) } })
+  if (!r.ok) throw new Error(`${p}: ${r.status}`)
+  return r.json()
+}
+
+// kliknutie na prvý viditeľný text
+const click = (text) => async (p) => {
+  await p.getByText(text, { exact: true }).first().click()
+  await p.waitForTimeout(900)
+}
+
+async function main() {
+  const companies = await api('/api/companies')
+  const firm = companies.find((c) => c.bookkeeping !== 'household')
+  const home = companies.find((c) => c.bookkeeping === 'household')
+  const F = `/api/companies/${firm.id}`
+  const inv = await api(`${F}/invoices`)
+  const byNum = (n) => inv.find((x) => x.number === n)?.id
+  const pdp = byNum('FA20260041') ?? inv.find((x) => x.status === 'issued').id
+  const proforma = inv.find((x) => x.kind === 'proforma' && x.status === 'issued')?.id
+  const quotes = await api(`${F}/quotes`)
+  const quote = quotes.find((q) => q.status === 'issued')?.id
+  const purchases = await api(`${F}/purchases`)
+  const foreign = purchases.find((x) => x.currency && x.currency !== 'EUR')?.id ?? purchases[0].id
+  const items = await api(`${F}/items`)
+  const stocked = items.find((x) => x.ean)?.id ?? items[0].id
+  const assets = (await api(`${F}/assets`)).items
+  const car = assets.find((a) => /Transit|auto|vozidlo/i.test(a.name))?.id ?? assets[0].id
+
+  // názov, cesta, firma, akcia, voľby (mobil, celá stránka, web)
+  const shots = [
+    // predaj
+    ['faktury', '/faktury', firm, null, { site: true }],
+    ['faktura', `/faktury/${pdp}`, firm, null, { site: true }],
+    ['faktura-tlac', `/faktury/${pdp}/tlac`, firm, null, { site: true, full: true }],
+    ['zalohova-faktura', `/faktury/${proforma}`, firm],
+    ['ponuky', '/ponuky', firm],
+    ['ponuka', `/ponuky/${quote}`, firm],
+    ['pravidelna-fakturacia', '/pravidelne', firm],
+    ['upomienky', '/upomienky', firm],
+    ['cennik', '/cennik', firm],
+    ['e-faktury', '/nastavenia/e-faktury', firm, null, { site: true }],
+    // nákup
+    ['prijate', '/prijate', firm],
+    ['prijata-faktura', `/prijate/${foreign}`, firm],
+    // sklad
+    ['sklad', '/sklad', firm],
+    ['sklad-doklady', '/sklad', firm, click('Doklady')],
+    ['karta-produktu', `/cennik/${stocked}/karta`, firm],
+    // peniaze
+    ['banka', '/banka', firm, null, { site: true }],
+    ['pokladna', '/pokladna', firm],
+    // dane
+    ['dph', '/dph', firm, null, { site: true }],
+    ['kontrolny-vykaz', '/kontrolny-vykaz', firm],
+    ['suhrnny-vykaz', '/suhrnny-vykaz', firm],
+    ['dan-z-prijmov', '/dan-z-prijmov', firm],
+    ['kalendar', '/kalendar', firm, null, { site: true }],
+    // mzdy
+    ['mzdy', '/mzdy', firm, null, { site: true }],
+    ['zamestnanci', '/zamestnanci', firm],
+    // účtovníctvo (jednoduché)
+    ['penazny-dennik', '/dennik', firm, null, { site: true }],
+    ['pohladavky-zavazky', '/pohladavky-zavazky', firm],
+    ['vykazy-ju', '/vykazy-ju', firm],
+    ['majetok', '/majetok', firm],
+    ['majetok-karta', `/majetok/${car}`, firm],
+    ['kniha-jazd', '/kniha-jazd', firm],
+    // e-shopy, mobil, nastavenia
+    ['e-shopy', '/nastavenia/e-shopy', firm],
+    ['mobil-v-sieti', '/nastavenia/mobil', firm],
+    ['nastavenia', '/nastavenia', firm],
+    ['firma', '/nastavenia/firma', firm],
+    ['firmy', '/firmy', firm],
+    ['prenos-dat', '/prenos', firm],
+    ['audit', '/audit', firm],
+    ['legislativa', '/legislativa', firm],
+    ['ai', '/ai', firm],
+    ['bezpecnost', '/nastavenia/bezpecnost', firm],
+    ['adresar', '/adresar', firm],
+    // domácnosť
+    ['domacnost', '/domacnost', home, null, { site: true, full: true }],
+    ['domacnost-pohyby', '/domacnost/pohyby', home],
+    ['domacnost-blocek', '/domacnost/pohyby', home, click('Lidl'), { site: true }],
+    ['domacnost-zavazky', '/domacnost/zavazky', home],
+    ['domacnost-plan', '/domacnost/zavazky', home, click('Plán po mesiacoch'), { site: true }],
+    ['domacnost-ucty', '/domacnost/ucty', home],
+    ['domacnost-rozpocet', '/domacnost/rozpocet', home],
+    // mobil (telefón)
+    ['mobil-domacnost', '/domacnost', home, null, { mobile: true, site: true }],
+    ['mobil-faktura', `/faktury/${pdp}`, firm, null, { mobile: true }],
+  ]
+  // podvojné účtovníctvo: tá istá ukážková firma prepnutá na podvojné
+  const double = [
+    ['uctovy-rozvrh', '/uctovy-rozvrh', firm],
+    ['hlavna-kniha', '/hlavna-kniha', firm, null, { site: true }],
+    ['hlavna-kniha-ucty', '/hlavna-kniha', firm, click('Hlavná kniha')],
+    ['suvaha', '/hlavna-kniha', firm, click('Súvaha')],
+    ['vysledovka', '/hlavna-kniha', firm, click('Výsledovka')],
+    ['majetok-odpisy', `/majetok/${car}`, firm],
+  ]
+
+  fs.mkdirSync(DOCS, { recursive: true })
+  fs.mkdirSync(SITE, { recursive: true })
+  const browser = await chromium.launch()
+  const run = async (list) => {
+    for (const [name, url, company, action, o = {}] of list) {
+      if (only.length && !only.includes(name)) continue
+      const vp = o.mobile ? { width: 390, height: 844 } : { width: 1280, height: 800 }
+      const ctx = await browser.newContext({ viewport: vp, deviceScaleFactor: o.mobile ? 2 : 1, locale: 'sk-SK' })
+      await ctx.addInitScript((id) => localStorage.setItem('fiskus.companyId', String(id)), company.id)
+      const p = await ctx.newPage()
+      p.on('pageerror', (e) => console.log(`  ${name}: chyba stránky ${e.message}`))
+      await p.goto(BASE + url, { waitUntil: 'networkidle' })
+      await p.waitForTimeout(700)
+      if (action) await action(p)
+      await p.waitForLoadState('networkidle')
+      await p.waitForTimeout(300)
+      const file = path.join(DOCS, `${name}.png`)
+      await p.screenshot({ path: file, fullPage: !!o.full })
+      if (o.site) fs.copyFileSync(file, path.join(SITE, `${name}.png`))
+      console.log(`  ${name}`)
+      await ctx.close()
+    }
+  }
+  await run(shots)
+  await api(`/api/companies/${firm.id}`, { method: 'PUT', body: JSON.stringify({ ...firm, bookkeeping: 'double' }) })
+  await run(double)
+  await browser.close()
+}
+
+main().catch((e) => {
+  console.error(e)
+  process.exit(1)
+})

@@ -222,15 +222,6 @@ h2 {
 .lead { max-width: var(--measure); color: var(--ink-soft); margin: 0 0 36px; }
 
 /* čo program robí: definičný zoznam v dvoch stĺpcoch */
-.does {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0 56px;
-  margin: 0;
-}
-.does div { padding: 18px 0; border-top: 1px solid var(--rule); }
-.does dt { font-weight: 700; font-size: 1.125rem; margin-bottom: 4px; }
-.does dd { margin: 0; color: var(--ink-soft); max-width: 52ch; }
 
 /* režimy: tabuľka ako v programe */
 .editions { width: 100%; border-collapse: collapse; background: var(--sheet); border: 1px solid var(--rule); }
@@ -238,6 +229,70 @@ h2 {
 .editions thead th { border-top: 0; font-size: 0.875rem; color: var(--ink-faint); font-weight: 600; background: var(--paper); }
 .editions tbody th { font-size: 1.125rem; width: 28%; }
 .editions td p { margin: 0; color: var(--ink-soft); }
+
+/* prehliadka funkcií so snímkami */
+.feature {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  gap: 48px;
+  align-items: center;
+  padding: 40px 0;
+  border-top: 1px solid var(--rule);
+}
+.feature.flip .feature-text { order: 2; }
+.feature h3 { font-size: 1.5rem; line-height: 1.2; margin: 0 0 12px; color: var(--blue-deep); }
+.feature p { margin: 0 0 14px; color: var(--ink-soft); max-width: 52ch; }
+.try {
+  border-left: 3px solid var(--brass);
+  padding: 4px 0 4px 12px;
+  font-size: 0.9375rem;
+  color: var(--ink-soft);
+}
+.try b { color: var(--ink); }
+.shot {
+  display: block;
+  background: var(--sheet);
+  border: 1px solid var(--rule);
+  border-top: 3px solid var(--blue-deep);
+  box-shadow: 0 12px 28px -18px rgba(31, 58, 92, 0.45);
+  overflow: hidden;
+}
+.shot img { display: block; width: 100%; height: auto; }
+.shot:focus-visible { outline: 3px solid var(--brass); outline-offset: 3px; }
+
+/* domácnosť: tmavý pás ako hlavička */
+.home { background: var(--blue-deep); color: #fff; padding: 72px 0; }
+.home h2 { color: #fff; }
+.home .lead { color: #c9d6e4; }
+.home-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(0, 0.62fr);
+  gap: 20px;
+  align-items: start;
+}
+.home figure { margin: 0; }
+.home .shot { border-top-color: var(--brass); box-shadow: none; aspect-ratio: 16 / 10; }
+.home .shot img { height: 100%; object-fit: cover; object-position: top left; }
+.home .phone .shot { aspect-ratio: 390 / 600; border-radius: 14px; border: 4px solid #0f1f33; }
+.home figcaption { margin-top: 12px; font-size: 0.9375rem; color: #c9d6e4; }
+.home figcaption b { color: #fff; display: block; margin-bottom: 2px; }
+.home .try { margin-top: 32px; color: #c9d6e4; }
+.home .try b { color: #fff; }
+
+.try-now { background: var(--blue-wash); }
+.btn-line { color: var(--blue-deep); border-color: var(--blue-deep); background: none; }
+.btn-line:hover { background: var(--sheet); color: var(--blue-deep); }
+
+@media (max-width: 860px) {
+  .feature { grid-template-columns: 1fr; gap: 20px; padding: 28px 0; }
+  .feature.flip .feature-text { order: 0; }
+  .home-grid { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 560px) {
+  .home { padding: 48px 0; }
+  .home-grid { grid-template-columns: 1fr; }
+  .home .phone { max-width: 240px; }
+}
 
 /* stiahnutie */
 .downloads { width: 100%; border-collapse: collapse; }
@@ -268,8 +323,7 @@ footer.bottom nav { display: flex; flex-wrap: wrap; gap: 6px 20px; margin-left: 
 @media (max-width: 860px) {
   .hero .wrap { grid-template-columns: 1fr; gap: 32px; }
   .hero-text { padding-bottom: 0; }
-  .does { grid-template-columns: 1fr; }
-  .top nav { gap: 14px; }
+    .top nav { gap: 14px; }
 }
 @media (max-width: 560px) {
   .wrap { padding: 0 16px; }

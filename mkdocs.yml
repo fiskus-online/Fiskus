@@ -20,6 +20,11 @@ theme:
     - navigation.top
     - content.code.copy
 
+plugins:
+  - search
+  - glightbox: # kliknutím sa snímka zväčší
+      skip_classes: [no-zoom]
+
 hooks:
   - docs_hooks/sourcebook.py # :::info a ```cards → Material
 

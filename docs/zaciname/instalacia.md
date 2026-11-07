@@ -86,6 +86,10 @@ Na výučbu a skúšanie je najlepšia ukážková firma **Demo elektroservis**:
 faktúry, nákupy, banka, pokladňa, sklad s kartami produktov, majetok aj
 kniha jázd.
 
+![Ukážková firma po spustení: kalendár termínov s daňami a splatnosťami](../obrazky/kalendar.webp)
+*Ukážková firma po spustení: kalendár termínov s daňami a splatnosťami*
+
+
 ```sh
 make demo                      # zo zdrojového kódu, http://127.0.0.1:8080
 fiskus -demo -addr 127.0.0.1:8080

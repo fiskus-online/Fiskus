@@ -14,6 +14,10 @@ Peňažný denník je v štruktúre opatrenia MF SR č. MF/27076/2007-74 (§ 4):
 stĺpce c, d1–d3 (príjmy), e1–e6 (výdavky), f a g. Riadky vznikajú
 z bankových výpisov a pokladne.
 
+![Peňažný denník — pohyby z banky a pokladne s rozpisom do stĺpcov](../obrazky/penazny-dennik.webp)
+*Peňažný denník — pohyby z banky a pokladne s rozpisom do stĺpcov*
+
+
 | Pohyb | Kto ho rozpíše do stĺpcov |
 |---|---|
 | úhrada spárovanej faktúry | Fiškus — základ podľa druhu plnenia alebo výdavku, DPH zvlášť, pomerne pri čiastočnej úhrade |
@@ -28,6 +32,13 @@ a výsledok hospodárenia sa počíta bez nej.
 :::
 
 ## Knihy a výkazy
+
+![Kniha pohľadávok a záväzkov k zvolenému dňu](../obrazky/pohladavky-zavazky.webp)
+*Kniha pohľadávok a záväzkov k zvolenému dňu*
+
+![Výkaz o príjmoch a výdavkoch a výkaz o majetku a záväzkoch](../obrazky/vykazy-ju.webp)
+*Výkaz o príjmoch a výdavkoch a výkaz o majetku a záväzkoch*
+
 
 - **Stavy pokladnice a účtov**, kniha **pohľadávok a záväzkov** k ľubovoľnému
   dňu (úhrady po tom dni sa neberú).
@@ -75,6 +86,10 @@ na portáli finančnej správy.
 ## Daňové priznanie typ B
 
 Obrazovka **Dane → Daň z príjmov** zostaví priznanie živnostníka za rok:
+
+![Daňové priznanie FO typ B — výpočet z peňažného denníka](../obrazky/dan-z-prijmov.webp)
+*Daňové priznanie FO typ B — výpočet z peňažného denníka*
+
 
 | Odkiaľ | Čo |
 |---|---|

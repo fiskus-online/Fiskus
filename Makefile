@@ -3,7 +3,7 @@
 WEB_DIST := backend/internal/web/dist
 VERSION  ?= dev
 
-.PHONY: test test-go test-web test-browser web build browser demo dev-api dev-web
+.PHONY: test test-go test-web test-browser web build browser demo dev-api dev-web snimky
 
 test: test-go test-web
 
@@ -50,3 +50,12 @@ dev-api:
 
 dev-web:
 	cd frontend && npm run dev
+
+# Snímky obrazovky do návodu (docs/obrazky) a na web (site/obrazky) z ukážkových
+# dát. Potrebuje Playwright (npx playwright install chromium) a Python s Pillow.
+snimky: web
+	cd backend && go build -o ../.snimky-fiskus ./cmd/fiskus
+	./.snimky-fiskus -demo -addr 127.0.0.1:8199 -rpo-url "" -ecb-url "" & echo $$! > .snimky.pid; \
+	sleep 3; BASE=http://127.0.0.1:8199 node tools/snimky/snimky.cjs; s=$$?; \
+	kill $$(cat .snimky.pid); rm -f .snimky.pid .snimky-fiskus; \
+	[ $$s -eq 0 ] && python3 tools/snimky/webp.py; exit $$s

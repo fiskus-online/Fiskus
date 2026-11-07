@@ -11,6 +11,10 @@ tags: [začíname, nastavenia]
 Nová firma prejde štyrmi krokmi. Uloží sa až na konci, takže sa môžete
 kedykoľvek vrátiť. Všetko sa dá neskôr zmeniť v **Nastaveniach**.
 
+![Údaje firmy a voľba jednoduchého alebo podvojného účtovníctva](../obrazky/firma.webp)
+*Údaje firmy a voľba jednoduchého alebo podvojného účtovníctva*
+
+
 | Krok | Čo zadáte | Na čo to je |
 |---|---|---|
 | 1. Údaje firmy | IČO — názov a adresa sa doplnia z registra; DIČ, IBAN, e-mail | hlavička dokladov, QR platba |
@@ -31,6 +35,10 @@ začiatočník nestratil v obrazovkách, ktoré nikdy nepoužije.
 V **Nastaveniach → Údaje a logo** sa dá firma zmazať (iba správca inštalácie). Fiškus pred zmazaním urobí
 zálohu, takže sa dá obnoviť. Potom sa založí nová firma a úvodné nastavenie
 sa spustí znova.
+
+![Firmy a domácnosti — prepínanie a zakladanie](../obrazky/firmy.webp)
+*Firmy a domácnosti — prepínanie a zakladanie*
+
 
 !!! warning "Doklady z iného programu iba raz"
     Prenos dokladov (faktúry, nákupy) z iného programu sa dá urobiť iba raz,
