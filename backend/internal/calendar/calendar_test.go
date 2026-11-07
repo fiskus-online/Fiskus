@@ -213,6 +213,22 @@ func TestICS(t *testing.T) {
 	}
 }
 
+func TestAlarms(t *testing.T) {
+	cases := []struct {
+		days int
+		want string
+	}{{0, "-P3D -P1D"}, {1, "-P1D"}, {7, "-P7D -P1D"}}
+	for _, c := range cases {
+		if got := strings.Join(alarms(c.days), " "); got != c.want {
+			t.Errorf("%d dní: %s, chcem %s", c.days, got, c.want)
+		}
+	}
+	out := string(ICS("X", []Event{{ID: "obl-1-1", Date: d("2026-11-20"), Kind: KindPay, Title: "Splátka: Škola", RemindDays: 7}}, time.Now()))
+	if !strings.Contains(out, "TRIGGER;RELATED=START:-P7D") {
+		t.Errorf("chýba pripomienka 7 dní vopred:\n%s", out)
+	}
+}
+
 func TestFold(t *testing.T) {
 	s := "SUMMARY:" + strings.Repeat("ščťž", 30)
 	f := fold(s)

@@ -22,10 +22,10 @@ import ObligationPayDialog from '../components/ObligationPayDialog.vue'
 import { api, ApiError } from '../lib/api.js'
 import { can, session } from '../lib/session.js'
 import { formatAmount, formatDate, formatMoney, fromISODate, toISODate } from '../lib/format.js'
-import { householdObligationColumns } from '../lib/columns.js'
+import { householdObligationColumns, householdPlanColumns } from '../lib/columns.js'
 import {
-  categoriesFor, dueStatus, filterObligations, frequencies, frequencyLabel, fromAmount, newObligation, obligationIcon, obligationKindLabel,
-  obligationKinds, obligationTone, paidPercent, toAmount,
+  categoriesFor, dueStatus, filterObligations, filterPlan, frequencies, ibanGroups, frequencyLabel, fromAmount, monthOptions, monthsLabel, newObligation, obligationIcon,
+  obligationKindLabel, obligationKinds, obligationTone, paidPercent, planMonthLabel, toAmount,
 } from '../lib/household.js'
 
 const props = defineProps({ id: { type: [String, Number], default: null } })
@@ -38,9 +38,10 @@ const list = ref([])
 const accounts = ref([])
 const categories = ref([])
 const loading = ref(true)
-const all = ref(false)
+const view = ref('open')
+const all = computed(() => view.value === 'all')
 const search = ref('')
-const views = [{ label: 'Otvorené', value: false }, { label: 'Všetky', value: true }]
+const views = [{ label: 'Otvorené', value: 'open' }, { label: 'Všetky', value: 'all' }, { label: 'Plán po mesiacoch', value: 'plan' }]
 
 async function load() {
   loading.value = true
@@ -56,6 +57,28 @@ async function load() {
   }
 }
 onMounted(load)
+
+// ---- plán platieb po mesiacoch (sumy počíta server) ----
+const plan = ref(null)
+const planFrom = ref(new Date(new Date().getFullYear(), new Date().getMonth(), 1))
+const planMonths = ref(12)
+const planLengths = [{ label: '3 mesiace', value: 3 }, { label: '6 mesiacov', value: 6 }, { label: '12 mesiacov', value: 12 }, { label: '24 mesiacov', value: 24 }]
+async function loadPlan() {
+  if (view.value !== 'plan') return
+  const d = planFrom.value ?? new Date()
+  const from = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+  try {
+    plan.value = await api.hhPlan(session.companyId, from, planMonths.value)
+  } catch (e) {
+    toast.add({ severity: 'error', summary: 'Plán platieb sa nenačítal', detail: e.message, life: 6000 })
+  }
+}
+watch([view, planFrom, planMonths], loadPlan)
+const planView = computed(() => filterPlan(plan.value, search.value))
+function payItem(it) {
+  const o = list.value.find((x) => x.id === it.obligationId)
+  if (o) paying.value = { ...o, amount: it.rest }
+}
 
 const visible = computed(() => filterObligations(list.value, { all: all.value, search: search.value }))
 // súčty zoznamu (už vypočítané zostatky): dlhy, po splatnosti, požičané
@@ -100,6 +123,7 @@ function pay(o) {
 }
 async function afterPay() {
   await load()
+  await loadPlan()
   if (props.id) await loadDetail(props.id)
 }
 
@@ -110,7 +134,7 @@ const busy = ref(false)
 function edit(o) {
   errors.value = {}
   form.value = o
-    ? { ...o, principal: fromAmount(o.principal), paidBefore: fromAmount(o.paidBefore), installment: fromAmount(o.installment), firstDue: fromISODate(o.firstDue) }
+    ? { ...o, principal: fromAmount(o.principal), paidBefore: fromAmount(o.paidBefore), installment: fromAmount(o.installment), firstDue: fromISODate(o.firstDue), months: [...(o.months ?? [])] }
     : { ...newObligation('loan', accounts.value), firstDue: new Date() }
 }
 const formCats = computed(() => categoriesFor(categories.value, form.value?.kind === 'lent' ? 'income' : 'expense'))
@@ -127,13 +151,15 @@ async function save() {
     const f = form.value
     const body = {
       ...f, principal: toAmount(f.principal) || '0', paidBefore: toAmount(f.paidBefore) || '0', installment: toAmount(f.installment) || '0',
-      firstDue: toISODate(f.firstDue), count: f.count || 0, accountId: f.accountId || 0,
+      firstDue: toISODate(f.firstDue), count: f.count || 0, accountId: f.accountId || 0, remindDays: f.remindDays || 0,
+      months: f.frequency === 'monthly' ? f.months ?? [] : [],
     }
     delete body.state
     const saved = await api.hhSaveObligation(session.companyId, body)
     toast.add({ severity: 'success', summary: f.id ? 'Záväzok uložený' : 'Záväzok pridaný', life: 2000 })
     form.value = null
     await load()
+    await loadPlan()
     if (props.id) await loadDetail(props.id)
     else if (!f.id) router.push(`/domacnost/zavazky/${saved.id}`)
   } catch (e) {
@@ -167,55 +193,113 @@ function remove(o) {
   <div class="page">
     <header class="head">
       <h1>Záväzky a platby</h1>
-      <SelectButton v-model="all" :options="views" option-label="label" option-value="value" :allow-empty="false" size="small" aria-label="Zobraziť" />
+      <SelectButton v-model="view" :options="views" option-label="label" option-value="value" :allow-empty="false" size="small" aria-label="Zobraziť" />
       <div class="spacer" />
       <IconField class="search">
         <InputIcon class="pi pi-search" />
         <InputText v-model="search" placeholder="Hľadať záväzok, veriteľa, spis" size="small" aria-label="Hľadať" />
       </IconField>
-      <ExportButton name="Záväzky domácnosti" :columns="householdObligationColumns" :rows="visible" />
+      <ExportButton v-if="view === 'plan'" name="Plán platieb domácnosti" :columns="householdPlanColumns" :rows="planView.rows" />
+      <ExportButton v-else name="Záväzky domácnosti" :columns="householdObligationColumns" :rows="visible" />
       <Button v-if="canWrite" label="Pridať záväzok" icon="pi pi-plus" size="small" @click="edit(null)" />
     </header>
 
-    <section v-if="list.length" class="sums" aria-label="Súčty">
-      <div><span>Zostáva splatiť</span><strong class="num"><span class="ledger">{{ formatMoney(sums.owe) }}</span></strong></div>
-      <div :class="{ late: Number(sums.late) > 0 }"><span>Po splatnosti</span><strong class="num">{{ formatMoney(sums.late) }}</strong></div>
-      <div v-if="Number(sums.lent) > 0"><span>Majú vám vrátiť</span><strong class="num">{{ formatMoney(sums.lent) }}</strong></div>
-    </section>
+    <!-- plán po mesiacoch -->
+    <template v-if="view === 'plan'">
+      <div class="plan-bar">
+        <FormField label="Od mesiaca">
+          <DatePicker v-model="planFrom" view="month" date-format="MM yy" size="small" :manual-input="false" />
+        </FormField>
+        <FormField label="Na">
+          <Select v-model="planMonths" :options="planLengths" option-label="label" option-value="value" size="small" />
+        </FormField>
+      </div>
+      <section v-if="plan" class="sums" aria-label="Súčty plánu">
+        <div :class="{ late: Number(planView.overdueSum.pay) > 0 }"><span>Treba doplatiť (po splatnosti)</span><strong class="num">{{ formatMoney(planView.overdueSum.pay) }}</strong></div>
+        <div><span>Zaplatiť za {{ planMonths }} mes.</span><strong class="num"><span class="ledger">{{ formatMoney(planView.total.pay) }}</span></strong></div>
+        <div v-if="Number(planView.total.receive) || Number(planView.overdueSum.receive)"><span>Majú vám vrátiť</span><strong class="num">{{ formatMoney(planView.total.receive) }}</strong></div>
+      </section>
+      <p v-if="plan && !list.length" class="empty">Pridajte záväzky a pravidelné platby — plán ukáže, čo a kedy treba v ktorom mesiaci zaplatiť.</p>
 
-    <p v-if="!loading && !list.length" class="empty">
-      Sem patria pôžičky a úvery, dlhy, exekúcie, ale aj pravidelné platby (nájom, energie, poistky) a peniaze, ktoré ste požičali. Fiškus
-      z nich zostaví splátkový kalendár, ukáže splátky v kalendári a pripomenie ich e-mailom pred splatnosťou.
-    </p>
-    <p v-else-if="!loading && !visible.length" class="empty">Žiadny záväzok nevyhovuje. <button class="lnk" type="button" @click="(all = true), (search = '')">Zobraziť všetky</button></p>
+      <section v-if="planView.overdue.length" class="pm late-m" aria-label="Po splatnosti">
+        <h2>
+          <span>Po splatnosti</span>
+          <small v-if="Number(planView.overdueSum.receive)" class="inc">má vrátiť {{ formatAmount(planView.overdueSum.receive) }}</small>
+          <strong v-if="Number(planView.overdueSum.pay)" class="num">doplatiť {{ formatMoney(planView.overdueSum.pay) }}</strong>
+        </h2>
+        <ul>
+          <li v-for="it in planView.overdue" :key="`${it.obligationId}-${it.n}`">
+            <span class="dt late">{{ formatDate(it.date) }}</span>
+            <i class="pi kind" :class="obligationIcon(it.kind)" aria-hidden="true" />
+            <div class="who"><b>{{ it.name }}</b><small>{{ [it.creditor, it.address].filter(Boolean).join(' · ') }}</small></div>
+            <div class="bank"><small v-if="it.iban">{{ ibanGroups(it.iban) }}</small><small v-if="it.vs">VS {{ it.vs }}</small></div>
+            <b class="num am" :class="{ inc: it.income }">{{ formatAmount(it.rest) }}</b>
+            <Button v-if="canWrite" :label="it.income ? 'Prijať' : 'Zaplatiť'" size="small" @click="payItem(it)" />
+          </li>
+        </ul>
+      </section>
 
-    <ul class="obls">
-      <li v-for="o in visible" :key="o.id" :class="{ closed: o.closed || o.state.paidOff }" @click="router.push(`/domacnost/zavazky/${o.id}`)">
-        <i class="pi kind" :class="obligationIcon(o.kind)" aria-hidden="true" />
-        <div class="main">
-          <span class="name">{{ o.name }}</span>
-          <small>{{ obligationKindLabel(o.kind) }}<template v-if="o.creditor"> · {{ o.creditor }}</template> · {{ formatMoney(o.installment) }} {{ frequencyLabel(o.frequency).toLowerCase() }}</small>
-          <span v-if="paidPercent(o) !== null" class="prog" :title="`splatené ${paidPercent(o)} %`"><span :style="{ width: paidPercent(o) + '%' }" /></span>
-        </div>
-        <div class="rest">
-          <template v-if="Number(o.principal)">
-            <small>{{ o.kind === 'lent' ? 'má vrátiť' : 'zostáva' }}</small>
-            <strong class="num">{{ formatMoney(o.state.remaining) }}</strong>
-          </template>
-        </div>
-        <div class="next">
-          <template v-if="o.state.nextDue && !o.closed">
-            <small>{{ o.state.overdue ? 'po splatnosti od' : 'najbližšie' }}</small>
-            <span :class="{ late: o.state.overdue }">{{ formatDate(o.state.nextDue) }} · <b class="num">{{ formatAmount(o.state.overdue ? o.state.overdueAmount : o.state.nextAmount) }}</b></span>
-          </template>
-          <span v-else class="tag" :data-tone="obligationTone(o).tone"><span class="tag-text">{{ obligationTone(o).label }}</span></span>
-        </div>
-        <div class="act" @click.stop>
-          <Button v-if="canWrite && !o.closed && !o.state.paidOff" :label="o.kind === 'lent' ? 'Prijať' : 'Zaplatiť'" size="small"
-            :severity="o.state.overdue ? undefined : 'secondary'" :outlined="!o.state.overdue" @click="pay(o)" />
-        </div>
-      </li>
-    </ul>
+      <section v-for="m in planView.months" :key="m.month" class="pm" :aria-label="planMonthLabel(m.month)">
+        <h2>
+          <span>{{ planMonthLabel(m.month) }}</span>
+          <small v-if="Number(m.receive)" class="inc">prijať {{ formatAmount(m.receive) }}</small>
+          <strong class="num"><span class="ledger">{{ formatMoney(m.pay) }}</span></strong>
+        </h2>
+        <p v-if="!m.items.length" class="none">Žiadna platba.</p>
+        <ul v-else>
+          <li v-for="it in m.items" :key="`${it.obligationId}-${it.n}`">
+            <span class="dt">{{ formatDate(it.date) }}</span>
+            <i class="pi kind" :class="obligationIcon(it.kind)" aria-hidden="true" />
+            <div class="who"><b>{{ it.name }}</b><small>{{ [it.creditor, it.address].filter(Boolean).join(' · ') }}</small></div>
+            <div class="bank"><small v-if="it.iban">{{ ibanGroups(it.iban) }}</small><small v-if="it.vs">VS {{ it.vs }}</small></div>
+            <b class="num am" :class="{ inc: it.income }">{{ formatAmount(it.rest) }}</b>
+            <Button v-if="canWrite" :label="it.income ? 'Prijať' : 'Zaplatiť'" size="small" severity="secondary" outlined @click="payItem(it)" />
+          </li>
+        </ul>
+      </section>
+    </template>
+
+    <template v-else>
+      <section v-if="list.length" class="sums" aria-label="Súčty">
+        <div><span>Zostáva splatiť</span><strong class="num"><span class="ledger">{{ formatMoney(sums.owe) }}</span></strong></div>
+        <div :class="{ late: Number(sums.late) > 0 }"><span>Po splatnosti</span><strong class="num">{{ formatMoney(sums.late) }}</strong></div>
+        <div v-if="Number(sums.lent) > 0"><span>Majú vám vrátiť</span><strong class="num">{{ formatMoney(sums.lent) }}</strong></div>
+      </section>
+
+      <p v-if="!loading && !list.length" class="empty">
+        Sem patria pôžičky a úvery, dlhy, exekúcie, ale aj pravidelné platby (nájom, energie, poistky) a peniaze, ktoré ste požičali. Fiškus
+        z nich zostaví splátkový kalendár, ukáže splátky v kalendári a pripomenie ich e-mailom pred splatnosťou.
+      </p>
+      <p v-else-if="!loading && !visible.length" class="empty">Žiadny záväzok nevyhovuje. <button class="lnk" type="button" @click="(view = 'all'), (search = '')">Zobraziť všetky</button></p>
+
+      <ul class="obls">
+        <li v-for="o in visible" :key="o.id" :class="{ closed: o.closed || o.state.paidOff }" @click="router.push(`/domacnost/zavazky/${o.id}`)">
+          <i class="pi kind" :class="obligationIcon(o.kind)" aria-hidden="true" />
+          <div class="main">
+            <span class="name">{{ o.name }}</span>
+            <small>{{ obligationKindLabel(o.kind) }}<template v-if="o.creditor"> · {{ o.creditor }}</template> · {{ formatMoney(o.installment) }} {{ frequencyLabel(o.frequency).toLowerCase() }}<template v-if="monthsLabel(o.months)"> ({{ monthsLabel(o.months) }})</template></small>
+            <span v-if="paidPercent(o) !== null" class="prog" :title="`splatené ${paidPercent(o)} %`"><span :style="{ width: paidPercent(o) + '%' }" /></span>
+          </div>
+          <div class="rest">
+            <template v-if="Number(o.principal)">
+              <small>{{ o.kind === 'lent' ? 'má vrátiť' : 'zostáva' }}</small>
+              <strong class="num">{{ formatMoney(o.state.remaining) }}</strong>
+            </template>
+          </div>
+          <div class="next">
+            <template v-if="o.state.nextDue && !o.closed">
+              <small>{{ o.state.overdue ? 'po splatnosti od' : 'najbližšie' }}</small>
+              <span :class="{ late: o.state.overdue }">{{ formatDate(o.state.nextDue) }} · <b class="num">{{ formatAmount(o.state.overdue ? o.state.overdueAmount : o.state.nextAmount) }}</b></span>
+            </template>
+            <span v-else class="tag" :data-tone="obligationTone(o).tone"><span class="tag-text">{{ obligationTone(o).label }}</span></span>
+          </div>
+          <div class="act" @click.stop>
+            <Button v-if="canWrite && !o.closed && !o.state.paidOff" :label="o.kind === 'lent' ? 'Prijať' : 'Zaplatiť'" size="small"
+              :severity="o.state.overdue ? undefined : 'secondary'" :outlined="!o.state.overdue" @click="pay(o)" />
+          </div>
+        </li>
+      </ul>
+    </template>
 
     <!-- detail záväzku -->
     <Drawer v-model:visible="detailOpen" position="right" class="obl-panel" :header="detail?.name ?? 'Záväzok'">
@@ -234,10 +318,13 @@ function remove(o) {
           <dt>Zaplatené</dt><dd class="num">{{ formatMoney(detail.state.paid) }}</dd>
           <template v-if="Number(detail.principal)"><dt>Zostáva</dt><dd class="num"><span class="ledger">{{ formatMoney(detail.state.remaining) }}</span></dd></template>
           <dt>Splátka</dt><dd>{{ formatMoney(detail.installment) }} {{ frequencyLabel(detail.frequency).toLowerCase() }}<template v-if="detail.state.left"> · zostáva {{ detail.state.left }}</template></dd>
+          <template v-if="monthsLabel(detail.months)"><dt>Platí sa</dt><dd>{{ monthsLabel(detail.months) }}</dd></template>
+          <dt>Pripomenúť</dt><dd>{{ detail.remindDays ? `${detail.remindDays} ${detail.remindDays === 1 ? 'deň' : detail.remindDays < 5 ? 'dni' : 'dní'} vopred` : 'podľa nastavenia upozornení' }}</dd>
           <template v-if="detail.accountId"><dt>Z účtu</dt><dd>{{ accountName(detail.accountId) }}</dd></template>
           <template v-if="detail.reference"><dt>Zmluva / spis</dt><dd>{{ detail.reference }}</dd></template>
-          <template v-if="detail.iban"><dt>IBAN</dt><dd class="mono">{{ detail.iban }}</dd></template>
+          <template v-if="detail.iban"><dt>IBAN</dt><dd class="mono">{{ ibanGroups(detail.iban) }}</dd></template>
           <template v-if="detail.vs"><dt>VS</dt><dd>{{ detail.vs }}</dd></template>
+          <template v-if="detail.address"><dt>Adresa</dt><dd>{{ detail.address }}</dd></template>
           <template v-if="detail.note"><dt>Poznámka</dt><dd>{{ detail.note }}</dd></template>
         </dl>
 
@@ -279,12 +366,12 @@ function remove(o) {
           <SelectButton v-model="form.kind" :options="obligationKinds" option-label="label" option-value="value" :allow-empty="false" size="small" class="kinds" />
         </FormField>
         <FormField label="Názov" :span="2" :error="errors.name">
-          <InputText v-model="form.name" size="small" :placeholder="form.kind === 'execution' ? 'napr. Exekúcia EX 845/2024' : form.kind === 'regular' ? 'napr. Nájom bytu' : 'napr. Hypotéka VÚB'" />
+          <InputText v-model="form.name" size="small" :placeholder="form.kind === 'execution' ? 'napr. Exekúcia EX 845/2024' : form.kind === 'regular' ? 'napr. Nájom bytu' : form.kind === 'fine' ? 'napr. Pokuta za parkovanie' : 'napr. Hypotéka VÚB'" />
         </FormField>
         <FormField :label="form.kind === 'lent' ? 'Kto vracia' : form.kind === 'execution' ? 'Exekútor' : 'Komu platím'" :span="2" :error="errors.creditor">
           <InputText v-model="form.creditor" size="small" />
         </FormField>
-        <FormField v-if="form.kind !== 'regular'" :label="form.kind === 'execution' ? 'Vymáhaná suma vrátane trov' : form.kind === 'lent' ? 'Požičaná suma' : 'Dlžná suma'" :error="errors.principal">
+        <FormField v-if="form.kind !== 'regular'" :label="form.kind === 'execution' ? 'Vymáhaná suma vrátane trov' : form.kind === 'lent' ? 'Požičaná suma' : form.kind === 'fine' ? 'Suma spolu' : 'Dlžná suma'" :error="errors.principal">
           <InputText v-model="form.principal" size="small" inputmode="decimal" class="num" placeholder="0,00" />
         </FormField>
         <FormField v-if="form.kind !== 'regular'" label="Splatené skôr" :error="errors.paidBefore" hint="pred evidenciou vo Fiškuse">
@@ -298,6 +385,9 @@ function remove(o) {
         </FormField>
         <FormField label="Prvá splátka" :error="errors.firstDue" hint="splatnosť prvej splátky v evidencii">
           <DatePicker v-model="form.firstDue" date-format="d. m. yy" size="small" fluid />
+        </FormField>
+        <FormField v-if="form.frequency === 'monthly'" label="Platí sa v mesiacoch" :span="4" :error="errors.months" hint="nič nevybraté = každý mesiac; napr. škola september – jún">
+          <SelectButton v-model="form.months" :options="monthOptions" option-label="label" option-value="value" multiple size="small" class="months" aria-label="Mesiace" />
         </FormField>
         <FormField v-if="form.frequency !== 'once'" label="Počet splátok" :error="errors.count" :hint="form.kind === 'regular' ? '0 = bez konca' : '0 = kým sa nesplatí'">
           <InputNumber v-model="form.count" :min="0" :max="1200" size="small" fluid />
@@ -316,6 +406,12 @@ function remove(o) {
         </FormField>
         <FormField label="IBAN" :error="errors.iban">
           <InputText v-model="form.iban" size="small" />
+        </FormField>
+        <FormField label="Adresa príjemcu" :span="3" :error="errors.address" hint="pri platbe poštovou poukážkou alebo šekom">
+          <InputText v-model="form.address" size="small" />
+        </FormField>
+        <FormField label="Pripomenúť (dní vopred)" :error="errors.remindDays" hint="0 = podľa nastavenia">
+          <InputNumber v-model="form.remindDays" :min="0" :max="60" size="small" fluid />
         </FormField>
         <FormField label="Poznámka" :span="4" :error="errors.note">
           <InputText v-model="form.note" size="small" />
@@ -549,7 +645,119 @@ h3 {
   gap: 6px;
   align-items: center;
 }
+.plan-bar {
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+}
+.pm {
+  border: 1px solid var(--rule);
+  background: var(--sheet);
+}
+.pm h2 {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 0;
+  padding: 7px 12px;
+  font-size: var(--fs-md);
+  color: var(--blue-deep);
+  border-bottom: 1px solid var(--ink);
+  text-transform: capitalize;
+}
+.pm h2 > span {
+  flex: 1;
+}
+.pm h2 small {
+  font-weight: 400;
+  font-size: var(--fs-sm);
+  text-transform: none;
+}
+.pm.late-m h2 {
+  color: var(--tone-overdue);
+  text-transform: none;
+}
+.pm ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.pm li {
+  display: grid;
+  grid-template-columns: 82px 20px minmax(0, 1fr) 230px 90px 92px;
+  gap: 10px;
+  align-items: center;
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--rule-soft);
+}
+.pm li:last-child {
+  border-bottom: 0;
+}
+.pm .dt {
+  font-variant-numeric: tabular-nums;
+}
+.pm .dt.late {
+  color: var(--tone-overdue);
+  font-weight: 600;
+}
+.pm .who,
+.pm .bank {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.pm .who small,
+.pm .bank small {
+  color: var(--ink-faint);
+  font-size: var(--fs-xs);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pm .bank small:first-child {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+.pm .am {
+  text-align: right;
+}
+.pm .inc {
+  color: var(--tone-paid);
+}
+.pm .none {
+  margin: 0;
+  padding: 6px 12px;
+  color: var(--ink-faint);
+  font-size: var(--fs-sm);
+}
+.months {
+  flex-wrap: wrap;
+}
 @media (max-width: 760px) {
+  .pm li {
+    grid-template-columns: 70px minmax(0, 1fr) auto;
+    grid-template-areas: 'd w a' 'd b p';
+    row-gap: 2px;
+  }
+  .pm li .kind {
+    display: none;
+  }
+  .pm .dt {
+    grid-area: d;
+    align-self: start;
+  }
+  .pm .who {
+    grid-area: w;
+  }
+  .pm .bank {
+    grid-area: b;
+  }
+  .pm .am {
+    grid-area: a;
+  }
+  .pm li .p-button {
+    grid-area: p;
+  }
   .search {
     width: 100%;
   }

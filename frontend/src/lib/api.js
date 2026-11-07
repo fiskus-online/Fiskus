@@ -252,6 +252,7 @@ export const api = {
   savePayroll: (cid, year, month, inputs) => request('PUT', `/api/companies/${cid}/payroll/${year}/${month}`, { inputs }),
   closePayroll: (cid, year, month) => request('POST', `/api/companies/${cid}/payroll/${year}/${month}/close`),
   reopenPayroll: (cid, year, month, reason) => request('POST', `/api/companies/${cid}/payroll/${year}/${month}/reopen`, { reason }),
+  hhPlan: (cid, from, months = 12) => request('GET', `/api/companies/${cid}/household/plan?from=${encodeURIComponent(from)}&months=${months}`),
   hhObligations: (cid) => request('GET', `/api/companies/${cid}/household/obligations`),
   hhObligation: (cid, id) => request('GET', `/api/companies/${cid}/household/obligations/${id}`),
   hhSaveObligation: (cid, o) => (o.id ? request('PUT', `/api/companies/${cid}/household/obligations/${o.id}`, o) : request('POST', `/api/companies/${cid}/household/obligations`, o)),

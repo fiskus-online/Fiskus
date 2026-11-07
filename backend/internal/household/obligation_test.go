@@ -21,6 +21,9 @@ func TestObligationValidate(t *testing.T) {
 		{"pravidelná bez sumy je v poriadku", func(o *Obligation) { o.Kind, o.Principal = Regular, m("0") }, ""},
 		{"splatené viac ako dlh", func(o *Obligation) { o.PaidBefore = m("1300") }, "paidBefore"},
 		{"neznámy druh", func(o *Obligation) { o.Kind = "x" }, "kind"},
+		{"pokuta jednorazovo", func(o *Obligation) { o.Kind, o.Frequency, o.Principal, o.Installment = Fine, Once, m("0"), m("50") }, ""},
+		{"zlý mesiac", func(o *Obligation) { o.Months = []int{9, 13} }, "months"},
+		{"pripomienka priďaleko", func(o *Obligation) { o.RemindDays = 61 }, "remindDays"},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
@@ -120,6 +123,38 @@ func TestScheduleKinds(t *testing.T) {
 			if c.dues > 0 {
 				if s := Schedule(c.o, Paid(c.o, c.entries), today, today); len(s) != c.dues {
 					t.Fatalf("splátok %d", len(s))
+				}
+			}
+		})
+	}
+}
+
+func TestScheduleMonths(t *testing.T) {
+	cases := []struct {
+		name   string
+		o      Obligation
+		months []int // očakávané mesiace splátok
+	}{
+		{"škola september – jún", Obligation{Kind: Regular, Installment: m("30"), Frequency: Monthly, FirstDue: d(2026, 9, 10), Count: 12, Months: []int{1, 2, 3, 4, 5, 6, 9, 10, 11, 12}},
+			[]int{9, 10, 11, 12, 1, 2, 3, 4, 5, 6, 9, 10}},
+		{"prvý mesiac mimo – začne v septembri", Obligation{Kind: Regular, Installment: m("30"), Frequency: Monthly, FirstDue: d(2026, 7, 10), Count: 3, Months: []int{9, 10, 11, 12}},
+			[]int{9, 10, 11}},
+		{"mesiace pri štvrťročnej sa ignorujú", Obligation{Kind: Regular, Installment: m("30"), Frequency: Quarterly, FirstDue: d(2026, 1, 10), Count: 3, Months: []int{9}},
+			[]int{1, 4, 7}},
+		{"všetkých 12 = každý mesiac", Obligation{Kind: Regular, Installment: m("30"), Frequency: Monthly, FirstDue: d(2026, 1, 10), Count: 2, Months: []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}},
+			[]int{1, 2}},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			o := c.o
+			o.Normalize()
+			s := Schedule(o, m("0"), d(2026, 1, 1), d(2030, 1, 1))
+			if len(s) != len(c.months) {
+				t.Fatalf("%d splátok, chcem %d: %+v", len(s), len(c.months), s)
+			}
+			for i, mo := range c.months {
+				if s[i].Date.Month() != mo || s[i].N != i+1 {
+					t.Errorf("splátka %d: %s, chcem mesiac %d", i+1, s[i].Date, mo)
 				}
 			}
 		})
