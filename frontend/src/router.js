@@ -45,6 +45,7 @@ import { settingsSections } from './lib/settingsNav.js'
 import DataTransfer from './views/DataTransfer.vue'
 import StockView from './views/StockView.vue'
 import Calendar from './views/Calendar.vue'
+import Calculators from './views/Calculators.vue'
 import HouseholdOverview from './views/HouseholdOverview.vue'
 import HouseholdEntries from './views/HouseholdEntries.vue'
 import HouseholdAccounts from './views/HouseholdAccounts.vue'
@@ -125,6 +126,7 @@ export const modules = [
   {
     group: 'Ostatné',
     items: [
+      { path: '/kalkulacky', label: 'Kalkulačky', icon: 'pi-calculator', ready: true, home: true },
       { path: '/adresar', label: 'Adresár', icon: 'pi-address-book', ready: true, perm: 'contacts.read' },
       { path: '/audit', label: 'Audit', icon: 'pi-shield', ready: true, perm: 'audit.read', home: true },
       { path: '/nastavenia', label: 'Nastavenia', icon: 'pi-cog', ready: true, settingsHub: true, home: true },
@@ -157,6 +159,7 @@ export const router = createRouter({
     { path: '/ponuky/:id(\\d+)', component: InvoiceEdit, props: (r) => ({ id: r.params.id, quote: true }), meta: { title: 'Cenová ponuka', perm: 'invoices.read' } },
     { path: '/ponuky/:id(\\d+)/tlac', component: InvoicePrint, props: (r) => ({ id: r.params.id, quote: true }), meta: { title: 'Cenová ponuka', bare: true, perm: 'invoices.read' } },
     { path: '/prenos', component: DataTransfer, meta: { settings: true, title: 'Prenos dát', perm: 'invoices.write' } },
+    { path: '/kalkulacky', component: Calculators, meta: { title: 'Kalkulačky', noCompany: true } },
     { path: '/kalendar', component: Calendar, meta: { title: 'Kalendár' } },
     { path: '/domacnost', component: HouseholdOverview, meta: { title: 'Domácnosť', perm: 'ledger.read' } },
     { path: '/domacnost/pohyby', component: HouseholdEntries, meta: { title: 'Pohyby', perm: 'ledger.read' } },

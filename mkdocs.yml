@@ -69,6 +69,8 @@ nav:
   - Mzdy: mzdy/index.md
   - Domácnosť: domacnost/index.md
   - Mobil: mobil/index.md
+  - Nástroje:
+      - nastroje/kalkulacky.md
   - Nastavenia a bezpečnosť: nastavenia/index.md
   - Plán vývoja: ROADMAP.md
   - Prehľad zmien: changelog.md
