@@ -286,7 +286,8 @@ export const api = {
   bank: (cid, { year, status } = {}) => request('GET', `/api/companies/${cid}/bank` + query({ year, status })),
   importBank: (cid, file) => request('POST', `/api/companies/${cid}/bank/import` + query({ name: file.name }), file),
   bankSuggestions: (cid, id) => request('GET', `/api/companies/${cid}/bank/${id}/suggestions`),
-  bankMatch: (cid, id, kind, docId) => request('POST', `/api/companies/${cid}/bank/${id}/match`, { kind, id: docId }),
+  bankMatch: (cid, id, kind, docId, foreignAmount) =>
+    request('POST', `/api/companies/${cid}/bank/${id}/match`, { kind, id: docId, ...(foreignAmount ? { foreignAmount } : {}) }),
   bankUnmatch: (cid, id) => request('POST', `/api/companies/${cid}/bank/${id}/unmatch`),
   bankIgnore: (cid, id, ignore, note) => request('POST', `/api/companies/${cid}/bank/${id}/ignore`, { ignore, note }),
 
