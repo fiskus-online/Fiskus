@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { limitedVAT, vatHint, blankTrip, filterFuel, filterTrips, fuelUnit, logbookPosting, methodHint, methodOptions, purposeSuggestions, returnTrip, tripRoute, tripTime, vehicleLabel } from './logbook.js'
+import { addPlace, chainOdometer, gpsDrafts, gpsToSave, isCoordName, limitedVAT, vatHint, blankTrip, filterFuel, filterTrips, fuelUnit, logbookPosting, methodHint, methodOptions, purposeSuggestions, returnTrip, tripRoute, tripTime, vehicleLabel } from './logbook.js'
 
 const trips = [
   { id: 1, date: '2026-10-01', from: 'Banská Bystrica', to: 'Zvolen', purpose: 'Montáž rozvádzača', kind: 'business', km: 25, driver: 'Ján' },
@@ -66,5 +66,50 @@ describe('DPH vozidla', () => {
   ])('vysvetlenie %#', (v, part) => expect(vatHint(v)).toContain(part))
   it('obmedzené kategórie', () => {
     expect(['M1', 'N1', 'L3e', 'L1e'].map(limitedVAT)).toEqual([true, false, true, true])
+  })
+})
+
+describe('import z GPS', () => {
+  const preview = {
+    trips: [
+      { date: '2026-11-03', from: 'Sídlo', to: '48.57670, 19.12630', km: 18, odoStart: 1000, odoEnd: 1018, duplicate: false, fromPoint: [48.7363, 19.1462], toPoint: [48.5767, 19.1263], meters: 17800 },
+      { date: '2026-11-03', from: 'Sklad', to: 'Sídlo', km: 18, odoStart: 0, odoEnd: 0, duplicate: true },
+      { date: '2026-11-04', from: 'Sídlo', to: 'Zvolen', km: 20, odoStart: 1036, odoEnd: 1056, duplicate: false },
+    ],
+  }
+  it.each([
+    ['Sídlo', false],
+    ['48.57670, 19.12630', true],
+    ['-1.50000, -60.10000', true],
+    ['', false],
+  ])('isCoordName(%s)', (s, want) => expect(isCoordName(s)).toBe(want))
+
+  it('duplicitné sa nevyberú a tachometer nadväzuje', () => {
+    const d = gpsDrafts(preview)
+    expect(d.map((x) => x.pick)).toEqual([true, false, true])
+    expect(d[2].odoStart).toBe(1018)
+    expect(d[2].odoEnd).toBe(1038)
+  })
+  it('zmena km posunie ďalšie jazdy', () => {
+    const d = gpsDrafts(preview)
+    d[0].km = 25
+    const c = chainOdometer(d)
+    expect([c[0].odoEnd, c[2].odoStart, c[2].odoEnd]).toEqual([1025, 1025, 1045])
+  })
+  it('bez stavu tachometra iba km', () => {
+    const c = chainOdometer([{ pick: true, km: 5, odoStart: 0 }, { pick: true, km: 7 }])
+    expect(c.map((x) => [x.odoStart, x.odoEnd])).toEqual([[0, 0], [0, 0]])
+  })
+  it('na uloženie idú iba vybrané bez pomocných polí', () => {
+    const t = gpsToSave(gpsDrafts(preview))
+    expect(t).toHaveLength(2)
+    expect(Object.keys(t[0])).not.toContain('fromPoint')
+    expect(Object.keys(t[0])).not.toContain('pick')
+  })
+  it('addPlace nahradí miesto na rovnakom bode', () => {
+    let p = addPlace([], [48.5767, 19.1263], ' Sklad ')
+    p = addPlace(p, [48.5767, 19.1263], 'Sklad Zvolen')
+    expect(p).toEqual([{ name: 'Sklad Zvolen', lat: 48.5767, lon: 19.1263, radius: 300 }])
+    expect(addPlace(p, [1, 2], '  ')).toBe(p)
   })
 })

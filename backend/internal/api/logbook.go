@@ -1,6 +1,7 @@
 package api
 
 import (
+	"io"
 	"net/http"
 	"strconv"
 
@@ -186,4 +187,66 @@ func (s *Server) postLogbook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]any{"posted": sum})
+}
+
+// gpsPreview: POST /api/companies/{cid}/vehicles/{id}/gps (telo = GPX alebo CSV)
+func (s *Server) gpsPreview(w http.ResponseWriter, r *http.Request) {
+	cid, _ := pathID(w, r, "cid")
+	id, ok := pathID(w, r, "id")
+	if !ok {
+		return
+	}
+	data, err := io.ReadAll(http.MaxBytesReader(w, r.Body, maxStatement))
+	if err != nil {
+		writeErr(w, http.StatusRequestEntityTooLarge, "Súbor je príliš veľký (najviac 20 MB)", nil)
+		return
+	}
+	out, err := s.App.PreviewGPSTrips(r.Context(), cid, id, data)
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, out)
+}
+
+func (s *Server) gpsSave(w http.ResponseWriter, r *http.Request) {
+	cid, _ := pathID(w, r, "cid")
+	id, ok := pathID(w, r, "id")
+	if !ok {
+		return
+	}
+	var trips []logbook.Trip // návrhy z náhľadu môžu niesť ďalšie polia
+	if !decodeLoose(w, r, &trips) {
+		return
+	}
+	out, err := s.App.SaveGPSTrips(r.Context(), cid, id, trips)
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	writeJSON(w, http.StatusCreated, out)
+}
+
+func (s *Server) gpsPlaces(w http.ResponseWriter, r *http.Request) {
+	cid, _ := pathID(w, r, "cid")
+	out, err := s.App.GPSPlaces(r.Context(), cid)
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, out)
+}
+
+func (s *Server) gpsSavePlaces(w http.ResponseWriter, r *http.Request) {
+	cid, _ := pathID(w, r, "cid")
+	var places []logbook.Place
+	if !decode(w, r, &places) {
+		return
+	}
+	out, err := s.App.SaveGPSPlaces(r.Context(), cid, places)
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, out)
 }

@@ -41,3 +41,32 @@ func TestLogbookAPI(t *testing.T) {
 	e.do("DELETE", fmt.Sprintf("%s/trips/%d", base, tr.ID), nil, 204, nil)
 	e.do("GET", fmt.Sprintf("%s/vehicles/%d/trips", base, 999), nil, 404, nil)
 }
+
+func TestGPSAPI(t *testing.T) {
+	e := setup(t, edition.Desktop)
+	base := fmt.Sprintf("/api/companies/%d", e.cid)
+	var v struct{ ID int64 }
+	e.do("POST", base+"/vehicles", `{"name":"Octavia","plate":"BB123AB","consumption":"5","odometer":5000,"odometerDate":"2026-01-01"}`, 201, &v)
+	e.do("PUT", base+"/logbook/places", `[{"name":"Sídlo","lat":48.7363,"lon":19.1462}]`, 200, nil)
+	var places []struct{ Name string }
+	e.do("GET", base+"/logbook/places", nil, 200, &places)
+	if len(places) != 1 || places[0].Name != "Sídlo" {
+		t.Fatalf("miesta: %+v", places)
+	}
+	csv := "time,lat,lon\n2026-11-03T06:30:00Z,48.7363,19.1462\n2026-11-03T06:40:00Z,48.70,19.14\n2026-11-03T06:50:00Z,48.5767,19.1263\n"
+	var p struct {
+		Points int
+		Trips  []map[string]any
+	}
+	e.do("POST", fmt.Sprintf("%s/vehicles/%d/gps", base, v.ID), csv, 200, &p)
+	if p.Points != 3 || len(p.Trips) != 1 || p.Trips[0]["from"] != "Sídlo" || p.Trips[0]["odoStart"] != 5000.0 {
+		t.Fatalf("náhľad: %+v", p)
+	}
+	e.do("POST", fmt.Sprintf("%s/vehicles/%d/gps", base, v.ID), "a,b\n", 422, nil)
+	p.Trips[0]["purpose"] = "Nákup materiálu"
+	var saved []struct{ ID, OdoEnd int64 }
+	e.do("POST", fmt.Sprintf("%s/vehicles/%d/gps/trips", base, v.ID), p.Trips, 201, &saved)
+	if len(saved) != 1 || saved[0].ID == 0 || saved[0].OdoEnd != 5018 {
+		t.Fatalf("uložené: %+v", saved)
+	}
+}
