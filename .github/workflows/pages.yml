@@ -4,6 +4,7 @@ name: Web na Cloudflare
 #   fiskus.online       ← site/ (verzia a odkazy na inštalátory z posledného vydania)
 #   docs.fiskus.online  ← docs/ cez MkDocs
 #   app.fiskus.online   ← Fiškus v prehliadači (make browser), iba pri vydaní
+# Pri vydaní (tag v* → workflow Release) sa po jeho úspechu nasadia všetky tri.
 # Nasadzuje sa, iba keď je v repozitári premenná CLOUDFLARE_ACCOUNT_ID
 # a tajomstvo CLOUDFLARE_API_TOKEN (práva Cloudflare Pages: Edit).
 # Nič sa neukladá ako artifact — zostavenie aj nahratie sú v jednom kroku.
@@ -14,6 +15,11 @@ on:
     paths: ['site/**', 'docs/**', 'docs_hooks/**', 'docs_theme/**', 'mkdocs.yml', '.github/workflows/pages.yml']
   release:
     types: [published]
+  # vydanie vytvára workflow Release (GITHUB_TOKEN), čo udalosť „release“
+  # nespustí — preto nasadenie aj po úspešnom Release z tagu v*
+  workflow_run:
+    workflows: [Release]
+    types: [completed]
   workflow_dispatch:
 
 permissions:
@@ -30,7 +36,7 @@ env:
 jobs:
   site:
     name: fiskus.online
-    if: vars.CLOUDFLARE_ACCOUNT_ID != ''
+    if: vars.CLOUDFLARE_ACCOUNT_ID != '' && (github.event_name != 'workflow_run' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push'))
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -56,7 +62,7 @@ jobs:
 
   docs:
     name: docs.fiskus.online
-    if: vars.CLOUDFLARE_ACCOUNT_ID != ''
+    if: vars.CLOUDFLARE_ACCOUNT_ID != '' && (github.event_name != 'workflow_run' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push'))
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -80,10 +86,12 @@ jobs:
     name: app.fiskus.online (Fiškus v prehliadači)
     # iba vydaná verzia — dáta používateľov sú v prehliadači a prechádzajú
     # migráciami, preto nie každá zmena v main
-    if: vars.CLOUDFLARE_ACCOUNT_ID != '' && github.event_name != 'push'
+    if: vars.CLOUDFLARE_ACCOUNT_ID != '' && github.event_name != 'push' && (github.event_name != 'workflow_run' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push'))
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_branch || github.ref }}
       - uses: actions/setup-go@v5
         with:
           go-version-file: backend/go.mod
@@ -95,9 +103,12 @@ jobs:
       - run: npm ci
         working-directory: frontend
       - name: Zostavenie
+        env:
+          TAG: ${{ github.event.workflow_run.head_branch }}
         run: |
           v=dev
           [ "$GITHUB_EVENT_NAME" = release ] && v=${GITHUB_REF_NAME#v}
+          [ "$GITHUB_EVENT_NAME" = workflow_run ] && v=${TAG#v}
           make browser VERSION="$v"
       - name: Nasadenie
         run: |
