@@ -24,6 +24,8 @@ type Capabilities struct {
 	// Browser: Fiškus beží v prehliadači (údaje v úložisku prehliadača).
 	// Je to desktopová verzia bez funkcií, ktoré potrebujú inštaláciu.
 	Browser bool `json:"browser,omitempty"`
+	// Demo: prázdna inštalácia ponúkne ukážkovú firmu na vyskúšanie.
+	Demo bool `json:"demo,omitempty"`
 }
 
 // For vráti schopnosti pre daný režim.

@@ -35,6 +35,8 @@ type App struct {
 	Caps  edition.Capabilities // režim behu
 	Today func() invoice.Date  // dá sa podvrhnúť v testoch
 	Now   func() time.Time     // aktuálny čas; nil = time.Now
+	// DemoSeed pripraví ukážkovú firmu a domácnosť (nastaví main; nil = bez ukážky).
+	DemoSeed func(context.Context, *App) (store.Company, error)
 	// PublicURL je verejná adresa servera (odkazy v upozorneniach); prázdna = bez odkazu.
 	PublicURL string
 
