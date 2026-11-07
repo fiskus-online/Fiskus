@@ -50,7 +50,8 @@ jobs:
           grep -n "version\|downloads" site/config.js
       - name: Nasadenie
         run: |
-          npx --yes wrangler@3 pages project create fiskus --production-branch=main >/dev/null 2>&1 || true
+          npx --yes wrangler@3 pages project list >/dev/null || { echo '::error::Token nemá právo Account › Cloudflare Pages › Edit alebo CLOUDFLARE_ACCOUNT_ID nie je Account ID (nie Zone ID)'; exit 1; }
+          npx --yes wrangler@3 pages project create fiskus --production-branch=main || true
           npx --yes wrangler@3 pages deploy site --project-name=fiskus --branch=main --commit-dirty=true
 
   docs:
@@ -69,7 +70,8 @@ jobs:
       - run: mkdocs build --strict -d _docs
       - name: Nasadenie
         run: |
-          npx --yes wrangler@3 pages project create fiskus-docs --production-branch=main >/dev/null 2>&1 || true
+          npx --yes wrangler@3 pages project list >/dev/null || { echo '::error::Token nemá právo Account › Cloudflare Pages › Edit alebo CLOUDFLARE_ACCOUNT_ID nie je Account ID (nie Zone ID)'; exit 1; }
+          npx --yes wrangler@3 pages project create fiskus-docs --production-branch=main || true
           npx --yes wrangler@3 pages deploy _docs --project-name=fiskus-docs --branch=main --commit-dirty=true
 
   app:
@@ -97,5 +99,6 @@ jobs:
           make browser VERSION="$v"
       - name: Nasadenie
         run: |
-          npx --yes wrangler@3 pages project create fiskus-app --production-branch=main >/dev/null 2>&1 || true
+          npx --yes wrangler@3 pages project list >/dev/null || { echo '::error::Token nemá právo Account › Cloudflare Pages › Edit alebo CLOUDFLARE_ACCOUNT_ID nie je Account ID (nie Zone ID)'; exit 1; }
+          npx --yes wrangler@3 pages project create fiskus-app --production-branch=main || true
           npx --yes wrangler@3 pages deploy frontend/dist-browser --project-name=fiskus-app --branch=main --commit-dirty=true
