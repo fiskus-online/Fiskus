@@ -244,6 +244,10 @@ var DefaultTemplates = []Template{
 	{Code: "FP-TOVAR", Name: "Prijatá faktúra – tovar na sklad", Doc: DocPurchase, Lines: []TemplateLine{
 		{Debit, "131", PartBase}, {Debit, "131", PartVATNon}, {Debit, "343", PartVAT}, {Credit, "321", PartTotal},
 		{Debit, "343", PartSelf}, {Credit, "343", PartSelf}}},
+	{Code: "FP-CLO", Name: "Rozhodnutie colného úradu – clo a DPH pri dovoze", Doc: DocPurchase, Lines: []TemplateLine{
+		{Debit, "501", PartBase}, {Debit, "501", PartVATNon}, {Debit, "343", PartVAT}, {Credit, "379", PartTotal}}},
+	{Code: "FP-CLO-SKLAD", Name: "Rozhodnutie colného úradu – clo do obstarania tovaru na sklad", Doc: DocPurchase, Lines: []TemplateLine{
+		{Debit, "131", PartBase}, {Debit, "131", PartVATNon}, {Debit, "343", PartVAT}, {Credit, "379", PartTotal}}},
 	{Code: "FP-ENERGIA", Name: "Prijatá faktúra – energie", Doc: DocPurchase, Lines: []TemplateLine{
 		{Debit, "502", PartBase}, {Debit, "502", PartVATNon}, {Debit, "343", PartVAT}, {Credit, "321", PartTotal}}},
 	{Code: "FP-OPRAVY", Name: "Prijatá faktúra – opravy a údržba", Doc: DocPurchase, Lines: []TemplateLine{
@@ -264,6 +268,8 @@ var DefaultTemplates = []Template{
 		{Debit, "221", PartTotal}, {Credit, "662", PartTotal}}},
 	{Code: "B-DPH", Name: "Úhrada DPH daňovému úradu", Doc: DocBank, Lines: []TemplateLine{
 		{Debit, "343", PartTotal}, {Credit, "221", PartTotal}}},
+	{Code: "B-COLNY", Name: "Úhrada colnému úradu (clo a DPH pri dovoze)", Doc: DocBank, Lines: []TemplateLine{
+		{Debit, "379", PartTotal}, {Credit, "221", PartTotal}}},
 	{Code: "B-KARTA", Name: "Pripísané platby kartou z terminálu", Doc: DocBank, Lines: []TemplateLine{
 		{Debit, "221", PartTotal}, {Credit, "261", PartTotal}}},
 	{Code: "B-VKLAD", Name: "Výber z banky do pokladne", Doc: DocBank, Lines: []TemplateLine{
@@ -282,6 +288,8 @@ var DefaultTemplates = []Template{
 		{Debit, "211", PartTotal}, {Credit, "311", PartTotal}}},
 	{Code: "P-DODAVATEL", Name: "Pokladňa – úhrada faktúry dodávateľovi", Doc: DocCash, Lines: []TemplateLine{
 		{Debit, "321", PartTotal}, {Credit, "211", PartTotal}}},
+	{Code: "P-COLNY", Name: "Pokladňa – úhrada colnému úradu", Doc: DocCash, Lines: []TemplateLine{
+		{Debit, "379", PartTotal}, {Credit, "211", PartTotal}}},
 	{Code: "P-VKLAD-PODN", Name: "Pokladňa – vklad podnikateľa (fyzická osoba)", Doc: DocCash, Lines: []TemplateLine{
 		{Debit, "211", PartTotal}, {Credit, "491", PartTotal}}},
 	{Code: "P-VKLAD", Name: "Pokladňa – príjem z banky", Doc: DocCash, Lines: []TemplateLine{

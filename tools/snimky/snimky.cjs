@@ -115,6 +115,15 @@ async function main() {
       await p.getByRole('button', { name: /Kurzové rozdiely/ }).click()
       await p.waitForTimeout(600)
     }],
+    ['prijata-colne-rozhodnutie', '/prijate', firm, async (p) => {
+      const imp = await api(`${F}/purchases`, { method: 'POST', body: JSON.stringify({ supplierNumber: 'SZ-2026-1187', supplier: { name: 'Shenzhen Meanwell Parts Co.', country: 'CN' },
+        issueDate: '2026-10-28', receivedDate: '2026-11-02', dueDate: '2026-11-20', supplyKind: 'goods', expense: 'stock', rates: [{ vatRate: 0, base: '1240' }] }) })
+      const cu = await api(`${F}/purchases`, { method: 'POST', body: JSON.stringify({ supplierNumber: '26SK5800000048213A7', supplier: { name: 'Colný úrad Bratislava', country: 'SK' },
+        issueDate: '2026-11-03', receivedDate: '2026-11-03', dueDate: '2026-11-13', expense: 'stock', rates: [{ vatRate: 23, base: '1314.40' }], customs: { duty: '49.60', importId: imp.id } }) })
+      await p.goto(`${BASE}/prijate/${cu.id}`, { waitUntil: 'networkidle' })
+      await p.waitForTimeout(600)
+      await p.locator('.customs').scrollIntoViewIfNeeded()
+    }],
     // tlačivá
     ['tlaciva', '/tlaciva', firm],
     ['tlaciva-ppd', '/tlaciva?t=ppd', firm, async (p) => {
