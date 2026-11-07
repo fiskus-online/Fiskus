@@ -19,6 +19,7 @@ import IconField from 'primevue/iconfield'
 import InputIcon from 'primevue/inputicon'
 import FormField from '../components/FormField.vue'
 import ExportButton from '../components/ExportButton.vue'
+import GpsImport from '../components/GpsImport.vue'
 import { api, ApiError } from '../lib/api.js'
 import { session, can } from '../lib/session.js'
 import { formatAmount, formatDate, formatMoney, fromISODate, toISODate } from '../lib/format.js'
@@ -145,6 +146,7 @@ narrow.addEventListener('change', applyResponsive)
 watch(tab, () => setTimeout(applyResponsive))
 
 // ---- formulár jazdy ----
+const gpsOpen = ref(false)
 const tripForm = ref(null)
 const errors = ref({})
 const busy = ref(false)
@@ -386,6 +388,7 @@ onBeforeUnmount(() => {
         <template v-if="vehicle && !vehicle.archived">
           <Button size="small" @click="openTrip()"><i class="pi pi-plus" /><span>Jazda</span><kbd class="hint">N</kbd></Button>
           <Button size="small" severity="secondary" outlined @click="openFuel()"><i class="pi pi-plus" /><span>Tankovanie</span><kbd class="hint dark">T</kbd></Button>
+          <Button icon="pi pi-map" label="Z GPS" text size="small" aria-label="Jazdy zo záznamu GPS" @click="gpsOpen = true" />
         </template>
       </template>
     </header>
@@ -574,6 +577,8 @@ onBeforeUnmount(() => {
         </div>
       </form>
     </Drawer>
+
+    <GpsImport v-if="vehicle" v-model:visible="gpsOpen" :cid="session.companyId" :vehicle="vehicle" :purposes="purposes" @saved="reload" />
 
     <!-- tankovanie -->
     <Drawer v-model:visible="fuelOpen" position="right" class="lb-panel" :header="fuelForm?.id ? 'Tankovanie' : 'Nové tankovanie'">
