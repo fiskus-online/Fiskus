@@ -23,6 +23,7 @@ import { fillFromRegistry, fillFromVIES } from '../lib/registry.js'
 import { formatAmount, formatDate, formatMoney, fromISODate, parseNumber, purchaseStatusOf, toISODate } from '../lib/format.js'
 import { takePurchaseDraft } from '../lib/drafts.js'
 import { currencyOptions, isForeignCurrency, rateHint, rateText } from '../lib/fx.js'
+import { customsForm, customsPayload, importCandidates } from '../lib/customs.js'
 
 // neplatiteľ DPH si daň neodpočítava — údaje o odpočte sa neukazujú
 const vatPayer = computed(() => !!session.company?.vatPayer)
@@ -58,6 +59,7 @@ async function load() {
       const data = await api.purchase(session.companyId, props.id)
       // sumy z API ("100.00") → zobrazenie s čiarkou na úpravu
       data.rates = data.rates.map((r) => ({ vatRate: r.vatRate, base: formatAmount(r.base), vat: formatAmount(r.vat) }))
+      data.customs = customsForm(data.customs)
       p.value = data
       summary.value = data.summary
     } else if ((aiNotes.value = takePurchaseDraft())) {
@@ -92,6 +94,7 @@ watch(() => props.id, (id, prev) => {
 function payload() {
   return {
     ...p.value,
+    customs: customsPayload(p.value.customs),
     rates: p.value.rates.map((r) => ({
       vatRate: Number(r.vatRate),
       base: parseNumber(r.base) ?? '0',
@@ -282,6 +285,25 @@ const set = (obj, key) => (v) => {
   obj[key] = v
   changed()
 }
+
+// rozhodnutie colného úradu pri dovoze (JCD)
+const imports = ref([])
+async function loadImports() {
+  try {
+    imports.value = importCandidates(await api.purchases(session.companyId), p.value?.id ?? 0)
+  } catch {
+    imports.value = []
+  }
+}
+function setCustoms(on) {
+  p.value.customs = on ? { duty: '', importId: 0, importNumber: '' } : null
+  if (on) {
+    p.value.reverseCharge = false
+    loadImports()
+  }
+  changed()
+}
+watch(() => !!p.value?.customs, (on) => on && !imports.value.length && loadImports())
 </script>
 
 <template>
@@ -397,7 +419,7 @@ const set = (obj, key) => (v) => {
             <FormField label="Druh výdavku" :error="fieldError('expense')" hint="Stĺpec v peňažnom denníku">
               <Select :model-value="p.expense || 'services'" :options="codes.expenseKinds" option-label="label" option-value="code" :disabled="locked" size="small" aria-label="Druh výdavku" @update:model-value="set(p, 'expense')($event)" />
             </FormField>
-            <FormField label="Mena" :error="fieldError('currency')">
+            <FormField v-if="!p.customs" label="Mena" :error="fieldError('currency')">
               <Select :model-value="p.currency || 'EUR'" :options="currencies" option-label="label" option-value="code" filter :disabled="locked" size="small" aria-label="Mena" @update:model-value="setCurrency" />
             </FormField>
             <FormField v-if="foreign" :label="`Kurz: 1 EUR = … ${p.currency}`" :error="fieldError('fxRate')">
@@ -453,14 +475,29 @@ const set = (obj, key) => (v) => {
               </tr>
             </tbody>
           </table>
-          <p class="help">DPH opíšte z dokladu. Ak ju necháte prázdnu, vypočíta sa zo základu.</p>
+          <p class="help">{{ p.customs ? 'Základ a DPH opíšte z rozhodnutia colného úradu (základ = colná hodnota + clo + náklady do miesta určenia).' : 'DPH opíšte z dokladu. Ak ju necháte prázdnu, vypočíta sa zo základu.' }}</p>
           <ul v-if="Object.keys(previewErrors).some((k) => k.startsWith('rates')) || warnings.length" class="msgs">
             <li v-for="(m, k) in Object.fromEntries(Object.entries(previewErrors).filter(([f]) => f.startsWith('rates[') && f.endsWith('vatRate')))" :key="k" class="err">{{ m }}</li>
             <li v-for="w in warnings" :key="w.field" class="warn">{{ w.message }}</li>
           </ul>
           <Button v-if="!locked" label="Pridať sadzbu" icon="pi pi-plus" text size="small" @click="addRow" />
           <div class="checks">
-            <label class="check">
+            <label v-if="!isForeign(p.supplier.country)" class="check">
+              <Checkbox :model-value="!!p.customs" binary :disabled="locked" @update:model-value="setCustoms" />
+              <span>Rozhodnutie colného úradu pri dovoze (JCD) — colnému úradu platím DPH a clo</span>
+            </label>
+            <div v-if="p.customs" class="customs">
+              <FormField label="Clo €" :error="fieldError('customs.duty')">
+                <InputText :model-value="p.customs.duty" inputmode="decimal" size="small" class="num-input" :disabled="locked" placeholder="0"
+                  @update:model-value="set(p.customs, 'duty')($event)" />
+              </FormField>
+              <FormField label="Faktúra za dovezený tovar" :error="fieldError('customs.importId')" hint="dodávateľ mimo EÚ, faktúra bez DPH">
+                <Select :model-value="p.customs.importId || null" :options="imports" option-label="label" option-value="value" show-clear filter size="small" fluid
+                  :placeholder="p.customs.importNumber || 'nepriradená'" :disabled="locked" aria-label="Faktúra za dovezený tovar"
+                  @update:model-value="set(p.customs, 'importId')($event || 0)" />
+              </FormField>
+            </div>
+            <label v-if="!p.customs" class="check">
               <Checkbox :model-value="p.reverseCharge" binary :disabled="locked" @update:model-value="set(p, 'reverseCharge')($event)" />
               <span>Prenesenie daňovej povinnosti (dodávateľ fakturuje bez DPH, daň priznávam ja)</span>
             </label>
@@ -515,13 +552,14 @@ const set = (obj, key) => (v) => {
         <h2>Súhrn</h2>
         <dl>
           <dt>Základ dane</dt><dd class="num">{{ formatAmount(summary.base) }}</dd>
-          <dt>{{ p.reverseCharge ? 'DPH (samozdanenie)' : 'DPH' }}</dt><dd class="num">{{ formatAmount(summary.vat) }}</dd>
+          <dt>{{ p.reverseCharge ? 'DPH (samozdanenie)' : p.customs ? 'DPH pri dovoze' : 'DPH' }}</dt><dd class="num">{{ formatAmount(summary.vat) }}</dd>
+          <template v-if="p.customs"><dt>Clo</dt><dd class="num">{{ formatAmount(p.customs.duty || '0') }}</dd></template>
           <template v-if="!foreign && vatPayer">
             <dt>Odpočet DPH<template v-if="p.deductPercent && !p.noDeduction"> ({{ p.deductPercent }} %)</template><template v-if="p.mixed && !p.noDeduction"> (koeficient {{ p.coef }} %)</template></dt><dd class="num">{{ p.noDeduction ? 'neuplatňuje sa' : formatAmount(p.deducted ?? summary.vat) }}</dd>
           </template>
         </dl>
         <div class="payable">
-          <span>Na úhradu</span>
+          <span>{{ p.customs ? 'Na úhradu colnému úradu' : 'Na úhradu' }}</span>
           <strong class="num">{{ formatMoney(summary.total, p.currency || 'EUR') }}</strong>
         </div>
         <div v-if="foreign" class="local">
@@ -824,6 +862,18 @@ const set = (obj, key) => (v) => {
   }
   .body {
     padding: 10px 10px 24px;
+  }
+}
+.customs {
+  display: grid;
+  grid-template-columns: minmax(7rem, 10rem) minmax(0, 1fr);
+  gap: 0.5rem 0.75rem;
+  margin: 0.1rem 0 0.4rem 1.9rem;
+}
+@media (max-width: 640px) {
+  .customs {
+    grid-template-columns: minmax(0, 1fr);
+    margin-left: 0;
   }
 }
 </style>
