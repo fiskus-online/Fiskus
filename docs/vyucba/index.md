@@ -10,8 +10,7 @@ tags: [výučba, prehľad]
 
 Fiškus je určený na **štúdium a výučbu účtovníctva** — na stredných
 odborných školách, vysokých školách, v kurzoch pre začínajúcich
-podnikateľov aj na samoštúdium. Je zadarmo, beží bez internetu a nič
-neposiela von.
+podnikateľov aj na samoštúdium. Beží bez internetu a nič neposiela von.
 
 :::info[Prečo skutočný program namiesto cvičných tabuliek]
 Učebnica ukáže zápis, ale neukáže, **odkiaľ sa vzal a kam ide ďalej**.

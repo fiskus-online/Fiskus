@@ -15,7 +15,7 @@ import (
 
 func TestHouseholdCompany(t *testing.T) {
 	a, firm := newApp(t, edition.Desktop)
-	h, err := a.CreateCompany(ctx, store.Company{Name: "Domácnosť Krnáčovci", Bookkeeping: store.BookkeepingHousehold})
+	h, err := a.CreateCompany(ctx, store.Company{Name: "Domácnosť Novákovci", Bookkeeping: store.BookkeepingHousehold})
 	if err != nil || !h.SetupDone {
 		t.Fatalf("domácnosť: %+v %v", h, err)
 	}

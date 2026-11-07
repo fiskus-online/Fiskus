@@ -3,7 +3,7 @@ import { closeSummary, eventLabel } from './yearclose.js'
 
 it.each([
   [null, ''],
-  [{ close: { closed: true, closedAt: '2026-01-15T10:00:00Z', closedBy: 'Pavol' } }, 'uzavretý 15. 1. 2026, Pavol'],
+  [{ close: { closed: true, closedAt: '2026-01-15T10:00:00Z', closedBy: 'Ján' } }, 'uzavretý 15. 1. 2026, Ján'],
   [{ canClose: true, close: null, checks: [] }, 'pripravený na uzávierku'],
   [{ canClose: true, close: { closed: false }, checks: [] }, 'otvorený po oprave — pripravený na uzávierku'],
   [{ canClose: false, checks: [{ blocking: true, ok: false }] }, 'chýba 1 krok'],

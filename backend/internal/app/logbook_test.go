@@ -19,7 +19,7 @@ func TestLogbookBusinessCar(t *testing.T) {
 		t.Fatal(err)
 	}
 	v, err := a.SaveVehicle(ctx, c.ID, logbook.Vehicle{Name: "Škoda Octavia", Plate: "bb-123ab", Consumption: m.MustParse("5"),
-		AssetID: car.ID, Driver: "Pavol Krnáč", Odometer: 1000, OdometerDate: invoice.MustDate("2026-01-10")})
+		AssetID: car.ID, Driver: "Ján Novák", Odometer: 1000, OdometerDate: invoice.MustDate("2026-01-10")})
 	if err != nil || v.Plate != "BB-123AB" || v.Ownership != logbook.Business {
 		t.Fatalf("vozidlo: %+v %v", v, err)
 	}
@@ -41,7 +41,7 @@ func TestLogbookBusinessCar(t *testing.T) {
 	t1 := trip("2026-03-02", logbook.TripBusiness, 1000, 1500)
 	trip("2026-03-03", logbook.TripPrivate, 1500, 1700)
 	trip("2026-03-05", logbook.TripBusiness, 1700, 2000)
-	if t1.Driver != "Pavol Krnáč" || t1.Km != 500 {
+	if t1.Driver != "Ján Novák" || t1.Km != 500 {
 		t.Fatalf("predvolený vodič a km: %+v", t1)
 	}
 	if _, err := a.SaveTrip(ctx, c.ID, logbook.Trip{VehicleID: v.ID, Date: invoice.MustDate("2026-03-06"), From: "A", To: "B", Purpose: "x", OdoStart: 900, OdoEnd: 950}); !fieldErr(err, "odoStart") {

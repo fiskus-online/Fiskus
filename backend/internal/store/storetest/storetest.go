@@ -789,7 +789,7 @@ func Run(t *testing.T, newStore Factory) {
 		}
 		trips := []logbook.Trip{
 			{VehicleID: car.ID, Date: invoice.MustDate("2026-10-02"), Depart: "07:30", Arrive: "08:10", From: "Banská Bystrica", To: "Zvolen",
-				Purpose: "Montáž", Kind: logbook.TripBusiness, Driver: "Pavol", OdoStart: 12000, OdoEnd: 12025, Km: 25},
+				Purpose: "Montáž", Kind: logbook.TripBusiness, Driver: "Ján", OdoStart: 12000, OdoEnd: 12025, Km: 25},
 			{VehicleID: car.ID, Date: invoice.MustDate("2026-10-01"), From: "BB", To: "BB", Kind: logbook.TripPrivate, Km: 10},
 			{VehicleID: van.ID, Date: invoice.MustDate("2025-12-30"), From: "BB", To: "Brno", Purpose: "Nákup", Kind: logbook.TripBusiness, Km: 300},
 		}
@@ -1185,7 +1185,7 @@ func Run(t *testing.T, newStore Factory) {
 		b, _ := s.CreateCompany(ctx, store.Company{Name: "Beta"})
 		at := time.Date(2026, 10, 29, 14, 0, 0, 0, time.UTC)
 		out := store.EInvoice{Direction: "out", DocID: 7, DocNumber: "FA1", Partner: "Odberateľ", PeppolID: "0245:2020372640",
-			File: "Faktura-FA1.xml", MessageID: "Faktura-FA1.xml", Status: "odoslané", Created: at, User: "Palo"}
+			File: "Faktura-FA1.xml", MessageID: "Faktura-FA1.xml", Status: "odoslané", Created: at, User: "Ján"}
 		in := store.EInvoice{Direction: "in", DocNumber: "D-9", Partner: "Dodávateľ", MessageID: "d9.xml", Created: at.Add(time.Minute), Data: []byte("<Invoice/>")}
 		for _, e := range []*store.EInvoice{&out, &in} {
 			if err := s.AddEInvoice(ctx, a.ID, e); err != nil || e.ID == 0 || e.CompanyID != a.ID {
@@ -1239,7 +1239,7 @@ func Run(t *testing.T, newStore Factory) {
 			return e
 		}
 		first := add(a.ID, store.Email{DocKind: "invoice", DocID: 7, DocNumber: "FA20260007", To: "x@firma.sk, y@firma.sk", Cc: "z@firma.sk",
-			Subject: "Faktúra FA20260007", File: "Faktura-FA20260007.pdf", Sent: at, User: "Palo"})
+			Subject: "Faktúra FA20260007", File: "Faktura-FA20260007.pdf", Sent: at, User: "Ján"})
 		add(a.ID, store.Email{DocKind: "invoice", DocID: 7, To: "x@firma.sk", Subject: "znova", Sent: at.Add(time.Hour), Error: "535 zlé heslo"})
 		add(a.ID, store.Email{DocKind: "quote", DocID: 7, To: "x@firma.sk", Subject: "ponuka", Sent: at.Add(-time.Hour)})
 		add(a.ID, store.Email{DocKind: "invoice", DocID: 1, To: "x@firma.sk", Subject: "minulý rok", Sent: at.AddDate(-1, 0, 0)})
@@ -1269,7 +1269,7 @@ func Run(t *testing.T, newStore Factory) {
 			}
 		}
 		got, _ := s.ListEmails(ctx, a.ID, store.EmailFilter{DocKind: "invoice", DocID: 7})
-		if g := got[1]; !g.Sent.Equal(first.Sent) || g.To != first.To || g.Cc != first.Cc || g.File != first.File || g.User != "Palo" || g.DocNumber != "FA20260007" {
+		if g := got[1]; !g.Sent.Equal(first.Sent) || g.To != first.To || g.Cc != first.Cc || g.File != first.File || g.User != "Ján" || g.DocNumber != "FA20260007" {
 			t.Errorf("záznam: %+v", g)
 		}
 		if got[0].Error != "535 zlé heslo" {

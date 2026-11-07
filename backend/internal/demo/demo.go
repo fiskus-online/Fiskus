@@ -15,6 +15,7 @@ import (
 	"github.com/palo-krnac/fiscus/backend/internal/cash"
 	"github.com/palo-krnac/fiscus/backend/internal/catalog"
 	"github.com/palo-krnac/fiscus/backend/internal/chart"
+	"github.com/palo-krnac/fiscus/backend/internal/ekasa"
 	"github.com/palo-krnac/fiscus/backend/internal/fx"
 	"github.com/palo-krnac/fiscus/backend/internal/household"
 	"github.com/palo-krnac/fiscus/backend/internal/invoice"
@@ -558,13 +559,13 @@ func seedLogbook(ctx context.Context, a *app.App, c store.Company) error {
 	today := a.Today()
 	start := invoice.NewDate(today.Year(), time.January, 2) // celý rok, aby sedel odpis na km
 	van, err := a.SaveVehicle(ctx, c.ID, logbook.Vehicle{Name: "Ford Transit", Plate: "ZA-123BC", Fuel: logbook.Diesel, Consumption: m.MustParse("7.9"),
-		Ownership: logbook.Business, Method: logbook.MethodLog, AssetID: transit, Driver: "Pavol Krnáč", Odometer: 48210, OdometerDate: start,
+		Ownership: logbook.Business, Method: logbook.MethodLog, AssetID: transit, Driver: "Ján Novák", Odometer: 48210, OdometerDate: start,
 		Category: "N1", VIN: "WF0XXXTTGXKA12345"})
 	if err != nil {
 		return err
 	}
 	car, err := a.SaveVehicle(ctx, c.ID, logbook.Vehicle{Name: "Škoda Fabia", Plate: "BB-482FK", Fuel: logbook.Petrol, Consumption: m.MustParse("5.6"),
-		Ownership: logbook.Private, Method: logbook.MethodLog, Driver: "Pavol Krnáč", Category: "M1"})
+		Ownership: logbook.Private, Method: logbook.MethodLog, Driver: "Ján Novák", Category: "M1"})
 	if err != nil {
 		return err
 	}
@@ -1010,8 +1011,39 @@ func seedHousehold(ctx context.Context, a *app.App) error {
 	}
 	split, amt := household.ReceiptSplit(items, m.MustParse("30.93"), "Potraviny")
 	if _, err := a.SaveHouseholdEntry(ctx, h.ID, household.Entry{Date: today.AddDays(-1), AccountID: wallet.ID, Amount: amt, Payee: "Lidl",
-		Split: split, Source: "ekasa:O-DEMO0000000000000000000000000001"}); err != nil {
+		Split: split, Source: "ekasa:O-DEMO0000000000000000000000000001", Receipt: demoReceipt(items, today.AddDays(-1))}); err != nil {
 		return err
 	}
 	return nil
+}
+
+// demoReceipt sú údaje bločku z eKasy k ukážkovému nákupu (detail bločku).
+func demoReceipt(items []household.ReceiptItem, d invoice.Date) *ekasa.Receipt {
+	rates := []int{5, 5, 19, 19, 5, 23, 23, 23, 19} // sadzby DPH položiek
+	r := &ekasa.Receipt{ID: "O-DEMO0000000000000000000000000001", Number: "0187/0042", Type: "PD", CashRegister: "88820210345600017",
+		Issued: time.Date(d.Year(), time.Month(d.Month()), d.Day(), 17, 42, 0, 0, time.Local),
+		Seller: ekasa.Seller{Name: "Lidl Slovenská republika, v.o.s.", ICO: "35793783", DIC: "2020234216", ICDPH: "SK2020234216",
+			Street: "Ružinovská 1E", City: "Bratislava", Zip: "82102"},
+		Unit: "Zvolenská cesta 21, 97405 Banská Bystrica"}
+	byRate := map[int]m.Dec{}
+	for i, it := range items {
+		q := m.MustParse("1")
+		if it.Quantity != "" {
+			q = m.MustParse(strings.ReplaceAll(it.Quantity, ",", "."))
+		}
+		kind := "K"
+		if it.Amount.Sign() < 0 {
+			kind = "Z"
+		}
+		r.Items = append(r.Items, ekasa.Item{Name: it.Name, Quantity: q, UnitPrice: ekasa.UnitPrice(it.Amount, q), Price: it.Amount,
+			VATRate: rates[i], Type: kind})
+		byRate[rates[i]] = byRate[rates[i]].Add(it.Amount)
+		r.Total = r.Total.Add(it.Amount)
+	}
+	for _, rate := range []int{5, 19, 23} {
+		gross := byRate[rate]
+		base := gross.MulRatio(m.FromInt(100), m.FromInt(int64(100+rate))).RoundCents()
+		r.VAT = append(r.VAT, ekasa.VATRow{Rate: rate, Base: base, VAT: gross.Sub(base)})
+	}
+	return r
 }
