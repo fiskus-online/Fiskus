@@ -131,3 +131,41 @@ export function vatHint(v) {
     ? 'Plný odpočet DPH: vozidlo iba na podnikanie. Treba elektronickú evidenciu každej jazdy (kniha jázd s VIN a tachometrom) aj nákladov a oznámenie daňovému úradu do lehoty na podanie priznania. Súkromná jazda sa zdaňuje.'
     : 'Plný odpočet DPH podľa výnimky § 85n ods. 4.'
 }
+
+// ---- import jázd z GPS ----
+// Jazdy z trasy navrhuje server (internal/logbook/gps.go); tu sa iba
+// upravujú pred uložením.
+
+/** Miesto bez názvu má server pomenované súradnicami „48.73630, 19.14620“. */
+export const isCoordName = (s) => /^-?\d{1,2}\.\d+, -?\d{1,3}\.\d+$/.test(s || '')
+
+/**
+ * Prepočíta stavy tachometra vybraných jázd za sebou: prvá začína stavom
+ * z návrhu, každá ďalšia nadväzuje na koniec predchádzajúcej.
+ */
+export function chainOdometer(drafts) {
+  let odo = null
+  return drafts.map((d) => {
+    if (!d.pick) return { ...d }
+    if (odo == null) odo = d.odoStart || 0
+    if (!odo) return { ...d, odoStart: 0, odoEnd: 0 }
+    const km = Math.max(0, Math.round(Number(d.km) || 0))
+    const out = { ...d, km, odoStart: odo, odoEnd: odo + km }
+    odo = out.odoEnd
+    return out
+  })
+}
+
+/** Návrhy z náhľadu: duplicitné sa predvolene nevyberú. */
+export const gpsDrafts = (preview) => chainOdometer((preview?.trips ?? []).map((t, i) => ({ ...t, key: i, pick: !t.duplicate })))
+
+/** Jazdy na uloženie (bez pomocných polí náhľadu). */
+export const gpsToSave = (drafts) =>
+  drafts.filter((d) => d.pick).map(({ key, pick, duplicate, fromPoint, toPoint, meters, ...t }) => t)
+
+/** Pridá alebo premenuje miesto v okolí bodu [lat, lon]. */
+export function addPlace(places, point, name, radius = 300) {
+  const n = (name || '').trim()
+  if (!n || !point) return places
+  return [...places.filter((p) => !(Math.abs(p.lat - point[0]) < 1e-5 && Math.abs(p.lon - point[1]) < 1e-5)), { name: n, lat: point[0], lon: point[1], radius }]
+}

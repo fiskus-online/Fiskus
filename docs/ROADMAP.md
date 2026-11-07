@@ -130,7 +130,8 @@ Referenčný prehľad funkcií pochádza z českých systémov  (MIT) a  ([docs/
 - [x] Kniha jázd: vozidlá (v obchodnom majetku, prenajaté, súkromné), jazdy so stavom tachometra, účelom a vodičom, tankovanie z pokladničných blokov a prijatých faktúr; vyúčtovanie za rok — PHM podľa knihy jázd s limitom spotreby z TP (nadspotreba, súkromné jazdy), paušál 80 % / 50 %, cestovné náhrady za súkromné auto (základná náhrada za km podľa dňa jazdy + PHM), odpis z registra majetku, náklady na každú jazdu a na km; zaúčtovanie do uzávierky; sadzby za km v Legislatíve
 - [x] DPH pri vozidlách od 2026 (§ 85n): kategória a VIN vozidla, odpočet 50 % z nákupov k osobnému autu (M1, L1e, L3e) — vozidlo na prijatej faktúre a pokladničnom bloku nastaví odpočet sám (DPH r. 19/21, KV B.2 a B.3 s odpočítanou daňou, neodpočítaná časť do výdavkov); plný odpočet pri výlučnom podnikaní (VIN, kniha jázd, dátum oznámenia) alebo výnimke; prehľad DPH z dokladov k vozidlu s kontrolou nesúladu
 - [x] Tlač knihy jázd (A4 na šírku): vozidlo, jazdy, tankovanie, náklady s DPH, vyúčtovanie
-- [ ] Kniha jázd: import z GPS, zdanenie súkromného použitia vozidla s plným odpočtom (§ 9 ods. 2), úprava odpočtu pri predaji do 5 rokov
+- [x] Kniha jázd: import jázd zo záznamu GPS (GPX, CSV) s pomenovanými miestami
+- [ ] Kniha jázd: zdanenie súkromného použitia vozidla s plným odpočtom (§ 9 ods. 2), úprava odpočtu pri predaji do 5 rokov
 
 ## Prenos dát z iných programov
 - [x] POHODA (XML export, aj Windows-1250): adresár, zásoby do cenníka, vydané faktúry a dobropisy s pôvodnými číslami a úhradami, prijaté faktúry; náhľad pred prenosom, opakovaný prenos nevytvorí duplicity, číselný rad pokračuje za prenesenými číslami
