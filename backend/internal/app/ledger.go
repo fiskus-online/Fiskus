@@ -41,6 +41,9 @@ type LedgerData struct {
 	// Revalued sú sumy pohľadávok a záväzkov v cudzej mene v eurách
 	// prepočítané kurzom k 31. 12. (kľúč sale:ID, purchase:ID).
 	Revalued map[string]money.Dec `json:"revalued,omitempty"`
+	// FXStatement je zostatok bankového účtu v cudzej mene k 31. 12. podľa
+	// výpisu (kľúč bank:IBAN), ak sa líši od súčtu pohybov vo Fiškuse.
+	FXStatement map[string]money.Dec `json:"fxStatement,omitempty"`
 	// Dims sú stredisko a zákazka dokladu (náklady a výnosy).
 	Dims map[string]ledger.Dims `json:"dims,omitempty"`
 }

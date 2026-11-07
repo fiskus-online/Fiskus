@@ -56,6 +56,33 @@ dajú ručné zápisy a interné doklady.
   ziskov a strát (Úč MÚJ 2-01); počiatočné stavy z konečných stavov
   minulého roka.
 
+### Kurzové rozdiely k 31. 12.
+
+V **Súvahe** kliknite na **Kurzové rozdiely k 31. 12.** Fiškus prepočíta
+kurzom ECB k 31. 12. všetko, čo je v cudzej mene:
+
+- **neuhradené pohľadávky a záväzky** (311, 321). Prepočítaná suma platí aj
+  pri úhrade v ďalšom roku,
+- **pokladnice v cudzej mene**. Zostatok v mene je súčet dokladov, suma
+  v účtovníctve je súčet dokladov v eurách (kurz ku dňu dokladu). Od
+  ďalšieho roka sa začína prepočítanou sumou,
+- **bankové účty v cudzej mene**. Pohyby v cudzej mene sa účtujú ručne
+  v eurách na analytický účet banky, preto suma v účtovníctve je zostatok
+  tohto účtu v hlavnej knihe. Zostatok v mene je súčet pohybov vo Fiškuse.
+  Ak sa líši od výpisu (napríklad účet bol založený pred používaním
+  Fiškusa), zadajte do riadku **Zostatok podľa výpisu k 31. 12.** sumu
+  z výpisu.
+
+Rozdiel je kurzový zisk (663) alebo strata (563) proti účtu pohľadávky,
+záväzku, pokladnice alebo banky. Pokladnice a banky sa účtujú na ich
+analytické účty z **Účty bánk a pokladníc**. Bankový účet v cudzej mene bez
+analytického účtu alebo s nezaúčtovanými pohybmi Fiškus nepreráta a upozorní
+na to. **Zaúčtovať** vytvorí interný doklad k 31. 12. Ďalšie zaúčtovanie ho
+nahradí, takže po doplnení kurzu alebo pohybov stačí kliknúť znova.
+
+![Kurzové rozdiely k 31. 12. — pohľadávka, záväzok a pokladnica v cudzej mene](../obrazky/kurzove-rozdiely.webp)
+*Kurzové rozdiely k 31. 12.: pohľadávka, záväzok a pokladnica v CZK*
+
 :::tip[Úloha: od faktúry k súvahe]
 V ukážkovej firme prepnite druh účtovníctva na podvojné. Nájdite jednu
 vydanú faktúru v účtovnom denníku, sledujte jej zápis na účte 311

@@ -13,6 +13,8 @@ etapách je v [pláne vývoja](./ROADMAP.md).
 
 ## Pripravuje sa (0.5)
 
+- **Kurzové rozdiely k 31. 12.** aj pre zostatky pokladníc a bankových účtov
+  v cudzej mene (analytické účty, zostatok podľa výpisu).
 - **Uzávierky e-kasy** v Pokladni: obrat podľa sadzieb a platby kartou sa
   zapíšu ako PPD na tržbu (DPH, KV D.1) a VPD na peniaze na ceste; pripísanie
   platieb z terminálu v banke sa zaúčtuje 221 / 261.

@@ -109,6 +109,12 @@ async function main() {
       await p.getByPlaceholder('0').fill('612,40')
       await p.waitForTimeout(800)
     }],
+    ['kurzove-rozdiely', '/hlavna-kniha', firm, async (p) => {
+      await p.getByText('Súvaha', { exact: true }).first().click()
+      await p.waitForTimeout(500)
+      await p.getByRole('button', { name: /Kurzové rozdiely/ }).click()
+      await p.waitForTimeout(600)
+    }],
     // tlačivá
     ['tlaciva', '/tlaciva', firm],
     ['tlaciva-ppd', '/tlaciva?t=ppd', firm, async (p) => {
