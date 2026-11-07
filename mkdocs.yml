@@ -5,8 +5,6 @@ site_name: Fiškus
 site_url: https://docs.fiskus.online/
 site_description: Slovenský účtovný program na štúdium a výučbu účtovníctva.
 docs_dir: docs
-exclude_docs: |
-  reference/
 
 theme:
   name: material

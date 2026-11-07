@@ -1,6 +1,6 @@
 # Plán vývoja
 
-Referenčný prehľad funkcií pochádza z českých systémov MyInvoice (MIT) a MyÚčto ([docs/reference/](https://github.com/fiskus-online/fiskus/tree/main/docs/reference)). Kód z nich nepreberáme, slúžia iba ako zoznam funkcií. Proprietárne časti MyÚčto (podvojné účtovníctvo, sklad, majetok, EPO, mzdy) píšeme od nuly podľa slovenskej legislatívy.
+Všetky časti (podvojné účtovníctvo, sklad, majetok, EPO, mzdy) píšeme od nuly podľa slovenskej legislatívy.
 
 ## Etapa 0 — kostra ✅
 - [x] Presný typ na peniaze, výpočet DPH (23/19/5/0 %, ceny s DPH aj bez DPH, prenesenie daňovej povinnosti)
@@ -168,7 +168,7 @@ Referenčný prehľad funkcií pochádza z českých systémov MyInvoice (MIT) a
 - [ ] Zaúčtovanie miezd do peňažného denníka a podvojného účtovníctva, príkazy na úhradu výplat a odvodov
 
 ## Odlíšenie od konkurencie
-Slovenské špecifiká, ktoré MyÚčto nemá: RÚZ, tri identifikátory (IČO / DIČ / IČ DPH), 2 % dane pre neziskovky, slovenská e-fakturácia, PAY by square.
+Slovenské špecifiká: RÚZ, tri identifikátory (IČO / DIČ / IČ DPH), 2 % dane pre neziskovky, slovenská e-fakturácia, PAY by square.
 
 ## Kalendár termínov
 - [x] Kalendár (mesiac aj zoznam): priznanie k DPH a KV, SV (ak sú dodania do EÚ), daň z príjmov, daň z motorových vozidiel — lehoty posunuté na pracovný deň podľa dní pracovného pokoja (upraviteľné v Legislatíve); splatnosti vydaných a prijatých faktúr, pravidelné faktúry, koniec platnosti ponúk; zmeškané termíny; podané priznanie označené
