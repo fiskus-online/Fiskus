@@ -235,3 +235,9 @@ func (d *Dec) UnmarshalJSON(b []byte) error {
 	*d = v
 	return nil
 }
+
+// FromRat vytvorí Dec zo zlomku (zaokrúhli na 4 miesta, polovica od nuly).
+func FromRat(r *big.Rat) (Dec, error) { return fromRat(r) }
+
+// Rat vráti hodnotu ako presný zlomok (na výpočty s mocninami).
+func (d Dec) Rat() *big.Rat { return new(big.Rat).SetFrac64(d.v, unit) }
