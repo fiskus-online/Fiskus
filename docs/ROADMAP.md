@@ -131,7 +131,7 @@ Referenčný prehľad funkcií pochádza z českých systémov  (MIT) a  ([docs/
 - [x] DPH pri vozidlách od 2026 (§ 85n): kategória a VIN vozidla, odpočet 50 % z nákupov k osobnému autu (M1, L1e, L3e) — vozidlo na prijatej faktúre a pokladničnom bloku nastaví odpočet sám (DPH r. 19/21, KV B.2 a B.3 s odpočítanou daňou, neodpočítaná časť do výdavkov); plný odpočet pri výlučnom podnikaní (VIN, kniha jázd, dátum oznámenia) alebo výnimke; prehľad DPH z dokladov k vozidlu s kontrolou nesúladu
 - [x] Tlač knihy jázd (A4 na šírku): vozidlo, jazdy, tankovanie, náklady s DPH, vyúčtovanie
 - [x] Kalkulačky bez firmy: DPH, úrok z omeškania, úver a RPMN, sporenie, čistá mzda, kurzy
-- [ ] Tlačivá: vyplnenie a tlač bez firmy, ukladanie a zaúčtovanie ako účtovný doklad, vlastné vzory
+- [x] Tlačivá: vyplnenie a tlač bez firmy, ukladanie a zaúčtovanie ako účtovný doklad, vzory a vlastné tlačivá
 - [x] Kniha jázd: import jázd zo záznamu GPS (GPX, CSV) s pomenovanými miestami
 - [ ] Kniha jázd: zdanenie súkromného použitia vozidla s plným odpočtom (§ 9 ods. 2), úprava odpočtu pri predaji do 5 rokov
 
