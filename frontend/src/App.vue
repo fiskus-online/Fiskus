@@ -21,6 +21,7 @@ import BrowserBackupBanner from './components/BrowserBackupBanner.vue'
 import { startHeartbeat } from './lib/desktop.js'
 import { attention, badgeText, refreshCalendar, refreshDrafts } from './lib/attention.js'
 import { badgeRange, soonCount } from './lib/calendar.js'
+import DemoOffer from './components/DemoOffer.vue'
 
 const route = useRoute()
 // Fiškus v prehliadači: funkcia nainštalovaného programu → výzva na inštaláciu
@@ -229,6 +230,7 @@ watch(
           <template v-if="isSuperAdmin()">
             <p>Zatiaľ tu nie je žiadna firma.</p>
             <RouterLink to="/firmy">Založiť firmu</RouterLink>
+            <DemoOffer />
           </template>
           <p v-else>Nemáte prístup do žiadnej firmy. Požiadajte správcu, aby vás pridal.</p>
         </div>
@@ -433,7 +435,8 @@ nav {
 
 .fatal {
   margin: 48px auto;
-  max-width: 440px;
+  padding: 0 16px;
+  max-width: 472px;
   text-align: center;
   color: var(--tone-overdue);
 }
@@ -442,6 +445,11 @@ nav {
 }
 .fatal .pi {
   font-size: 1.5rem;
+}
+.fatal :deep(.demo-offer) {
+  flex-direction: column;
+  align-items: stretch;
+  margin-top: 20px;
 }
 
 .scrim {

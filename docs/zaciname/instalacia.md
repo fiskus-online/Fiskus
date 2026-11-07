@@ -86,6 +86,15 @@ Na výučbu a skúšanie je najlepšia ukážková firma **Demo elektroservis**:
 faktúry, nákupy, banka, pokladňa, sklad s kartami produktov, majetok aj
 kniha jázd.
 
+Najjednoduchšie ju načítate v prázdnom Fiškuse — nainštalovanom aj
+v prehliadači — tlačidlom **Vyskúšať na ukážkovej firme**. Spolu s firmou
+sa načíta aj domácnosť Novákovci s bločkami, rozpočtom a plánom platieb.
+Keď budete chcieť začať naostro, ukážku zmažete v **Nastavenia → Údaje
+a logo → Zmazať firmu** (a domácnosť rovnako) a založíte svoju firmu.
+
+![Prázdny Fiškus ponúkne ukážkovú firmu](../obrazky/ukazka.webp)
+*Prázdny Fiškus ponúkne ukážkovú firmu*
+
 ![Ukážková firma po spustení: kalendár termínov s daňami a splatnosťami](../obrazky/kalendar.webp)
 *Ukážková firma po spustení: kalendár termínov s daňami a splatnosťami*
 

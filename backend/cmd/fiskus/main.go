@@ -171,6 +171,7 @@ func main() {
 	if err := a.LoadLegal(context.Background()); err != nil {
 		log.Fatalf("legislatíva: %v", err)
 	}
+	a.DemoSeed = demo.Seed // prázdny Fiškus ponúkne ukážkovú firmu
 	if *demoData {
 		a.BackupsOff = "Ukážkové dáta sú iba v pamäti a nezálohujú sa. Pre ostrú prácu spustite Fiškus s parametrami -db a -backup-dir."
 	}
