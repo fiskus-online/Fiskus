@@ -98,6 +98,17 @@ async function main() {
     ['kalkulacky-mzda', '/kalkulacky?k=wage', firm, async (p) => {
       await p.getByRole('button', { name: 'Dieťa', exact: true }).click()
     }, { mobile: true, full: true }],
+    ['pokladna-uzavierka', '/pokladna', firm, async (p) => {
+      await p.getByRole('button', { name: 'Uzávierky e-kasy' }).click()
+      await p.getByRole('button', { name: 'Nová uzávierka' }).click()
+      const inputs = p.locator('.closings-panel .form-grid input')
+      await inputs.nth(1).fill('217')
+      await inputs.nth(2).fill('88812345678900001')
+      await p.getByLabel('Obrat 23 %').fill('1 254,60')
+      await p.getByLabel('Obrat 5 %').fill('86,10')
+      await p.getByPlaceholder('0').fill('612,40')
+      await p.waitForTimeout(800)
+    }],
     // tlačivá
     ['tlaciva', '/tlaciva', firm],
     ['tlaciva-ppd', '/tlaciva?t=ppd', firm, async (p) => {

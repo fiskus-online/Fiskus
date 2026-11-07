@@ -106,6 +106,11 @@ const sheetClass = computed(() => [cash.value ? 'cash' : 'doc', props.form.paper
         <div v-if="field('sign2')"><b>{{ role('sign2') }}</b><span>{{ field('sign2').label }}</span></div>
       </footer>
     </template>
+    <!-- logo Fiškus dole v strede každého tlačiva -->
+    <p class="brand" aria-label="Fiškus">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="7" fill="#1f3a5c" /><path d="M10 8h13v3.4h-9v3.6h8v3.3h-8V24h-4z" fill="#f6f7f9" /><rect x="18" y="20.5" width="5" height="3.5" fill="#d9a441" /></svg>
+      <span>Fiškus</span>
+    </p>
   </article>
 </template>
 
@@ -138,6 +143,27 @@ const sheetClass = computed(() => [cash.value ? 'cash' : 'doc', props.form.paper
 }
 .pre {
   white-space: pre-line;
+}
+.brand {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 3mm;
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1.5mm;
+  font-size: 8pt;
+  font-weight: 600;
+  color: #1f3a5c;
+}
+.brand svg {
+  width: 4mm;
+  height: 4mm;
+}
+.sheet.doc {
+  padding-bottom: 14mm !important;
 }
 .head {
   display: flex;
@@ -328,7 +354,7 @@ h1.title {
   position: absolute;
   left: 14mm;
   right: 14mm;
-  bottom: 9mm;
+  bottom: 11mm;
 }
 .signs div {
   display: flex;

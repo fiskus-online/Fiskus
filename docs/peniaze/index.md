@@ -55,3 +55,36 @@ môže uhradiť faktúru v hotovosti.
   (odpočet, KV B.3.1/B.3.2 podľa limitu 3 000 €), tržba z e-kasy (KV D.1).
 - **Viac pokladní** — každá má vlastný zostatok a rad dokladov.
 - **Pokladňa v cudzej mene** — kurz ECB ku dňu dokladu.
+
+### Uzávierky e-kasy
+
+Tržby z pokladnice e-kasa klient netreba zapisovať po bločkoch. V Pokladni
+kliknite na **Uzávierky e-kasy → Nová uzávierka** a opíšte údaje z dennej
+alebo intervalovej uzávierky: dátum, číslo uzávierky, kód pokladnice (ORP),
+obrat s DPH v každej sadzbe (po odpočítaní vrátených a stornovaných položiek)
+a koľko z toho zákazníci zaplatili kartou. Základ a DPH v každej sadzbe aj
+hotovosť dopočíta Fiškus hneď pri písaní.
+
+**Zapísať do pokladne** vytvorí dva doklady:
+
+- **PPD na celú tržbu** s DPH podľa sadzieb. Daň ide do priznania DPH
+  (r. 03 až 06) a do kontrolného výkazu v časti D.1. V peňažnom denníku je
+  to príjem z predaja tovaru (d1) alebo služieb (d2) podľa políčka **predaj
+  tovaru**, v podvojnom účtovníctve 211 / 604 alebo 602 a 343.
+- **VPD na platby kartou**: tieto peniaze nie sú v pokladni, sú na ceste na
+  účet. V peňažnom denníku sú priebežná položka (c), v podvojnom účtovníctve
+  261 / 211.
+
+Keď banka platby z terminálu pripíše na účet, Fiškus ich v bankovom výpise
+spozná podľa textu (platby kartou, terminál, Global Payments, SumUp…) a
+zaúčtuje ich ako peniaze na ceste (221 / 261, v peňažnom denníku c), nie ako
+druhú tržbu. Ak banka pripíše sumu po odpočítaní poplatku, rozdiel
+rozpíšte v peňažnom denníku ako výdavok na služby.
+
+Neplatiteľ DPH zadá iba celú tržbu, bez sadzieb. Tá istá uzávierka (rovnaké
+číslo a ORP) sa nedá zapísať dvakrát. Doklady uzávierky sa nedajú stornovať
+jednotlivo. Stornuje sa celá uzávierka a s ňou oba doklady, potom ju
+môžete zapísať znova.
+
+![Uzávierka e-kasy — obrat podľa sadzieb, platby kartou a hotovosť](../obrazky/pokladna-uzavierka.webp)
+*Uzávierka e-kasy: obrat podľa sadzieb, platby kartou, hotovosť v pokladni*

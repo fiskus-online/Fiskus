@@ -462,6 +462,7 @@ var (
 	reInterest = regexp.MustCompile(`(?i)[úu]rok|interest`)
 	// presun peňazí medzi bankou a pokladnicou (261 peniaze na ceste)
 	reToCash   = regexp.MustCompile(`(?i)do pokladn|v[ýy]ber hotovost|v[ýy]ber z bankomatu|atm`)
+	reCard     = regexp.MustCompile(`(?i)platb\w* kart|kartou|termin[áa]l|\bpos\b|global payments|gp ?webpay|sumup|mypos|cardpay|zúčtovanie kariet|settlement`)
 	reFromBank = regexp.MustCompile(`(?i)z banky|z (bankov[ée]ho )?[úu][čc]tu|v[ýy]ber z`)
 	rePHM      = regexp.MustCompile(`(?i)pohonn|\bphm\b|benz[íi]n|naft|tankov`)
 )
@@ -689,6 +690,8 @@ func (a *App) ledgerSources(ctx context.Context, companyID int64, year int, p *p
 				post.Template = "B-UROKY"
 			case reToCash.MatchString(text) && signed.Sign() < 0:
 				post.Template = "B-VKLAD"
+			case reCard.MatchString(text) && signed.Sign() > 0:
+				post.Template = "B-KARTA"
 			}
 		}
 		out = append(out, post)
@@ -726,6 +729,9 @@ func (a *App) ledgerSources(ctx context.Context, companyID int64, year int, p *p
 			if dir > 0 {
 				p.set(key, chart.Amounts{Total: gross, Base: base, VAT: tax})
 				post.Template = "P-TRZBA"
+				if d.Tax.Goods {
+					post.Template = "P-TRZBA-TOVAR"
+				}
 			} else {
 				deduct := money.Zero
 				if p.vatPayer {
@@ -740,6 +746,13 @@ func (a *App) ledgerSources(ctx context.Context, companyID int64, year int, p *p
 		default:
 			p.set(key, chart.Amounts{Total: abs(d.SignedEUR()), Base: abs(d.SignedEUR())})
 			switch {
+			case d.LinkKind == cash.LinkClosing && dir < 0:
+				post.Template = "P-KARTA"
+			case d.LinkKind == cash.LinkClosing: // tržba neplatiteľa DPH
+				post.Template = "P-TRZBA"
+				if c, err := a.Store.GetCashClosing(ctx, companyID, d.LinkID); err == nil && c.Goods {
+					post.Template = "P-TRZBA-TOVAR"
+				}
 			case dir > 0 && reFromBank.MatchString(d.Purpose):
 				post.Template = "P-VKLAD"
 			case dir < 0 && rePHM.MatchString(d.Purpose):
