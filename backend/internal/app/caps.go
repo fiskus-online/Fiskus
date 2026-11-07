@@ -4,7 +4,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/palo-krnac/fiscus/backend/internal/edition"
+	"github.com/fiskus-online/fiskus/backend/internal/edition"
 )
 
 // Capabilities vráti schopnosti režimu behu (bez licencií).

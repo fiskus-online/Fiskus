@@ -9,8 +9,8 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/palo-krnac/fiscus/backend/internal/app"
-	"github.com/palo-krnac/fiscus/backend/internal/auth"
+	"github.com/fiskus-online/fiskus/backend/internal/app"
+	"github.com/fiskus-online/fiskus/backend/internal/auth"
 )
 
 // OAuth 2.1 pre vzdialených klientov MCP (Claude na webe a v mobile).

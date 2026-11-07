@@ -16,7 +16,7 @@ import (
 	"path"
 	"strings"
 
-	"github.com/palo-krnac/fiscus/backend/internal/xmlenc"
+	"github.com/fiskus-online/fiskus/backend/internal/xmlenc"
 )
 
 // Address je adresa (Ulice, Misto, PSC, Stat).

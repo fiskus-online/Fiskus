@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/palo-krnac/fiscus/backend/internal/store"
+	"github.com/fiskus-online/fiskus/backend/internal/store"
 )
 
 // ofCompany: patrí hodnota (štruktúra s poľom CompanyID) firme?

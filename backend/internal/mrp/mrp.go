@@ -17,7 +17,7 @@ import (
 	"path"
 	"strings"
 
-	"github.com/palo-krnac/fiscus/backend/internal/xmlenc"
+	"github.com/fiskus-online/fiskus/backend/internal/xmlenc"
 )
 
 // Row sú polia jedného riadku tabuľky (kľúče malými písmenami).

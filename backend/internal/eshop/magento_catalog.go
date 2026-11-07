@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/palo-krnac/fiscus/backend/internal/money"
+	"github.com/fiskus-online/fiskus/backend/internal/money"
 )
 
 // Magento: cenník a zákazníci. Sadzba DPH je trieda dane produktu

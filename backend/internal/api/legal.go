@@ -4,8 +4,8 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/palo-krnac/fiscus/backend/internal/app"
-	"github.com/palo-krnac/fiscus/backend/internal/legal"
+	"github.com/fiskus-online/fiskus/backend/internal/app"
+	"github.com/fiskus-online/fiskus/backend/internal/legal"
 )
 
 // getLegal: GET /api/legal — zákonné parametre spoločné pre všetky firmy.

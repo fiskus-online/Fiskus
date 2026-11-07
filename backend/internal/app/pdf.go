@@ -4,10 +4,10 @@ import (
 	"context"
 	"errors"
 
-	"github.com/palo-krnac/fiscus/backend/internal/auth"
-	"github.com/palo-krnac/fiscus/backend/internal/invoice"
-	"github.com/palo-krnac/fiscus/backend/internal/printout"
-	"github.com/palo-krnac/fiscus/backend/internal/store"
+	"github.com/fiskus-online/fiskus/backend/internal/auth"
+	"github.com/fiskus-online/fiskus/backend/internal/invoice"
+	"github.com/fiskus-online/fiskus/backend/internal/printout"
+	"github.com/fiskus-online/fiskus/backend/internal/store"
 )
 
 // Document je hotový doklad v PDF (na stiahnutie alebo do prílohy e-mailu).

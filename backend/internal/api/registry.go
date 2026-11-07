@@ -5,8 +5,8 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/palo-krnac/fiscus/backend/internal/invoice"
-	"github.com/palo-krnac/fiscus/backend/internal/registry"
+	"github.com/fiskus-online/fiskus/backend/internal/invoice"
+	"github.com/fiskus-online/fiskus/backend/internal/registry"
 )
 
 // lookupICO vráti údaje firmy z registra (RPO) podľa IČO.

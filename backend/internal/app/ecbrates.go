@@ -10,8 +10,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/palo-krnac/fiscus/backend/internal/audit"
-	"github.com/palo-krnac/fiscus/backend/internal/reminder"
+	"github.com/fiskus-online/fiskus/backend/internal/audit"
+	"github.com/fiskus-online/fiskus/backend/internal/reminder"
 )
 
 // ErrECBRatesOff — sťahovanie sadzieb ECB je vypnuté (program bez internetu).

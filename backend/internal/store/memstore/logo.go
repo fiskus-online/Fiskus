@@ -3,7 +3,7 @@ package memstore
 import (
 	"context"
 
-	"github.com/palo-krnac/fiscus/backend/internal/store"
+	"github.com/fiskus-online/fiskus/backend/internal/store"
 )
 
 func (s *Store) GetLogo(_ context.Context, companyID int64) (store.Logo, error) {

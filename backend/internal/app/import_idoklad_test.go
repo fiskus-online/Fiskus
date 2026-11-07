@@ -6,7 +6,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/palo-krnac/fiscus/backend/internal/edition"
+	"github.com/fiskus-online/fiskus/backend/internal/edition"
 )
 
 func TestImportIDoklad(t *testing.T) {

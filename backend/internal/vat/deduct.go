@@ -1,6 +1,6 @@
 package vat
 
-import "github.com/palo-krnac/fiscus/backend/internal/money"
+import "github.com/fiskus-online/fiskus/backend/internal/money"
 
 // DeductPart vráti odpočítateľnú časť dane pri čiastočnom odpočte
 // (percent 1–99, napr. 50 % pri osobnom vozidle podľa § 85n alebo

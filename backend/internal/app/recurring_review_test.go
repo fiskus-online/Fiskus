@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/palo-krnac/fiscus/backend/internal/invoice"
+	"github.com/fiskus-online/fiskus/backend/internal/invoice"
 )
 
 func TestRecurringDraftsAndNotice(t *testing.T) {

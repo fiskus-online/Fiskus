@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/palo-krnac/fiscus/backend/internal/invoice"
+	"github.com/fiskus-online/fiskus/backend/internal/invoice"
 )
 
 // Period je zdaňovacie obdobie: mesiac alebo štvrťrok.

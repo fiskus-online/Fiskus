@@ -4,7 +4,7 @@ import (
 	"context"
 	"sort"
 
-	"github.com/palo-krnac/fiscus/backend/internal/store"
+	"github.com/fiskus-online/fiskus/backend/internal/store"
 )
 
 func (s *Store) ListItemImages(_ context.Context, companyID, itemID int64) ([]store.ItemImage, error) {

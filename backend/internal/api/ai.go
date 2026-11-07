@@ -5,8 +5,8 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/palo-krnac/fiscus/backend/internal/app"
-	"github.com/palo-krnac/fiscus/backend/internal/extract"
+	"github.com/fiskus-online/fiskus/backend/internal/app"
+	"github.com/fiskus-online/fiskus/backend/internal/extract"
 )
 
 func (s *Server) getAISettings(w http.ResponseWriter, r *http.Request) {

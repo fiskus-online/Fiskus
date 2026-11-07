@@ -8,7 +8,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/palo-krnac/fiscus/backend/internal/store"
+	"github.com/fiskus-online/fiskus/backend/internal/store"
 )
 
 func (s *Store) GetLogo(ctx context.Context, companyID int64) (store.Logo, error) {

@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/palo-krnac/fiscus/backend/internal/edition"
+	"github.com/fiskus-online/fiskus/backend/internal/edition"
 )
 
 func TestBankAPI(t *testing.T) {

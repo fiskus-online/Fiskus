@@ -3,7 +3,7 @@ package household
 import (
 	"testing"
 
-	"github.com/palo-krnac/fiscus/backend/internal/invoice"
+	"github.com/fiskus-online/fiskus/backend/internal/invoice"
 )
 
 func TestObligationValidate(t *testing.T) {

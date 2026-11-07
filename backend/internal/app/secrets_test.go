@@ -3,9 +3,9 @@ package app
 import (
 	"testing"
 
-	"github.com/palo-krnac/fiscus/backend/internal/edition"
-	"github.com/palo-krnac/fiscus/backend/internal/eshop"
-	"github.com/palo-krnac/fiscus/backend/internal/postman"
+	"github.com/fiskus-online/fiskus/backend/internal/edition"
+	"github.com/fiskus-online/fiskus/backend/internal/eshop"
+	"github.com/fiskus-online/fiskus/backend/internal/postman"
 )
 
 // Uložené heslo, token či kľúč ide iba na adresu, pre ktorú bol zadaný. Kto

@@ -3,7 +3,7 @@ package dpfo
 import (
 	"fmt"
 
-	"github.com/palo-krnac/fiscus/backend/internal/money"
+	"github.com/fiskus-online/fiskus/backend/internal/money"
 )
 
 // Mesačné výpočty zamestnávateľa pri mzde (§ 35 zákona o dani z príjmov):
