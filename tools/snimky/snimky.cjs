@@ -93,6 +93,11 @@ async function main() {
       await p.locator('.gps .lead').click()
       await p.waitForTimeout(500)
     }],
+    // kalkulačky
+    ['kalkulacky', '/kalkulacky?k=loan', firm, null, { site: true }],
+    ['kalkulacky-mzda', '/kalkulacky?k=wage', firm, async (p) => {
+      await p.getByRole('button', { name: 'Dieťa', exact: true }).click()
+    }, { mobile: true, full: true }],
     // e-shopy, mobil, nastavenia
     ['e-shopy', '/nastavenia/e-shopy', firm],
     ['mobil-v-sieti', '/nastavenia/mobil', firm],

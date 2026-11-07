@@ -13,6 +13,8 @@ etapách je v [pláne vývoja](./ROADMAP.md).
 
 ## Pripravuje sa (0.5)
 
+- **Kalkulačky** aj bez založenej firmy: DPH, úrok z omeškania, úver
+  s RPMN a splátkovým kalendárom, sporenie, čistá mzda a kurzy ECB.
 - **Kniha jázd zo záznamu GPS**: trasa z mobilu alebo GPS jednotky (GPX,
   CSV) sa rozdelí na jazdy podľa zastávok, s pomenovanými miestami,
   nadväzujúcim tachometrom a kontrolou už zapísaných jázd.
