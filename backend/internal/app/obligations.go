@@ -93,7 +93,7 @@ func (a *App) obligation(ctx context.Context, companyID, id int64) (household.Ob
 // defaultObligationCategory: kategória splátky podľa druhu záväzku.
 func defaultObligationCategory(o household.Obligation, cats []household.Category) string {
 	want := map[household.ObligationKind]string{household.Loan: "Splátky a dlhy", household.Debt: "Splátky a dlhy",
-		household.Execution: "Splátky a dlhy", household.Regular: "Bývanie", household.Lent: "Iné príjmy"}[o.Kind]
+		household.Execution: "Splátky a dlhy", household.Regular: "Bývanie", household.Lent: "Iné príjmy", household.Fine: "Iné výdavky"}[o.Kind]
 	for _, c := range cats {
 		if c.Name == want && c.Income == o.Income() {
 			return want
@@ -235,6 +235,10 @@ type UpcomingDue struct {
 	Kind         household.ObligationKind `json:"kind"`
 	Creditor     string                   `json:"creditor"`
 	AccountID    int64                    `json:"accountId"`
+	IBAN         string                   `json:"iban,omitempty"`
+	VS           string                   `json:"vs,omitempty"`
+	Address      string                   `json:"address,omitempty"`
+	RemindDays   int                      `json:"remindDays,omitempty"`
 	household.Due
 	Rest money.Dec `json:"rest"` // zostáva zaplatiť z tejto splátky
 }
@@ -260,7 +264,8 @@ func (a *App) obligationDues(ctx context.Context, companyID int64, to invoice.Da
 			if d.Status == household.DuePaid || d.Date.After(to) {
 				continue
 			}
-			out = append(out, UpcomingDue{ObligationID: o.ID, Name: o.Name, Kind: o.Kind, Creditor: o.Creditor, AccountID: o.AccountID, Due: d, Rest: d.Amount.Sub(d.Paid)})
+			out = append(out, UpcomingDue{ObligationID: o.ID, Name: o.Name, Kind: o.Kind, Creditor: o.Creditor, AccountID: o.AccountID,
+				IBAN: o.IBAN, VS: o.VS, Address: o.Address, RemindDays: o.RemindDays, Due: d, Rest: d.Amount.Sub(d.Paid)})
 		}
 	}
 	sort.SliceStable(out, func(i, j int) bool { return out[i].Date.Before(out[j].Date) })
@@ -277,11 +282,15 @@ func (a *App) householdEvents(ctx context.Context, companyID int64, to invoice.D
 	for _, d := range dues {
 		amt := d.Rest
 		kind, title := calendar.KindPay, "Splátka: "+d.Name
-		if d.Kind == household.Lent {
+		switch d.Kind {
+		case household.Lent:
 			kind, title = calendar.KindReceive, "Má vrátiť: "+d.Name
+		case household.Regular, household.Fine:
+			title = "Platba: " + d.Name
 		}
 		out = append(out, calendar.Event{ID: fmt.Sprintf("obl-%d-%d", d.ObligationID, d.N), Date: d.Date, Kind: kind, Title: title,
-			Amount: &amt, Curr: "EUR", Link: fmt.Sprintf("/domacnost/zavazky/%d", d.ObligationID), Overdue: d.Status == household.DueOverdue})
+			Amount: &amt, Curr: "EUR", Link: fmt.Sprintf("/domacnost/zavazky/%d", d.ObligationID), Overdue: d.Status == household.DueOverdue,
+			Detail: d.Creditor, RemindDays: d.RemindDays})
 	}
 	return out, nil
 }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
-  budgetTone, budgetWidth, receiptFacts, receiptRows, listTotals, setAllCategory, splitByCategory, filterObligations, fromAmount, newObligation, obligationTone, paidPercent, toAmount, categoriesFor, categoryErrors, chartBars, entryCategory, entryType, filterEntries, fromForm, newEntry, toForm,
+  budgetTone, budgetWidth, receiptFacts, receiptRows, listTotals, setAllCategory, splitByCategory, filterObligations, fromAmount, newObligation, obligationTone, paidPercent, toAmount, categoriesFor, categoryErrors, chartBars, entryCategory, entryType, filterEntries, fromForm, newEntry, toForm, monthsLabel, planMonthLabel, filterPlan, ibanGroups,
 } from './household.js'
 
 const accounts = [
@@ -137,6 +137,47 @@ describe('domácnosť', () => {
     const back = fromForm({ ...toForm(e), source: 'ekasa:O-1' })
     expect(back.split).toHaveLength(3)
     expect(back).toMatchObject({ amount: '-6.29', source: 'ekasa:O-1' })
+  })
+})
+
+describe('plán platieb', () => {
+  it.each([
+    [[9, 10, 11, 12, 1, 2, 3, 4, 5, 6], 'september – jún'],
+    [[1, 2, 3], 'január – marec'],
+    [[7], 'júl'],
+    [[1, 3, 4], 'január, marec – apríl'],
+    [[], ''],
+    [[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], ''],
+  ])('mesiace %j → %s', (ms, want) => {
+    expect(monthsLabel(ms)).toBe(want)
+  })
+
+  it('IBAN po štvoriciach', () => {
+    expect(ibanGroups('SK3112000000198742637541')).toBe('SK31 1200 0000 1987 4263 7541')
+    expect(ibanGroups('')).toBe('')
+  })
+
+  it('názov mesiaca', () => {
+    expect(planMonthLabel('2026-11')).toBe('november 2026')
+  })
+
+  const plan = {
+    overdue: [{ name: 'Exekúcia', kind: 'execution', rest: '120.00', date: '2026-10-20' }],
+    months: [
+      { month: '2026-11', items: [{ name: 'Obedy – Janko', creditor: 'ZŠ Moyzesova', kind: 'regular', rest: '32.40' }, { name: 'Pokuta', kind: 'fine', rest: '50.00' }, { name: 'Mišo', kind: 'lent', rest: '100.00', income: true }] },
+      { month: '2026-12', items: [{ name: 'Obedy – Janko', creditor: 'ZŠ Moyzesova', kind: 'regular', rest: '32.40' }] },
+    ],
+  }
+  it('súčty mesiacov a hľadanie', () => {
+    const v = filterPlan(plan)
+    expect(v.months[0]).toMatchObject({ pay: '82.40', receive: '100.00' })
+    expect(v.total).toEqual({ pay: '114.80', receive: '100.00' })
+    expect(v.overdueSum.pay).toBe('120.00')
+    expect(v.rows.map((r) => r.month)).toEqual(['po splatnosti', 'november 2026', 'november 2026', 'november 2026', 'december 2026'])
+    const s = filterPlan(plan, 'zs moyzes')
+    expect(s.total.pay).toBe('64.80')
+    expect(s.overdue).toEqual([])
+    expect(s.months[1].items).toHaveLength(1)
   })
 })
 
