@@ -35,6 +35,32 @@ každej platbe odpíše z účtu 311 pomerná časť sumy faktúry v eurách
 ![Eurová platba k faktúre v CZK: koľko korún uhrádza](../obrazky/banka-cudzia-mena.webp)
 *Eurová platba k faktúre v CZK: koľko korún uhrádza*
 
+### Fio banka priamo, bez výpisu
+
+Fio banka dovolí čítať pohyby na účte cez svoje API. V Banke kliknite na
+**Napojiť Fio** a vložte token z internetbankingu Fio (**Nastavenia → API →
+Pridať nový token**, oprávnenie *iba sledovať účet*). Takýto token nedovolí
+zadať platbu. Potom stačí tlačidlo **Stiahnuť z Fio**: nové pohyby sa načítajú
+a spárujú s faktúrami rovnako ako z výpisu.
+
+- Pri prvom stiahnutí sa načítajú pohyby za posledných 90 dní, potom vždy od
+  posledného stiahnutého dňa. Už načítané pohyby sa nezdvoja.
+- Fio dovolí jedno stiahnutie za 30 sekúnd; Fiškus skoršie volanie ani
+  nepošle.
+- Token sa po uložení už nikde nezobrazí (ani v audite či chybových
+  hláseniach). Zmeniť ho môžete úpravou napojenia, zrušiť napojenie
+  tlačidlom koša; stiahnuté pohyby zostanú.
+- Viac účtov vo Fio (napr. eurový a dolárový) = viac tokenov, každý ako
+  samostatné napojenie.
+- Vo verzii v prehliadači napojenie nie je, banka nedovolí volanie
+  z webovej stránky. Použite výpis.
+
+![Napojenie na Fio banku tokenom](../obrazky/banka-fio.webp)
+*Napojenie na Fio banku tokenom*
+
+Ostatné slovenské banky sprístupňujú pohyby iba licencovaným
+poskytovateľom (PSD2), preto sa u nich načítava výpis.
+
 :::info[Prečo párovanie, a nie odškrtnutie „uhradené“]
 Úhrada je udalosť s dátumom a sumou. Z nej sa počíta peňažný denník,
 kurzový rozdiel aj stav pohľadávok k ľubovoľnému dňu. Faktúra s odškrtnutým

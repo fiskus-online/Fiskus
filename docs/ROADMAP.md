@@ -46,7 +46,8 @@ Referenčný prehľad funkcií pochádza z českých systémov MyInvoice (MIT) a
 - [x] Banka: import výpisov camt.053, automatické párovanie podľa VS a sumy, návrhy, ručné párovanie, nepárované pohyby
 - [x] Banka: výpisy GPC, CSV a Excel, čiastočné úhrady
 - [x] Banka: platobné príkazy SEPA (pain.001) z prijatých faktúr
-- [ ] Banka: napojenie na banku cez API
+- [x] Banka: napojenie na Fio banku cez API (token iba na čítanie, posledných 90 dní, potom od posledného dňa, limit 30 s, bez zdvojenia)
+- [ ] Banka: napojenie na ďalšie banky (PSD2 vyžaduje licenciu NBS — podľa možností agregátora)
 - [x] Pokladňa: príjmové a výdavkové doklady (PPD/VPD), kontrola záporného zostatku, úhrada faktúr v hotovosti, storno, tlač so sumou slovom
 - [x] Pokladňa: DPH na pokladničných dokladoch — blok ako zjednodušená faktúra (odpočet, KV B.3.1/B.3.2 podľa limitu 3 000 €), tržba z e-kasy (daň na výstupe, KV D.1), rozpis v peňažnom denníku
 - [x] Viac pokladní (vlastný zostatok a rad dokladov s predponou, archivácia) a pokladňa v cudzej mene (kurz ECB ku dňu dokladu, v peňažnom denníku v eurách, úhrada faktúr v tej istej mene)

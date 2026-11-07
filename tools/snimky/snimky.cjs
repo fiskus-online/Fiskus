@@ -109,6 +109,11 @@ async function main() {
       await p.getByPlaceholder('0').fill('612,40')
       await p.waitForTimeout(800)
     }],
+    ['banka-fio', '/banka', firm, async (p) => {
+      await p.locator('header .p-button:has(.pi-link)').click()
+      await p.locator('#fio-token').fill('x'.repeat(64))
+      await p.waitForTimeout(500)
+    }, { mobile: true }],
     ['kurzove-rozdiely', '/hlavna-kniha', firm, async (p) => {
       await p.getByText('Súvaha', { exact: true }).first().click()
       await p.waitForTimeout(500)
