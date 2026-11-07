@@ -923,7 +923,7 @@ func (ret *Return) addCash(in Input, add func(string, money.Dec), warn func(stri
 	var order []string
 	var total KVB3
 	for _, d := range in.CashDocs {
-		if d.Cancelled || d.Tax == nil || d.LinkKind != "" || !in.Period.Contains(d.Date) {
+		if d.Cancelled || d.Tax == nil || (d.LinkKind != "" && d.LinkKind != cash.LinkClosing) || !in.Period.Contains(d.Date) {
 			continue
 		}
 		if d.Kind == cash.In {

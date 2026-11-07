@@ -264,10 +264,16 @@ var DefaultTemplates = []Template{
 		{Debit, "221", PartTotal}, {Credit, "662", PartTotal}}},
 	{Code: "B-DPH", Name: "Úhrada DPH daňovému úradu", Doc: DocBank, Lines: []TemplateLine{
 		{Debit, "343", PartTotal}, {Credit, "221", PartTotal}}},
+	{Code: "B-KARTA", Name: "Pripísané platby kartou z terminálu", Doc: DocBank, Lines: []TemplateLine{
+		{Debit, "221", PartTotal}, {Credit, "261", PartTotal}}},
 	{Code: "B-VKLAD", Name: "Výber z banky do pokladne", Doc: DocBank, Lines: []TemplateLine{
 		{Debit, "261", PartTotal}, {Credit, "221", PartTotal}}},
 	{Code: "P-TRZBA", Name: "Pokladňa – tržba (e-kasa)", Doc: DocCash, Lines: []TemplateLine{
 		{Debit, "211", PartTotal}, {Credit, "602", PartBase}, {Credit, "343", PartVAT}}},
+	{Code: "P-TRZBA-TOVAR", Name: "Pokladňa – tržba za tovar (e-kasa)", Doc: DocCash, Lines: []TemplateLine{
+		{Debit, "211", PartTotal}, {Credit, "604", PartBase}, {Credit, "343", PartVAT}}},
+	{Code: "P-KARTA", Name: "Pokladňa – platby kartou z e-kasy na ceste na účet", Doc: DocCash, Lines: []TemplateLine{
+		{Debit, "261", PartTotal}, {Credit, "211", PartTotal}}},
 	{Code: "P-NAKUP", Name: "Pokladňa – nákup (blok)", Doc: DocCash, Lines: []TemplateLine{
 		{Debit, "501", PartBase}, {Debit, "501", PartVATNon}, {Debit, "343", PartVAT}, {Credit, "211", PartTotal}}},
 	{Code: "P-PHM", Name: "Pokladňa – pohonné hmoty", Doc: DocCash, Lines: []TemplateLine{

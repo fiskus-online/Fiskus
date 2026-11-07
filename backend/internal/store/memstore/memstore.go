@@ -53,6 +53,7 @@ type Store struct {
 	hhEntries     map[int64]household.Entry
 	hhObligations map[int64]household.Obligation
 	formDocs      map[int64]forms.Doc
+	cashClosings  map[int64]cash.Closing
 	hhPhotos      map[int64]store.HHPhoto
 	recurring     map[int64]recurring.Template
 	reminders     map[int64]reminder.Reminder

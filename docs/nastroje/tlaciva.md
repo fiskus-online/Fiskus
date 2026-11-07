@@ -11,7 +11,7 @@ Tlačivá sú v menu **Ostatné → Tlačivá**. Vyberiete tlačivo, vyplníte h
 vpravo hneď vidíte, ako bude vyzerať na papieri. **Tlačiť** otvorí dialóg
 tlače, kde ho môžete vytlačiť alebo uložiť ako PDF. Vytlačí sa iba hárok
 tlačiva v skutočnej veľkosti (pokladničný doklad na A5 na šírku, ostatné
-na A4 alebo A5).
+na A4 alebo A5). Dole v strede každého tlačiva je logo Fiškus.
 
 ![Tlačivá — vstavané a vlastné tlačivá](../obrazky/tlaciva.webp)
 *Výber tlačiva*

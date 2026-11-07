@@ -13,6 +13,9 @@ etapách je v [pláne vývoja](./ROADMAP.md).
 
 ## Pripravuje sa (0.5)
 
+- **Uzávierky e-kasy** v Pokladni: obrat podľa sadzieb a platby kartou sa
+  zapíšu ako PPD na tržbu (DPH, KV D.1) a VPD na peniaze na ceste; pripísanie
+  platieb z terminálu v banke sa zaúčtuje 221 / 261.
 - **Tlačivá**: pokladničné doklady, dodací list, objednávka, potvrdenie
   o prevzatí, splnomocnenie a vlastné tlačivá. Bez firmy sa vyplnia a
   vytlačia, vo firme sa ukladajú, robia sa z nich vzory a pokladničný doklad

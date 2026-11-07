@@ -124,7 +124,7 @@ func (d *Document) ValidateTax(date string) []invoice.FieldError {
 	}
 	var fe []invoice.FieldError
 	add := func(f, m string) { fe = append(fe, invoice.FieldError{Field: f, Message: m}) }
-	if d.LinkKind != "" {
+	if d.LinkKind != "" && d.LinkKind != LinkClosing {
 		add("tax", "DPH sa uvádza na faktúre — doklad, ktorý uhrádza faktúru, ju nemá")
 		return fe
 	}

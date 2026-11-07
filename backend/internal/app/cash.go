@@ -176,6 +176,16 @@ func (a *App) checkLink(ctx context.Context, companyID int64, d *cash.Document) 
 			return bad(fmt.Sprintf("Suma sa musí rovnať sume dokladu %s (%s €)", p.Number, p.Summary.Total.Display()))
 		}
 		d.LinkNumber = p.Number
+	case cash.LinkClosing:
+		c, err := a.Store.GetCashClosing(ctx, companyID, d.LinkID)
+		if err != nil {
+			return err
+		}
+		// doklady uzávierky vytvára iba CreateCashClosing (PPD, potom VPD)
+		if c.Cancelled || c.InID != 0 && (d.Kind == cash.In || c.OutID != 0) {
+			return bad("Uzávierka e-kasy už má pokladničné doklady")
+		}
+		d.LinkNumber = c.Label()
 	default:
 		return bad("Neznámy druh dokladu")
 	}
@@ -356,12 +366,20 @@ func (a *App) UpdateCash(ctx context.Context, companyID, id int64, partner, purp
 
 // CancelCash stornuje doklad; uhradená faktúra sa vráti medzi neuhradené.
 func (a *App) CancelCash(ctx context.Context, companyID, id int64) (cash.Document, error) {
+	return a.cancelCash(ctx, companyID, id, false)
+}
+
+// cancelCash stornuje doklad; doklad uzávierky e-kasy iba spolu s uzávierkou.
+func (a *App) cancelCash(ctx context.Context, companyID, id int64, fromClosing bool) (cash.Document, error) {
 	if err := a.Require(ctx, companyID, auth.PermCashWrite); err != nil {
 		return cash.Document{}, err
 	}
 	d, err := a.Store.GetCashDocument(ctx, companyID, id)
 	if err != nil {
 		return d, err
+	}
+	if d.LinkKind == cash.LinkClosing && !fromClosing {
+		return d, vErr("linkId", "Doklad patrí k uzávierke e-kasy — stornujte celú uzávierku v Pokladni → Uzávierky e-kasy")
 	}
 	if err := a.checkOpen(ctx, companyID, d.Date); err != nil {
 		return d, err

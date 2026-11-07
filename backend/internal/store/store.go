@@ -408,6 +408,12 @@ type Store interface {
 	SaveHHObligation(ctx context.Context, companyID int64, o *household.Obligation) error
 	DeleteHHObligation(ctx context.Context, companyID, id int64) error
 
+	// Uzávierky e-kasy (rok 0 = všetky).
+	ListCashClosings(ctx context.Context, companyID int64, year int) ([]cash.Closing, error)
+	GetCashClosing(ctx context.Context, companyID, id int64) (cash.Closing, error)
+	SaveCashClosing(ctx context.Context, companyID int64, c *cash.Closing) error
+	DeleteCashClosing(ctx context.Context, companyID, id int64) error
+
 	// Tlačivá: vyplnené tlačivá a vzory firmy (definície vlastných tlačív
 	// sú v nastaveniach).
 	ListFormDocs(ctx context.Context, companyID int64) ([]forms.Doc, error)
