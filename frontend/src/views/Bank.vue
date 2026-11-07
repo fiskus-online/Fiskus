@@ -18,6 +18,8 @@ import { fiskusGridTheme, skGridLocale, gridRows } from '../lib/grid.js'
 import { matches, searchTerms } from '../lib/search.js'
 import { bankColumns } from '../lib/columns.js'
 import ExportButton from '../components/ExportButton.vue'
+import FioPanel from '../components/FioPanel.vue'
+import { importSummary } from '../lib/fio.js'
 
 const router = useRouter()
 const toast = useToast()
@@ -53,6 +55,40 @@ async function load() {
 }
 watch(year, load)
 onMounted(load)
+
+// ---- Fio API (nie v prehliadači: banka nedovolí volanie z webovej stránky) ----
+const fioOn = computed(() => canWrite.value && !session.caps?.browser)
+const fioAccounts = ref([])
+const fioOpen = ref(false)
+const fioBusy = ref(false)
+async function loadFio() {
+  if (!fioOn.value) return
+  try {
+    fioAccounts.value = await api.fioAccounts(session.companyId)
+  } catch {
+    fioAccounts.value = []
+  }
+}
+onMounted(loadFio)
+async function syncAllFio() {
+  fioBusy.value = true
+  try {
+    for (const a of fioAccounts.value) {
+      try {
+        const r = await api.syncFio(session.companyId, a.id)
+        toast.add({ severity: 'success', summary: `Stiahnuté z Fio (${a.label})`, detail: importSummary(r), life: 6000 })
+        for (const w of r.warnings || []) toast.add({ severity: 'warn', summary: 'Upozornenie', detail: w, life: 8000 })
+        if (r.open) view.value = 'open'
+      } catch (e) {
+        const f = e.fields?.find((x) => x.field === 'fio')
+        toast.add({ severity: 'error', summary: `Sťahovanie z Fio zlyhalo (${a.label})`, detail: f?.message || e.message, life: 8000 })
+      }
+    }
+    await Promise.all([load(), loadFio()])
+  } finally {
+    fioBusy.value = false
+  }
+}
 
 const visibleRows = computed(() => {
   const terms = searchTerms(search.value)
@@ -124,11 +160,7 @@ async function onFile(e) {
   importing.value = true
   try {
     const r = await api.importBank(session.companyId, file)
-    const parts = [`${r.imported} nových pohybov`]
-    if (r.autoMatched) parts.push(`${r.autoMatched} automaticky spárovaných`)
-    if (r.open) parts.push(`${r.open} na spárovanie`)
-    if (r.duplicates) parts.push(`${r.duplicates} už importovaných`)
-    toast.add({ severity: 'success', summary: `Výpis ${file.name} načítaný${r.format ? ` (${r.format})` : ""}`, detail: parts.join(', '), life: 6000 })
+    toast.add({ severity: 'success', summary: `Výpis ${file.name} načítaný${r.format ? ` (${r.format})` : ""}`, detail: importSummary(r), life: 6000 })
     for (const w of r.warnings) toast.add({ severity: 'warn', summary: 'Upozornenie', detail: w, life: 8000 })
     if (r.open) view.value = 'open'
     await load()
@@ -220,8 +252,13 @@ const kindLabel = (k) => (k === 'purchase' ? 'prijatá' : 'vydaná')
       <template v-if="canWrite">
         <input ref="fileEl" type="file" accept=".xml,.gpc,.abo,.txt,.csv,.xlsx,application/xml,text/xml,text/csv,text/plain,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden @change="onFile" />
         <Button size="small" icon="pi pi-upload" label="Načítať výpis" :loading="importing" v-tooltip.bottom="'Výpis z internetbankingu: XML camt.053, GPC (ABO), CSV alebo Excel'" @click="fileEl.click()" />
+        <template v-if="fioOn">
+          <Button v-if="fioAccounts.length" size="small" icon="pi pi-download" label="Stiahnuť z Fio" :loading="fioBusy" v-tooltip.bottom="'Nové pohyby priamo z Fio banky'" @click="syncAllFio" />
+          <Button size="small" :text="fioAccounts.length > 0" :outlined="!fioAccounts.length" :icon="fioAccounts.length ? 'pi pi-cog' : 'pi pi-link'" :label="fioAccounts.length ? undefined : 'Napojiť Fio'" :aria-label="fioAccounts.length ? 'Fio banka – napojenie' : undefined" v-tooltip.bottom="'Fio banka – napojenie cez API'" @click="fioOpen = true" />
+        </template>
       </template>
     </header>
+    <FioPanel v-if="fioOn" v-model:visible="fioOpen" :cid="session.companyId" :can-write="canWrite" :accounts="fioAccounts" @changed="(l) => (fioAccounts = l)" @synced="() => Promise.all([load(), loadFio()])" />
 
     <section class="ledger" aria-label="Súhrn">
       <div class="figure">

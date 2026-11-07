@@ -1,0 +1,1913 @@
+<!DOCTYPE html><html lang="sk" class="no-js"><head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Slovenský účtovný program na štúdium a výučbu účtovníctva.">
+      
+      
+      
+        <link rel="canonical" href="https://docs.fiskus.online/ROADMAP/">
+      
+      
+        <link rel="prev" href="../nastavenia/">
+      
+      
+        <link rel="next" href="../changelog/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/favicon.svg">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Plán vývoja - Fiškus</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  <link rel="stylesheet" href="../assets/fiskus.css">
+
+  <link href="../assets/stylesheets/glightbox.min.css" rel="stylesheet"><script src="../assets/javascripts/glightbox.min.js"></script><style id="glightbox-style">
+            html.glightbox-open { overflow: initial; height: 100%; }
+            .gslide-title { margin-top: 0px; user-select: text; }
+            .gslide-desc { color: #666; user-select: text; }
+            .gslide-image img { background: white; }
+            .gscrollbar-fixer { padding-right: 15px; }
+            .gdesc-inner { font-size: 0.75rem; }
+            body[data-md-color-scheme="slate"] .gdesc-inner { background: var(--md-default-bg-color); }
+            body[data-md-color-scheme="slate"] .gslide-title { color: var(--md-default-fg-color); }
+            body[data-md-color-scheme="slate"] .gslide-desc { color: var(--md-default-fg-color); }
+        </style></head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#plan-vyvoja" class="md-skip">
+          Preskočiť na obsah
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Hlavička">
+    <a href=".." title="Fiškus" class="md-header__button md-logo" aria-label="Fiškus" data-md-component="logo">
+      
+  <img src="../assets/favicon.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"></path></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Fiškus
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Plán vývoja
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"></path></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Hľadať" placeholder="Hľadať" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required="">
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"></path></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"></path></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Vyhľadávanie">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Vyčistiť" aria-label="Vyčistiť" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"></path></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix="">
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Spúšťam hľadanie
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigácia" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Fiškus" class="md-nav__button md-logo" aria-label="Fiškus" data-md-component="logo">
+      
+  <img src="../assets/favicon.svg" alt="logo">
+
+    </a>
+    Fiškus
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix="">
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Prehľad
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2">
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Začíname
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Začíname
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../zaciname/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Začíname
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../zaciname/instalacia/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Inštalácia
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../zaciname/uvodne-nastavenie/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Úvodné nastavenie
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../zaciname/prenos-dat/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Prenos dát z iného programu
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../vyucba/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Výučba
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4">
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Predaj
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Predaj
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../predaj/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Predaj
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../predaj/faktury/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Faktúry a dobropisy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../predaj/zalohy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Zálohy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../predaj/ponuky/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cenové ponuky a pravidelná fakturácia
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../predaj/upomienky/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Upomienky
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../predaj/cennik/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Cenník
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nakup/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Nákup
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6">
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sklad
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Sklad
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sklad/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sklad
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sklad/karta-produktu/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Karta produktu
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sklad/doklady/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Skladové doklady
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sklad/ocenenie/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Ocenenie a účtovanie zásob
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../peniaze/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Peniaze
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../dane/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Dane
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9">
+        
+          
+          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Účtovníctvo
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Účtovníctvo
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../uctovnictvo/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Účtovníctvo
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../uctovnictvo/jednoduche/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Jednoduché účtovníctvo
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../uctovnictvo/podvojne/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Podvojné účtovníctvo
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../uctovnictvo/majetok/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Majetok a kniha jázd
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../eshopy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    E-shopy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mzdy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Mzdy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../domacnost/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Domácnosť
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mobil/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Mobil
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_14">
+        
+          
+          <label class="md-nav__link" for="__nav_14" id="__nav_14_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Nástroje
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_14_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_14">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Nástroje
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix="">
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nastroje/kalkulacky/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Kalkulačky
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nastroje/tlaciva/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Tlačivá
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../nastavenia/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Nastavenia a bezpečnosť
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Plán vývoja
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Plán vývoja
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Obsah">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Obsah
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
+      
+        <li class="md-nav__item">
+  <a href="#etapa-0-kostra" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Etapa 0 — kostra ✅
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#etapa-1-fakturacia-a-dph-pre-zivnostnika" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Etapa 1 — fakturácia a DPH pre živnostníka
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pouzivatelia-prava-a-audit-pre-uctovne-kancelarie-a-poskytovatelov-sluzieb" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Používatelia, práva a audit (pre účtovné kancelárie a poskytovateľov služieb)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#etapa-2-uctovnictvo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Etapa 2 — účtovníctvo
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#etapa-3-sklad-a-majetok" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Etapa 3 — sklad a majetok
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#prenos-dat-z-inych-programov" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Prenos dát z iných programov
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#etapa-4-mzdy-samostatny-navrh" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Etapa 4 — mzdy (samostatný návrh)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#odlisenie-od-konkurencie" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Odlíšenie od konkurencie
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kalendar-terminov" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Kalendár termínov
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Prehľad zmien
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Obsah">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Obsah
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
+      
+        <li class="md-nav__item">
+  <a href="#etapa-0-kostra" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Etapa 0 — kostra ✅
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#etapa-1-fakturacia-a-dph-pre-zivnostnika" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Etapa 1 — fakturácia a DPH pre živnostníka
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pouzivatelia-prava-a-audit-pre-uctovne-kancelarie-a-poskytovatelov-sluzieb" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Používatelia, práva a audit (pre účtovné kancelárie a poskytovateľov služieb)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#etapa-2-uctovnictvo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Etapa 2 — účtovníctvo
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#etapa-3-sklad-a-majetok" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Etapa 3 — sklad a majetok
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#prenos-dat-z-inych-programov" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Prenos dát z iných programov
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#etapa-4-mzdy-samostatny-navrh" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Etapa 4 — mzdy (samostatný návrh)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#odlisenie-od-konkurencie" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Odlíšenie od konkurencie
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kalendar-terminov" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Kalendár termínov
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="plan-vyvoja">Plán vývoja<a class="headerlink" href="#plan-vyvoja" title="Permanent link">¶</a></h1>
+<p>Referenčný prehľad funkcií pochádza z českých systémov MyInvoice (MIT) a MyÚčto (<a href="https://github.com/fiskus-online/fiskus/tree/main/docs/reference">docs/reference/</a>). Kód z nich nepreberáme, slúžia iba ako zoznam funkcií. Proprietárne časti MyÚčto (podvojné účtovníctvo, sklad, majetok, EPO, mzdy) píšeme od nuly podľa slovenskej legislatívy.</p>
+<h2 id="etapa-0-kostra">Etapa 0 — kostra ✅<a class="headerlink" href="#etapa-0-kostra" title="Permanent link">¶</a></h2>
+<ul>
+<li>[x] Presný typ na peniaze, výpočet DPH (23/19/5/0 %, ceny s DPH aj bez DPH, prenesenie daňovej povinnosti)</li>
+<li>[x] Overenie IČO a IČ DPH</li>
+<li>[x] Faktúra: koncept → vystavená → uhradená / stornovaná, číselné rady bez dier</li>
+<li>[x] Edície: desktop (1 firma) a server (viac firiem)</li>
+<li>[x] Úložisko SQLite + spoločná sada testov, šifrované zálohy s rotáciou</li>
+<li>[x] API a rozhranie: zoznam faktúr, editor so živým prepočtom DPH</li>
+<li>[x] CI (testy) a release (binárky pre Win/macOS/Linux)</li>
+</ul>
+<h2 id="etapa-1-fakturacia-a-dph-pre-zivnostnika">Etapa 1 — fakturácia a DPH pre živnostníka<a class="headerlink" href="#etapa-1-fakturacia-a-dph-pre-zivnostnika" title="Permanent link">¶</a></h2>
+<ul>
+<li>[x] Nastavenia firmy (údaje, IBAN, platiteľ DPH áno/nie, predvolená splatnosť)</li>
+<li>[x] Úvodné nastavenie novej firmy (údaje z IČO, DPH, jednoduché/podvojné účtovníctvo — menu podľa neho, nová firma alebo prechod z iného programu); prenos dokladov z iného programu iba raz</li>
+<li>[x] Bločky z mobilu: odfotenie QR kódu bločku eKasa (čítanie v telefóne), doklad z Finančnej správy → uhradený prijatý doklad s fotkou; stránka /m na plochu telefónu (manifest)</li>
+<li>[x] Mobil v sieti k desktopu: spárovanie QR kódom (jednorazový kód 5 min), trvalý prístup iba pre spárované telefóny, správa programu z telefónu zakázaná</li>
+<li>[x] Nastavenia po sekciách (firma, DPH, doklady a platby, e-faktúry, e-mail, kalendár, bezpečnosť, používatelia, AI, prenos dát, zálohy, kurzy, legislatíva): menu vľavo, na mobile rozbaľovacie, podľa práv</li>
+<li>[x] Číselníky: sadzby DPH s obdobím platnosti (kontrola podľa dátumu dodania), číselné rady s vlastným formátom, merné jednotky, spôsoby úhrady, krajiny</li>
+<li>[x] Logo firmy na faktúre, cenovej ponuke, upomienke a pokladničnom doklade (PNG, JPEG, WebP do 512 kB; SVG nie kvôli bezpečnosti)</li>
+<li>[x] Cenník: položky s kódom, MJ, cenou bez DPH alebo s DPH a sadzbou; výber z cenníka vo faktúre, ponuke aj pravidelnej faktúre; archivácia; MCP <code>list_catalog_items</code></li>
+<li>[x] Cenník: import z Excelu/CSV s náhľadom, uloženie riadku faktúry do cenníka (skladové položky v etape 3)</li>
+<li>[x] Meny a kurzy ECB (faktúra a prijatá faktúra v cudzej mene, DPH v EUR)</li>
+<li>[x] Adresár odberateľov a dodávateľov, výber odberateľa vo faktúre, vlastná splatnosť</li>
+<li>[x] Vyhľadanie firmy v registri (RPO) podľa IČO: názov a adresa</li>
+<li>[ ] DIČ a IČ DPH z registrov finančnej správy (vyžaduje API kľúč)</li>
+<li>[x] Tlač a PDF faktúry (A4) s QR kódom <strong>PAY by square</strong></li>
+<li>[x] Odoslanie faktúry, ponuky a upomienky e-mailom (PDF zo servera, SMTP), história e-mailov</li>
+<li>[x] Dobropis (opravná faktúra) k vystavenej faktúre: celý aj čiastočný, kontrola limitu, sadzby k pôvodnému dodaniu; zápočet s neuhradenou časťou faktúry (vyrovnaná dobropisom)</li>
+<li>[x] Cenová ponuka: vlastný číselný rad (CP), platnosť, stavy odoslaná / prijatá / odmietnutá / po platnosti, kópia ako nová verzia, tlač, jedným klikom koncept faktúry; nezapočíta sa do DPH</li>
+<li>[x] Pravidelná fakturácia: šablóna faktúry s intervalom (mesačne, štvrťročne, polročne, ročne), koncom, splatnosťou a texty <code>{obdobie}</code> / <code>{mesiac}</code> / <code>{rok}</code> / <code>{minule_obdobie}</code>; Fiškus faktúru vytvorí a vystaví sám (pri štarte a každú hodinu), dobehnuté staršie obdobia ostanú ako koncepty; pozastavenie, faktúra hneď, história</li>
+<li>[x] Pravidelná fakturácia: automatické odoslanie vystavenej faktúry e-mailom</li>
+<li>[x] Pravidelná fakturácia: upozornenie na koncepty na kontrolu (zoznam s dôvodom, odznak v menu, súhrnný e-mail)</li>
+<li>[x] Zálohová faktúra (nie je daňový doklad), po úhrade automaticky daňový doklad k prijatej platbe (dátum dodania = deň prijatia platby, § 19 ods. 4), vyúčtovacia faktúra s presným odpočtom zálohy po sadzbách; do DPH a KV iba zostatok, pri 100 % zálohe sa vyúčtovanie do KV neuvádza</li>
+<li>[x] Zálohy: čiastočná úhrada zálohy (daňový doklad ku každej platbe, sadzby v pomere zálohy), vyúčtovanie s odpočtom všetkých dokladov k platbám aj po čiastočnej úhrade; vyúčtovaná záloha sa nevymáha</li>
+<li>[x] Zálohy: viac zálohových faktúr toho istého odberateľa na jedno vyúčtovanie (pridanie a odobratie v koncepte)</li>
+<li>[x] Zálohy do zahraničia: tovar do EÚ, vývoz a služba mimo EÚ bez dokladu k platbe (záloha znižuje iba úhradu, DPH a súhrnný výkaz z vyúčtovania); služba do EÚ s dokladom k platbe s prenesením (súhrnný výkaz v období platby)</li>
+<li>[x] Zálohy s tuzemským prenesením pri službách (stavebné práce): doklad k platbe bez DPH v KV A.2, vyúčtovanie iba so zostatkom</li>
+<li>[x] Zálohy: dodanie do 15 dní od platby bez dokladu k platbe — kontrola lehoty a obdobia DPH pri vyúčtovaní, dodatočný doklad k platbe jedným klikom</li>
+<li>[x] Zálohy v cudzej mene: doklad k platbe v mene zálohy kurzom ECB ku dňu prijatia platby, vyúčtovanie v eurách = celá dodávka kurzom vyúčtovania mínus zálohy v eurách presne podľa dokladov k platbám</li>
+<li>[x] Zálohy s tuzemským prenesením pri tovare (telefóny, obvody, plodiny, kovy): doklad k prvej platbe uvedie v A.2 celé množstvo dodávky, ďalšie doklady a vyúčtovanie iba základ; viac druhov prenesenia na jednej zálohe</li>
+<li>[x] Cenová ponuka: prijatie alebo odmietnutie zákazníkom cez tajný odkaz (server s verejnou adresou), číslo objednávky zákazníka do faktúry, upozornenie e-mailom</li>
+<li>[x] Prijaté faktúry: evidencia z rekapitulácie DPH dodávateľa, odpočet / bez odpočtu, prenesenie, kontrola duplicít, úhrady</li>
+<li>[x] AI vyťaženie prijatých faktúr z PDF a fotky (Claude API; AI iba navrhuje, používateľ skontroluje)</li>
+<li>[x] Banka: import výpisov camt.053, automatické párovanie podľa VS a sumy, návrhy, ručné párovanie, nepárované pohyby</li>
+<li>[x] Banka: výpisy GPC, CSV a Excel, čiastočné úhrady</li>
+<li>[x] Banka: platobné príkazy SEPA (pain.001) z prijatých faktúr</li>
+<li>[x] Banka: napojenie na Fio banku cez API (token iba na čítanie, posledných 90 dní, potom od posledného dňa, limit 30 s, bez zdvojenia)</li>
+<li>[ ] Banka: napojenie na ďalšie banky (PSD2 vyžaduje licenciu NBS — podľa možností agregátora)</li>
+<li>[x] Pokladňa: príjmové a výdavkové doklady (PPD/VPD), kontrola záporného zostatku, úhrada faktúr v hotovosti, storno, tlač so sumou slovom</li>
+<li>[x] Pokladňa: DPH na pokladničných dokladoch — blok ako zjednodušená faktúra (odpočet, KV B.3.1/B.3.2 podľa limitu 3 000 €), tržba z e-kasy (daň na výstupe, KV D.1), rozpis v peňažnom denníku</li>
+<li>[x] Viac pokladní (vlastný zostatok a rad dokladov s predponou, archivácia) a pokladňa v cudzej mene (kurz ECB ku dňu dokladu, v peňažnom denníku v eurách, úhrada faktúr v tej istej mene)</li>
+<li>[ ] Pokladňa: časť B.3 v XML kontrolného výkazu (overiť voči XSD KVDPHv25)</li>
+<li>[x] Pokladňa: uzávierky e-kasy (PPD na tržbu, VPD na platby kartou na ceste, pripísanie z terminálu 221 / 261)</li>
+<li>[ ] Uzávierky e-kasy: načítanie zo súboru (podľa vzorky z pokladnice alebo e-kasa zóny)</li>
+<li>[x] <strong>Priznanie k DPH (DPHv25) a kontrolný výkaz (KVDPHv25)</strong>: výpočet z dokladov, XML pre eDane, mesačne aj štvrťročne</li>
+<li>[x] Súhrnný výkaz (SVDPHv20): tovar do EÚ (kód 0), služby do EÚ (kód 2); r. 13–15 pre dodanie do EÚ a vývoz; nadobudnutie tovaru z EÚ (r. 05–08) a služby zo zahraničia (r. 09–10)</li>
+<li>[x] A.2 a tuzemské prenesenie pri dodaní (§ 69 ods. 12) pri položkách: druhy a) až j), kód colného sadzobníka, hranica 5 000 €, XML</li>
+<li>[x] Dobropis k A.2: C.1 bez dane a sadzby, pri tovare kód SCS / druh a rozdiel množstva so znamienkom mínus</li>
+<li>[x] Trojstranný obchod (§ 45): prvý odberateľ — faktúra s textom, SV kód 1, mimo priznania; druhý odberateľ — r. 11–12, odpočet, KV B.1</li>
+<li>[x] Dovoz tovaru z tretej krajiny s DPH zaplatenou colnému úradu: odpočet r. 18–19, z toho r. 22–23, bez KV</li>
+<li>[ ] Call-off stock, dovoz s uplatnením dane v priznaní (§ 84a ods. 3, r. 11c–12e)</li>
+<li>[x] Dobropisy od tuzemských dodávateľov: oprava odpočítanej dane v r. 28 a riadky C.2 (číslo pôvodnej faktúry)</li>
+<li>[x] Pomerné odpočítanie DPH (§ 50): spoločné nákupy (prijaté faktúry, bloky) s predbežným koeficientom roka, ročný koeficient z plnení vo Fiškuse (alebo ručne), vysporiadanie v poslednom období roka v r. 18–19, prepočet pri zmene koeficientu v nepodaných obdobiach</li>
+<li>[x] Dobropisy pri prenesení daňovej povinnosti (služby zo zahraničia, tuzemské § 69 ods. 12): zníženie samozdanenia v r. 09–10 a odpočtu v r. 18–19, C.2 v období prijatia</li>
+<li>[x] Dobropis k nadobudnutiu tovaru z EÚ: oprava r. 05–08 (trojstranný r. 11–12) a odpočtu v období pôvodného nadobudnutia (podľa čísla pôvodnej faktúry), C.2 v období prijatia, upozornenie na dodatočné priznanie</li>
+<li>[x] Opravné a dodatočné priznanie k DPH (dátum zistenia, r. 36 rozdiel oproti poslednej známej povinnosti, r. 37), opravný KV, záznam o podaní (posledná známa povinnosť, návrh druhu podľa lehoty)</li>
+<li>[ ] Dodatočný kontrolný výkaz (iba opravované záznamy)</li>
+<li>[ ] Podanie priamo na portál finančnej správy (vyžaduje autentifikáciu)</li>
+<li>[x] Upomienky: faktúry po splatnosti podľa odberateľov, 1., 2. a posledná upomienka, zákonný úrok z omeškania (ECB + 9 p. b. podnikateľ, + 5 p. b. spotrebiteľ, k prvému dňu omeškania), dohodnutá sadzba, paušálna náhrada 40 € (§ 369c ObZ), tlač listu, číselný rad UP</li>
+<li>[x] Legislatíva v nastaveniach (spoločná pre všetky firmy): obdobia sadzieb DPH, sadzby ECB, prirážky úroku z omeškania, paušálna náhrada; nová inštalácia sa predvyplní, nová verzia programu doplní nové riadky a úpravy používateľa nechá</li>
+<li>[x] Upomienky: základná úroková sadzba ECB pre úrok z omeškania sa dopĺňa automaticky zo servera ECB (ECB Data Portal), aj tlačidlom v Legislatíve</li>
+<li>[ ] Ďalšie zákonné hodnoty do Legislatívy podľa potreby (limity, sadzby pre mzdy a odvody v etape 4)</li>
+<li>[x] Obrazovka Zálohy: stav, ručná záloha, stiahnutie, obnova naplánovaná na ďalšie spustenie, <code>-restore</code> zo súboru</li>
+<li>[x] Nastavenie priečinka a hesla záloh priamo v rozhraní, návrh priečinka synchronizovaného do cloudu (OneDrive, Dropbox, Google Disk, iCloud)</li>
+<li>[x] Záloha priamo do cloudového úložiska (S3, WebDAV) — kópia po každej zálohe s rovnakou rotáciou, overenie spojenia skúšobným súborom, stav poslednej kópie, stiahnutie zálohy z cloudu na novom počítači</li>
+<li>[x] Inštalačky: Inno Setup (Windows), DMG s Fiškus.app (macOS), .deb a .rpm (Linux); aplikácia s dátami v priečinku používateľa, otvorí prehliadač, skončí po zatvorení okna</li>
+<li>[x] Fiškus v prehliadači bez inštalácie: program v Go ako WebAssembly, SQLite v úložisku prehliadača (OPFS), funkcie nainštalovaného programu s výzvou na inštaláciu, šifrovaná záloha a obnova <code>.fbk</code> kompatibilná s nainštalovaným Fiškusom</li>
+<li>[ ] Fiškus v prehliadači: nasadenie na <code>app.fiskus.online</code>, odkaz „Otvoriť v prehliadači“ na fiskus.online</li>
+<li>[ ] Podpísané inštalačky (Authenticode, notarizácia Apple), automatická aktualizácia, AppImage</li>
+<li>[x] Bez licencií: licencie, predaj cez Paddle a limit počtu firiem zrušené</li>
+<li>[x] Web fiskus.online (priečinok <code>site/</code>): funkcie, stiahnutie podľa systému, Fiškus v prehliadači, ochrana údajov</li>
+<li>[x] E-faktúra UBL 2.1 (EN 16931, Peppol BIS Billing 3.0): vytvorenie z vystavenej faktúry a dobropisu (adresa 0245:DIČ), načítanie prijatej e-faktúry ako nákladu</li>
+<li>[x] E-faktúra: všeobecné napojenie na digitálneho poštára — priečinky (synchronizácia aplikáciou poskytovateľa) alebo HTTP API adaptéra; odoslanie, schránka prijatých, zoznam odoslaných a prevzatých</li>
+<li>[x] E-faktúra: národné rozhranie SAPI-SK 1.0 (ePošťák, Verteco a ďalší prístupoví body): prihlásenie client_credentials, odoslanie s Idempotency-Key, schránka so stránkovaním, potvrdenie prevzatia, overenie spojenia</li>
+<li>[x] E-faktúra: kontrola pravidiel u poštára pred odoslaním (SAPI-SK validate — neplatná sa neodošle), stav doručenia (ručne aj každú hodinu, nedoručenie do auditu)</li>
+<li>[x] E-faktúra: vyúčtovanie zálohy — odpočet zálohy s dokladom k platbe ako záporný riadok po sadzbách (rekapitulácia so zostatkom DPH), záloha bez dokladu ako zaplatené vopred (PrepaidAmount)</li>
+<li>[ ] E-faktúra: vlastná kontrola pravidiel Peppol bez poštára</li>
+</ul>
+<h2 id="pouzivatelia-prava-a-audit-pre-uctovne-kancelarie-a-poskytovatelov-sluzieb">Používatelia, práva a audit (pre účtovné kancelárie a poskytovateľov služieb)<a class="headerlink" href="#pouzivatelia-prava-a-audit-pre-uctovne-kancelarie-a-poskytovatelov-sluzieb" title="Permanent link">¶</a></h2>
+<ul>
+<li>[x] Používatelia a prihlasovanie v serverovom režime (heslo PBKDF2, relácia v HttpOnly cookie, limit pokusov, ochrana CSRF)</li>
+<li>[x] Dvojfázové overenie (TOTP z aplikácie v telefóne, 10 záložných kódov, ochrana proti zopakovaniu kódu; zrušenie správcom inštalácie pri strate telefónu)</li>
+<li>[x] Desktop: voliteľný PIN (zamkne okno po spustení, po 30 min nečinnosti aj tlačidlom); server: povinné 2FA pre všetkých používateľov (správca ho musí mať sám)</li>
+<li>[x] Roly pre každú firmu zvlášť: správca, účtovník, fakturant, zákazník (klient kancelárie), len čítanie</li>
+<li>[x] Práva kontroluje backend pri každej požiadavke; rozhranie skrýva nepovolené akcie</li>
+<li>[x] Audit všetkých zmien (kto, kedy, kanál, čo, pred/po), nemenný reťazec s odtlačkami; filter podľa firmy a kategórie</li>
+<li>[x] API kľúče používateľa (len na čítanie / ako používateľ), iba hash v databáze, zrušenie</li>
+<li>[x] MCP server pre AI asistentov (POST /mcp, Streamable HTTP) + most <code>fiskus-mcp</code> pre stdio; práva používateľa, každé volanie v audite</li>
+<li>[x] MCP: zoznam cenových ponúk (<code>list_quotes</code>) a pravidelných faktúr (<code>list_recurring_invoices</code>)</li>
+<li>[x] MCP: zaevidovanie a úhrada prijatej faktúry, návrhy a párovanie bankových platieb, dobropis (celý aj časť položiek), faktúry po splatnosti a upomienky; kontrola povinných argumentov</li>
+<li>[x] MCP: OAuth 2.1 pre vzdialených klientov (Claude na webe a v mobile): metadáta RFC 9728/8414, registrácia RFC 7591 bez stavu, PKCE, súhlas v rozhraní, obnovovacie tokeny s výmenou a odhalením opakovaného použitia</li>
+</ul>
+<h2 id="etapa-2-uctovnictvo">Etapa 2 — účtovníctvo<a class="headerlink" href="#etapa-2-uctovnictvo" title="Permanent link">¶</a></h2>
+<ul>
+<li>[x] Peňažný denník (opatrenie MF SR č. MF/27076/2007-74, § 4): pohyby z bankových výpisov a pokladne, stĺpce c, d1–d3, e1–e6, f, g; úhrady spárovaných faktúr rozpíše Fiškus (základ podľa druhu plnenia / druhu výdavku, DPH zvlášť, pomerne pri čiastočnej úhrade), ostatné pohyby ručne s rýchlymi voľbami; súčty stĺpcov a rozdiel príjmov a výdavkov; export; MCP <code>money_journal</code></li>
+<li>[x] Stavy pokladnice a účtov v peňažnom denníku (počiatočný stav účtu podľa výpisu, pokladnica z dokladov), kniha pohľadávok a záväzkov k zvolenému dňu (úhrady po dni sa neberú, cudzia mena v eurách, dni po splatnosti)</li>
+<li>[x] Výkazy JÚ v celých eurách: Výkaz o príjmoch a výdavkoch (Úč FO 1-01) z peňažného denníka, Výkaz o majetku a záväzkoch (Úč FO 2-01) z kníh, pokladne a účtov + ručne zadané riadky (dlhodobý majetok, zásoby, úvery…), predchádzajúce obdobie, tlač, export, MCP</li>
+<li>[x] Uzávierkové operácie k 31. 12. (odpisy, zostatková cena predaného majetku, úpravy príjmov a výdavkov) v peňažnom denníku, bez vplyvu na stavy peňazí; prenesú sa do výkazov</li>
+<li>[x] Podklady pre DP FO typ B (DPFOBv25, VI. oddiel): tabuľka č. 1 r. 2, r. 39–42, tabuľka č. 1a na začiatku a na konci obdobia, zaplatené poistné na kontrolu</li>
+<li>[x] Daňové priznanie FO typ B pre živnostníka: tabuľka 1 a 1a z kníh, skutočné alebo paušálne výdavky, zamestnanie, NČZD (2025 aj 2026 — tretina základu), sadzba 15 % do 100 000 € príjmov alebo pásma 19/25/30/35 %, DDS, preddavky, podiel dane 2 %/3 %, vrátenie preplatku; XML v štruktúre formulára DPFOB na načítanie na portáli</li>
+<li>[x] Uzávierka roka v JÚ: kontroly, uzamknutie roka, prenos stavov účtov do ďalšieho roka, otvorenie s dôvodom, tlač závierky Úč FO</li>
+<li>[x] DP typ B: deti a daňový bonus (vek z rodného čísla, mesiace, zníženie nad hranicou, strop podľa počtu detí, vyplatenie), manžel/ka, straty z predchádzajúcich 5 rokov, bonus od zamestnávateľa, počet príloh</li>
+<li>[ ] Jednoduché účtovníctvo ďalej: elektronické uloženie závierky do RÚZ; priznanie typu B s deťmi, manželom/kou a stratou z minulých rokov priamo vo Fiškuse</li>
+<li>[x] Účtový rozvrh: rámcová účtová osnova pre podnikateľov (syntetické účty, druh, nedaňové náklady), analytické účty firmy, skrytie nepoužívaných, strediská a zákazky</li>
+<li>[x] Predkontácie (vzory zaúčtovania) pre faktúry, nákupy, banku a pokladňu — 23 predvolených, vlastné, kontrola vyrovnania MD = D</li>
+<li>[x] Podvojné účtovníctvo: účtovný denník, hlavná kniha (obratová predvaha), automatické účtovanie faktúr, nákupov, banky a pokladne podľa predkontácií, ručné zápisy, interné doklady, počiatočné stavy</li>
+<li>[x] Podvojné účtovníctvo: strediská a zákazky v zápisoch (náklady, výnosy a výsledok po strediskách), kurzové rozdiely pri úhrade faktúry v cudzej mene, automatické účtovanie záloh (DPH zo zálohy, zúčtovanie vo vyúčtovaní), analytické účty bánk a pokladníc</li>
+<li>[x] Dovoz z tretej krajiny: rozhodnutie colného úradu (JCD) ako samostatný doklad s DPH a clom, väzba na faktúru za tovar, odpočet r. 18 – 23, podvojné FP-CLO / B-COLNY, peňažný denník clo + DPH</li>
+<li>[x] Podvojné účtovníctvo: dovoz s DPH vyrubenou colným úradom (343 / 379), kurzové rozdiely k 31. 12. (prepočet neuhradených pohľadávok a záväzkov, platí aj pri úhrade v ďalšom roku; zostatky pokladníc a bankových účtov v cudzej mene na ich analytické účty, zostatok podľa výpisu), pokladničné doklady bez DPH (aj v cudzej mene) podľa predkontácie</li>
+<li>[x] Podvojné účtovníctvo: kurzové rozdiely pri čiastočných úhradách faktúr v cudzej mene z eurového účtu (párovanie so sumou v mene faktúry, pomerná časť v eurách, posledná platba zvyšok)</li>
+<li>[ ] Podvojné účtovníctvo ďalej: clo a náklady obstarania pri dovoze, zostatky bankových účtov a pokladníc v cudzej mene k 31. 12.</li>
+<li>[x] Závierka mikro účtovnej jednotky z hlavnej knihy: súvaha (Úč MÚJ 1-01) a výkaz ziskov a strát (Úč MÚJ 2-01), počiatočné stavy z konečných stavov minulého roka</li>
+<li>[ ] Závierka ďalej: malá účtovná jednotka (Úč POD), poznámky, uzamknutie obdobia, uloženie do RÚZ (XML)</li>
+<li>[ ] Daňové priznanie k dani z príjmov (typ A/B pre FO, PO)</li>
+</ul>
+<h2 id="etapa-3-sklad-a-majetok">Etapa 3 — sklad a majetok<a class="headerlink" href="#etapa-3-sklad-a-majetok" title="Permanent link">¶</a></h2>
+<ul>
+<li>[x] Sklad: skladové položky z cenníka, viac skladov, príjemky, výdajky, inventúrne rozdiely, ocenenie váženým priemerom, výdajka z vystavenej faktúry a vrátenie k dobropisu, zaúčtovanie (132/131, 504/132…), zásoby vo výkaze o majetku</li>
+<li>[x] Sklad: FIFO alebo vážený priemer v nastaveniach, presun medzi skladmi, príjemka k prijatej faktúre, odkaz pre e-shop (zásoby JSON/CSV, objednávky → výdajky)</li>
+<li>[x] Karta produktu: EAN s kontrolou, kategória, značka, dodávateľ a jeho kód, nákupná cena, hmotnosť, technické parametre, popis, až 10 obrázkov (hlavný v zozname), stav a hodnota po skladoch, všetky pohyby s hľadaním a exportom; zaradenie na sklad priamo z karty; import cenníka tieto údaje načíta a chýbajúce stĺpce neprepíše</li>
+<li>[x] Register dlhodobého majetku s daňovými odpismi (§ 22 – 29 ZDP): skupiny 0 – 6, rovnomerné a zrýchlené odpisovanie, pomerná časť v roku zaradenia, podiel na podnikaní, vyradenie (ZC do výdavkov), odpisový plán, väzba na prijatú faktúru, hľadanie a export</li>
+<li>[x] Odpisy z registra jedným tlačidlom do uzávierky roka (stĺpec e6); zostatkové ceny do výkazu o majetku a záväzkoch (r. 01, 02) a tabuľky 1a DP typ B</li>
+<li>[x] Účtovné odpisy v podvojnom účtovníctve: účet majetku a oprávok, doba odpisovania v mesiacoch (alebo ako daňové), účtovný odpisový plán s rozdielom k daňovým odpisom, zaúčtovanie za rok jedným interným dokladom (551/08x, vyradenie 541 alebo 551 a 08x/02x)</li>
+<li>[ ] Technické zhodnotenie, prerušenie odpisovania, prenájom (§ 27 ods. 2)</li>
+<li>[x] Kniha jázd: vozidlá (v obchodnom majetku, prenajaté, súkromné), jazdy so stavom tachometra, účelom a vodičom, tankovanie z pokladničných blokov a prijatých faktúr; vyúčtovanie za rok — PHM podľa knihy jázd s limitom spotreby z TP (nadspotreba, súkromné jazdy), paušál 80 % / 50 %, cestovné náhrady za súkromné auto (základná náhrada za km podľa dňa jazdy + PHM), odpis z registra majetku, náklady na každú jazdu a na km; zaúčtovanie do uzávierky; sadzby za km v Legislatíve</li>
+<li>[x] DPH pri vozidlách od 2026 (§ 85n): kategória a VIN vozidla, odpočet 50 % z nákupov k osobnému autu (M1, L1e, L3e) — vozidlo na prijatej faktúre a pokladničnom bloku nastaví odpočet sám (DPH r. 19/21, KV B.2 a B.3 s odpočítanou daňou, neodpočítaná časť do výdavkov); plný odpočet pri výlučnom podnikaní (VIN, kniha jázd, dátum oznámenia) alebo výnimke; prehľad DPH z dokladov k vozidlu s kontrolou nesúladu</li>
+<li>[x] Tlač knihy jázd (A4 na šírku): vozidlo, jazdy, tankovanie, náklady s DPH, vyúčtovanie</li>
+<li>[x] Kalkulačky bez firmy: DPH, úrok z omeškania, úver a RPMN, sporenie, čistá mzda, kurzy</li>
+<li>[x] Tlačivá: vyplnenie a tlač bez firmy, ukladanie a zaúčtovanie ako účtovný doklad, vzory a vlastné tlačivá</li>
+<li>[x] Kniha jázd: import jázd zo záznamu GPS (GPX, CSV) s pomenovanými miestami</li>
+<li>[ ] Kniha jázd: zdanenie súkromného použitia vozidla s plným odpočtom (§ 9 ods. 2), úprava odpočtu pri predaji do 5 rokov</li>
+</ul>
+<h2 id="prenos-dat-z-inych-programov">Prenos dát z iných programov<a class="headerlink" href="#prenos-dat-z-inych-programov" title="Permanent link">¶</a></h2>
+<ul>
+<li>[x] POHODA (XML export, aj Windows-1250): adresár, zásoby do cenníka, vydané faktúry a dobropisy s pôvodnými číslami a úhradami, prijaté faktúry; náhľad pred prenosom, opakovaný prenos nevytvorí duplicity, číselný rad pokračuje za prenesenými číslami</li>
+<li>[x] Money S3 (XML export, slovenská aj česká verzia, Windows-1250): adresár, zásoby, vydané faktúry a dobropisy, prijaté faktúry; položky so zľavou alebo zmiešanými cenami podľa rekapitulácie DPH; voľba „faktúry so splatnosťou do … sú uhradené“ (Money úhrady neexportuje, platí aj pre POHODU)</li>
+<li>[x] Všeobecná tabuľka Excel/CSV z ľubovoľného programu: adresár, cenník, vydané alebo prijaté faktúry (riadok = faktúra, sumy po sadzbách, iba základ a DPH alebo iba suma so sadzbou); stĺpce podľa hlavičky (SK/CZ/EN), dátumy aj z Excelu, úhrada (áno/dátum), dobropisy; vzory na stiahnutie</li>
+<li>[x] KROS Omega (textový export podľa špecifikácie KROS: partneri T04, skladové karty T03, fakturácia T01, doklady EUD T00 s úhradami a dobropismi)</li>
+<li>[x] iDoklad: export pre POHODU (ZIP s XML po druhoch dokladov, aj jednotlivé XML); kontakty sa založia z odberateľov a dodávateľov na faktúrach</li>
+<li>[x] MRP-K/S podľa dokumentácie importu faktúr (5.53): vydané FAKVY/FAKVYPOL/FAKVYUHR, prijaté FAKPR/FAKPRPOL/FAKPRUHR, adresy FV_ADRES/FP_ADRES s IBAN; dobropisy (TYP_DOKL=D, ORIGCIS2), úhrady, zľavy, textové riadky, vlastné čísla drobných odberateľov (X0001)</li>
+<li>[x] Adresár: kontaktné osoby (funkcia, e-mail, telefón, predvolená) a ďalšie adresy (dodacia, korešpondenčná, prevádzka) — na faktúre kontaktná osoba a dodacia adresa z adresára alebo ručne, na tlači aj v PDF; importy ukladajú osobu ako osobu</li>
+<li>[x] Import kontaktov priamo v Adresári: vizitky vCard (.vcf, verzie 2.1–4.0) a tabuľky vrátane exportov z Outlooku a Google Kontaktov (meno a priezvisko, pracovná alebo domáca adresa, IBAN); kontaktná osoba do poznámky</li>
+<li>[x] Počiatočné stavy účtov z tabuľky (konečná súvaha alebo predvaha z iného programu: Účet; Názov; MD; D alebo jeden stĺpec so zostatkom) — návrh do editora, 211000 → 211, upozornenie na chýbajúce účty a nevyrovnané strany</li>
+<li>[x] SuperFaktúra a Fakturoid: ich export pre účtovníka (POHODA, Money S3, KROS Omega alebo MRP) — formát sa rozpozná sám, aj v ZIP; kontakty z faktúr</li>
+<li>[ ] KROS Alfa; priame napojenie cez API (Fakturoid, iDoklad, SuperFaktúra)</li>
+<li>[x] Napojenie e-shopov WooCommerce a Shopify (neoverené na živom obchode): objednávky → koncepty faktúr (zákazník, IČO, kontaktná osoba, dodacia adresa, väzba na cenník podľa kódu, sadzba DPH z dane), „iba uhradené“, bez duplicít; stav zásob zo skladu do obchodu; na serveri zákaz volaní do vnútornej siete</li>
+<li>[x] PrestaShop, Magento / Adobe Commerce, Drupal Commerce (neoverené); automatické načítanie objednávok každú hodinu s chybou pri obchode</li>
+<li>[x] Shoptet (súkromné API): objednávky → koncepty faktúr, zásoby (realStock) — neoverené</li>
+<li>[x] Riadenie obchodu z Fiškusu (WooCommerce): prevzatie produktov a zákazníkov, odoslanie cenníka (názov, cena, trieda DPH, vyradenie) iba zmien, nové skladové položky ako koncept; každú hodinu aj so zásobami</li>
+<li>[x] Riadenie obchodu pre Shopify (zdaniteľný = 23 %, nezdaniteľný = 0 %) a Magento (triedy dane z daňových pravidiel, ceny bez DPH)</li>
+<li>[x] Riadenie obchodu pre Shoptet podľa oficiálnej schémy openapi.yaml: produkty a varianty, zákazníci, cena v predvolenom cenníku (sadzba + cena bez DPH), názov a skrytie, nový produkt skrytý v prvej kategórii</li>
+<li>[x] Riadenie obchodu pre PrestaShop: skupiny daňových pravidiel (SK), produkty aj kombinácie, zákazníci; úprava celého produktu v XML (iba cena, DPH, aktívnosť, jednojazyčný názov), nový produkt neaktívny v domovskej kategórii</li>
+</ul>
+<h2 id="etapa-4-mzdy-samostatny-navrh">Etapa 4 — mzdy (samostatný návrh)<a class="headerlink" href="#etapa-4-mzdy-samostatny-navrh" title="Permanent link">¶</a></h2>
+<ul>
+<li>[x] Zamestnanci a dohodári (PP, DoPČ, DoVP, DoBPŠ, pravidelný/nepravidelný príjem, dôchodcovia, ZŤP, výnimka 200 €, NČZD, daňový bonus)</li>
+<li>[x] Výpočet mzdy 2025 a 2026: sociálne poistenie po fondoch s maximom, zdravotné poistenie, preddavok na daň s pásmami 19/25/30/35 %, daňový bonus, čistá mzda, cena práce; výplatná listina so súčtami na úhradu podľa inštitúcií, výplatné pásky, uzavretie mesiaca</li>
+<li>[ ] Mesačný výkaz pre Sociálnu poisťovňu, výkazy zdravotných poisťovní, registračné listy (XML)</li>
+<li>[ ] Mesačný prehľad a ročné hlásenie pre finančnú správu, potvrdenie o príjmoch, ročné zúčtovanie</li>
+<li>[ ] Priemerný zárobok: náhrada mzdy za dovolenku, náhrada príjmu pri PN (dni 1 – 14), evidencia dochádzky a dovoleniek</li>
+<li>[ ] Zaúčtovanie miezd do peňažného denníka a podvojného účtovníctva, príkazy na úhradu výplat a odvodov</li>
+</ul>
+<h2 id="odlisenie-od-konkurencie">Odlíšenie od konkurencie<a class="headerlink" href="#odlisenie-od-konkurencie" title="Permanent link">¶</a></h2>
+<p>Slovenské špecifiká, ktoré MyÚčto nemá: RÚZ, tri identifikátory (IČO / DIČ / IČ DPH), 2 % dane pre neziskovky, slovenská e-fakturácia, PAY by square.</p>
+<h2 id="kalendar-terminov">Kalendár termínov<a class="headerlink" href="#kalendar-terminov" title="Permanent link">¶</a></h2>
+<ul>
+<li>[x] Kalendár (mesiac aj zoznam): priznanie k DPH a KV, SV (ak sú dodania do EÚ), daň z príjmov, daň z motorových vozidiel — lehoty posunuté na pracovný deň podľa dní pracovného pokoja (upraviteľné v Legislatíve); splatnosti vydaných a prijatých faktúr, pravidelné faktúry, koniec platnosti ponúk; zmeškané termíny; podané priznanie označené</li>
+<li>[x] Vlastné opakované termíny (odvody, preddavky, STK, poistky) s rýchlym výberom a označením „splnené“</li>
+<li>[x] Odber do mobilu a kalendára (iCalendar, tajný odkaz iba na čítanie, pripomienky 3 dni a 1 deň vopred), súbor .ics, odznak v menu</li>
+<li>[x] Prepojenie kalendára termínov s Google Kalendárom a Outlookom (Microsoft 365, Outlook.com) cez ich API — funguje aj v desktopovej verzii</li>
+<li>[x] Upozornenie e-mailom pred lehotou (daňové a vlastné termíny, splatné prijaté faktúry; 1 až 14 dní vopred, raz za termín, od 7:00)</li>
+<li>[ ] Termíny miezd (etapa 4)</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden="">
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"></path></svg>
+  Na začiatok
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.sections", "navigation.top", "content.code.copy"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Skop\u00edrovan\u00e9 do schr\u00e1nky", "clipboard.copy": "Kop\u00edrova\u0165 do schr\u00e1nky", "search.result.more.one": "1 \u010fal\u0161\u00ed na tejto str\u00e1nke", "search.result.more.other": "# \u010fal\u0161\u00edch na tejto str\u00e1nke", "search.result.none": "\u017diadne vyhovuj\u00face dokumenty", "search.result.one": "Vyhovuj\u00faci dokument: 1", "search.result.other": "Vyhovuj\u00face dokumenty: #", "search.result.placeholder": "Pre vyh\u013ead\u00e1vanie za\u010dni p\u00edsa\u0165", "search.result.term.missing": "Ch\u00fdbaj\u00faci", "select.version": "Vyberte verziu"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  
+<script id="init-glightbox">const lightbox = GLightbox({"touchNavigation": true, "loop": false, "zoomable": true, "draggable": true, "openEffect": "zoom", "closeEffect": "zoom", "slideEffect": "slide"});
+document$.subscribe(()=>{ lightbox.reload(); });
+</script></body></html>
