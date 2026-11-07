@@ -16,12 +16,23 @@ adresou ju zákazník prijme alebo odmietne cez tajný odkaz a môže pripísať
 číslo svojej objednávky. Prijatá ponuka sa jedným klikom zmení na koncept
 faktúry.
 
+![Cenové ponuky so stavmi a úspešnosťou](../obrazky/ponuky.webp)
+*Cenové ponuky so stavmi a úspešnosťou*
+
+![Ponuka s odkazom pre zákazníka a vytvorením faktúry](../obrazky/ponuka.webp)
+*Ponuka s odkazom pre zákazníka a vytvorením faktúry*
+
+
 ## Pravidelná fakturácia
 
 Šablóna faktúry s intervalom (mesačne, štvrťročne, polročne, ročne) a
 koncom. V texte možno použiť `{obdobie}`, `{mesiac}`, `{rok}` a
 `{minule_obdobie}`. Fiškus faktúru vytvorí a vystaví sám — pri štarte a
 každú hodinu — a ak chcete, aj ju pošle e-mailom.
+
+![Šablóny pravidelných faktúr a koncepty na kontrolu](../obrazky/pravidelna-fakturacia.webp)
+*Šablóny pravidelných faktúr a koncepty na kontrolu*
+
 
 !!! note "Dobehnuté obdobia"
     Ak program dlhšie nebežal, staršie obdobia sa vytvoria ako koncepty na

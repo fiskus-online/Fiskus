@@ -19,7 +19,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - run: pip install "mkdocs<2" mkdocs-material
+      - run: pip install "mkdocs<2" mkdocs-material mkdocs-glightbox
       - run: python -m unittest -q test_sourcebook
         working-directory: docs_hooks
       - run: mkdocs build --strict

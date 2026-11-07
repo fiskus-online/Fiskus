@@ -13,6 +13,10 @@ faktúra, úhrada v banke, zápis v peňažnom alebo účtovnom denníku, prizna
 k DPH a nakoniec závierka. Všetko je v jednom programe a dá sa vyskúšať na
 ukážkovej firme bez toho, aby ste niečo pokazili.
 
+![Vydané faktúry v ukážkovej firme — súčty, stavy, hľadanie a export](obrazky/faktury.webp)
+*Vydané faktúry v ukážkovej firme — súčty, stavy, hľadanie a export*
+
+
 :::info[Prečo program na výučbu]
 Účtovníctvo sa učí ťažko z tabuliek v učebnici, lebo v nich chýba to
 najdôležitejšie — **súvislosti**. Vo Fiškuse vidí študent, že jedna vystavená
@@ -46,6 +50,10 @@ firmu, výstupy (najmä priznania a závierku) si nechajte skontrolovať
 ```
 
 ## Čo Fiškus vie
+
+![Domácnosť: účty, najbližšie platby, rozpočet a príjmy a výdavky za rok](obrazky/domacnost.webp)
+*Domácnosť: účty, najbližšie platby, rozpočet a príjmy a výdavky za rok*
+
 
 ```cards
 - title: Predaj

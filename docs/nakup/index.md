@@ -12,6 +12,10 @@ tags: [nákup, dph]
 Prijatá faktúra sa eviduje z **rekapitulácie DPH dodávateľa** — základ a daň
 po sadzbách, tak ako sú na doklade. Pri každej určíte:
 
+![Prijaté faktúry — DPH na odpočet, na úhradu, po splatnosti](../obrazky/prijate.webp)
+*Prijaté faktúry — DPH na odpočet, na úhradu, po splatnosti*
+
+
 | Voľba | Vplyv |
 |---|---|
 | s odpočtom / bez odpočtu DPH | riadky 19 a 21 priznania, časť B kontrolného výkazu |
@@ -36,6 +40,10 @@ DPH) sa doplnia z Finančnej správy a vznikne uhradený prijatý doklad
 s fotkou.
 
 ## Zvláštne prípady
+
+![Prijatá faktúra v cudzej mene s kurzom ECB a samozdanením](../obrazky/prijata-faktura.webp)
+*Prijatá faktúra v cudzej mene s kurzom ECB a samozdanením*
+
 
 - **Pomerné odpočítanie DPH (§ 50)** — predbežný a ročný koeficient,
   vysporiadanie v poslednom období roka.

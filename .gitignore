@@ -14,3 +14,5 @@ frontend/dist-browser/
 frontend/src/browser/fiskus.wasm
 frontend/src/browser/fiskus.wasm.gz
 frontend/src/browser/wasm_exec.js
+.snimky-fiskus
+.snimky.pid

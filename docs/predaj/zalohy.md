@@ -11,6 +11,10 @@ tags: [predaj, zálohy, dph]
 Zálohy sú na výučbu výborná téma, lebo ukazujú rozdiel medzi **platbou**
 a **dodaním**.
 
+![Zálohová faktúra — nie je daňový doklad, DPH vznikne až pri platbe](../obrazky/zalohova-faktura.webp)
+*Zálohová faktúra — nie je daňový doklad, DPH vznikne až pri platbe*
+
+
 | Doklad | Je daňový doklad? | Kedy vzniká |
 |---|---|---|
 | Zálohová faktúra | nie | výzva na zaplatenie |

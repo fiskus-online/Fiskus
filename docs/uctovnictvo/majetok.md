@@ -12,6 +12,13 @@ tags: [účtovníctvo, majetok, vozidlá]
 
 Daňové odpisy podľa § 22 – 29 zákona o dani z príjmov:
 
+![Register majetku s daňovými odpismi](../obrazky/majetok.webp)
+*Register majetku s daňovými odpismi*
+
+![Karta majetku s odpisovým plánom](../obrazky/majetok-karta.webp)
+*Karta majetku s odpisovým plánom*
+
+
 | Voľba | Možnosti |
 |---|---|
 | odpisová skupina | 0 – 6 |
@@ -31,6 +38,10 @@ odpisovania v mesiacoch** podľa vášho odpisového plánu. Účtovné odpisy s
 rovnomerné mesačné — od mesiaca po zaradení, naposledy za mesiac pred
 vyradením. Bez zadanej doby sú rovnaké ako daňové (bez krátenia podielom
 na podnikaní).
+
+![Účet majetku a doba účtovného odpisovania v podvojnom účtovníctve](../obrazky/majetok-odpisy.webp)
+*Účet majetku a doba účtovného odpisovania v podvojnom účtovníctve*
+
 
 V **Účtovnej knihe → Účtovné odpisy** sa za rok zaúčtuje jeden interný
 doklad k 31. 12.:
@@ -52,6 +63,10 @@ Vozidlá (v obchodnom majetku, prenajaté, súkromné), jazdy so stavom
 tachometra, účelom a vodičom, tankovanie z bločkov a prijatých faktúr.
 Ročné vyúčtovanie: spotreba podľa knihy jázd s limitom z technického
 preukazu, alebo paušál 80 % / 50 %; cestovné náhrady za súkromné auto.
+
+![Kniha jázd — služobné a súkromné jazdy, tankovanie, výdavky na vozidlo](../obrazky/kniha-jazd.webp)
+*Kniha jázd — služobné a súkromné jazdy, tankovanie, výdavky na vozidlo*
+
 
 !!! note "DPH pri vozidlách od roku 2026"
     Pri osobnom aute (M1, L1e, L3e) sa z nákupov odpočíta 50 % DPH. Plný

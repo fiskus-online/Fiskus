@@ -33,6 +33,10 @@ Menu vľavo je zoradené tak, ako doklad putuje firmou: **Predaj → Nákup →
 Peniaze → Dane → Účtovníctvo**. Na mobile sa menu schová pod tlačidlo
 vľavo hore.
 
+![Vľavo menu podľa agend, hore výber firmy alebo domácnosti](../obrazky/faktury.webp)
+*Vľavo menu podľa agend, hore výber firmy alebo domácnosti*
+
+
 | Skratka | Kde funguje | Čo urobí |
 |---|---|---|
 | `N` | zoznamy | nový doklad alebo položka |

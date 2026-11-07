@@ -8,6 +8,10 @@ tags: [sklad, doklady]
 
 # Skladové doklady
 
+![Skladové doklady: príjemky, výdajky, prevodky, inventúrne rozdiely](../obrazky/sklad-doklady.webp)
+*Skladové doklady: príjemky, výdajky, prevodky, inventúrne rozdiely*
+
+
 | Doklad | Množstvo | Cena |
 |---|---|---|
 | Príjemka | pribudne | zadáte obstarávaciu cenu za jednotku |

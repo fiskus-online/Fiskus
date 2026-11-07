@@ -10,6 +10,10 @@ tags: [účtovníctvo]
 Menu ukazuje časti podľa druhu účtovníctva firmy, ktorý ste zvolili
 v [úvodnom nastavení](../zaciname/uvodne-nastavenie.md).
 
+![Peňažný denník v jednoduchom účtovníctve](../obrazky/penazny-dennik.webp)
+*Peňažný denník v jednoduchom účtovníctve*
+
+
 ```cards
 - title: Jednoduché účtovníctvo
   href: ./jednoduche.md

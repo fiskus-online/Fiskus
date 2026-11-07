@@ -35,6 +35,10 @@ a kartami produktov, majetok a knihu jázd.
 
 ## Úlohy podľa tém
 
+![Peňažný denník — každý pohyb s dokladom, z ktorého vznikol](../obrazky/penazny-dennik.webp)
+*Peňažný denník — každý pohyb s dokladom, z ktorého vznikol*
+
+
 | Téma | Úloha | Čo si všímať |
 |---|---|---|
 | DPH | vystavte faktúru s dvoma sadzbami | rekapitulácia po sadzbách, riadky priznania |
@@ -51,6 +55,10 @@ Podrobné úlohy sú pri jednotlivých témach (napríklad
 [karta produktu](../sklad/karta-produktu.md) a [zálohy](../predaj/zalohy.md)).
 
 ## Čo Fiškus naučí navyše
+
+![Hlavná kniha v podvojnom účtovníctve: obraty a konečné stavy účtov](../obrazky/hlavna-kniha-ucty.webp)
+*Hlavná kniha v podvojnom účtovníctve: obraty a konečné stavy účtov*
+
 
 - **Audit** — každá zmena má autora a čas. Dobrá téma o tom, prečo sa
   v účtovníctve nič „nezmaže“.

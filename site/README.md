@@ -6,6 +6,7 @@ Web nemá cenník, predaj ani formuláre.
 
 - `config.js` — verzia na stiahnutie a adresa inštalátorov. Pri nasadení ich workflow `pages.yml` doplní z posledného vydania na GitHube.
 - `ochrana-osobnych-udajov.html` — **návrh**, údaje v hranatých zátvorkách treba doplniť.
+- `obrazky/` — snímky obrazovky z ukážkových dát; obnovia sa spolu so snímkami návodu príkazom `make snimky`.
 - `node site/check.mjs` — kontrola odkazov (beží v CI).
 
 ## Nasadenie
