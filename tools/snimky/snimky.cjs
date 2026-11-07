@@ -98,6 +98,27 @@ async function main() {
     ['kalkulacky-mzda', '/kalkulacky?k=wage', firm, async (p) => {
       await p.getByRole('button', { name: 'Dieťa', exact: true }).click()
     }, { mobile: true, full: true }],
+    // tlačivá
+    ['tlaciva', '/tlaciva', firm],
+    ['tlaciva-ppd', '/tlaciva?t=ppd', firm, async (p) => {
+      await p.locator('textarea').nth(1).fill('Ján Novák\nHlavná 12, 974 01 Banská Bystrica')
+      await p.getByLabel('Účel platby', { exact: false }).fill('Tržba za predaj materiálu')
+      await p.getByLabel('Suma €', { exact: false }).fill('246')
+      await p.getByLabel('Vyhotovil', { exact: false }).fill('Ján Novák')
+      await p.locator('.fill .p-select').first().click()
+      await p.getByRole('option', { name: '23 %' }).click()
+      await p.waitForTimeout(800)
+    }],
+    ['tlaciva-dodaci-list', '/tlaciva?t=dodaci-list', firm, async (p) => {
+      await p.getByLabel('Číslo', { exact: true }).fill('DL-2026-031')
+      await p.locator('textarea').nth(1).fill('Hotel Lesná s.r.o.\nLesná 5, 960 01 Zvolen\nIČO 36123456')
+      const rows = [['Kábel CYKY 3x2,5', '50', 'm', '1,19'], ['Istič B16 1-pól', '6', 'ks', '4,80']]
+      for (const [i, r] of rows.entries()) {
+        const inputs = p.locator('.item').nth(i).locator('input')
+        for (const [j, v] of r.entries()) await inputs.nth(j).fill(v)
+      }
+      await p.waitForTimeout(800)
+    }],
     // e-shopy, mobil, nastavenia
     ['e-shopy', '/nastavenia/e-shopy', firm],
     ['mobil-v-sieti', '/nastavenia/mobil', firm],

@@ -209,7 +209,7 @@ function addChild() {
               <FormField label="Dôchodok">
                 <Select v-model="f.pension" :options="pensionOptions" option-label="label" option-value="value" size="small" fluid />
               </FormField>
-              <FormField :span="2">
+              <FormField label="Daň" :span="2">
                 <div class="checks">
                   <label><Checkbox v-model="f.nczd" binary /> Podpísané vyhlásenie (nezdaniteľná časť)</label>
                   <label v-if="f.contract !== 'tpp' && f.contract !== 'dobps'"><Checkbox v-model="f.regular" binary /> Pravidelný mesačný príjem z dohody</label>

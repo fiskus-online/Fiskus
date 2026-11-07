@@ -13,6 +13,10 @@ etapách je v [pláne vývoja](./ROADMAP.md).
 
 ## Pripravuje sa (0.5)
 
+- **Tlačivá**: pokladničné doklady, dodací list, objednávka, potvrdenie
+  o prevzatí, splnomocnenie a vlastné tlačivá. Bez firmy sa vyplnia a
+  vytlačia, vo firme sa ukladajú, robia sa z nich vzory a pokladničný doklad
+  sa zapíše do pokladne ako účtovný doklad.
 - **Kalkulačky** aj bez založenej firmy: DPH, úrok z omeškania, úver
   s RPMN a splátkovým kalendárom, sporenie, čistá mzda a kurzy ECB.
 - **Kniha jázd zo záznamu GPS**: trasa z mobilu alebo GPS jednotky (GPX,
