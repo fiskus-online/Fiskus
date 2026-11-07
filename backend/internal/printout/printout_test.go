@@ -16,8 +16,8 @@ import (
 )
 
 var supplier = Supplier{Company: store.Company{
-	Name: "Krnáč s.r.o.", Street: "Hlavná 12", Zip: "040 01", City: "Košice", ICO: "12345678", DIC: "2020123456",
-	ICDPH: "SK2020123456", IBAN: "SK31 1200 0000 1987 4263 7541", Email: "faktury@krnac.sk", Phone: "+421 55 123 4567", VATPayer: true,
+	Name: "Novák s.r.o.", Street: "Hlavná 12", Zip: "040 01", City: "Košice", ICO: "12345678", DIC: "2020123456",
+	ICDPH: "SK2020123456", IBAN: "SK31 1200 0000 1987 4263 7541", Email: "faktury@novak.sk", Phone: "+421 55 123 4567", VATPayer: true,
 }}
 
 func sample(mod func(*invoice.Invoice)) invoice.Invoice {
@@ -67,8 +67,8 @@ func TestInvoice(t *testing.T) {
 		not  []string
 	}{
 		{"faktúra", nil,
-			[]string{"Faktúra – daňový doklad", "2026001", "Dodávateľ", "Krnáč s.r.o.", "Odberateľ", "Žltý dom, a.s.", "IČ DPH", "SK2020123456",
-				"Tel.", "+421 55 123 4567", "E-mail", "faktury@krnac.sk", "Vytvorené v programe Fiškus", "Prevodom na účet", "SK31 1200 0000 1987 4263 7541", "Cena za MJ bez DPH", "12,5", "1\u00a0250,00", "23 %", "5 %", "K úhrade", "1\u00a0708,44 €"},
+			[]string{"Faktúra – daňový doklad", "2026001", "Dodávateľ", "Novák s.r.o.", "Odberateľ", "Žltý dom, a.s.", "IČ DPH", "SK2020123456",
+				"Tel.", "+421 55 123 4567", "E-mail", "faktury@novak.sk", "Vytvorené v programe Fiškus", "Prevodom na účet", "SK31 1200 0000 1987 4263 7541", "Cena za MJ bez DPH", "12,5", "1\u00a0250,00", "23 %", "5 %", "K úhrade", "1\u00a0708,44 €"},
 			[]string{"Koncept", "Dodávateľ nie je platiteľ DPH", "Dodacia adresa", "Kontakt"}},
 		{"koncept", func(i *invoice.Invoice) { i.Status = invoice.StatusDraft; i.Number = "" }, []string{"Koncept"}, nil},
 		{"kontaktná osoba a dodacia adresa", func(i *invoice.Invoice) {

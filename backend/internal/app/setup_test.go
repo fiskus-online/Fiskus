@@ -105,7 +105,7 @@ func TestDeleteCompany(t *testing.T) {
 		t.Fatalf("firiem %d", n)
 	}
 	// desktop: po zmazaní sa dá založiť nová firma a začína sprievodcom
-	nc, err := a.CreateCompany(ctx, store.Company{Name: "Pavol Krnáč – elektroservis"})
+	nc, err := a.CreateCompany(ctx, store.Company{Name: "Ján Novák – elektroservis"})
 	if err != nil || nc.SetupDone {
 		t.Fatalf("nová firma %+v %v", nc, err)
 	}

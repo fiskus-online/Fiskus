@@ -122,10 +122,10 @@ docs/
   reference/        podklady (zoznamy funkcií iných systémov), nezverejňujú sa
 ```
 
-## Zadarmo
+## Režimy
 
-Fiškus je vždy zadarmo — desktop, server aj verzia v prehliadači, bez licencií
-a bez obmedzenia počtu firiem. Režimy sa líšia iba tým, kde program beží:
+Fiškus nemá licencie ani obmedzenie počtu firiem. Režimy sa líšia iba tým,
+kde program beží:
 
 | Režim | Pre koho |
 |---|---|

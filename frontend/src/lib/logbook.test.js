@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { limitedVAT, vatHint, blankTrip, filterFuel, filterTrips, fuelUnit, logbookPosting, methodHint, methodOptions, purposeSuggestions, returnTrip, tripRoute, tripTime, vehicleLabel } from './logbook.js'
 
 const trips = [
-  { id: 1, date: '2026-10-01', from: 'Banská Bystrica', to: 'Zvolen', purpose: 'Montáž rozvádzača', kind: 'business', km: 25, driver: 'Pavol' },
+  { id: 1, date: '2026-10-01', from: 'Banská Bystrica', to: 'Zvolen', purpose: 'Montáž rozvádzača', kind: 'business', km: 25, driver: 'Ján' },
   { id: 2, date: '2026-10-02', from: 'Banská Bystrica', to: 'Žilina', purpose: 'Obhliadka', kind: 'business', km: 110 },
   { id: 3, date: '2026-10-03', from: 'Zvolen', to: 'Tesco', purpose: '', kind: 'private', km: 8 },
   { id: 4, date: '2026-10-04', from: 'BB', to: 'ZV', purpose: 'Montáž rozvádzača', kind: 'business', km: 25 },
@@ -40,8 +40,8 @@ describe('kniha jázd', () => {
   })
 
   it('nová a spiatočná jazda', () => {
-    const t = blankTrip({ id: 5, driver: 'Pavol', lastOdometer: 12040 }, '2026-10-30')
-    expect([t.vehicleId, t.odoStart, t.driver, t.kind]).toEqual([5, 12040, 'Pavol', 'business'])
+    const t = blankTrip({ id: 5, driver: 'Ján', lastOdometer: 12040 }, '2026-10-30')
+    expect([t.vehicleId, t.odoStart, t.driver, t.kind]).toEqual([5, 12040, 'Ján', 'business'])
     const back = returnTrip({ id: 9, from: 'BB', to: 'ZV', odoStart: 100, odoEnd: 125, km: 25, purpose: 'Montáž' })
     expect([back.id, back.from, back.to, back.odoStart, back.odoEnd, back.purpose]).toEqual([0, 'ZV', 'BB', 125, 150, 'Montáž'])
   })

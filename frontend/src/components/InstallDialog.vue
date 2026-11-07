@@ -28,7 +28,7 @@ function toBackup() {
       <div>
         <p class="lead"><strong>{{ install.feature }}</strong> je iba v nainštalovanom Fiškuse.</p>
         <p>Fiškus v prehliadači pracuje bez inštalácie a údaje má iba v tomto počítači. Nemôže sa však pripájať na iné služby, posielať e-maily ani pracovať na pozadí.</p>
-        <p>Nainštalovaný Fiškus je tiež zadarmo. Údaje do neho prenesiete zálohou: tu ju stiahnete a v nainštalovanom Fiškuse ju obnovíte v časti Zálohy.</p>
+        <p>Údaje do nainštalovaného Fiškusa prenesiete zálohou: tu ju stiahnete a v nainštalovanom Fiškuse ju obnovíte v časti Zálohy.</p>
       </div>
     </div>
     <template #footer>

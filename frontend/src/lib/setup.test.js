@@ -18,7 +18,7 @@ describe('úvodné nastavenie', () => {
 
   it.each([
     [0, { name: ' ' }, ['name']],
-    [0, { name: 'Pavol Krnáč' }, []],
+    [0, { name: 'Ján Novák' }, []],
     [1, { vatPayer: true, icdph: 'SK 2120000003' }, []],
     [1, { vatPayer: true, icdph: '2120000003' }, ['icdph']],
     [1, { vatPayer: false }, []],

@@ -1,6 +1,6 @@
 <script setup>
 // Firmy a domácnosti: založenie (aj prvé spustenie) a prepínanie. Fiškus je
-// zadarmo bez obmedzenia počtu firiem.
+// bez obmedzenia počtu firiem.
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import Button from 'primevue/button'
@@ -107,7 +107,7 @@ async function create() {
 
     <Dialog v-model:visible="creating" :header="form?.bookkeeping === 'household' ? 'Založiť domácnosť' : 'Založiť firmu'" modal :style="{ width: '34rem' }" :breakpoints="{ '560px': '94vw' }">
       <form v-if="form && form.bookkeeping === 'household'" class="form-grid create" @submit.prevent="create">
-        <FormField label="Názov domácnosti" :error="errors.name" :span="2"><InputText v-model="form.name" fluid placeholder="napr. Krnáčovci" autofocus /></FormField>
+        <FormField label="Názov domácnosti" :error="errors.name" :span="2"><InputText v-model="form.name" fluid placeholder="napr. Novákovci" autofocus /></FormField>
         <FormField label="Ulica" :error="errors.street" :span="2"><InputText v-model="form.street" fluid /></FormField>
         <FormField label="PSČ" :error="errors.zip"><InputText v-model="form.zip" fluid /></FormField>
         <FormField label="Obec" :error="errors.city"><InputText v-model="form.city" fluid /></FormField>

@@ -3,7 +3,7 @@
 // Rozhoduje backend — frontend sa len pýta /api/capabilities a podľa toho
 // zobrazí alebo skryje prvky. Obísť sa to teda nedá úpravou rozhrania.
 //
-// Fiškus je vždy zadarmo — bez licencií a bez obmedzenia počtu firiem.
+// Fiškus nemá licencie ani obmedzenie počtu firiem.
 // Režimy sa líšia iba tým, kde program beží (desktop, server, prehliadač).
 package edition
 
