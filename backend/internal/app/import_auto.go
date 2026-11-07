@@ -9,11 +9,11 @@ import (
 	"path"
 	"strings"
 
-	"github.com/palo-krnac/fiscus/backend/internal/moneys3"
-	"github.com/palo-krnac/fiscus/backend/internal/mrp"
-	"github.com/palo-krnac/fiscus/backend/internal/omega"
-	"github.com/palo-krnac/fiscus/backend/internal/pohoda"
-	"github.com/palo-krnac/fiscus/backend/internal/xmlenc"
+	"github.com/fiskus-online/fiskus/backend/internal/moneys3"
+	"github.com/fiskus-online/fiskus/backend/internal/mrp"
+	"github.com/fiskus-online/fiskus/backend/internal/omega"
+	"github.com/fiskus-online/fiskus/backend/internal/pohoda"
+	"github.com/fiskus-online/fiskus/backend/internal/xmlenc"
 )
 
 // Fakturačné programy (SuperFaktúra, Fakturoid…) exportujú pre účtovníka

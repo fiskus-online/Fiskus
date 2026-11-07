@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/palo-krnac/fiscus/backend/internal/party"
+	"github.com/fiskus-online/fiskus/backend/internal/party"
 )
 
 // VIESBaseURL je REST API Európskej komisie na overenie IČ DPH (VIES).

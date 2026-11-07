@@ -11,10 +11,10 @@ import (
 	"sort"
 	"time"
 
-	"github.com/palo-krnac/fiscus/backend/internal/invoice"
-	"github.com/palo-krnac/fiscus/backend/internal/money"
-	"github.com/palo-krnac/fiscus/backend/internal/purchase"
-	"github.com/palo-krnac/fiscus/backend/internal/store"
+	"github.com/fiskus-online/fiskus/backend/internal/invoice"
+	"github.com/fiskus-online/fiskus/backend/internal/money"
+	"github.com/fiskus-online/fiskus/backend/internal/purchase"
+	"github.com/fiskus-online/fiskus/backend/internal/store"
 )
 
 const purchaseCols = `id, company_id, number, supplier_number, variable_symbol, status, contact_id,

@@ -4,7 +4,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/palo-krnac/fiscus/backend/internal/money"
+	"github.com/fiskus-online/fiskus/backend/internal/money"
 )
 
 func issued(t *testing.T, mod func(*Invoice)) Invoice {

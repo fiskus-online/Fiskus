@@ -8,8 +8,8 @@ import (
 	"encoding/json"
 	"errors"
 
-	"github.com/palo-krnac/fiscus/backend/internal/reminder"
-	"github.com/palo-krnac/fiscus/backend/internal/store"
+	"github.com/fiskus-online/fiskus/backend/internal/reminder"
+	"github.com/fiskus-online/fiskus/backend/internal/store"
 )
 
 func scanReminder(r interface{ Scan(...any) error }) (reminder.Reminder, error) {

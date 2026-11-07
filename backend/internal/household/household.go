@@ -7,13 +7,13 @@ package household
 
 import (
 	"fmt"
-	"github.com/palo-krnac/fiscus/backend/internal/ekasa"
+	"github.com/fiskus-online/fiskus/backend/internal/ekasa"
 	"sort"
 	"strings"
 	"unicode"
 
-	"github.com/palo-krnac/fiscus/backend/internal/invoice"
-	"github.com/palo-krnac/fiscus/backend/internal/money"
+	"github.com/fiskus-online/fiskus/backend/internal/invoice"
+	"github.com/fiskus-online/fiskus/backend/internal/money"
 )
 
 // AccountKind je druh účtu domácnosti.

@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/palo-krnac/fiscus/backend/internal/pohoda"
+	"github.com/fiskus-online/fiskus/backend/internal/pohoda"
 )
 
 // Prenos z iDokladu: iDoklad exportuje pre účtovníka balík XML vo formáte

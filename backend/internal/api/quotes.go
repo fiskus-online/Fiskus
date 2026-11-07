@@ -2,12 +2,12 @@ package api
 
 import (
 	"errors"
-	"github.com/palo-krnac/fiscus/backend/internal/app"
+	"github.com/fiskus-online/fiskus/backend/internal/app"
 	"net/http"
 	"strconv"
 
-	"github.com/palo-krnac/fiscus/backend/internal/invoice"
-	"github.com/palo-krnac/fiscus/backend/internal/quote"
+	"github.com/fiskus-online/fiskus/backend/internal/invoice"
+	"github.com/fiskus-online/fiskus/backend/internal/quote"
 )
 
 func failQuote(w http.ResponseWriter, err error) {

@@ -7,9 +7,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/palo-krnac/fiscus/backend/internal/audit"
-	"github.com/palo-krnac/fiscus/backend/internal/auth"
-	"github.com/palo-krnac/fiscus/backend/internal/invoice"
+	"github.com/fiskus-online/fiskus/backend/internal/audit"
+	"github.com/fiskus-online/fiskus/backend/internal/auth"
+	"github.com/fiskus-online/fiskus/backend/internal/invoice"
 )
 
 // Dvojfázové overenie (2FA) v serverovom režime. Po správnom hesle dostane

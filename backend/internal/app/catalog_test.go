@@ -4,13 +4,13 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/palo-krnac/fiscus/backend/internal/audit"
-	"github.com/palo-krnac/fiscus/backend/internal/auth"
-	"github.com/palo-krnac/fiscus/backend/internal/catalog"
-	"github.com/palo-krnac/fiscus/backend/internal/edition"
-	m "github.com/palo-krnac/fiscus/backend/internal/money"
-	"github.com/palo-krnac/fiscus/backend/internal/store"
-	"github.com/palo-krnac/fiscus/backend/internal/vat"
+	"github.com/fiskus-online/fiskus/backend/internal/audit"
+	"github.com/fiskus-online/fiskus/backend/internal/auth"
+	"github.com/fiskus-online/fiskus/backend/internal/catalog"
+	"github.com/fiskus-online/fiskus/backend/internal/edition"
+	m "github.com/fiskus-online/fiskus/backend/internal/money"
+	"github.com/fiskus-online/fiskus/backend/internal/store"
+	"github.com/fiskus-online/fiskus/backend/internal/vat"
 )
 
 func TestCatalog(t *testing.T) {

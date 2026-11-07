@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/palo-krnac/fiscus/backend/internal/app"
+	"github.com/fiskus-online/fiskus/backend/internal/app"
 )
 
 // Skladová karta produktu a jeho obrázky.

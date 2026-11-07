@@ -10,9 +10,9 @@ import (
 	_ "image/png"
 	"net/http"
 
-	"github.com/palo-krnac/fiscus/backend/internal/audit"
-	"github.com/palo-krnac/fiscus/backend/internal/auth"
-	"github.com/palo-krnac/fiscus/backend/internal/store"
+	"github.com/fiskus-online/fiskus/backend/internal/audit"
+	"github.com/fiskus-online/fiskus/backend/internal/auth"
+	"github.com/fiskus-online/fiskus/backend/internal/store"
 )
 
 // Limity loga: na faktúre má pár centimetrov, väčší súbor iba spomaľuje tlač.

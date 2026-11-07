@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/palo-krnac/fiscus/backend/internal/quote"
+	"github.com/fiskus-online/fiskus/backend/internal/quote"
 )
 
 func TestQuoteShare(t *testing.T) {

@@ -7,15 +7,15 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/palo-krnac/fiscus/backend/internal/audit"
-	"github.com/palo-krnac/fiscus/backend/internal/auth"
-	"github.com/palo-krnac/fiscus/backend/internal/cash"
-	"github.com/palo-krnac/fiscus/backend/internal/invoice"
-	"github.com/palo-krnac/fiscus/backend/internal/money"
-	"github.com/palo-krnac/fiscus/backend/internal/purchase"
-	"github.com/palo-krnac/fiscus/backend/internal/store"
-	"github.com/palo-krnac/fiscus/backend/internal/vat"
-	"github.com/palo-krnac/fiscus/backend/internal/vatreturn"
+	"github.com/fiskus-online/fiskus/backend/internal/audit"
+	"github.com/fiskus-online/fiskus/backend/internal/auth"
+	"github.com/fiskus-online/fiskus/backend/internal/cash"
+	"github.com/fiskus-online/fiskus/backend/internal/invoice"
+	"github.com/fiskus-online/fiskus/backend/internal/money"
+	"github.com/fiskus-online/fiskus/backend/internal/purchase"
+	"github.com/fiskus-online/fiskus/backend/internal/store"
+	"github.com/fiskus-online/fiskus/backend/internal/vat"
+	"github.com/fiskus-online/fiskus/backend/internal/vatreturn"
 )
 
 // Pomerné odpočítanie dane (§ 50 zákona o DPH): nákup, ktorý slúži plneniam

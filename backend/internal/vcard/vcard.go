@@ -11,7 +11,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/palo-krnac/fiscus/backend/internal/table"
+	"github.com/fiskus-online/fiskus/backend/internal/table"
 )
 
 // Address je poštová adresa (ADR).

@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/palo-krnac/fiscus/backend/internal/invoice"
-	m "github.com/palo-krnac/fiscus/backend/internal/money"
+	"github.com/fiskus-online/fiskus/backend/internal/invoice"
+	m "github.com/fiskus-online/fiskus/backend/internal/money"
 )
 
 func d(s string) invoice.Date { return invoice.MustDate(s) }

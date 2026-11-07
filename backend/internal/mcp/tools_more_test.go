@@ -4,11 +4,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/palo-krnac/fiscus/backend/internal/auth"
-	"github.com/palo-krnac/fiscus/backend/internal/bank"
-	"github.com/palo-krnac/fiscus/backend/internal/invoice"
-	"github.com/palo-krnac/fiscus/backend/internal/money"
-	"github.com/palo-krnac/fiscus/backend/internal/store"
+	"github.com/fiskus-online/fiskus/backend/internal/auth"
+	"github.com/fiskus-online/fiskus/backend/internal/bank"
+	"github.com/fiskus-online/fiskus/backend/internal/invoice"
+	"github.com/fiskus-online/fiskus/backend/internal/money"
+	"github.com/fiskus-online/fiskus/backend/internal/store"
 )
 
 // issued vystaví faktúru s dvoma položkami (8 hod × 45 € a 2 ks × 20 €, 23 %).

@@ -3,8 +3,8 @@ package invoice
 import (
 	"testing"
 
-	m "github.com/palo-krnac/fiscus/backend/internal/money"
-	"github.com/palo-krnac/fiscus/backend/internal/vat"
+	m "github.com/fiskus-online/fiskus/backend/internal/money"
+	"github.com/fiskus-online/fiskus/backend/internal/vat"
 )
 
 // stavba: montáž (bežná DPH) + stavebné práce a oceľ s prenesením

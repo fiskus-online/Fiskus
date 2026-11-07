@@ -8,7 +8,7 @@ import (
 	"io"
 	"testing"
 
-	"github.com/palo-krnac/fiscus/backend/internal/edition"
+	"github.com/fiskus-online/fiskus/backend/internal/edition"
 )
 
 func TestItemCardAPI(t *testing.T) {

@@ -8,8 +8,8 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/palo-krnac/fiscus/backend/internal/auth"
-	"github.com/palo-krnac/fiscus/backend/internal/store"
+	"github.com/fiskus-online/fiskus/backend/internal/auth"
+	"github.com/fiskus-online/fiskus/backend/internal/store"
 )
 
 const apiKeyCols = "id, user_id, name, prefix, hash, read_only, created_at, last_used_at, revoked"

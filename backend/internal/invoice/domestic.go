@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/palo-krnac/fiscus/backend/internal/money"
-	"github.com/palo-krnac/fiscus/backend/internal/party"
+	"github.com/fiskus-online/fiskus/backend/internal/money"
+	"github.com/fiskus-online/fiskus/backend/internal/party"
 )
 
 // DomesticRC je druh tuzemského prenesenia daňovej povinnosti pri položke

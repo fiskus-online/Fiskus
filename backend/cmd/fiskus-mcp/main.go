@@ -26,7 +26,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/palo-krnac/fiscus/backend/internal/desktop"
+	"github.com/fiskus-online/fiskus/backend/internal/desktop"
 )
 
 func main() {

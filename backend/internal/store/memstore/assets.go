@@ -4,8 +4,8 @@ import (
 	"context"
 	"sort"
 
-	"github.com/palo-krnac/fiscus/backend/internal/asset"
-	"github.com/palo-krnac/fiscus/backend/internal/store"
+	"github.com/fiskus-online/fiskus/backend/internal/asset"
+	"github.com/fiskus-online/fiskus/backend/internal/store"
 )
 
 func (s *Store) ListAssets(_ context.Context, companyID int64) ([]asset.Asset, error) {

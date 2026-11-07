@@ -8,16 +8,16 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/palo-krnac/fiscus/backend/internal/app"
-	"github.com/palo-krnac/fiscus/backend/internal/auth"
-	"github.com/palo-krnac/fiscus/backend/internal/bank"
-	"github.com/palo-krnac/fiscus/backend/internal/invoice"
-	"github.com/palo-krnac/fiscus/backend/internal/money"
-	"github.com/palo-krnac/fiscus/backend/internal/purchase"
-	"github.com/palo-krnac/fiscus/backend/internal/quote"
-	"github.com/palo-krnac/fiscus/backend/internal/recurring"
-	"github.com/palo-krnac/fiscus/backend/internal/store"
-	"github.com/palo-krnac/fiscus/backend/internal/vat"
+	"github.com/fiskus-online/fiskus/backend/internal/app"
+	"github.com/fiskus-online/fiskus/backend/internal/auth"
+	"github.com/fiskus-online/fiskus/backend/internal/bank"
+	"github.com/fiskus-online/fiskus/backend/internal/invoice"
+	"github.com/fiskus-online/fiskus/backend/internal/money"
+	"github.com/fiskus-online/fiskus/backend/internal/purchase"
+	"github.com/fiskus-online/fiskus/backend/internal/quote"
+	"github.com/fiskus-online/fiskus/backend/internal/recurring"
+	"github.com/fiskus-online/fiskus/backend/internal/store"
+	"github.com/fiskus-online/fiskus/backend/internal/vat"
 )
 
 // Tool je nástroj dostupný asistentovi.

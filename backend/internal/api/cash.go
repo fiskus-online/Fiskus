@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/palo-krnac/fiscus/backend/internal/cash"
+	"github.com/fiskus-online/fiskus/backend/internal/cash"
 )
 
 func failCash(w http.ResponseWriter, err error) {

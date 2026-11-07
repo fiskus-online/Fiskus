@@ -6,13 +6,13 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/palo-krnac/fiscus/backend/internal/audit"
-	"github.com/palo-krnac/fiscus/backend/internal/bank"
-	"github.com/palo-krnac/fiscus/backend/internal/invoice"
-	"github.com/palo-krnac/fiscus/backend/internal/money"
-	"github.com/palo-krnac/fiscus/backend/internal/party"
-	"github.com/palo-krnac/fiscus/backend/internal/purchase"
-	"github.com/palo-krnac/fiscus/backend/internal/store"
+	"github.com/fiskus-online/fiskus/backend/internal/audit"
+	"github.com/fiskus-online/fiskus/backend/internal/bank"
+	"github.com/fiskus-online/fiskus/backend/internal/invoice"
+	"github.com/fiskus-online/fiskus/backend/internal/money"
+	"github.com/fiskus-online/fiskus/backend/internal/party"
+	"github.com/fiskus-online/fiskus/backend/internal/purchase"
+	"github.com/fiskus-online/fiskus/backend/internal/store"
 )
 
 // PaymentCandidate je neuhradená prijatá faktúra ponúknutá do platobného

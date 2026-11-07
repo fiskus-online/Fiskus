@@ -3,7 +3,7 @@ package invoice
 import (
 	"strings"
 
-	"github.com/palo-krnac/fiscus/backend/internal/party"
+	"github.com/fiskus-online/fiskus/backend/internal/party"
 )
 
 // ExemptionNote vráti povinný text na faktúre pri plnení bez DPH (prenesenie

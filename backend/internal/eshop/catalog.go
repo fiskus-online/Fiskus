@@ -3,7 +3,7 @@ package eshop
 import (
 	"context"
 
-	"github.com/palo-krnac/fiscus/backend/internal/money"
+	"github.com/fiskus-online/fiskus/backend/internal/money"
 )
 
 // Riadenie obchodu z Fiškusu: cenník (produkty a ceny) a zákazníci.

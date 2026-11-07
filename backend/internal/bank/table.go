@@ -6,9 +6,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/palo-krnac/fiscus/backend/internal/invoice"
-	"github.com/palo-krnac/fiscus/backend/internal/money"
-	"github.com/palo-krnac/fiscus/backend/internal/table"
+	"github.com/fiskus-online/fiskus/backend/internal/invoice"
+	"github.com/fiskus-online/fiskus/backend/internal/money"
+	"github.com/fiskus-online/fiskus/backend/internal/table"
 )
 
 // Stĺpce výpisu v CSV/Excel. Banky ich pomenúvajú rôzne, preto sa hľadajú

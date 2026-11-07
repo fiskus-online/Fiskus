@@ -4,8 +4,8 @@ import (
 	"context"
 	"sort"
 
-	"github.com/palo-krnac/fiscus/backend/internal/cash"
-	"github.com/palo-krnac/fiscus/backend/internal/store"
+	"github.com/fiskus-online/fiskus/backend/internal/cash"
+	"github.com/fiskus-online/fiskus/backend/internal/store"
 )
 
 func (s *Store) ListCashDocuments(_ context.Context, companyID int64, year int) ([]cash.Document, error) {

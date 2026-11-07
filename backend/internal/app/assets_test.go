@@ -4,12 +4,12 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/palo-krnac/fiscus/backend/internal/asset"
-	"github.com/palo-krnac/fiscus/backend/internal/edition"
-	"github.com/palo-krnac/fiscus/backend/internal/invoice"
-	"github.com/palo-krnac/fiscus/backend/internal/journal"
-	m "github.com/palo-krnac/fiscus/backend/internal/money"
-	"github.com/palo-krnac/fiscus/backend/internal/store"
+	"github.com/fiskus-online/fiskus/backend/internal/asset"
+	"github.com/fiskus-online/fiskus/backend/internal/edition"
+	"github.com/fiskus-online/fiskus/backend/internal/invoice"
+	"github.com/fiskus-online/fiskus/backend/internal/journal"
+	m "github.com/fiskus-online/fiskus/backend/internal/money"
+	"github.com/fiskus-online/fiskus/backend/internal/store"
 )
 
 func TestAssetRegister(t *testing.T) {

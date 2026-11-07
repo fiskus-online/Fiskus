@@ -3,7 +3,7 @@ package app
 import (
 	"context"
 	"errors"
-	"github.com/palo-krnac/fiscus/backend/internal/audit"
+	"github.com/fiskus-online/fiskus/backend/internal/audit"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -11,12 +11,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/palo-krnac/fiscus/backend/internal/auth"
-	"github.com/palo-krnac/fiscus/backend/internal/edition"
-	"github.com/palo-krnac/fiscus/backend/internal/invoice"
-	"github.com/palo-krnac/fiscus/backend/internal/postman"
-	"github.com/palo-krnac/fiscus/backend/internal/store"
-	"github.com/palo-krnac/fiscus/backend/internal/ubl"
+	"github.com/fiskus-online/fiskus/backend/internal/auth"
+	"github.com/fiskus-online/fiskus/backend/internal/edition"
+	"github.com/fiskus-online/fiskus/backend/internal/invoice"
+	"github.com/fiskus-online/fiskus/backend/internal/postman"
+	"github.com/fiskus-online/fiskus/backend/internal/store"
+	"github.com/fiskus-online/fiskus/backend/internal/ubl"
 )
 
 func TestEInvoiceExchange(t *testing.T) {

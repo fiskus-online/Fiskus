@@ -3,7 +3,7 @@ package reminder
 import (
 	"strings"
 
-	"github.com/palo-krnac/fiscus/backend/internal/money"
+	"github.com/fiskus-online/fiskus/backend/internal/money"
 )
 
 // Texty listu upomienky — rovnaké ako lib/reminders.js vo frontende.

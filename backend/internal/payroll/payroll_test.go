@@ -3,8 +3,8 @@ package payroll
 import (
 	"testing"
 
-	"github.com/palo-krnac/fiscus/backend/internal/dpfo"
-	"github.com/palo-krnac/fiscus/backend/internal/money"
+	"github.com/fiskus-online/fiskus/backend/internal/dpfo"
+	"github.com/fiskus-online/fiskus/backend/internal/money"
 )
 
 func fund(r Result, f string) Fund {

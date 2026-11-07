@@ -7,9 +7,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/palo-krnac/fiscus/backend/internal/edition"
-	"github.com/palo-krnac/fiscus/backend/internal/extract"
-	"github.com/palo-krnac/fiscus/backend/internal/store"
+	"github.com/fiskus-online/fiskus/backend/internal/edition"
+	"github.com/fiskus-online/fiskus/backend/internal/extract"
+	"github.com/fiskus-online/fiskus/backend/internal/store"
 )
 
 func fakeClaude(t *testing.T, input string) string {

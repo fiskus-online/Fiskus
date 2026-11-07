@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/palo-krnac/fiscus/backend/internal/auth"
-	"github.com/palo-krnac/fiscus/backend/internal/chart"
-	"github.com/palo-krnac/fiscus/backend/internal/ledger"
-	"github.com/palo-krnac/fiscus/backend/internal/money"
-	"github.com/palo-krnac/fiscus/backend/internal/tabimport"
-	"github.com/palo-krnac/fiscus/backend/internal/table"
+	"github.com/fiskus-online/fiskus/backend/internal/auth"
+	"github.com/fiskus-online/fiskus/backend/internal/chart"
+	"github.com/fiskus-online/fiskus/backend/internal/ledger"
+	"github.com/fiskus-online/fiskus/backend/internal/money"
+	"github.com/fiskus-online/fiskus/backend/internal/tabimport"
+	"github.com/fiskus-online/fiskus/backend/internal/table"
 )
 
 // OpeningImport sú počiatočné stavy načítané z tabuľky (konečná súvaha

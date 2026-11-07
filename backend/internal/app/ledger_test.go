@@ -3,16 +3,16 @@ package app
 import (
 	"testing"
 
-	"github.com/palo-krnac/fiscus/backend/internal/bank"
-	"github.com/palo-krnac/fiscus/backend/internal/cash"
-	"github.com/palo-krnac/fiscus/backend/internal/chart"
-	"github.com/palo-krnac/fiscus/backend/internal/edition"
-	"github.com/palo-krnac/fiscus/backend/internal/fx"
-	"github.com/palo-krnac/fiscus/backend/internal/invoice"
-	"github.com/palo-krnac/fiscus/backend/internal/ledger"
-	m "github.com/palo-krnac/fiscus/backend/internal/money"
-	"github.com/palo-krnac/fiscus/backend/internal/purchase"
-	"github.com/palo-krnac/fiscus/backend/internal/vat"
+	"github.com/fiskus-online/fiskus/backend/internal/bank"
+	"github.com/fiskus-online/fiskus/backend/internal/cash"
+	"github.com/fiskus-online/fiskus/backend/internal/chart"
+	"github.com/fiskus-online/fiskus/backend/internal/edition"
+	"github.com/fiskus-online/fiskus/backend/internal/fx"
+	"github.com/fiskus-online/fiskus/backend/internal/invoice"
+	"github.com/fiskus-online/fiskus/backend/internal/ledger"
+	m "github.com/fiskus-online/fiskus/backend/internal/money"
+	"github.com/fiskus-online/fiskus/backend/internal/purchase"
+	"github.com/fiskus-online/fiskus/backend/internal/vat"
 )
 
 // lineStr zapíše riadky ako „311 MD 492.00, 602 D 400.00“ na porovnanie.

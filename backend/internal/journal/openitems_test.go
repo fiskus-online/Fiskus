@@ -3,10 +3,10 @@ package journal
 import (
 	"testing"
 
-	"github.com/palo-krnac/fiscus/backend/internal/invoice"
-	m "github.com/palo-krnac/fiscus/backend/internal/money"
-	"github.com/palo-krnac/fiscus/backend/internal/purchase"
-	"github.com/palo-krnac/fiscus/backend/internal/vat"
+	"github.com/fiskus-online/fiskus/backend/internal/invoice"
+	m "github.com/fiskus-online/fiskus/backend/internal/money"
+	"github.com/fiskus-online/fiskus/backend/internal/purchase"
+	"github.com/fiskus-online/fiskus/backend/internal/vat"
 )
 
 func inv(id int64, kind invoice.Kind, status invoice.Status, issue, due, total string, pays ...invoice.Payment) invoice.Invoice {

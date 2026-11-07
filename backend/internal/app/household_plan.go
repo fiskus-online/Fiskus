@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/palo-krnac/fiscus/backend/internal/household"
-	"github.com/palo-krnac/fiscus/backend/internal/invoice"
-	"github.com/palo-krnac/fiscus/backend/internal/money"
+	"github.com/fiskus-online/fiskus/backend/internal/household"
+	"github.com/fiskus-online/fiskus/backend/internal/invoice"
+	"github.com/fiskus-online/fiskus/backend/internal/money"
 )
 
 // Plán platieb domácnosti po mesiacoch: čo a kedy treba zaplatiť (splátky,

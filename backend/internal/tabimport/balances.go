@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/palo-krnac/fiscus/backend/internal/catalog"
-	"github.com/palo-krnac/fiscus/backend/internal/money"
+	"github.com/fiskus-online/fiskus/backend/internal/catalog"
+	"github.com/fiskus-online/fiskus/backend/internal/money"
 )
 
 // Balance je zostatok účtu z tabuľky (obratová predvaha, konečná súvaha

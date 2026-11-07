@@ -6,11 +6,11 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/palo-krnac/fiscus/backend/internal/edition"
-	"github.com/palo-krnac/fiscus/backend/internal/household"
-	"github.com/palo-krnac/fiscus/backend/internal/invoice"
-	m "github.com/palo-krnac/fiscus/backend/internal/money"
-	"github.com/palo-krnac/fiscus/backend/internal/store"
+	"github.com/fiskus-online/fiskus/backend/internal/edition"
+	"github.com/fiskus-online/fiskus/backend/internal/household"
+	"github.com/fiskus-online/fiskus/backend/internal/invoice"
+	m "github.com/fiskus-online/fiskus/backend/internal/money"
+	"github.com/fiskus-online/fiskus/backend/internal/store"
 )
 
 const groceryJSON = `{"returnValue":0,"receipt":{"receiptId":"O-11112222333344445555666677778888","receiptNumber":7,

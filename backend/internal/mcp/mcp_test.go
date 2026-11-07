@@ -3,20 +3,20 @@ package mcp
 import (
 	"context"
 	"encoding/json"
-	"github.com/palo-krnac/fiscus/backend/internal/catalog"
+	"github.com/fiskus-online/fiskus/backend/internal/catalog"
 	"strings"
 	"testing"
 
-	"github.com/palo-krnac/fiscus/backend/internal/app"
-	"github.com/palo-krnac/fiscus/backend/internal/audit"
-	"github.com/palo-krnac/fiscus/backend/internal/auth"
-	"github.com/palo-krnac/fiscus/backend/internal/edition"
-	"github.com/palo-krnac/fiscus/backend/internal/invoice"
-	"github.com/palo-krnac/fiscus/backend/internal/money"
-	"github.com/palo-krnac/fiscus/backend/internal/quote"
-	"github.com/palo-krnac/fiscus/backend/internal/recurring"
-	"github.com/palo-krnac/fiscus/backend/internal/store"
-	"github.com/palo-krnac/fiscus/backend/internal/store/memstore"
+	"github.com/fiskus-online/fiskus/backend/internal/app"
+	"github.com/fiskus-online/fiskus/backend/internal/audit"
+	"github.com/fiskus-online/fiskus/backend/internal/auth"
+	"github.com/fiskus-online/fiskus/backend/internal/edition"
+	"github.com/fiskus-online/fiskus/backend/internal/invoice"
+	"github.com/fiskus-online/fiskus/backend/internal/money"
+	"github.com/fiskus-online/fiskus/backend/internal/quote"
+	"github.com/fiskus-online/fiskus/backend/internal/recurring"
+	"github.com/fiskus-online/fiskus/backend/internal/store"
+	"github.com/fiskus-online/fiskus/backend/internal/store/memstore"
 )
 
 type rpcResp struct {

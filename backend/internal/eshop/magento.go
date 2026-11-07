@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/palo-krnac/fiscus/backend/internal/money"
+	"github.com/fiskus-online/fiskus/backend/internal/money"
 )
 
 // Magento 2 / Adobe Commerce REST API (/rest/V1), prihlásenie tokenom

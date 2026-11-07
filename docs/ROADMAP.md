@@ -1,6 +1,6 @@
 # Plán vývoja
 
-Referenčný prehľad funkcií pochádza z českých systémov  (MIT) a  ([docs/reference/](https://github.com/palo-krnac/Fiscus/tree/main/docs/reference)). Kód z nich nepreberáme, slúžia iba ako zoznam funkcií. Proprietárne časti  (podvojné účtovníctvo, sklad, majetok, EPO, mzdy) píšeme od nuly podľa slovenskej legislatívy.
+Referenčný prehľad funkcií pochádza z českých systémov  (MIT) a  ([docs/reference/](https://github.com/fiskus-online/fiskus/tree/main/docs/reference)). Kód z nich nepreberáme, slúžia iba ako zoznam funkcií. Proprietárne časti  (podvojné účtovníctvo, sklad, majetok, EPO, mzdy) píšeme od nuly podľa slovenskej legislatívy.
 
 ## Etapa 0 — kostra ✅
 - [x] Presný typ na peniaze, výpočet DPH (23/19/5/0 %, ceny s DPH aj bez DPH, prenesenie daňovej povinnosti)

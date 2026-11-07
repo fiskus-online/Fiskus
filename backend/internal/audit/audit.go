@@ -13,7 +13,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/palo-krnac/fiscus/backend/internal/auth"
+	"github.com/fiskus-online/fiskus/backend/internal/auth"
 )
 
 // Category je oblasť, ktorej sa záznam týka (filter v audite).

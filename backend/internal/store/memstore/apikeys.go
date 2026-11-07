@@ -4,8 +4,8 @@ import (
 	"context"
 	"sort"
 
-	"github.com/palo-krnac/fiscus/backend/internal/auth"
-	"github.com/palo-krnac/fiscus/backend/internal/store"
+	"github.com/fiskus-online/fiskus/backend/internal/auth"
+	"github.com/fiskus-online/fiskus/backend/internal/store"
 )
 
 func (s *Store) CreateAPIKey(_ context.Context, k *auth.APIKey) error {

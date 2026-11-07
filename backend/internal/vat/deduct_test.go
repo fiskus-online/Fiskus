@@ -3,7 +3,7 @@ package vat
 import (
 	"testing"
 
-	"github.com/palo-krnac/fiscus/backend/internal/money"
+	"github.com/fiskus-online/fiskus/backend/internal/money"
 )
 
 func TestDeductPart(t *testing.T) {

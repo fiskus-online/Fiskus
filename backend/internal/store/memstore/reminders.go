@@ -4,8 +4,8 @@ import (
 	"context"
 	"sort"
 
-	"github.com/palo-krnac/fiscus/backend/internal/reminder"
-	"github.com/palo-krnac/fiscus/backend/internal/store"
+	"github.com/fiskus-online/fiskus/backend/internal/reminder"
+	"github.com/fiskus-online/fiskus/backend/internal/store"
 )
 
 func cloneReminder(r reminder.Reminder) reminder.Reminder {

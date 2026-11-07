@@ -13,7 +13,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/palo-krnac/fiscus/backend/internal/money"
+	"github.com/fiskus-online/fiskus/backend/internal/money"
 )
 
 // Rate je sadzba DPH v percentách.

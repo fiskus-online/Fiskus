@@ -7,9 +7,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/palo-krnac/fiscus/backend/internal/audit"
-	"github.com/palo-krnac/fiscus/backend/internal/invoice"
-	"github.com/palo-krnac/fiscus/backend/internal/store"
+	"github.com/fiskus-online/fiskus/backend/internal/audit"
+	"github.com/fiskus-online/fiskus/backend/internal/invoice"
+	"github.com/fiskus-online/fiskus/backend/internal/store"
 )
 
 // AmendError — vystavenú faktúru už nemožno upraviť (opravuje sa dobropisom).

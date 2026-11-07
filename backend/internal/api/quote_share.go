@@ -6,8 +6,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/palo-krnac/fiscus/backend/internal/app"
-	"github.com/palo-krnac/fiscus/backend/internal/quote"
+	"github.com/fiskus-online/fiskus/backend/internal/app"
+	"github.com/fiskus-online/fiskus/backend/internal/quote"
 )
 
 func (s *Server) shareQuote(r *http.Request, cid, id int64) (quote.Quote, error) {

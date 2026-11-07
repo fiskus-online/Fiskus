@@ -9,15 +9,15 @@ import (
 	"strings"
 	"time"
 
-	"github.com/palo-krnac/fiscus/backend/internal/audit"
-	"github.com/palo-krnac/fiscus/backend/internal/auth"
-	"github.com/palo-krnac/fiscus/backend/internal/invoice"
-	"github.com/palo-krnac/fiscus/backend/internal/mail"
-	"github.com/palo-krnac/fiscus/backend/internal/money"
-	"github.com/palo-krnac/fiscus/backend/internal/printout"
-	"github.com/palo-krnac/fiscus/backend/internal/quote"
-	"github.com/palo-krnac/fiscus/backend/internal/reminder"
-	"github.com/palo-krnac/fiscus/backend/internal/store"
+	"github.com/fiskus-online/fiskus/backend/internal/audit"
+	"github.com/fiskus-online/fiskus/backend/internal/auth"
+	"github.com/fiskus-online/fiskus/backend/internal/invoice"
+	"github.com/fiskus-online/fiskus/backend/internal/mail"
+	"github.com/fiskus-online/fiskus/backend/internal/money"
+	"github.com/fiskus-online/fiskus/backend/internal/printout"
+	"github.com/fiskus-online/fiskus/backend/internal/quote"
+	"github.com/fiskus-online/fiskus/backend/internal/reminder"
+	"github.com/fiskus-online/fiskus/backend/internal/store"
 )
 
 var (

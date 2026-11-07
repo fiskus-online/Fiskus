@@ -8,10 +8,10 @@ import (
 	"encoding/json"
 	"errors"
 
-	"github.com/palo-krnac/fiscus/backend/internal/bank"
-	"github.com/palo-krnac/fiscus/backend/internal/invoice"
-	"github.com/palo-krnac/fiscus/backend/internal/money"
-	"github.com/palo-krnac/fiscus/backend/internal/store"
+	"github.com/fiskus-online/fiskus/backend/internal/bank"
+	"github.com/fiskus-online/fiskus/backend/internal/invoice"
+	"github.com/fiskus-online/fiskus/backend/internal/money"
+	"github.com/fiskus-online/fiskus/backend/internal/store"
 )
 
 const bankCols = `id, company_id, account, date, amount, currency, direction, vs, ss, ks,
