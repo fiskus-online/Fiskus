@@ -3,7 +3,6 @@ package app
 import (
 	"context"
 	"errors"
-	"github.com/palo-krnac/fiscus/backend/internal/license/licensetest"
 	"strings"
 	"testing"
 	"time"
@@ -23,22 +22,11 @@ func newApp(t *testing.T, mode edition.Mode) (*App, store.Company) {
 	caps, _ := edition.For(mode)
 	a := New(memstore.New(), caps)
 	a.Today = func() invoice.Date { return invoice.MustDate("2026-10-29") }
-	unlock(t, a)
 	c, err := a.CreateCompany(ctx, store.Company{Name: "Moja firma", ICO: "31322832", VATPayer: true, ICDPH: "SK2020372640"})
 	if err != nil {
 		t.Fatal(err)
 	}
 	return a, c
-}
-
-// unlock nahrá testovaciu licenciu pre viac firiem (iba serverová verzia ju uplatní).
-func unlock(t *testing.T, a *App) {
-	t.Helper()
-	keys, key := licensetest.Unlimited()
-	a.LicenseKeys = keys
-	if err := a.LoadLicense(key); err != nil {
-		t.Fatal(err)
-	}
 }
 
 func validDraft() invoice.Invoice {
@@ -49,18 +37,14 @@ func validDraft() invoice.Invoice {
 	}
 }
 
-func TestDesktopAllowsOnlyOneCompany(t *testing.T) {
-	a, _ := newApp(t, edition.Desktop)
-	if _, err := a.CreateCompany(ctx, store.Company{Name: "Druhá"}); !errors.Is(err, ErrCompanyLimit) {
-		t.Fatalf("druhá firma v desktope: %v", err)
-	}
-}
-
-func TestServerAllowsManyCompanies(t *testing.T) {
-	a, _ := newApp(t, edition.Server)
-	for i := 0; i < 3; i++ {
-		if _, err := a.CreateCompany(ctx, store.Company{Name: "Ďalšia"}); err != nil {
-			t.Fatal(err)
+func TestManyCompaniesFree(t *testing.T) {
+	// Fiškus je zadarmo bez obmedzenia počtu firiem v každom režime
+	for _, mode := range []edition.Mode{edition.Desktop, edition.Server} {
+		a, _ := newApp(t, mode)
+		for i := 0; i < 3; i++ {
+			if _, err := a.CreateCompany(ctx, store.Company{Name: "Ďalšia"}); err != nil {
+				t.Fatalf("%s: %v", mode, err)
+			}
 		}
 	}
 }

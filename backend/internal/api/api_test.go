@@ -18,7 +18,6 @@ import (
 	"github.com/palo-krnac/fiscus/backend/internal/auth"
 	"github.com/palo-krnac/fiscus/backend/internal/edition"
 	"github.com/palo-krnac/fiscus/backend/internal/invoice"
-	"github.com/palo-krnac/fiscus/backend/internal/license/licensetest"
 	"github.com/palo-krnac/fiscus/backend/internal/mcp"
 	"github.com/palo-krnac/fiscus/backend/internal/registry"
 	"github.com/palo-krnac/fiscus/backend/internal/store"
@@ -36,7 +35,7 @@ type env struct {
 }
 
 const (
-	adminEmail = "spravca@fiskus.sk"
+	adminEmail = "spravca@fiskus.online"
 	adminPass  = "spravca-heslo-1"
 )
 
@@ -45,23 +44,12 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
-// setup spustí server; serverová verzia dostane licenciu pre viac firiem.
+// setup spustí server v danom režime.
 func setup(t *testing.T, mode edition.Mode) *env {
-	return setupLicensed(t, mode, true)
-}
-
-func setupLicensed(t *testing.T, mode edition.Mode, licensed bool) *env {
 	t.Helper()
 	caps, _ := edition.For(mode)
 	a := app.New(memstore.New(), caps)
 	a.Today = func() invoice.Date { return invoice.MustDate("2026-10-29") }
-	if licensed {
-		keys, key := licensetest.Unlimited()
-		a.LicenseKeys = keys
-		if err := a.LoadLicense(key); err != nil {
-			t.Fatal(err)
-		}
-	}
 	c, err := a.CreateCompany(context.Background(), store.Company{Name: "Moja firma", VATPayer: true, ICDPH: "SK2020372640"})
 	if err != nil {
 		t.Fatal(err)
@@ -137,17 +125,10 @@ func TestCapabilities(t *testing.T) {
 		e := setup(t, mode)
 		var caps edition.Capabilities
 		e.do("GET", "/api/capabilities", nil, 200, &caps)
-		if caps.MultiCompany != (mode == edition.Server) {
+		if !caps.MultiCompany {
 			t.Errorf("%s: multiCompany = %v", mode, caps.MultiCompany)
 		}
 	}
-}
-
-func TestDesktopRejectsSecondCompany(t *testing.T) {
-	e := setup(t, edition.Desktop)
-	e.do("POST", "/api/companies", `{"name":"Druhá"}`, 403, nil)
-	e2 := setup(t, edition.Server)
-	e2.do("POST", "/api/companies", `{"name":"Druhá"}`, 201, nil)
 }
 
 func TestInvoiceFlow(t *testing.T) {

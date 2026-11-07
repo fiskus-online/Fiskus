@@ -67,7 +67,7 @@ obnovíte v časti **Obnoviť zo zálohy**.
 
 Zostavenie zo zdrojového kódu: `make browser` vytvorí statický web
 v `frontend/dist-browser`. Nahrá sa na ľubovoľný hosting s HTTPS do koreňa
-domény (napr. `app.fiskus.sk`); server nič nepočíta, iba posiela súbory.
+domény (napr. `app.fiskus.online`); server nič nepočíta, iba posiela súbory.
 Program je v ňom už skomprimovaný (asi 6 MB) a súčasťou sú `404.html`
 (hosting bez presmerovania adries) a `_headers` (cache).
 
@@ -78,7 +78,7 @@ Nasadenie na Cloudflare Pages (pripojenie repozitára z GitHubu):
 | Build command | `cd frontend && npm ci && cd .. && make browser` |
 | Build output directory | `frontend/dist-browser` |
 | Premenné prostredia | `GO_VERSION` = verzia z `backend/go.mod`, `NODE_VERSION` = `22` |
-| Vlastná doména | `app.fiskus.sk` |
+| Vlastná doména | `app.fiskus.online` |
 
 ## Ukážková firma
 
@@ -101,10 +101,10 @@ fiskus -mode server -addr :8080 -db /data/fiskus.db
 ```
 
 Serverová verzia má prihlasovanie, povinné dvojfázové overenie, roly
-používateľov a pri licencii aj viac firiem. Za reverznou proxy ju spustite
+používateľov a ľubovoľný počet firiem. Za reverznou proxy ju spustite
 s `-public-url https://vas-server`, aby odkazy (ponuky pre zákazníkov,
 pripojenie AI asistenta) mali správnu adresu.
 
-!!! note "Jedna firma je zadarmo"
-    Desktop aj server s jednou firmou sú zadarmo. Licencia je potrebná iba
-    pre server s viacerými firmami (účtovné kancelárie).
+!!! note "Vždy zadarmo"
+    Desktop, server aj Fiškus v prehliadači sú zadarmo, bez licencií
+    a bez obmedzenia počtu firiem.

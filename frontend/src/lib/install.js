@@ -7,7 +7,7 @@ import { reactive } from 'vue'
 export const inBrowser = import.meta.env.MODE === 'browser'
 
 /** Stránka so stiahnutím nainštalovaného Fiškusa. */
-export const downloadURL = 'https://fiskus.sk/#stiahnut'
+export const downloadURL = 'https://fiskus.online/#stiahnut'
 
 export const install = reactive({ feature: '' })
 

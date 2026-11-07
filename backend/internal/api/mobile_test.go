@@ -79,7 +79,7 @@ func TestLANHandler(t *testing.T) {
 	// správa programu z telefónu nie
 	for _, c := range []struct{ method, path string }{
 		{"GET", "/api/mobile"}, {"POST", "/api/mobile/pairing"}, {"POST", "/api/backups"}, {"POST", "/api/desktop/quit"},
-		{"PUT", "/api/security/pin"}, {"DELETE", fmt.Sprintf("/api/companies/%d", e.cid)}, {"POST", "/api/auth/lock"}, {"GET", "/api/license"},
+		{"PUT", "/api/security/pin"}, {"DELETE", fmt.Sprintf("/api/companies/%d", e.cid)}, {"POST", "/api/auth/lock"},
 		// trvalé prístupy by prežili zrušenie párovania
 		{"POST", "/api/me/keys"}, {"POST", "/api/me/calendar-feed"}, {"PUT", "/api/ai/settings"},
 		{"PUT", "/api/calendar-sync/config"}, {"PUT", "/api/rates"}, {"POST", "/api/me/mfa/setup"},
