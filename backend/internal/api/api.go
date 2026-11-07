@@ -137,6 +137,7 @@ func (s *Server) Handler() http.Handler {
 
 	open("GET /api/companies", s.listCompanies)
 	open("POST /api/companies", s.createCompany)
+	open("POST /api/demo", s.loadDemo)
 	need("PUT /api/companies/{cid}", auth.PermSettingsWrite, s.updateCompany)
 	open("DELETE /api/companies/{cid}", s.deleteCompany)
 	open("GET /api/companies/{cid}/logo", s.getLogo)
@@ -453,6 +454,8 @@ func fail(w http.ResponseWriter, err error) {
 		writeErr(w, http.StatusUnprocessableEntity, "Doklad obsahuje chyby", ve.Fields)
 	case errors.Is(err, store.ErrNotFound):
 		writeErr(w, http.StatusNotFound, "Záznam neexistuje", nil)
+	case errors.Is(err, app.ErrDemoOff):
+		writeErr(w, http.StatusNotFound, err.Error(), nil)
 	case errors.Is(err, invoice.ErrLocked), errors.Is(err, invoice.ErrBadTransition), errors.Is(err, app.ErrReceiptIssued), errors.Is(err, app.ErrAmend):
 		writeErr(w, http.StatusConflict, err.Error(), nil)
 	case errors.Is(err, invoice.ErrBadPayment):
@@ -464,7 +467,7 @@ func fail(w http.ResponseWriter, err error) {
 		writeErr(w, http.StatusUnprocessableEntity, err.Error(), nil)
 	case errors.Is(err, app.ErrNoSession):
 		writeErr(w, http.StatusUnauthorized, err.Error(), nil)
-	case errors.Is(err, app.ErrLastAdmin), errors.Is(err, app.ErrSelfDemote), errors.Is(err, store.ErrDuplicate):
+	case errors.Is(err, app.ErrLastAdmin), errors.Is(err, app.ErrSelfDemote), errors.Is(err, store.ErrDuplicate), errors.Is(err, app.ErrDemoNotEmpty):
 		writeErr(w, http.StatusConflict, err.Error(), nil)
 	default:
 		log.Printf("api: %v", err)
@@ -514,6 +517,7 @@ func (s *Server) company(w http.ResponseWriter, r *http.Request) (int64, bool) {
 // capabilities je verejné (aj pred prihlásením).
 func (s *Server) capabilities(w http.ResponseWriter, r *http.Request) {
 	c := s.App.Capabilities()
+	c.Demo = s.App.DemoAvailable(r.Context())
 	writeJSON(w, http.StatusOK, struct {
 		edition.Capabilities
 		Launcher bool   `json:"launcher"` // desktop z inštalátora: okno sa ozýva, dá sa ukončiť
@@ -532,6 +536,16 @@ func (s *Server) listCompanies(w http.ResponseWriter, r *http.Request) {
 		list = []store.Company{}
 	}
 	writeJSON(w, http.StatusOK, list)
+}
+
+// loadDemo založí ukážkovú firmu a domácnosť do prázdneho Fiškusa.
+func (s *Server) loadDemo(w http.ResponseWriter, r *http.Request) {
+	c, err := s.App.LoadDemo(r.Context())
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	writeJSON(w, http.StatusCreated, c)
 }
 
 func (s *Server) createCompany(w http.ResponseWriter, r *http.Request) {

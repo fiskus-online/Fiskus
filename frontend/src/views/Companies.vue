@@ -13,6 +13,7 @@ import { session, selectCompany } from '../lib/session.js'
 import FormField from '../components/FormField.vue'
 import IcoInput from '../components/IcoInput.vue'
 import ExportButton from '../components/ExportButton.vue'
+import DemoOffer from '../components/DemoOffer.vue'
 import IconField from 'primevue/iconfield'
 import InputIcon from 'primevue/inputicon'
 import { matches, searchTerms } from '../lib/search.js'
@@ -77,6 +78,7 @@ async function create() {
     <p v-if="!count" class="welcome">
       Vitajte vo Fiškuse. Začnite založením firmy — IČO stačí zadať a údaje doplníme z registra.
     </p>
+    <DemoOffer v-if="!session.companies.length" />
 
     <p v-if="count && !households.length" class="note">
       Domáce účtovníctvo (rodinný rozpočet, účty, výdavky) vediete v samostatnej domácnosti — tlačidlo „Založiť domácnosť“.

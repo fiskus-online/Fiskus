@@ -28,6 +28,7 @@ import (
 
 	"github.com/palo-krnac/fiscus/backend/internal/api"
 	"github.com/palo-krnac/fiscus/backend/internal/app"
+	"github.com/palo-krnac/fiscus/backend/internal/demo"
 	"github.com/palo-krnac/fiscus/backend/internal/edition"
 	"github.com/palo-krnac/fiscus/backend/internal/store/sqlite"
 )
@@ -51,6 +52,7 @@ func main() {
 	a := app.New(st, edition.ForBrowser())
 	a.Browser = browserDB{st: st, bridge: bridge}
 	a.BackupsOff = "Fiškus v prehliadači sa zálohuje stiahnutím súboru zálohy."
+	a.DemoSeed = demo.Seed // ukážková firma na vyskúšanie
 	if err := a.LoadLegal(context.Background()); err != nil {
 		fatal(fmt.Errorf("legislatíva: %w", err))
 		return
