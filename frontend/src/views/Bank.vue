@@ -159,6 +159,7 @@ async function openTx(tx) {
   docSearch.value = ''
   suggestions.value = []
   documents.value = []
+  foreignPick.value = null
   if (tx.status !== 'open') return
   try {
     const r = await api.bankSuggestions(session.companyId, tx.id)
@@ -173,7 +174,7 @@ const otherDocs = computed(() => {
   const terms = searchTerms(docSearch.value)
   const sug = new Set(suggestions.value.map((s) => `${s.kind}:${s.id}`))
   return documents.value
-    .filter((d) => !sug.has(`${d.kind}:${d.id}`) && matches(terms, [d.number, d.vs, d.partner, d.amount]))
+    .filter((d) => !sug.has(`${d.kind}:${d.id}`) && matches(terms, [d.number, d.vs, d.partner, d.amount, d.currency]))
     .slice(0, 30)
 })
 
@@ -191,6 +192,19 @@ async function act(fn, ok) {
   }
 }
 const pairWith = (d) => act(() => api.bankMatch(session.companyId, selected.value.id, d.kind, d.id), `Spárované s ${d.number} — doklad je uhradený`)
+// faktúra v cudzej mene z eurového účtu: koľko z nej platba uhrádza (v mene faktúry)
+const foreignPick = ref(null)
+const foreignAmount = ref('')
+function pickForeign(d) {
+  if (d.kind !== 'invoice') return pairWith(d)
+  foreignPick.value = foreignPick.value?.id === d.id ? null : d
+  foreignAmount.value = String(d.amount).replace('.', ',')
+}
+const payForeign = (d) =>
+  act(
+    () => api.bankMatch(session.companyId, selected.value.id, d.kind, d.id, foreignAmount.value.replace(/\s/g, '').replace(',', '.')),
+    `Spárované s ${d.number} — kurzový rozdiel sa zaúčtuje`,
+  )
 const unmatch = () => act(() => api.bankUnmatch(session.companyId, selected.value.id), 'Spárovanie zrušené, doklad je opäť neuhradený')
 const ignore = (on) => act(() => api.bankIgnore(session.companyId, selected.value.id, on, note.value), on ? 'Označené ako nepárované' : 'Vrátené medzi nespárované')
 const docLink = (kind, id) => (kind === 'purchase' ? `/prijate/${id}` : `/faktury/${id}`)
@@ -309,8 +323,22 @@ const kindLabel = (k) => (k === 'purchase' ? 'prijatá' : 'vydaná')
                   <span class="partner">{{ d.partner }}</span>
                 </div>
                 <div class="doc-side">
-                  <strong>{{ formatAmount(d.amount) }}</strong>
-                  <Button v-if="canWrite" label="Spárovať" severity="secondary" outlined size="small" :loading="busy" @click="pairWith(d)" />
+                  <strong>{{ formatAmount(d.amount) }}<small v-if="d.currency" class="cur"> {{ d.currency }}</small></strong>
+                  <Button
+                    v-if="canWrite"
+                    label="Spárovať"
+                    severity="secondary"
+                    outlined
+                    size="small"
+                    :loading="busy"
+                    @click="d.currency ? pickForeign(d) : pairWith(d)"
+                  />
+                </div>
+                <div v-if="foreignPick && foreignPick.id === d.id && foreignPick.kind === d.kind" class="foreign">
+                  <label :for="`fa-${d.id}`">Koľko {{ d.currency }} táto platba uhrádza?</label>
+                  <InputText :id="`fa-${d.id}`" v-model="foreignAmount" size="small" inputmode="decimal" class="num" />
+                  <Button label="Spárovať" size="small" :loading="busy" @click="payForeign(d)" />
+                  <small>Celý zostatok je {{ formatAmount(d.amount) }} {{ d.currency }}. Pri menšej sume ostane faktúra čiastočne uhradená. Rozdiel kurzu sa v podvojnom účtovníctve zaúčtuje ako kurzový zisk alebo strata.</small>
                 </div>
               </li>
               <li v-if="!otherDocs.length" class="muted">Žiadne ďalšie neuhradené doklady.</li>
@@ -497,6 +525,7 @@ const kindLabel = (k) => (k === 'purchase' ? 'prijatá' : 'vydaná')
 }
 .docs li {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   gap: 10px;
   padding: 6px 0;
@@ -505,7 +534,35 @@ const kindLabel = (k) => (k === 'purchase' ? 'prijatá' : 'vydaná')
 .doc-main {
   display: flex;
   flex-direction: column;
+  flex: 1 1 0;
   min-width: 0;
+}
+.foreign {
+  flex-basis: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: var(--blue-wash);
+  border-left: 3px solid var(--blue);
+}
+.foreign label {
+  font-weight: 600;
+  font-size: var(--fs-sm);
+}
+.foreign .p-inputtext {
+  width: 9rem;
+  text-align: right;
+}
+.foreign small {
+  flex-basis: 100%;
+  color: var(--ink-faint);
+}
+.cur {
+  margin-left: 3px;
+  font-weight: 400;
+  color: var(--ink-faint);
 }
 .doc-side {
   display: flex;

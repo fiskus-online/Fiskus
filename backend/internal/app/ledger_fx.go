@@ -232,3 +232,61 @@ func (a *App) PostFXRevaluation(ctx context.Context, companyID int64, year int) 
 	})
 	return saved, err
 }
+
+// fxPaymentBook vráti, akou sumou v eurách sa platba (bankový pohyb txID)
+// faktúry v cudzej mene odpíše z účtu odberateľa: pomernou časťou sumy
+// v účtovníctve podľa uhradenej sumy v mene faktúry, posledná platba
+// zvyškom (bez haliernych rozdielov). Ak je faktúra prepočítaná k 31. 12.
+// minulého roka (rv), delí sa prepočítaná suma medzi platby po tomto dni.
+func fxPaymentBook(inv *invoice.Invoice, txID int64, year int, rv money.Dec, hasRV bool) (money.Dec, bool) {
+	sum, ok := inv.TaxSummary()
+	if !ok {
+		return money.Zero, false
+	}
+	pays := make([]invoice.Payment, 0, len(inv.Payments))
+	found := false
+	for _, p := range inv.Payments {
+		if p.Source == invoice.PaymentBank && p.Ref == txID {
+			found = true
+		}
+		pays = append(pays, p)
+	}
+	if !found {
+		return money.Zero, false
+	}
+	sort.SliceStable(pays, func(i, j int) bool {
+		if pays[i].Date != pays[j].Date {
+			return pays[i].Date.Before(pays[j].Date)
+		}
+		return pays[i].Ref < pays[j].Ref
+	})
+	base, foreign := sum.Total, inv.Summary.Total
+	if hasRV {
+		cut := invoice.MustDate(fmt.Sprintf("%d-12-31", year-1))
+		kept := pays[:0]
+		for _, p := range pays {
+			if p.Date.After(cut) {
+				kept = append(kept, p)
+			} else {
+				foreign = foreign.Sub(p.Amount)
+			}
+		}
+		pays, base = kept, rv
+	}
+	if foreign.Sign() <= 0 {
+		return money.Zero, false
+	}
+	cum, alloc := money.Zero, money.Zero
+	for _, p := range pays {
+		cum = cum.Add(p.Amount)
+		v := p.Amount.MulRatio(base, foreign).RoundCents()
+		if cum.Cmp(foreign) >= 0 {
+			v = base.Sub(alloc) // posledná platba: zvyšok
+		}
+		if p.Source == invoice.PaymentBank && p.Ref == txID {
+			return v, true
+		}
+		alloc = alloc.Add(v)
+	}
+	return money.Zero, false
+}
