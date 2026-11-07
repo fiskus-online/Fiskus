@@ -310,6 +310,7 @@ export const api = {
   codes: () => request('GET', '/api/codes'),
   companies: () => request('GET', '/api/companies'),
   createCompany: (c) => request('POST', '/api/companies', c),
+  loadDemo: () => request('POST', '/api/demo', {}),
   updateCompany: (c) => request('PUT', `/api/companies/${c.id}`, c),
   deleteCompany: (id, name) => request('DELETE', `/api/companies/${id}`, { name }),
   registry: (ico) => request('GET', `/api/registry/${encodeURIComponent(ico)}`),
