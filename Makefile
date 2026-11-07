@@ -30,7 +30,7 @@ build: web
 	cd backend && CGO_ENABLED=0 go build -ldflags "-s -w" -o ../bin/fiskus-mcp ./cmd/fiskus-mcp
 
 # Fiškus v prehliadači: statický web v frontend/dist-browser (nahrá sa na
-# ľubovoľný hosting s HTTPS, do koreňa domény, napr. app.fiskus.sk).
+# ľubovoľný hosting s HTTPS, do koreňa domény, napr. app.fiskus.online).
 # Program ide skomprimovaný (fiskus.wasm.gz, rozbalí ho prehliadač) — nezáleží
 # na tom, či hosting komprimuje, a súbor je pod limitom 25 MiB Cloudflare Pages.
 browser:

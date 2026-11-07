@@ -9,7 +9,7 @@ const KEY = 'fiskus.companyId'
 export const session = reactive({
   ready: false,
   error: null,
-  caps: { mode: 'desktop', multiCompany: false },
+  caps: { mode: 'desktop', multiCompany: true },
   companies: [],
   companyId: null,
   me: null, // odpoveď /api/me

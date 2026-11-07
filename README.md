@@ -122,30 +122,18 @@ docs/
   reference/        podklady (zoznamy funkcií iných systémov), nezverejňujú sa
 ```
 
-## Edície
+## Zadarmo
 
-| Edícia | Cena | Pre koho |
-|---|---|---|
-| Desktop | zadarmo | jedna firma, offline na vlastnom počítači |
-| Server – jedna firma | zadarmo | prístup z prehliadača, používatelia a roly |
-| Server – viac firiem | 99 € ročne (Paddle) | účtovné kancelárie a poskytovatelia služieb |
+Fiškus je vždy zadarmo — desktop, server aj verzia v prehliadači, bez licencií
+a bez obmedzenia počtu firiem. Režimy sa líšia iba tým, kde program beží:
 
-Licencia je podpísaný kľúč `FISKUS1.…` (Ed25519). Program ho overí offline,
-bez spojenia so serverom. Nahrá ho správca inštalácie v časti **Firmy a licencia**,
-prípadne cez súbor `fiskus.license` vedľa databázy alebo premennú `FISKUS_LICENSE`.
-Po vypršaní platí ešte 30 dní na obnovenie. Potom sa nedajú zakladať nové firmy,
-ale existujúce firmy a ich dáta zostávajú prístupné.
+| Režim | Pre koho |
+|---|---|
+| Desktop | offline na vlastnom počítači |
+| Server | prístup z prehliadača, používatelia a roly (aj účtovné kancelárie) |
+| V prehliadači | bez inštalácie, údaje v prehliadači (app.fiskus.online) |
 
-Vydanie licencie (po platbe cez Paddle):
-
-```
-go run ./cmd/fiskus-license keygen -out licencia.key        # raz; verejný kľúč pridať do internal/license
-go run ./cmd/fiskus-license sign -key licencia.key -customer "Kancelária s.r.o." -email a@b.sk -id txn_…
-```
-
-Súkromný kľúč `licencia.key` nepatrí do repozitára.
-
-Po spustení predaja vydáva licencie automaticky služba `fiskus-shop` (webhook Paddle → podpísaný kľúč → e-mail zákazníkovi). Web s cenníkom a nákupom je v priečinku [`site/`](site/README.md).
+Web je v priečinku [`site/`](site/README.md).
 
 ## AI asistent (MCP)
 

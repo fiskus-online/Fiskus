@@ -1,4 +1,4 @@
-// fiskus.sk: odkazy na stiahnutie podľa systému a nákup licencie cez Paddle.
+// fiskus.online: odkazy na stiahnutie podľa systému.
 ;(function () {
   const cfg = window.FISKUS || {}
   const v = cfg.version || ''
@@ -31,70 +31,4 @@
       hero.textContent = { windows: 'Stiahnuť pre Windows', macos: 'Stiahnuť pre macOS', linux: 'Stiahnuť pre Linux' }[os]
     }
   }
-
-  // ---- nákup licencie ----
-  const form = document.querySelector('#kupit-form')
-  if (!form) return
-  const msg = form.querySelector('.msg')
-  const p = cfg.paddle || {}
-  const ready = !!(p.token && p.priceId)
-  const button = form.querySelector('button')
-  if (!ready) {
-    button.disabled = true
-    msg.textContent = `Online predaj spúšťame. Licenciu zatiaľ objednáte e-mailom na ${cfg.contact}.`
-    return
-  }
-
-  let loaded = null
-  function loadPaddle() {
-    loaded ??= new Promise((resolve, reject) => {
-      const s = document.createElement('script')
-      s.src = 'https://cdn.paddle.com/paddle/v2/paddle.js'
-      s.onload = () => {
-        if (p.environment === 'sandbox') window.Paddle.Environment.set('sandbox')
-        window.Paddle.Initialize({
-          token: p.token,
-          eventCallback: (e) => {
-            if (e.name === 'checkout.completed') {
-              msg.classList.remove('err')
-              msg.textContent = 'Ďakujeme. Licenčný kľúč príde do niekoľkých minút na zadaný e-mail.'
-            }
-          },
-        })
-        resolve(window.Paddle)
-      }
-      s.onerror = () => reject(new Error('Platobnú bránu sa nepodarilo načítať. Skúste to znova.'))
-      document.head.appendChild(s)
-    })
-    return loaded
-  }
-
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault()
-    const company = form.company.value.trim()
-    const email = form.email.value.trim()
-    if (!company || !form.email.checkValidity()) {
-      msg.classList.add('err')
-      msg.textContent = 'Zadajte obchodné meno a platný e-mail — pošleme naň licenčný kľúč.'
-      return
-    }
-    msg.classList.remove('err')
-    msg.textContent = ''
-    button.disabled = true
-    try {
-      const paddle = await loadPaddle()
-      // obchodné meno a e-mail dostane licenčný server v custom_data
-      paddle.Checkout.open({
-        items: [{ priceId: p.priceId, quantity: 1 }],
-        customer: { email },
-        customData: { company, email },
-        settings: { displayMode: 'overlay' },
-      })
-    } catch (err) {
-      msg.classList.add('err')
-      msg.textContent = err.message
-    } finally {
-      button.disabled = false
-    }
-  })
 })()

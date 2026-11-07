@@ -9,9 +9,7 @@ tags: [domácnosť, rozpočet]
 
 Domáce účtovníctvo vediete v samostatnej **domácnosti** — vo Fiškuse je to
 zvláštny druh „firmy“ bez IČO, DPH a dokladov. Založíte ju v časti
-**Nastavenia → Firmy a domácnosti → Založiť domácnosť**. Do počtu firiem
-licencie sa nepočíta, takže ju má aj bezplatná desktopová verzia popri
-svojej firme. Medzi firmou a domácnosťou sa prepínate hore v hlavičke.
+**Nastavenia → Firmy a domácnosti → Založiť domácnosť**. Medzi firmou a domácnosťou sa prepínate hore v hlavičke.
 
 ## Účty
 

@@ -6,7 +6,6 @@ import (
 	"net/http"
 
 	"context"
-	"crypto/ed25519"
 	"errors"
 	"fmt"
 	"github.com/palo-krnac/fiscus/backend/internal/backup"
@@ -24,29 +23,21 @@ import (
 	"github.com/palo-krnac/fiscus/backend/internal/household"
 	"github.com/palo-krnac/fiscus/backend/internal/invoice"
 	"github.com/palo-krnac/fiscus/backend/internal/legal"
-	"github.com/palo-krnac/fiscus/backend/internal/license"
 	"github.com/palo-krnac/fiscus/backend/internal/mail"
 	"github.com/palo-krnac/fiscus/backend/internal/money"
 	"github.com/palo-krnac/fiscus/backend/internal/party"
 	"github.com/palo-krnac/fiscus/backend/internal/store"
 )
 
-// ErrCompanyLimit — v tejto edícii sa nedá založiť ďalšia firma.
-var ErrCompanyLimit = errors.New("desktopová verzia podporuje iba jednu firmu — viac firiem je dostupných v serverovej verzii")
-
 // App je aplikačná služba.
 type App struct {
 	Store store.Store
-	Caps  edition.Capabilities // režim bez licencie; aktuálne schopnosti vracia Capabilities()
+	Caps  edition.Capabilities // režim behu
 	Today func() invoice.Date  // dá sa podvrhnúť v testoch
-	Now   func() time.Time     // čas pre licenciu; nil = time.Now
+	Now   func() time.Time     // aktuálny čas; nil = time.Now
 	// PublicURL je verejná adresa servera (odkazy v upozorneniach); prázdna = bez odkazu.
 	PublicURL string
 
-	// LicenseKeys sú verejné kľúče na overenie licencie; nil = license.TrustedKeys.
-	LicenseKeys []ed25519.PublicKey
-	// SaveLicense trvalo uloží licenčný kľúč (nastaví main); nil = iba v pamäti.
-	SaveLicense func(key string) error
 	// Backups spravuje šifrované zálohy (nil = vypnuté, dôvod v BackupsOff).
 	Backups    *backup.Manager
 	BackupsOff string
@@ -85,7 +76,6 @@ type App struct {
 	Postman func(postman.Settings) (postman.Provider, error)
 	// Mailer posiela e-maily (nil = SMTP podľa nastavenia firmy).
 	Mailer   mail.Sender
-	lic      atomic.Pointer[license.License]
 	recurMu  sync.Mutex // jeden beh pravidelnej fakturácie naraz
 	mobile   mobileState
 	quoteMu  sync.Mutex // odpovede zákazníkov na ponuky
@@ -107,16 +97,8 @@ func New(s store.Store, caps edition.Capabilities) *App {
 	return &App{Store: s, Caps: caps, Today: invoice.Today}
 }
 
-// CreateCompany založí firmu, ak to edícia dovoľuje.
+// CreateCompany založí firmu alebo domácnosť (bez obmedzenia počtu).
 func (a *App) CreateCompany(ctx context.Context, c store.Company) (store.Company, error) {
-	// domácnosť sa do počtu firiem licencie nezapočítava
-	n, err := a.businessCount(ctx)
-	if err != nil {
-		return store.Company{}, err
-	}
-	if c.Bookkeeping != store.BookkeepingHousehold && !a.Capabilities().CanAddCompany(n) {
-		return store.Company{}, a.companyLimitError()
-	}
 	if c.Bookkeeping == store.BookkeepingHousehold {
 		c.SetupDone = true // domácnosť nepotrebuje sprievodcu (DPH, účtovníctvo)
 	}
@@ -125,7 +107,7 @@ func (a *App) CreateCompany(ctx context.Context, c store.Company) (store.Company
 		return store.Company{}, err
 	}
 	c.MigratedFrom, c.MigratedAt = "", ""
-	c, err = a.Store.CreateCompany(ctx, c)
+	c, err := a.Store.CreateCompany(ctx, c)
 	if err != nil {
 		return c, err
 	}
@@ -159,7 +141,7 @@ func (a *App) UpdateCompany(ctx context.Context, c store.Company) (store.Company
 	}
 	// prenos z iného programu zapisuje iba server
 	c.MigratedFrom, c.MigratedAt = old.MigratedFrom, old.MigratedAt
-	// domácnosť a firma sa nedajú zameniť (iné dáta, licencia)
+	// domácnosť a firma sa nedajú zameniť (iné dáta)
 	if (old.Bookkeeping == store.BookkeepingHousehold) != (c.Bookkeeping == store.BookkeepingHousehold) {
 		return c, vErr("bookkeeping", "Domácnosť sa nedá zmeniť na firmu ani naopak — založte novú")
 	}
@@ -224,21 +206,6 @@ func NumberFormat(c store.Company, k invoice.Kind) string {
 		return f
 	}
 	return invoice.DefaultFormats[invoice.KindInvoice]
-}
-
-// businessCount je počet firiem bez domácností (limit licencie).
-func (a *App) businessCount(ctx context.Context) (int, error) {
-	cs, err := a.Store.ListCompanies(ctx)
-	if err != nil {
-		return 0, err
-	}
-	n := 0
-	for _, c := range cs {
-		if c.Bookkeeping != store.BookkeepingHousehold {
-			n++
-		}
-	}
-	return n, nil
 }
 
 func validateCompany(c store.Company) error {

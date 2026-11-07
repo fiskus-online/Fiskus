@@ -1,15 +1,8 @@
-// Nastavenie webu fiskus.sk. Predaj je vypnutý, kým nie je vyplnené paddle.token
-// a paddle.priceId (Paddle → Developer tools → Authentication / Catalog).
+// Nastavenie webu fiskus.online (verziu a adresu súborov doplní nasadenie z posledného vydania).
 window.FISKUS = {
   version: '0.1.0',
-  // kde ležia súbory na stiahnutie (napr. https://fiskus.sk/stiahnut/0.1.0/)
+  // kde ležia súbory na stiahnutie (napr. https://fiskus.online/stiahnut/0.1.0/)
   downloads: 'stiahnut/0.1.0/',
-  paddle: {
-    environment: 'sandbox', // 'sandbox' na skúšku, 'production' naostro
-    token: '', // client-side token (test_… / live_…)
-    priceId: '', // cena „Server – viac firiem“, 99 € ročne (pri_…)
-  },
-  contact: 'info@fiskus.sk',
-  app: 'https://app.fiskus.sk/', // Fiškus v prehliadači
-  docs: 'https://docs.fiskus.sk/', // návod
+  app: 'https://app.fiskus.online/', // Fiškus v prehliadači
+  docs: 'https://docs.fiskus.online/', // návod
 }

@@ -14,11 +14,7 @@ import (
 )
 
 func TestHouseholdCompany(t *testing.T) {
-	// desktop je pre jednu firmu — domácnosť sa do limitu nepočíta
 	a, firm := newApp(t, edition.Desktop)
-	if _, err := a.CreateCompany(ctx, store.Company{Name: "Druhá firma"}); !errors.Is(err, ErrCompanyLimit) {
-		t.Fatalf("druhá firma v desktope: %v", err)
-	}
 	h, err := a.CreateCompany(ctx, store.Company{Name: "Domácnosť Krnáčovci", Bookkeeping: store.BookkeepingHousehold})
 	if err != nil || !h.SetupDone {
 		t.Fatalf("domácnosť: %+v %v", h, err)

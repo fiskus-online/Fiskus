@@ -76,7 +76,7 @@ const (
 	BookkeepingSimple = "simple"
 	BookkeepingDouble = "double"
 	// BookkeepingHousehold je domácnosť (domáce účtovníctvo) — bez dokladov,
-	// DPH a daní; nezapočítava sa do počtu firiem licencie.
+	// DPH a daní.
 	BookkeepingHousehold = "household"
 )
 

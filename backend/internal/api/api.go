@@ -116,7 +116,6 @@ func (s *Server) Handler() http.Handler {
 	open("PUT /api/security/require-mfa", s.setRequireMFA)
 	open("POST /api/auth/password", s.changePassword)
 	open("GET /api/me", s.me)
-	open("GET /api/license", s.getLicense)
 	open("GET /api/mobile", s.mobileStatus)
 	open("PUT /api/mobile", s.setMobile)
 	open("PUT /api/mobile/address", s.setMobileAddress)
@@ -125,7 +124,6 @@ func (s *Server) Handler() http.Handler {
 	open("POST /api/mobile/pairing", s.newPairing)
 	open("DELETE /api/mobile/devices/{id}", s.removeDevice)
 	public("POST /api/mobile/pair", s.pairMobile)
-	open("POST /api/license", s.setLicense)
 	open("GET /api/registry/{ico}", s.lookupICO)
 	open("GET /api/vies/{vatid}", s.checkVAT)
 	open("GET /api/legal", s.getLegal)
@@ -459,7 +457,7 @@ func fail(w http.ResponseWriter, err error) {
 		writeErr(w, http.StatusConflict, err.Error(), nil)
 	case errors.Is(err, invoice.ErrBadPayment):
 		writeErr(w, http.StatusUnprocessableEntity, err.Error(), nil)
-	case errors.Is(err, app.ErrCompanyLimit), errors.Is(err, app.ErrForbidden), errors.Is(err, app.ErrReadOnly):
+	case errors.Is(err, app.ErrForbidden), errors.Is(err, app.ErrReadOnly):
 		writeErr(w, http.StatusForbidden, err.Error(), nil)
 	case errors.Is(err, app.ErrNotVATPayer), errors.Is(err, app.ErrPeriodTooOld), errors.Is(err, app.ErrPeriodInFuture),
 		errors.Is(err, app.ErrMissingVATData):
@@ -513,10 +511,9 @@ func (s *Server) company(w http.ResponseWriter, r *http.Request) (int64, bool) {
 
 // ---- handlery ----
 
-// capabilities je verejné (aj pred prihlásením), preto bez údajov o držiteľovi licencie.
+// capabilities je verejné (aj pred prihlásením).
 func (s *Server) capabilities(w http.ResponseWriter, r *http.Request) {
 	c := s.App.Capabilities()
-	c.License = nil
 	writeJSON(w, http.StatusOK, struct {
 		edition.Capabilities
 		Launcher bool   `json:"launcher"` // desktop z inštalátora: okno sa ozýva, dá sa ukončiť
