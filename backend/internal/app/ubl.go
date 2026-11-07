@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/palo-krnac/fiscus/backend/internal/audit"
-	"github.com/palo-krnac/fiscus/backend/internal/auth"
-	"github.com/palo-krnac/fiscus/backend/internal/printout"
-	"github.com/palo-krnac/fiscus/backend/internal/ubl"
+	"github.com/fiskus-online/fiskus/backend/internal/audit"
+	"github.com/fiskus-online/fiskus/backend/internal/auth"
+	"github.com/fiskus-online/fiskus/backend/internal/printout"
+	"github.com/fiskus-online/fiskus/backend/internal/ubl"
 )
 
 // InvoiceUBL vytvorí e-faktúru (UBL 2.1, Peppol BIS Billing 3.0) z vystavenej

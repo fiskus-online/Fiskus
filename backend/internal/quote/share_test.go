@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/palo-krnac/fiscus/backend/internal/invoice"
+	"github.com/fiskus-online/fiskus/backend/internal/invoice"
 )
 
 func TestToken(t *testing.T) {

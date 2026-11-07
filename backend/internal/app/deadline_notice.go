@@ -7,11 +7,11 @@ import (
 	"log"
 	"strings"
 
-	"github.com/palo-krnac/fiscus/backend/internal/auth"
-	"github.com/palo-krnac/fiscus/backend/internal/calendar"
-	"github.com/palo-krnac/fiscus/backend/internal/invoice"
-	"github.com/palo-krnac/fiscus/backend/internal/mail"
-	"github.com/palo-krnac/fiscus/backend/internal/store"
+	"github.com/fiskus-online/fiskus/backend/internal/auth"
+	"github.com/fiskus-online/fiskus/backend/internal/calendar"
+	"github.com/fiskus-online/fiskus/backend/internal/invoice"
+	"github.com/fiskus-online/fiskus/backend/internal/mail"
+	"github.com/fiskus-online/fiskus/backend/internal/store"
 )
 
 // Upozornenia e-mailom na blížiace sa lehoty: daňové termíny, vlastné

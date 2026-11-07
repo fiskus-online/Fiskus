@@ -5,8 +5,8 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/palo-krnac/fiscus/backend/internal/invoice"
-	"github.com/palo-krnac/fiscus/backend/internal/ubl"
+	"github.com/fiskus-online/fiskus/backend/internal/invoice"
+	"github.com/fiskus-online/fiskus/backend/internal/ubl"
 )
 
 // failUBL: chýbajúce údaje e-faktúry → 422 s poľami (zobrazia sa pri faktúre).

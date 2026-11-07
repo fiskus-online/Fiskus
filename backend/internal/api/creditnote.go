@@ -3,7 +3,7 @@ package api
 import (
 	"net/http"
 
-	"github.com/palo-krnac/fiscus/backend/internal/invoice"
+	"github.com/fiskus-online/fiskus/backend/internal/invoice"
 )
 
 // creditNote vytvorí koncept dobropisu k vystavenej faktúre.

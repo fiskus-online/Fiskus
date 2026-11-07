@@ -19,7 +19,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/palo-krnac/fiscus/backend/internal/money"
+	"github.com/fiskus-online/fiskus/backend/internal/money"
 )
 
 // Platform je druh e-shopu.

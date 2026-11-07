@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/palo-krnac/fiscus/backend/internal/money"
+	"github.com/fiskus-online/fiskus/backend/internal/money"
 )
 
 // Deti (daňový bonus § 33), manžel/ka (NČZD § 11 ods. 3) a daňové straty

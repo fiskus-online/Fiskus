@@ -18,7 +18,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/palo-krnac/fiscus/backend/internal/money"
+	"github.com/fiskus-online/fiskus/backend/internal/money"
 )
 
 // DefaultURL je adresa služby vyhľadania dokladu.

@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/palo-krnac/fiscus/backend/internal/logbook"
+	"github.com/fiskus-online/fiskus/backend/internal/logbook"
 )
 
 func (s *Server) yearParam(r *http.Request) int {

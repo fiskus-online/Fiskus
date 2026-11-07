@@ -12,7 +12,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/palo-krnac/fiscus/backend/internal/money"
+	"github.com/fiskus-online/fiskus/backend/internal/money"
 )
 
 // PrestaShop: cenník a zákazníci. Cena produktu je v PrestaShope vždy bez

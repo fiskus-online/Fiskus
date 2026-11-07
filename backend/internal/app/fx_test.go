@@ -6,12 +6,12 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/palo-krnac/fiscus/backend/internal/cash"
-	"github.com/palo-krnac/fiscus/backend/internal/edition"
-	"github.com/palo-krnac/fiscus/backend/internal/fx"
-	"github.com/palo-krnac/fiscus/backend/internal/invoice"
-	m "github.com/palo-krnac/fiscus/backend/internal/money"
-	"github.com/palo-krnac/fiscus/backend/internal/purchase"
+	"github.com/fiskus-online/fiskus/backend/internal/cash"
+	"github.com/fiskus-online/fiskus/backend/internal/edition"
+	"github.com/fiskus-online/fiskus/backend/internal/fx"
+	"github.com/fiskus-online/fiskus/backend/internal/invoice"
+	m "github.com/fiskus-online/fiskus/backend/internal/money"
+	"github.com/fiskus-online/fiskus/backend/internal/purchase"
 )
 
 func ecbStub(rates ...fx.Rate) func(context.Context, string) ([]fx.Rate, error) {

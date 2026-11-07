@@ -6,8 +6,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/palo-krnac/fiscus/backend/internal/invoice"
-	"github.com/palo-krnac/fiscus/backend/internal/money"
+	"github.com/fiskus-online/fiskus/backend/internal/invoice"
+	"github.com/fiskus-online/fiskus/backend/internal/money"
 )
 
 // Kind je druh termínu (určuje farbu a skupinu v kalendári).

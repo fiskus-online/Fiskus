@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/palo-krnac/fiscus/backend/internal/app"
-	"github.com/palo-krnac/fiscus/backend/internal/auth"
+	"github.com/fiskus-online/fiskus/backend/internal/app"
+	"github.com/fiskus-online/fiskus/backend/internal/auth"
 )
 
 // Mobil v sieti (desktop): telefóny sa pripájajú na adresu počítača v sieti.

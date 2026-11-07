@@ -3,7 +3,7 @@ package journal
 import (
 	"testing"
 
-	m "github.com/palo-krnac/fiscus/backend/internal/money"
+	m "github.com/fiskus-online/fiskus/backend/internal/money"
 )
 
 func rowMap(rows []Row) map[string]Row {

@@ -4,9 +4,9 @@ import (
 	"context"
 	"sort"
 
-	"github.com/palo-krnac/fiscus/backend/internal/invoice"
-	"github.com/palo-krnac/fiscus/backend/internal/recurring"
-	"github.com/palo-krnac/fiscus/backend/internal/store"
+	"github.com/fiskus-online/fiskus/backend/internal/invoice"
+	"github.com/fiskus-online/fiskus/backend/internal/recurring"
+	"github.com/fiskus-online/fiskus/backend/internal/store"
 )
 
 func cloneRecurring(t recurring.Template) recurring.Template {

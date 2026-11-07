@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/palo-krnac/fiscus/backend/internal/app"
+	"github.com/fiskus-online/fiskus/backend/internal/app"
 )
 
 // Zabezpečenie: PIN desktopu a povinné 2FA na serveri.

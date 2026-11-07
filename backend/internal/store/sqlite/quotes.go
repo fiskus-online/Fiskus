@@ -8,8 +8,8 @@ import (
 	"encoding/json"
 	"errors"
 
-	"github.com/palo-krnac/fiscus/backend/internal/quote"
-	"github.com/palo-krnac/fiscus/backend/internal/store"
+	"github.com/fiskus-online/fiskus/backend/internal/quote"
+	"github.com/fiskus-online/fiskus/backend/internal/store"
 )
 
 func scanQuote(r interface{ Scan(...any) error }) (quote.Quote, error) {

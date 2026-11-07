@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/palo-krnac/fiscus/backend/internal/edition"
-	"github.com/palo-krnac/fiscus/backend/internal/mail"
-	"github.com/palo-krnac/fiscus/backend/internal/mail/mailtest"
+	"github.com/fiskus-online/fiskus/backend/internal/edition"
+	"github.com/fiskus-online/fiskus/backend/internal/mail"
+	"github.com/fiskus-online/fiskus/backend/internal/mail/mailtest"
 )
 
 func TestMailAPI(t *testing.T) {

@@ -4,8 +4,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/palo-krnac/fiscus/backend/internal/cash"
-	"github.com/palo-krnac/fiscus/backend/internal/vat"
+	"github.com/fiskus-online/fiskus/backend/internal/cash"
+	"github.com/fiskus-online/fiskus/backend/internal/vat"
 )
 
 func cashDoc(id int64, kind cash.Kind, date, icdph string, rows map[vat.Rate]string) cash.Document {

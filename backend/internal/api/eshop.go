@@ -4,7 +4,7 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/palo-krnac/fiscus/backend/internal/app"
+	"github.com/fiskus-online/fiskus/backend/internal/app"
 )
 
 // Napojenie na e-shopy: nastavenie obchodov, načítanie objednávok, zásoby.

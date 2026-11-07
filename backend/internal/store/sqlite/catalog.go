@@ -10,10 +10,10 @@ import (
 	"sort"
 	"time"
 
-	"github.com/palo-krnac/fiscus/backend/internal/catalog"
-	"github.com/palo-krnac/fiscus/backend/internal/money"
-	"github.com/palo-krnac/fiscus/backend/internal/store"
-	"github.com/palo-krnac/fiscus/backend/internal/vat"
+	"github.com/fiskus-online/fiskus/backend/internal/catalog"
+	"github.com/fiskus-online/fiskus/backend/internal/money"
+	"github.com/fiskus-online/fiskus/backend/internal/store"
+	"github.com/fiskus-online/fiskus/backend/internal/vat"
 )
 
 const itemCols = "id, company_id, code, name, unit, price, price_mode, vat_rate, note, archived, ean, category, brand, supplier, supplier_code, purchase_price, weight, description, params_json"

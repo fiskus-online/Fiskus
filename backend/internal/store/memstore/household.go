@@ -4,8 +4,8 @@ import (
 	"context"
 	"sort"
 
-	"github.com/palo-krnac/fiscus/backend/internal/household"
-	"github.com/palo-krnac/fiscus/backend/internal/store"
+	"github.com/fiskus-online/fiskus/backend/internal/household"
+	"github.com/fiskus-online/fiskus/backend/internal/store"
 )
 
 func (s *Store) ListHHAccounts(_ context.Context, companyID int64) ([]household.Account, error) {

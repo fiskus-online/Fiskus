@@ -4,9 +4,9 @@ import (
 	"context"
 	"sort"
 
-	"github.com/palo-krnac/fiscus/backend/internal/invoice"
-	"github.com/palo-krnac/fiscus/backend/internal/quote"
-	"github.com/palo-krnac/fiscus/backend/internal/store"
+	"github.com/fiskus-online/fiskus/backend/internal/invoice"
+	"github.com/fiskus-online/fiskus/backend/internal/quote"
+	"github.com/fiskus-online/fiskus/backend/internal/store"
 )
 
 // cloneQuote oddelí položky, aby volajúci nemenil uložené dáta.

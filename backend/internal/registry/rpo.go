@@ -19,7 +19,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/palo-krnac/fiscus/backend/internal/party"
+	"github.com/fiskus-online/fiskus/backend/internal/party"
 )
 
 // DefaultBaseURL je adresa verejného RPO API.

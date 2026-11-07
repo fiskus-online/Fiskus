@@ -5,9 +5,9 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/palo-krnac/fiscus/backend/internal/app"
-	"github.com/palo-krnac/fiscus/backend/internal/catalog"
-	"github.com/palo-krnac/fiscus/backend/internal/invoice"
+	"github.com/fiskus-online/fiskus/backend/internal/app"
+	"github.com/fiskus-online/fiskus/backend/internal/catalog"
+	"github.com/fiskus-online/fiskus/backend/internal/invoice"
 )
 
 func (s *Server) listItems(w http.ResponseWriter, r *http.Request) {

@@ -4,8 +4,8 @@ import (
 	"errors"
 	"testing"
 
-	m "github.com/palo-krnac/fiscus/backend/internal/money"
-	"github.com/palo-krnac/fiscus/backend/internal/purchase"
+	m "github.com/fiskus-online/fiskus/backend/internal/money"
+	"github.com/fiskus-online/fiskus/backend/internal/purchase"
 )
 
 func lines(ls ...any) []Line {

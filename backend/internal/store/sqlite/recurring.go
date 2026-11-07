@@ -8,8 +8,8 @@ import (
 	"encoding/json"
 	"errors"
 
-	"github.com/palo-krnac/fiscus/backend/internal/recurring"
-	"github.com/palo-krnac/fiscus/backend/internal/store"
+	"github.com/fiskus-online/fiskus/backend/internal/recurring"
+	"github.com/fiskus-online/fiskus/backend/internal/store"
 )
 
 func scanRecurring(r interface{ Scan(...any) error }) (recurring.Template, error) {

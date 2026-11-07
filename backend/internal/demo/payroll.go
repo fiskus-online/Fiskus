@@ -4,11 +4,11 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/palo-krnac/fiscus/backend/internal/app"
-	"github.com/palo-krnac/fiscus/backend/internal/dpfo"
-	m "github.com/palo-krnac/fiscus/backend/internal/money"
-	"github.com/palo-krnac/fiscus/backend/internal/payroll"
-	"github.com/palo-krnac/fiscus/backend/internal/store"
+	"github.com/fiskus-online/fiskus/backend/internal/app"
+	"github.com/fiskus-online/fiskus/backend/internal/dpfo"
+	m "github.com/fiskus-online/fiskus/backend/internal/money"
+	"github.com/fiskus-online/fiskus/backend/internal/payroll"
+	"github.com/fiskus-online/fiskus/backend/internal/store"
 )
 
 // seedPayroll pridá zamestnanca s deťmi, dohodárku a študenta na brigáde;

@@ -3,10 +3,10 @@ package printout
 import (
 	"strings"
 
-	"github.com/palo-krnac/fiscus/backend/internal/invoice"
-	"github.com/palo-krnac/fiscus/backend/internal/payqr"
-	"github.com/palo-krnac/fiscus/backend/internal/pdf"
-	"github.com/palo-krnac/fiscus/backend/internal/store"
+	"github.com/fiskus-online/fiskus/backend/internal/invoice"
+	"github.com/fiskus-online/fiskus/backend/internal/payqr"
+	"github.com/fiskus-online/fiskus/backend/internal/pdf"
+	"github.com/fiskus-online/fiskus/backend/internal/store"
 )
 
 // payCode vráti reťazec PAY by square pre faktúru, alebo "" ak QR nedáva

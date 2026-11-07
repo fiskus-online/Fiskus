@@ -13,12 +13,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/palo-krnac/fiscus/backend/internal/audit"
-	"github.com/palo-krnac/fiscus/backend/internal/auth"
-	"github.com/palo-krnac/fiscus/backend/internal/calendar"
-	"github.com/palo-krnac/fiscus/backend/internal/calsync"
-	"github.com/palo-krnac/fiscus/backend/internal/edition"
-	"github.com/palo-krnac/fiscus/backend/internal/store"
+	"github.com/fiskus-online/fiskus/backend/internal/audit"
+	"github.com/fiskus-online/fiskus/backend/internal/auth"
+	"github.com/fiskus-online/fiskus/backend/internal/calendar"
+	"github.com/fiskus-online/fiskus/backend/internal/calsync"
+	"github.com/fiskus-online/fiskus/backend/internal/edition"
+	"github.com/fiskus-online/fiskus/backend/internal/store"
 )
 
 // Prepojenie kalendára termínov s Google Kalendárom alebo Outlookom:

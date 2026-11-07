@@ -5,8 +5,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/palo-krnac/fiscus/backend/internal/catalog"
-	"github.com/palo-krnac/fiscus/backend/internal/store"
+	"github.com/fiskus-online/fiskus/backend/internal/catalog"
+	"github.com/fiskus-online/fiskus/backend/internal/store"
 )
 
 func (s *Store) ListItems(_ context.Context, companyID int64) ([]catalog.Item, error) {

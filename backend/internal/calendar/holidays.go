@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/palo-krnac/fiscus/backend/internal/invoice"
+	"github.com/fiskus-online/fiskus/backend/internal/invoice"
 )
 
 // Holiday je deň pracovného pokoja podľa zákona č. 241/1993 Z. z. Day je

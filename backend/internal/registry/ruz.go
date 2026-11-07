@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/palo-krnac/fiscus/backend/internal/party"
+	"github.com/fiskus-online/fiskus/backend/internal/party"
 )
 
 // RUZBaseURL je verejné API Registra účtovných závierok (bez kľúča).

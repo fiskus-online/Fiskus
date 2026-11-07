@@ -13,7 +13,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/palo-krnac/fiscus/backend/internal/table"
+	"github.com/fiskus-online/fiskus/backend/internal/table"
 )
 
 // Rec je veta: hodnoty podľa čísla stĺpca zo špecifikácie (1 = R01…).

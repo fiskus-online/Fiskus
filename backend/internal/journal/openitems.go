@@ -1,9 +1,9 @@
 package journal
 
 import (
-	"github.com/palo-krnac/fiscus/backend/internal/invoice"
-	"github.com/palo-krnac/fiscus/backend/internal/money"
-	"github.com/palo-krnac/fiscus/backend/internal/purchase"
+	"github.com/fiskus-online/fiskus/backend/internal/invoice"
+	"github.com/fiskus-online/fiskus/backend/internal/money"
+	"github.com/fiskus-online/fiskus/backend/internal/purchase"
 )
 
 // Kniha pohľadávok a kniha záväzkov (opatrenie MF SR č. MF/27076/2007-74,

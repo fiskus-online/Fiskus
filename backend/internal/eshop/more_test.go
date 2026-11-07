@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/palo-krnac/fiscus/backend/internal/money"
+	"github.com/fiskus-online/fiskus/backend/internal/money"
 )
 
 func TestPrestaShop(t *testing.T) {
