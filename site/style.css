@@ -286,3 +286,5 @@ footer.bottom nav { display: flex; flex-wrap: wrap; gap: 6px 20px; margin-left: 
   .downloads tr { display: block; border-top: 1px solid var(--rule); padding: 12px 0; }
   .downloads td.get { text-align: left; margin-top: 6px; }
 }
+
+.doc .sign { margin-top: 32px; font-weight: 600; }
