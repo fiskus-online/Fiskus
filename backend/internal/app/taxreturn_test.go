@@ -11,7 +11,7 @@ import (
 
 func TestTaxReturn(t *testing.T) {
 	a, c := newApp(t, edition.Desktop)
-	c.Name, c.DIC, c.Street, c.Zip, c.City = "Pavol Krnáč – elektroservis", "1012345678", "Námestie SNP 1", "974 01", "Banská Bystrica"
+	c.Name, c.DIC, c.Street, c.Zip, c.City = "Ján Novák – elektroservis", "1012345678", "Námestie SNP 1", "974 01", "Banská Bystrica"
 	if err := a.Store.UpdateCompany(ctx, c); err != nil {
 		t.Fatal(err)
 	}
@@ -20,7 +20,7 @@ func TestTaxReturn(t *testing.T) {
 		t.Fatal(err)
 	}
 	tp := tr.Input.Taxpayer
-	if tp.Name != "Pavol" || tp.Surname != "Krnáč" || tp.Street != "Námestie SNP" || tp.Number != "1" || tp.DIC != "1012345678" || tr.Form != "DPFOBv25" {
+	if tp.Name != "Ján" || tp.Surname != "Novák" || tp.Street != "Námestie SNP" || tp.Number != "1" || tp.DIC != "1012345678" || tr.Form != "DPFOBv25" {
 		t.Fatalf("predvyplnenie %+v", tp)
 	}
 	if len(tr.Years) < 2 || tr.Years[0] != 2026 {

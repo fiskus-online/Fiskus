@@ -2,7 +2,7 @@
 
 Statický web (HTML, CSS a trochu JavaScriptu, bez zostavovania). Písmo Source Sans 3 je uložené v `fonts/`, takže web nenačítava nič od tretích strán.
 
-Fiškus je vždy zadarmo — web nemá cenník, predaj ani formuláre.
+Web nemá cenník, predaj ani formuláre.
 
 - `config.js` — verzia na stiahnutie a adresa inštalátorov. Pri nasadení ich workflow `pages.yml` doplní z posledného vydania na GitHube.
 - `ochrana-osobnych-udajov.html` — **návrh**, údaje v hranatých zátvorkách treba doplniť.

@@ -7,7 +7,7 @@ import (
 	"github.com/palo-krnac/fiscus/backend/internal/edition"
 )
 
-// Capabilities vráti schopnosti režimu behu (Fiškus je vždy zadarmo, bez licencií).
+// Capabilities vráti schopnosti režimu behu (bez licencií).
 func (a *App) Capabilities() edition.Capabilities { return a.Caps }
 
 func (a *App) now() time.Time {

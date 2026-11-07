@@ -105,6 +105,6 @@ používateľov a ľubovoľný počet firiem. Za reverznou proxy ju spustite
 s `-public-url https://vas-server`, aby odkazy (ponuky pre zákazníkov,
 pripojenie AI asistenta) mali správnu adresu.
 
-!!! note "Vždy zadarmo"
-    Desktop, server aj Fiškus v prehliadači sú zadarmo, bez licencií
+!!! note "Bez licencií"
+    Desktop, server aj Fiškus v prehliadači majú všetky funkcie, bez licencií
     a bez obmedzenia počtu firiem.

@@ -112,9 +112,9 @@ func TestExpandAndParseList(t *testing.T) {
 
 func message() mail.Message {
 	return mail.Message{
-		FromName: "Krnáč – elektroservis", From: "faktury@krnac.sk", ReplyTo: "palo@krnac.sk",
-		To: []string{"odberatel@firma.sk"}, Cc: []string{"uctaren@firma.sk"}, Bcc: []string{"faktury@krnac.sk"},
-		Subject: "Faktúra FA2026001 – Krnáč", Body: "Dobrý deň,\n\nv prílohe je faktúra. Ďakujeme.\n",
+		FromName: "Novák – elektroservis", From: "faktury@novak.sk", ReplyTo: "palo@novak.sk",
+		To: []string{"odberatel@firma.sk"}, Cc: []string{"uctaren@firma.sk"}, Bcc: []string{"faktury@novak.sk"},
+		Subject: "Faktúra FA2026001 – Novák", Body: "Dobrý deň,\n\nv prílohe je faktúra. Ďakujeme.\n",
 		Attachments: []mail.Attachment{{Name: "Faktura-FA2026001.pdf", ContentType: "application/pdf", Data: []byte("%PDF-1.7 obsah")}},
 	}
 }
@@ -161,8 +161,8 @@ func TestBytes(t *testing.T) {
 	dec := new(mime.WordDecoder)
 	subj, _ := dec.DecodeHeader(msg.Header.Get("Subject"))
 	from, _ := msg.Header.AddressList("From")
-	if subj != "Faktúra FA2026001 – Krnáč" || from[0].Name != "Krnáč – elektroservis" || msg.Header.Get("Cc") != "uctaren@firma.sk" ||
-		msg.Header.Get("Reply-To") != "palo@krnac.sk" || msg.Header.Get("Bcc") != "" {
+	if subj != "Faktúra FA2026001 – Novák" || from[0].Name != "Novák – elektroservis" || msg.Header.Get("Cc") != "uctaren@firma.sk" ||
+		msg.Header.Get("Reply-To") != "palo@novak.sk" || msg.Header.Get("Bcc") != "" {
 		t.Errorf("hlavička: %q %+v %v", subj, from, msg.Header)
 	}
 	if text != "Dobrý deň,\r\n\r\nv prílohe je faktúra. Ďakujeme.\r\n" {
@@ -201,10 +201,10 @@ func TestSMTP(t *testing.T) {
 		err    string
 		secure bool
 	}{
-		{"STARTTLS s prihlásením", func(s *mailtest.Server) { s.User, s.Password = "faktury@krnac.sk", "tajne" }, nil, "", true},
-		{"SSL/TLS", func(s *mailtest.Server) { s.ImplicitTLS = true; s.User, s.Password = "faktury@krnac.sk", "tajne" },
+		{"STARTTLS s prihlásením", func(s *mailtest.Server) { s.User, s.Password = "faktury@novak.sk", "tajne" }, nil, "", true},
+		{"SSL/TLS", func(s *mailtest.Server) { s.ImplicitTLS = true; s.User, s.Password = "faktury@novak.sk", "tajne" },
 			func(s *mail.Settings) { s.Security = mail.TLS }, "", true},
-		{"zlé heslo", func(s *mailtest.Server) { s.User, s.Password = "faktury@krnac.sk", "ine" }, nil, "skontrolujte meno a heslo", false},
+		{"zlé heslo", func(s *mailtest.Server) { s.User, s.Password = "faktury@novak.sk", "ine" }, nil, "skontrolujte meno a heslo", false},
 		{"server bez STARTTLS", func(s *mailtest.Server) { s.NoStartTLS = true }, nil, "nepodporuje šifrovanie", false},
 		{"bez šifrovania a bez prihlásenia", func(s *mailtest.Server) { s.NoStartTLS = true },
 			func(s *mail.Settings) { s.Security = mail.None; s.Username = "" }, "", false},
@@ -212,7 +212,7 @@ func TestSMTP(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			srv := mailtest.Start(t, tt.srv)
-			set := mail.Settings{Host: srv.Addr, Port: srv.Port, Security: mail.StartTLS, Username: "faktury@krnac.sk", Password: "tajne", FromEmail: "faktury@krnac.sk"}
+			set := mail.Settings{Host: srv.Addr, Port: srv.Port, Security: mail.StartTLS, Username: "faktury@novak.sk", Password: "tajne", FromEmail: "faktury@novak.sk"}
 			if tt.set != nil {
 				tt.set(&set)
 			}
@@ -227,7 +227,7 @@ func TestSMTP(t *testing.T) {
 				t.Fatal(err)
 			}
 			got := srv.Mails()
-			if len(got) != 1 || got[0].From != "faktury@krnac.sk" || len(got[0].To) != 3 || got[0].TLS != tt.secure {
+			if len(got) != 1 || got[0].From != "faktury@novak.sk" || len(got[0].To) != 3 || got[0].TLS != tt.secure {
 				t.Fatalf("prijaté: %+v", got)
 			}
 			if _, _, files := parse(t, got[0].Data); len(files) != 1 {

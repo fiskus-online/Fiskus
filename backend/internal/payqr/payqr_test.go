@@ -30,7 +30,7 @@ var samples = []struct {
 	{"faktúra", "FA20260039", Payment{Amount: "269.12", Currency: "EUR", DueDate: "20261112", VariableSymbol: "20260039",
 		Note: "Faktura FA20260039", IBAN: "SK31 1200 0000 1987 4263 7541", Name: "Demo elektroservis", Street: "Námestie SNP 1", City: "974 01 Banská Bystrica"}},
 	{"celé eurá a diakritika", "FA20260001", Payment{Amount: "100", Currency: "EUR", DueDate: "20261231", VariableSymbol: "1",
-		Note: "Faktúra č. 1 – ďakujeme", IBAN: "sk3112000000198742637541", Name: "Pavol Krnáč – elektroservis", City: "Banská Bystrica"}},
+		Note: "Faktúra č. 1 – ďakujeme", IBAN: "sk3112000000198742637541", Name: "Ján Novák – elektroservis", City: "Banská Bystrica"}},
 	{"dlhá poznámka", "FA2026LONG", Payment{Amount: "123456.78", Currency: "EUR", DueDate: "20270101", VariableSymbol: "2026999999",
 		Note: strings.Repeat("Servisný paušál a podpora ", 5), IBAN: "SK3112000000198742637541", Name: strings.Repeat("Veľmi dlhý názov firmy ", 3),
 		Street: "Hlavná 1", City: "811 01 Bratislava"}},

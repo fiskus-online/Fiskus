@@ -72,7 +72,7 @@ func (a *App) fillFromBooks(ctx context.Context, companyID int64, in *dpfo.Input
 	return st.Unclassified, nil
 }
 
-// splitPersonName rozdelí obchodné meno živnostníka „Pavol Krnáč – elektroservis“
+// splitPersonName rozdelí obchodné meno živnostníka „Ján Novák – elektroservis“
 // na meno a priezvisko (dodatok za pomlčkou sa vynechá).
 func splitPersonName(s string) (name, surname string) {
 	for _, sep := range []string{" – ", " - ", ",", " — "} {
