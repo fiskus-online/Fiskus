@@ -51,3 +51,33 @@ s fotkou.
 - **Nadobudnutie tovaru z EÚ** a služby zo zahraničia.
 - **Dobropisy od dodávateľov** — oprava odpočtu, riadky C.2.
 - **Platobné príkazy** SEPA (pain.001) z neuhradených faktúr pre banku.
+
+### Dovoz z tretej krajiny: clo a DPH colnému úradu
+
+Pri dovoze tovaru z krajiny mimo EÚ (Čína, USA, Spojené kráľovstvo…)
+zaevidujte dva doklady:
+
+1. **Faktúru zahraničného dodávateľa** za tovar, bez DPH (sadzba 0 %, druh
+   plnenia tovar, mena podľa faktúry). Platí sa dodávateľovi.
+2. **Rozhodnutie colného úradu** (JCD) ako ďalšiu prijatú faktúru. Dodávateľ
+   je colný úrad, číslo dokladu je číslo rozhodnutia (MRN). Zaškrtnite
+   **Rozhodnutie colného úradu pri dovoze** a v rekapitulácii opíšte základ
+   a DPH z rozhodnutia: základ je colná hodnota + clo + náklady do miesta
+   určenia. Do poľa **Clo** zadajte clo a priraďte faktúru za dovezený tovar.
+   Na úhradu colnému úradu je DPH + clo.
+
+DPH z rozhodnutia sa odpočíta v priznaní v r. 18 – 21 a zároveň v r. 22 – 23
+(„z toho pri dovoze“). Do kontrolného výkazu sa neuvádza. V peňažnom denníku
+je úhrada colnému úradu výdavok (clo) a zaplatená DPH. V podvojnom
+účtovníctve sa rozhodnutie zaúčtuje predkontáciou **FP-CLO**:
+clo MD 501 (alebo **FP-CLO-SKLAD** MD 131 pri tovare na sklad), DPH MD 343,
+spolu D 379. Úhrada z banky je **B-COLNY** 379 / 221.
+
+![Rozhodnutie colného úradu s clom a priradenou faktúrou za tovar](../obrazky/prijata-colne-rozhodnutie.webp)
+*Rozhodnutie colného úradu: základ a DPH z rozhodnutia, clo, faktúra za tovar*
+
+:::info[Clo je súčasť obstarávacej ceny]
+Clo a ďalšie náklady súvisiace s obstaraním (doprava, poistenie) patria do
+obstarávacej ceny tovaru. Faktúru dopravcu zaevidujte ako bežnú prijatú
+faktúru s rovnakým druhom výdavku (zásoby).
+:::
