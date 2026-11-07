@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/fiskus-online/fiskus/backend/internal/catalog"
+	"github.com/fiskus-online/fiskus/backend/internal/forms"
 	"github.com/fiskus-online/fiskus/backend/internal/fx"
 	"sort"
 	"sync"
@@ -51,6 +52,7 @@ type Store struct {
 	hhAccounts    map[int64]household.Account
 	hhEntries     map[int64]household.Entry
 	hhObligations map[int64]household.Obligation
+	formDocs      map[int64]forms.Doc
 	hhPhotos      map[int64]store.HHPhoto
 	recurring     map[int64]recurring.Template
 	reminders     map[int64]reminder.Reminder
