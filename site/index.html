@@ -1,1713 +1,203 @@
-<!DOCTYPE html><html lang="sk" class="no-js"><head>
-    
-      <meta charset="utf-8">
-      <meta name="viewport" content="width=device-width,initial-scale=1">
-      
-        <meta name="description" content="Slovenský účtovný program na štúdium a výučbu účtovníctva — od faktúry po závierku.">
-      
-      
-      
-        <link rel="canonical" href="https://docs.fiskus.online/">
-      
-      
-      
-        <link rel="next" href="zaciname/">
-      
-      
-        
-      
-      
-      <link rel="icon" href="assets/favicon.svg">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
-    
-    
-      
-        <title>Fiškus - Fiškus</title>
-      
-    
-    
-      <link rel="stylesheet" href="assets/stylesheets/main.ec1eaa64.min.css">
-      
-      
-
-
-    
-    
-      
-    
-    
-      
-    
-    
-    <script>__md_scope=new URL(".",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
-    
-      
-
-    
-    
-  <link rel="stylesheet" href="assets/fiskus.css">
-
-  <link href="assets/stylesheets/glightbox.min.css" rel="stylesheet"><script src="assets/javascripts/glightbox.min.js"></script><style id="glightbox-style">
-            html.glightbox-open { overflow: initial; height: 100%; }
-            .gslide-title { margin-top: 0px; user-select: text; }
-            .gslide-desc { color: #666; user-select: text; }
-            .gslide-image img { background: white; }
-            .gscrollbar-fixer { padding-right: 15px; }
-            .gdesc-inner { font-size: 0.75rem; }
-            body[data-md-color-scheme="slate"] .gdesc-inner { background: var(--md-default-bg-color); }
-            body[data-md-color-scheme="slate"] .gslide-title { color: var(--md-default-fg-color); }
-            body[data-md-color-scheme="slate"] .gslide-desc { color: var(--md-default-fg-color); }
-        </style></head>
-  
-  
-    <body dir="ltr">
-  
-    
-    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
-    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
-    <label class="md-overlay" for="__drawer"></label>
-    <div data-md-component="skip">
-      
-        
-        <a href="#fiskus" class="md-skip">
-          Preskočiť na obsah
-        </a>
-      
-    </div>
-    <div data-md-component="announce">
-      
-    </div>
-    
-    
-      
-
-  
-
-<header class="md-header md-header--shadow" data-md-component="header">
-  <nav class="md-header__inner md-grid" aria-label="Hlavička">
-    <a href="." title="Fiškus" class="md-header__button md-logo" aria-label="Fiškus" data-md-component="logo">
-      
-  <img src="assets/favicon.svg" alt="logo">
-
-    </a>
-    <label class="md-header__button md-icon" for="__drawer">
-      
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"></path></svg>
-    </label>
-    <div class="md-header__title" data-md-component="header-title">
-      <div class="md-header__ellipsis">
-        <div class="md-header__topic">
-          <span class="md-ellipsis">
-            Fiškus
-          </span>
-        </div>
-        <div class="md-header__topic" data-md-component="header-topic">
-          <span class="md-ellipsis">
-            
-              Fiškus
-            
-          </span>
-        </div>
-      </div>
-    </div>
-    
-    
-      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
-    
-    
-    
-      
-      
-        <label class="md-header__button md-icon" for="__search">
-          
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"></path></svg>
-        </label>
-        <div class="md-search" data-md-component="search" role="dialog">
-  <label class="md-search__overlay" for="__search"></label>
-  <div class="md-search__inner" role="search">
-    <form class="md-search__form" name="search">
-      <input type="text" class="md-search__input" name="query" aria-label="Hľadať" placeholder="Hľadať" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required="">
-      <label class="md-search__icon md-icon" for="__search">
-        
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"></path></svg>
-        
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"></path></svg>
-      </label>
-      <nav class="md-search__options" aria-label="Vyhľadávanie">
-        
-        <button type="reset" class="md-search__icon md-icon" title="Vyčistiť" aria-label="Vyčistiť" tabindex="-1">
-          
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"></path></svg>
-        </button>
+<!doctype html>
+<html lang="sk">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Fiškus – účtovný program pre živnostníkov a malé firmy</title>
+  <meta name="description" content="Faktúry, DPH, kontrolný výkaz, banka, pokladňa a domáce financie. Dáta ostávajú vo vašom počítači.">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="top">
+    <div class="wrap">
+      <a class="brand" href="./" aria-label="Fiškus – úvod">
+        <svg viewBox="0 0 32 32" width="28" height="28" aria-hidden="true"><rect width="32" height="32" rx="7" fill="#f6f7f9"/><path d="M10 8h13v3.4h-9v3.6h8v3.3h-8V24h-4z" fill="#1f3a5c"/><rect x="18" y="20.5" width="5" height="3.5" fill="#d9a441"/></svg>
+        Fiškus
+      </a>
+      <nav aria-label="Hlavná ponuka">
+        <a href="#co-vie" class="secondary">Čo vie</a>
+        <a href="#doma" class="secondary">Doma</a>
+        <a href="#rezimy">Kde beží</a>
+        <a href="#stiahnut">Stiahnuť</a>
+        <a href="https://docs.fiskus.online/">Návod</a>
       </nav>
-      
-    </form>
-    <div class="md-search__output">
-      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix="">
-        <div class="md-search-result" data-md-component="search-result">
-          <div class="md-search-result__meta">
-            Spúšťam hľadanie
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="wrap">
+        <div class="hero-text">
+          <h1>Faktúry, DPH a domáce financie</h1>
+          <p>Fiškus je slovenský účtovný program pre živnostníkov, malé firmy aj domácnosť. Vystavíte faktúru, spárujete výpis z banky a pripravíte priznanie k DPH. Doma uvidíte, kam idú peniaze a čo treba tento mesiac zaplatiť. Dáta ostávajú vo vašom počítači.</p>
+          <div class="actions">
+            <a class="btn btn-primary" href="#stiahnut" data-hero-download>Stiahnuť Fiškus</a>
+            <a class="btn btn-ghost" href="https://app.fiskus.online/">Vyskúšať v prehliadači</a>
           </div>
-          <ol class="md-search-result__list" role="presentation"></ol>
+          <small>Windows, macOS a Linux · verzia <span data-version></span></small>
+        </div>
+
+        <figure class="sheet" aria-label="Ukážka faktúry s prenesením daňovej povinnosti">
+          <div class="sheet-head">
+            <b>FA20260041</b>
+            <span>Stavmont Zvolen, a.s. · dodanie 20. 10. 2026</span>
+          </div>
+          <table>
+            <thead><tr><th>Položka</th><th class="num">DPH</th><th class="num">Základ</th></tr></thead>
+            <tbody>
+              <tr><td>Programovanie riadenia vetrania</td><td class="num">23 %</td><td class="num">720,00</td></tr>
+              <tr><td>Montáž rozvádzača v hale</td><td class="num rc">PDP</td><td class="num">3 200,00</td></tr>
+              <tr><td>Oceľová konštrukcia <span class="hide-sm">káblových trás</span></td><td class="num rc">PDP</td><td class="num">5 520,00</td></tr>
+              <tr><td>DPH 23 %</td><td></td><td class="num">165,60</td></tr>
+            </tbody>
+          </table>
+          <div class="payable"><span>K úhrade</span><strong>9 605,60 €</strong></div>
+          <p class="note">Položky s prenesením daňovej povinnosti idú do časti A.2 kontrolného výkazu aj s kódom colného sadzobníka.</p>
+        </figure>
+      </div>
+    </section>
+
+    <section class="block" id="co-vie">
+      <div class="wrap">
+        <h2>Čo Fiškus robí</h2>
+        <p class="lead">Je postavený na slovenských pravidlách. Program počíta DPH, sleduje splatnosti a pripraví výkazy pre finančnú správu, vy kontrolujete výsledok. Všetky obrázky sú z ukážkovej firmy priamo v programe.</p>
+        <article class="feature">
+          <div class="feature-text">
+            <h3>Faktúra za minútu, aj ako e-faktúra</h3>
+            <p>Odberateľa doplníte podľa IČO, DPH a rekapituláciu spočíta program. Faktúra ide do PDF s QR kódom PAY by square alebo e-mailom. Od roku 2027 ju Fiškus pošle ako e-faktúru cez <strong>digitálneho poštára</strong> do siete Peppol a prijaté e-faktúry si sám vyzdvihne.</p>
+            <p class="try"><b>Skúste:</b> Vystavte faktúru s prenesením daňovej povinnosti a pozrite sa, v ktorej časti kontrolného výkazu sa objaví.</p>
+          </div>
+          <a class="shot" href="obrazky/faktura.webp"><img src="obrazky/faktura.webp" alt="Vystavená faktúra s prenesením daňovej povinnosti a rekapituláciou DPH" width="1280" height="800" loading="lazy"></a>
+        </article>
+        <article class="feature flip">
+          <div class="feature-text">
+            <h3>Výpis z banky sa spáruje sám</h3>
+            <p>Nahráte výpis (GPC, CSV alebo Excel) a Fiškus priradí platby k faktúram podľa variabilného symbolu a sumy, aj čiastočné úhrady. Účet vo Fio banke sa napojí tokenom a pohyby sa stiahnu jedným tlačidlom, bez výpisu. Na vás ostane iba to, čo naozaj treba vyriešiť.</p>
+            <p class="try"><b>Skúste:</b> Načítajte výpis a nájdite platbu, ktorá sa nespárovala. Čo jej chýba?</p>
+          </div>
+          <a class="shot" href="obrazky/banka.webp"><img src="obrazky/banka.webp" alt="Bankový výpis spárovaný s faktúrami" width="1280" height="800" loading="lazy"></a>
+        </article>
+        <article class="feature">
+          <div class="feature-text">
+            <h3>DPH, kontrolný a súhrnný výkaz z dokladov</h3>
+            <p>Každý riadok priznania sa dá rozkliknúť až na faktúry, z ktorých vznikol. XML pre eDane, opravné aj dodatočné priznanie. Kalendár stráži lehoty a pripomenie ich v mobile aj e-mailom.</p>
+            <p class="try"><b>Skúste:</b> Otvorte riadok 03 v priznaní k DPH a prejdite až na konkrétnu faktúru.</p>
+          </div>
+          <a class="shot" href="obrazky/dph.webp"><img src="obrazky/dph.webp" alt="Priznanie k DPH po riadkoch" width="1280" height="800" loading="lazy"></a>
+        </article>
+        <article class="feature flip">
+          <div class="feature-text">
+            <h3>Jednoduché aj podvojné účtovníctvo</h3>
+            <p>Pre živnostníka peňažný denník, knihy a výkazy. Pre s.r.o. účtovný denník, hlavná kniha, súvaha a výsledovka, pričom doklady sa zaúčtujú samy podľa predkontácií. K tomu uzávierka roka, odpisy majetku, kniha jázd a sklad.</p>
+            <p class="try"><b>Skúste:</b> Vystavte faktúru a pozrite sa, ako sa objaví v účtovnom denníku na účtoch 311, 602 a 343.</p>
+          </div>
+          <a class="shot" href="obrazky/hlavna-kniha.webp"><img src="obrazky/hlavna-kniha.webp" alt="Účtovný denník v podvojnom účtovníctve" width="1280" height="800" loading="lazy"></a>
+        </article>
+        <article class="feature">
+          <div class="feature-text">
+            <h3>Mzdy pre pár ľudí</h3>
+            <p>Pracovný pomer aj dohody, odvody do poisťovní a preddavok na daň podľa sadzieb na rok 2026. Výplatná listina a výplatné pásky na pár kliknutí.</p>
+            <p class="try"><b>Skúste:</b> Pridajte brigádnika na dohodu a pozrite, koľko dostane na ruku.</p>
+          </div>
+          <a class="shot" href="obrazky/mzdy.webp"><img src="obrazky/mzdy.webp" alt="Výplatná listina za mesiac" width="1280" height="800" loading="lazy"></a>
+        </article>
+      </div>
+    </section>
+
+    <section class="home" id="doma">
+      <div class="wrap">
+        <h2>A doma?</h2>
+        <p class="lead">Ten istý program vedie aj domáce peniaze, oddelene od firmy. Uvidíte, kam idú, čo treba zaplatiť tento mesiac a koľko ostáva do výplaty.</p>
+        <div class="home-grid">
+          <figure>
+            <a class="shot" href="obrazky/domacnost-blocek.webp"><img src="obrazky/domacnost-blocek.webp" alt="Detail bločku z eKasy rozdelený na položky a kategórie" width="1280" height="800" loading="lazy"></a>
+            <figcaption><b>Bloček odfotíte mobilom.</b> Fiškus načíta položky z eKasy a sám ich roztriedi na potraviny, drogériu a ďalšie.</figcaption>
+          </figure>
+          <figure>
+            <a class="shot" href="obrazky/domacnost-plan.webp"><img src="obrazky/domacnost-plan.webp" alt="Plán platieb domácnosti po mesiacoch" width="1280" height="800" loading="lazy"></a>
+            <figcaption><b>Každý mesiac viete vopred, koľko treba.</b> Splátky, nájom, obedy v škole od septembra do júna aj pokuty, s pripomienkou v kalendári.</figcaption>
+          </figure>
+          <figure>
+            <a class="shot" href="obrazky/domacnost.webp"><img src="obrazky/domacnost.webp" alt="Prehľad domácnosti s rozpočtom a grafom príjmov a výdavkov" width="1280" height="1515" loading="lazy"></a>
+            <figcaption><b>Rozpočet, ktorý sa stráži sám.</b> Pri každej kategórii vidíte, koľko ešte ostáva, a graf ukáže celý rok.</figcaption>
+          </figure>
+          <figure class="phone">
+            <a class="shot" href="obrazky/mobil-domacnost.webp"><img src="obrazky/mobil-domacnost.webp" alt="Fiškus na mobile — domácnosť" width="780" height="1688" loading="lazy"></a>
+            <figcaption><b>Aj v telefóne.</b> Spárujte mobil s Fiškusom na počítači a zapisujte výdavky hneď pri pokladni.</figcaption>
+          </figure>
+        </div>
+        <p class="try"><b>Skúste:</b> založte si domácnosť, pridajte bežný účet a odfoťte prvý bloček.</p>
+      </div>
+    </section>
+
+    <section class="block" id="kalkulacky">
+      <div class="wrap">
+        <article class="feature">
+          <div class="feature-text">
+            <h2>Kalkulačky a tlačivá aj bez firmy</h2>
+            <p>Koľko je s DPH, aký úrok z omeškania si môžete pýtať, koľko vás stojí úver vrátane RPMN, koľko nasporíte a koľko dostanete na ruku z hrubej mzdy. Sadzby sú tie isté, s ktorými Fiškus počíta faktúry, upomienky a mzdy.</p>
+            <p>Pokladničný doklad, dodací list, objednávka či splnomocnenie: vyplníte, vytlačíte a hotovo. Vo firme sa tlačivá ukladajú, robia sa z nich vzory a pokladničný doklad sa jedným tlačidlom zapíše do pokladne.</p>
+            <p class="try"><b>Skúste:</b> <a href="https://app.fiskus.online/kalkulacky?k=late">vypočítajte úrok z faktúry</a>, ktorú vám zaplatili o mesiac neskôr, alebo <a href="https://app.fiskus.online/tlaciva">vyplňte príjmový doklad</a>.</p>
+          </div>
+          <a class="shot" href="obrazky/kalkulacky.webp"><img src="obrazky/kalkulacky.webp" alt="Kalkulačka úveru so splátkou, RPMN a splátkovým kalendárom" width="1280" height="800" loading="lazy"></a>
+        </article>
+      </div>
+    </section>
+
+    <section class="block try-now">
+      <div class="wrap">
+        <h2>Vyskúšajte to hneď v prehliadači</h2>
+        <p class="lead">Fiškus na <a href="https://app.fiskus.online/">app.fiskus.online</a> beží celý vo vašom prehliadači a údaje zostávajú vo vašom počítači. Tlačidlom <strong>Vyskúšať na ukážkovej firme</strong> načítate firmu s faktúrami, DPH, bankou a mzdami aj domácnosť Novákovci, takže hneď máte čo skúšať. Keď vám sadne, nainštalujte si ho a údaje prenesiete zálohou. Postup krok za krokom je v <a href="https://docs.fiskus.online/">návode</a>.</p>
+        <div class="actions">
+          <a class="btn btn-ink" href="https://app.fiskus.online/">Otvoriť Fiškus v prehliadači</a>
+          <a class="btn btn-line" href="https://docs.fiskus.online/">Prečítať návod</a>
         </div>
       </div>
+    </section>
+
+    <section class="block" id="rezimy">
+      <div class="wrap">
+        <h2>Vždy zadarmo</h2>
+        <p class="lead">Fiškus je zadarmo celý a natrvalo. Nie sú v ňom licencie, predplatné ani obmedzenie počtu firiem. Spôsoby spustenia sa líšia iba tým, kde program beží.</p>
+        <table class="editions">
+          <thead><tr><th scope="col">Spustenie</th><th scope="col">Pre koho</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">Desktop</th><td><p>Na vlastnom počítači, funguje aj offline. Firmy aj domácnosti vediete vedľa seba.</p></td></tr>
+            <tr><th scope="row">V prehliadači</th><td><p>Bez inštalácie na <a href="https://app.fiskus.online/">app.fiskus.online</a>. Údaje zostávajú vo vašom prehliadači.</p></td></tr>
+            <tr><th scope="row">Server</th><td><p>Prístup z prehliadača pre viac ľudí, používatelia a roly, audit zmien. Aj pre účtovné kancelárie s mnohými klientmi.</p></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="block" id="stiahnut">
+      <div class="wrap">
+        <h2>Stiahnuť Fiškus <span data-version></span></h2>
+        <p class="lead">Po inštalácii sa Fiškus otvorí v prehliadači. Dáta sú v priečinku vášho používateľa a odinštalovanie ich nezmaže.</p>
+        <table class="downloads">
+          <tbody>
+            <tr data-os="windows"><th scope="row">Windows</th><td class="file"><span data-name="windows"></span><br>Windows 10 a 11, inštalácia bez práv správcu</td><td class="get"><a class="btn btn-ink" data-file="windows">Stiahnuť</a></td></tr>
+            <tr data-os="macos"><th scope="row">macOS</th><td class="file"><span data-name="macos"></span><br>Apple Silicon aj Intel. Prvé spustenie: pravé tlačidlo na Fiškus → Otvoriť</td><td class="get"><a class="btn btn-ink" data-file="macos">Stiahnuť</a></td></tr>
+            <tr data-os="linux"><th scope="row">Linux</th><td class="file"><span data-name="deb"></span> (Debian, Ubuntu)<br><span data-name="rpm"></span> (Fedora, openSUSE)</td><td class="get"><a class="btn btn-ink" data-file="deb">.deb</a> <a class="btn btn-ink" data-file="rpm">.rpm</a></td></tr>
+          </tbody>
+        </table>
+        <p><strong>Bez inštalácie:</strong> <a href="https://app.fiskus.online/">Fiškus v prehliadači</a> beží celý vo vašom prehliadači a údaje zostávajú vo vašom počítači. Funkcie, ktoré potrebujú pripojenie na iné služby (vyhľadanie podľa IČO, e-maily, e-faktúry, mobil), sú iba v nainštalovanom Fiškuse.</p>
+        <p>Serverovú verziu spustíte rovnakým programom s parametrom <code>-mode server</code>. Postup je v <a href="https://docs.fiskus.online/zaciname/instalacia/">návode</a>, samostatné programy bez inštalátora sú pri každom vydaní na GitHube.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="bottom">
+    <div class="wrap">
+      <span>Fiškus</span>
+      <nav aria-label="Právne informácie">
+        <a href="ochrana-osobnych-udajov.html">Ochrana osobných údajov</a>
+      </nav>
     </div>
-  </div>
-</div>
-      
-    
-    
-  </nav>
-  
-</header>
-    
-    <div class="md-container" data-md-component="container">
-      
-      
-        
-          
-        
-      
-      <main class="md-main" data-md-component="main">
-        <div class="md-main__inner md-grid">
-          
-            
-              
-              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation">
-                <div class="md-sidebar__scrollwrap">
-                  <div class="md-sidebar__inner">
-                    
-
-
-
-<nav class="md-nav md-nav--primary" aria-label="Navigácia" data-md-level="0">
-  <label class="md-nav__title" for="__drawer">
-    <a href="." title="Fiškus" class="md-nav__button md-logo" aria-label="Fiškus" data-md-component="logo">
-      
-  <img src="assets/favicon.svg" alt="logo">
-
-    </a>
-    Fiškus
-  </label>
-  
-  <ul class="md-nav__list" data-md-scrollfix="">
-    
-      
-      
-  
-  
-    
-  
-  
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Prehľad
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="." class="md-nav__link md-nav__link--active">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Prehľad
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Obsah">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Obsah
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
-      
-        <li class="md-nav__item">
-  <a href="#kde-zacat" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Kde začať
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#co-fiskus-vie" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Čo Fiškus vie
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#zasady-na-ktorych-stoji" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Zásady, na ktorých stojí
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    
-    
-    
-    
-      
-        
-        
-      
-    
-    
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2">
-        
-          
-          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
-            
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Začíname
-  
-
-    
-  </span>
-  
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_2">
-            <span class="md-nav__icon md-icon"></span>
-            
-  
-    Začíname
-  
-
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix="">
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="zaciname/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Začíname
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="zaciname/instalacia/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Inštalácia
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="zaciname/uvodne-nastavenie/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Úvodné nastavenie
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="zaciname/prenos-dat/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Prenos dát z iného programu
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="vyucba/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Výučba
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    
-    
-    
-    
-      
-        
-        
-      
-    
-    
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4">
-        
-          
-          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
-            
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Predaj
-  
-
-    
-  </span>
-  
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_4">
-            <span class="md-nav__icon md-icon"></span>
-            
-  
-    Predaj
-  
-
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix="">
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="predaj/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Predaj
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="predaj/faktury/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Faktúry a dobropisy
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="predaj/zalohy/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Zálohy
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="predaj/ponuky/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Cenové ponuky a pravidelná fakturácia
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="predaj/upomienky/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Upomienky
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="predaj/cennik/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Cenník
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="nakup/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Nákup
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    
-    
-    
-    
-      
-        
-        
-      
-    
-    
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6">
-        
-          
-          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
-            
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Sklad
-  
-
-    
-  </span>
-  
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_6">
-            <span class="md-nav__icon md-icon"></span>
-            
-  
-    Sklad
-  
-
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix="">
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="sklad/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Sklad
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="sklad/karta-produktu/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Karta produktu
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="sklad/doklady/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Skladové doklady
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="sklad/ocenenie/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Ocenenie a účtovanie zásob
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="peniaze/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Peniaze
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="dane/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Dane
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    
-    
-    
-    
-      
-        
-        
-      
-    
-    
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_9">
-        
-          
-          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="">
-            
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Účtovníctvo
-  
-
-    
-  </span>
-  
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_9">
-            <span class="md-nav__icon md-icon"></span>
-            
-  
-    Účtovníctvo
-  
-
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix="">
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="uctovnictvo/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Účtovníctvo
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="uctovnictvo/jednoduche/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Jednoduché účtovníctvo
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="uctovnictvo/podvojne/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Podvojné účtovníctvo
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="uctovnictvo/majetok/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Majetok a kniha jázd
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="eshopy/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    E-shopy
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="mzdy/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Mzdy
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="domacnost/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Domácnosť
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="mobil/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Mobil
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    
-    
-    
-    
-      
-        
-        
-      
-    
-    
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_14">
-        
-          
-          <label class="md-nav__link" for="__nav_14" id="__nav_14_label" tabindex="">
-            
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Nástroje
-  
-
-    
-  </span>
-  
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_14_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_14">
-            <span class="md-nav__icon md-icon"></span>
-            
-  
-    Nástroje
-  
-
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix="">
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="nastroje/kalkulacky/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Kalkulačky
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="nastroje/tlaciva/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Tlačivá
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="nastavenia/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Nastavenia a bezpečnosť
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="ROADMAP/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Plán vývoja
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="changelog/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Prehľad zmien
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-    
-  </ul>
-</nav>
-                  </div>
-                </div>
-              </div>
-            
-            
-              
-              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc">
-                <div class="md-sidebar__scrollwrap">
-                  <div class="md-sidebar__inner">
-                    
-
-<nav class="md-nav md-nav--secondary" aria-label="Obsah">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Obsah
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
-      
-        <li class="md-nav__item">
-  <a href="#kde-zacat" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Kde začať
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#co-fiskus-vie" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Čo Fiškus vie
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#zasady-na-ktorych-stoji" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Zásady, na ktorých stojí
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-                  </div>
-                </div>
-              </div>
-            
-          
-          
-            <div class="md-content" data-md-component="content">
-              
-              <article class="md-content__inner md-typeset">
-                
-                  
-
-
-
-<h1 id="fiskus">Fiškus<a class="headerlink" href="#fiskus" title="Permanent link">¶</a></h1>
-<p>Fiškus je slovenský účtovný program, ktorý vznikol na <strong>študijné účely a na
-výučbu účtovníctva</strong>. Obsahuje celú cestu dokladu tak, ako ju pozná účtovník:
-faktúra, úhrada v banke, zápis v peňažnom alebo účtovnom denníku, priznanie
-k DPH a nakoniec závierka. Všetko je v jednom programe a dá sa vyskúšať na
-ukážkovej firme bez toho, aby ste niečo pokazili.</p>
-<p><a class="glightbox" data-type="image" data-width="auto" data-height="auto" href="obrazky/faktury.webp" data-desc-position="bottom"><img alt="Vydané faktúry v ukážkovej firme — súčty, stavy, hľadanie a export" src="obrazky/faktury.webp"></a>
-<em>Vydané faktúry v ukážkovej firme — súčty, stavy, hľadanie a export</em></p>
-<div class="admonition info">
-<p class="admonition-title">Prečo program na výučbu</p>
-<p>Účtovníctvo sa učí ťažko z tabuliek v učebnici, lebo v nich chýba to
-najdôležitejšie — <strong>súvislosti</strong>. Vo Fiškuse vidí študent, že jedna vystavená
-faktúra sa objaví v kontrolnom výkaze, v knihe pohľadávok, po úhrade
-v peňažnom denníku a na konci roka vo výkaze o príjmoch a výdavkoch. Každé
-číslo sa dá rozkliknúť až po doklad, z ktorého vzniklo.</p>
-</div>
-<div class="admonition warning">
-<p class="admonition-title">Na ostré účtovníctvo na vlastnú zodpovednosť</p>
-<p>Fiškus počíta podľa slovenských predpisov a jeho výpočty sú pokryté testami,
-no nie je certifikovaný ani overený audítorom. Ak ho použijete na skutočnú
-firmu, výstupy (najmä priznania a závierku) si nechajte skontrolovať
-účtovníkom.</p>
-</div>
-<h2 id="kde-zacat">Kde začať<a class="headerlink" href="#kde-zacat" title="Permanent link">¶</a></h2>
-<div class="grid cards">
-<ul>
-<li>
-<p><strong><a href="zaciname/instalacia/">Inštalácia</a></strong></p>
-<p>Windows, macOS, Linux alebo server. Ukážková firma jedným príkazom.</p>
-</li>
-<li>
-<p><strong><a href="zaciname/uvodne-nastavenie/">Úvodné nastavenie</a></strong></p>
-<p>Údaje firmy, DPH, jednoduché alebo podvojné účtovníctvo, prechod z iného programu.</p>
-</li>
-<li>
-<p><strong><a href="vyucba/">Fiškus vo výučbe</a></strong></p>
-<p>Ako s programom pracovať na hodine — ukážková firma, úlohy a čo si všímať.</p>
-</li>
-</ul>
-</div>
-<h2 id="co-fiskus-vie">Čo Fiškus vie<a class="headerlink" href="#co-fiskus-vie" title="Permanent link">¶</a></h2>
-<p><a class="glightbox" data-type="image" data-width="auto" data-height="auto" href="obrazky/domacnost.webp" data-desc-position="bottom"><img alt="Domácnosť: účty, najbližšie platby, rozpočet a príjmy a výdavky za rok" src="obrazky/domacnost.webp"></a>
-<em>Domácnosť: účty, najbližšie platby, rozpočet a príjmy a výdavky za rok</em></p>
-<div class="grid cards">
-<ul>
-<li>
-<p><strong><a href="predaj/">Predaj</a></strong></p>
-<p>Faktúry, dobropisy, zálohy, cenové ponuky, pravidelná fakturácia, upomienky, e-faktúra.</p>
-</li>
-<li>
-<p><strong><a href="nakup/">Nákup</a></strong></p>
-<p>Prijaté faktúry, vyťaženie z PDF, bločky eKasa z mobilu.</p>
-</li>
-<li>
-<p><strong><a href="sklad/">Sklad</a></strong></p>
-<p>Karty produktov s obrázkami a parametrami, viac skladov, priemer alebo FIFO.</p>
-</li>
-<li>
-<p><strong><a href="peniaze/">Peniaze</a></strong></p>
-<p>Bankové výpisy s párovaním, platobné príkazy, pokladňa s DPH.</p>
-</li>
-<li>
-<p><strong><a href="dane/">Dane</a></strong></p>
-<p>Priznanie k DPH, kontrolný a súhrnný výkaz ako XML pre eDane.</p>
-</li>
-<li>
-<p><strong><a href="uctovnictvo/">Účtovníctvo</a></strong></p>
-<p>Peňažný denník, účtovný denník a hlavná kniha, majetok, kniha jázd, závierka.</p>
-</li>
-<li>
-<p><strong><a href="eshopy/">E-shopy</a></strong></p>
-<p>WooCommerce, Shopify, Shoptet, PrestaShop, Magento — objednávky aj riadenie obchodu.</p>
-</li>
-<li>
-<p><strong><a href="mobil/">Mobil</a></strong></p>
-<p>Odfotenie bločku, spárovanie telefónu s počítačom v sieti.</p>
-</li>
-<li>
-<p><strong><a href="nastavenia/">Nastavenia a bezpečnosť</a></strong></p>
-<p>Používatelia a roly, 2FA, audit, zálohy, legislatíva, AI asistent.</p>
-</li>
-</ul>
-</div>
-<h2 id="zasady-na-ktorych-stoji">Zásady, na ktorých stojí<a class="headerlink" href="#zasady-na-ktorych-stoji" title="Permanent link">¶</a></h2>
-<table>
-<thead>
-<tr>
-<th>Zásada</th>
-<th>Čo to znamená pre vás</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Doklad je zdroj pravdy</td>
-<td>Súčty, denníky aj výkazy sa počítajú z dokladov. Nič sa neprepisuje ručne bez stopy.</td>
-</tr>
-<tr>
-<td>Výpočty robí server</td>
-<td>DPH, súčty a ocenenie zásob počíta jedna časť programu, takže desktop, web aj testy dávajú rovnaký výsledok.</td>
-</tr>
-<tr>
-<td>Peniaze bez zaokrúhľovacích chýb</td>
-<td>Sumy sú presné desatinné čísla, nie čísla s plávajúcou čiarkou.</td>
-</tr>
-<tr>
-<td>Každá zmena je v audite</td>
-<td>Kto, kedy, čo a ako to vyzeralo predtým. Aj zmeny cez AI asistenta.</td>
-</tr>
-<tr>
-<td>Firmy sa nemiešajú</td>
-<td>Na serveri s viacerými firmami nevidí jedna firma nič z druhej.</td>
-</tr>
-</tbody>
-</table>
-<p>Plán ďalšieho vývoja je v <a href="ROADMAP/">pláne vývoja</a>, zmeny podľa verzií
-v <a href="changelog/">prehľade zmien</a>.</p>
-
-
-
-
-
-
-
-  
-  
-
-
-
-
-
-
-                
-              </article>
-            </div>
-          
-          
-<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
-        </div>
-        
-          <button type="button" class="md-top md-icon" data-md-component="top" hidden="">
-  
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"></path></svg>
-  Na začiatok
-</button>
-        
-      </main>
-      
-        <footer class="md-footer">
-  
-  <div class="md-footer-meta md-typeset">
-    <div class="md-footer-meta__inner md-grid">
-      <div class="md-copyright">
-  
-  
-    Made with
-    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
-      Material for MkDocs
-    </a>
-  
-</div>
-      
-    </div>
-  </div>
-</footer>
-      
-    </div>
-    <div class="md-dialog" data-md-component="dialog">
-      <div class="md-dialog__inner md-typeset"></div>
-    </div>
-    
-    
-    
-      
-      
-      <script id="__config" type="application/json">{"annotate": null, "base": ".", "features": ["navigation.sections", "navigation.top", "content.code.copy"], "search": "assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Skop\u00edrovan\u00e9 do schr\u00e1nky", "clipboard.copy": "Kop\u00edrova\u0165 do schr\u00e1nky", "search.result.more.one": "1 \u010fal\u0161\u00ed na tejto str\u00e1nke", "search.result.more.other": "# \u010fal\u0161\u00edch na tejto str\u00e1nke", "search.result.none": "\u017diadne vyhovuj\u00face dokumenty", "search.result.one": "Vyhovuj\u00faci dokument: 1", "search.result.other": "Vyhovuj\u00face dokumenty: #", "search.result.placeholder": "Pre vyh\u013ead\u00e1vanie za\u010dni p\u00edsa\u0165", "search.result.term.missing": "Ch\u00fdbaj\u00faci", "select.version": "Vyberte verziu"}, "version": null}</script>
-    
-    
-      <script src="assets/javascripts/bundle.d7400e89.min.js"></script>
-      
-    
-  
-<script id="init-glightbox">const lightbox = GLightbox({"touchNavigation": true, "loop": false, "zoomable": true, "draggable": true, "openEffect": "zoom", "closeEffect": "zoom", "slideEffect": "slide"});
-document$.subscribe(()=>{ lightbox.reload(); });
-</script></body></html>
+  </footer>
+
+  <script src="config.js"></script>
+  <script src="site.js"></script>
+</body>
+</html>
