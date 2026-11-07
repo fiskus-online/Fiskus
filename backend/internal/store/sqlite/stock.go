@@ -8,8 +8,8 @@ import (
 	"encoding/json"
 	"errors"
 
-	"github.com/palo-krnac/fiscus/backend/internal/stock"
-	"github.com/palo-krnac/fiscus/backend/internal/store"
+	"github.com/fiskus-online/fiskus/backend/internal/stock"
+	"github.com/fiskus-online/fiskus/backend/internal/store"
 )
 
 func scanStockDoc(r interface{ Scan(...any) error }) (stock.Doc, error) {

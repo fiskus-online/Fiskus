@@ -4,7 +4,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/palo-krnac/fiscus/backend/internal/invoice"
+	"github.com/fiskus-online/fiskus/backend/internal/invoice"
 )
 
 func field(err error) string {

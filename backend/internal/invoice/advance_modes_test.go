@@ -4,8 +4,8 @@ import (
 	"strings"
 	"testing"
 
-	m "github.com/palo-krnac/fiscus/backend/internal/money"
-	"github.com/palo-krnac/fiscus/backend/internal/vat"
+	m "github.com/fiskus-online/fiskus/backend/internal/money"
+	"github.com/fiskus-online/fiskus/backend/internal/vat"
 )
 
 func TestAdvanceMode(t *testing.T) {

@@ -21,8 +21,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/palo-krnac/fiscus/backend/internal/invoice"
-	"github.com/palo-krnac/fiscus/backend/internal/money"
+	"github.com/fiskus-online/fiskus/backend/internal/invoice"
+	"github.com/fiskus-online/fiskus/backend/internal/money"
 )
 
 // Ownership je vzťah vozidla k podnikaniu.

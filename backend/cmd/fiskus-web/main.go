@@ -26,11 +26,11 @@ import (
 	"syscall/js"
 	"time"
 
-	"github.com/palo-krnac/fiscus/backend/internal/api"
-	"github.com/palo-krnac/fiscus/backend/internal/app"
-	"github.com/palo-krnac/fiscus/backend/internal/demo"
-	"github.com/palo-krnac/fiscus/backend/internal/edition"
-	"github.com/palo-krnac/fiscus/backend/internal/store/sqlite"
+	"github.com/fiskus-online/fiskus/backend/internal/api"
+	"github.com/fiskus-online/fiskus/backend/internal/app"
+	"github.com/fiskus-online/fiskus/backend/internal/demo"
+	"github.com/fiskus-online/fiskus/backend/internal/edition"
+	"github.com/fiskus-online/fiskus/backend/internal/store/sqlite"
 )
 
 // version sa nastaví pri zostavení: -ldflags "-X main.version=1.0.0"

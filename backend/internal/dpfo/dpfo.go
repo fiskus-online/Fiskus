@@ -14,7 +14,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/palo-krnac/fiscus/backend/internal/money"
+	"github.com/fiskus-online/fiskus/backend/internal/money"
 )
 
 // Bracket je pásmo sadzby: do sumy Upto (vrátane) sadzba Rate %.

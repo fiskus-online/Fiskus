@@ -3,13 +3,13 @@ package app
 import (
 	"testing"
 
-	"github.com/palo-krnac/fiscus/backend/internal/asset"
-	"github.com/palo-krnac/fiscus/backend/internal/cash"
-	"github.com/palo-krnac/fiscus/backend/internal/edition"
-	"github.com/palo-krnac/fiscus/backend/internal/invoice"
-	"github.com/palo-krnac/fiscus/backend/internal/journal"
-	"github.com/palo-krnac/fiscus/backend/internal/logbook"
-	m "github.com/palo-krnac/fiscus/backend/internal/money"
+	"github.com/fiskus-online/fiskus/backend/internal/asset"
+	"github.com/fiskus-online/fiskus/backend/internal/cash"
+	"github.com/fiskus-online/fiskus/backend/internal/edition"
+	"github.com/fiskus-online/fiskus/backend/internal/invoice"
+	"github.com/fiskus-online/fiskus/backend/internal/journal"
+	"github.com/fiskus-online/fiskus/backend/internal/logbook"
+	m "github.com/fiskus-online/fiskus/backend/internal/money"
 )
 
 func TestLogbookBusinessCar(t *testing.T) {

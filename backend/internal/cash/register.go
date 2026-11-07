@@ -6,8 +6,8 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/palo-krnac/fiscus/backend/internal/fx"
-	"github.com/palo-krnac/fiscus/backend/internal/invoice"
+	"github.com/fiskus-online/fiskus/backend/internal/fx"
+	"github.com/fiskus-online/fiskus/backend/internal/invoice"
 )
 
 // Register je pokladňa firmy. Hlavná pokladňa má ID 0, je v eurách a

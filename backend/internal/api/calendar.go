@@ -6,9 +6,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/palo-krnac/fiscus/backend/internal/app"
-	"github.com/palo-krnac/fiscus/backend/internal/calendar"
-	"github.com/palo-krnac/fiscus/backend/internal/invoice"
+	"github.com/fiskus-online/fiskus/backend/internal/app"
+	"github.com/fiskus-online/fiskus/backend/internal/calendar"
+	"github.com/fiskus-online/fiskus/backend/internal/invoice"
 )
 
 // calendarView: GET /api/companies/{cid}/calendar?from=2026-10-01&to=2026-10-31

@@ -4,7 +4,7 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/palo-krnac/fiscus/backend/internal/chart"
+	"github.com/fiskus-online/fiskus/backend/internal/chart"
 )
 
 func (s *Server) chartView(w http.ResponseWriter, r *http.Request) {

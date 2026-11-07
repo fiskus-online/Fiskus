@@ -28,7 +28,7 @@ make demo        # ukážková firma „Demo elektroservis“, http://127.0.0.1:
 ```
 
 Ukážkové dáta sú iba v pamäti, po reštarte sú znova pôvodné. Inštalačky pre
-Windows, macOS a Linux sú vo [vydaniach](https://github.com/palo-krnac/Fiscus/releases).
+Windows, macOS a Linux sú vo [vydaniach](https://github.com/fiskus-online/fiskus/releases).
 
 ## Funkcie
 

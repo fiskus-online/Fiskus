@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/palo-krnac/fiscus/backend/internal/store"
+	"github.com/fiskus-online/fiskus/backend/internal/store"
 )
 
 // DeleteCompany zmaže firmu a všetky riadky so stĺpcom company_id (tabuľky

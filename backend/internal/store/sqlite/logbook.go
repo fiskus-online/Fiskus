@@ -8,8 +8,8 @@ import (
 	"encoding/json"
 	"errors"
 
-	"github.com/palo-krnac/fiscus/backend/internal/logbook"
-	"github.com/palo-krnac/fiscus/backend/internal/store"
+	"github.com/fiskus-online/fiskus/backend/internal/logbook"
+	"github.com/fiskus-online/fiskus/backend/internal/store"
 )
 
 func (s *Store) ListVehicles(ctx context.Context, companyID int64) ([]logbook.Vehicle, error) {

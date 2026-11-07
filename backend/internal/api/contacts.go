@@ -3,7 +3,7 @@ package api
 import (
 	"net/http"
 
-	"github.com/palo-krnac/fiscus/backend/internal/store"
+	"github.com/fiskus-online/fiskus/backend/internal/store"
 )
 
 func (s *Server) updateCompany(w http.ResponseWriter, r *http.Request) {

@@ -9,9 +9,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/palo-krnac/fiscus/backend/internal/app"
-	"github.com/palo-krnac/fiscus/backend/internal/backup"
-	"github.com/palo-krnac/fiscus/backend/internal/edition"
+	"github.com/fiskus-online/fiskus/backend/internal/app"
+	"github.com/fiskus-online/fiskus/backend/internal/backup"
+	"github.com/fiskus-online/fiskus/backend/internal/edition"
 )
 
 type fakeDB struct{}

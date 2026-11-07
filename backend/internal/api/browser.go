@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/palo-krnac/fiscus/backend/internal/app"
+	"github.com/fiskus-online/fiskus/backend/internal/app"
 )
 
 // Fiškus v prehliadači (cmd/fiskus-web) beží celý v prehliadači používateľa.

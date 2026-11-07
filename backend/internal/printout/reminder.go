@@ -3,9 +3,9 @@ package printout
 import (
 	"strconv"
 
-	"github.com/palo-krnac/fiscus/backend/internal/party"
-	"github.com/palo-krnac/fiscus/backend/internal/pdf"
-	"github.com/palo-krnac/fiscus/backend/internal/reminder"
+	"github.com/fiskus-online/fiskus/backend/internal/party"
+	"github.com/fiskus-online/fiskus/backend/internal/pdf"
+	"github.com/fiskus-online/fiskus/backend/internal/reminder"
 )
 
 // Reminder vytvorí PDF upomienky (list s adresným okienkom obálky).

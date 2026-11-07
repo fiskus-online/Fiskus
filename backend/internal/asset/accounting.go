@@ -3,7 +3,7 @@ package asset
 import (
 	"fmt"
 
-	"github.com/palo-krnac/fiscus/backend/internal/money"
+	"github.com/fiskus-online/fiskus/backend/internal/money"
 )
 
 // Účtovné odpisy (§ 28 zákona o účtovníctve, podvojné účtovníctvo): podľa

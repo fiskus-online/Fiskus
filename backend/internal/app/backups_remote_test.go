@@ -14,9 +14,9 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/palo-krnac/fiscus/backend/internal/auth"
-	"github.com/palo-krnac/fiscus/backend/internal/backup"
-	"github.com/palo-krnac/fiscus/backend/internal/edition"
+	"github.com/fiskus-online/fiskus/backend/internal/auth"
+	"github.com/fiskus-online/fiskus/backend/internal/backup"
+	"github.com/fiskus-online/fiskus/backend/internal/edition"
 )
 
 // davServer je najjednoduchší WebDAV (PUT, GET, DELETE, PROPFIND) s heslom.

@@ -4,7 +4,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/palo-krnac/fiscus/backend/internal/money"
+	"github.com/fiskus-online/fiskus/backend/internal/money"
 )
 
 // Bloček v domácnosti: nákup rozdelený na položky, každá s kategóriou

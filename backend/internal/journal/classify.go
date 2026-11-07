@@ -1,9 +1,9 @@
 package journal
 
 import (
-	"github.com/palo-krnac/fiscus/backend/internal/money"
-	"github.com/palo-krnac/fiscus/backend/internal/purchase"
-	pkgvat "github.com/palo-krnac/fiscus/backend/internal/vat"
+	"github.com/fiskus-online/fiskus/backend/internal/money"
+	"github.com/fiskus-online/fiskus/backend/internal/purchase"
+	pkgvat "github.com/fiskus-online/fiskus/backend/internal/vat"
 )
 
 // Návrh rozpisu úhrad dokladov. Pri čiastočnej úhrade sa DPH rozdelí

@@ -3,8 +3,8 @@ package memstore
 import (
 	"context"
 
-	"github.com/palo-krnac/fiscus/backend/internal/journal"
-	"github.com/palo-krnac/fiscus/backend/internal/store"
+	"github.com/fiskus-online/fiskus/backend/internal/journal"
+	"github.com/fiskus-online/fiskus/backend/internal/store"
 )
 
 func (s *Store) ListJournalOverrides(_ context.Context, companyID int64) (map[string]store.JournalOverride, error) {

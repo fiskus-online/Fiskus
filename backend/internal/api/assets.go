@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/palo-krnac/fiscus/backend/internal/asset"
+	"github.com/fiskus-online/fiskus/backend/internal/asset"
 )
 
 func (s *Server) listAssets(w http.ResponseWriter, r *http.Request) {

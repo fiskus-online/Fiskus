@@ -6,7 +6,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/palo-krnac/fiscus/backend/internal/app"
+	"github.com/fiskus-online/fiskus/backend/internal/app"
 )
 
 func failLogo(w http.ResponseWriter, err error) {

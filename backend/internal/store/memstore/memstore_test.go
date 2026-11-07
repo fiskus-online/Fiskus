@@ -3,8 +3,8 @@ package memstore
 import (
 	"testing"
 
-	"github.com/palo-krnac/fiscus/backend/internal/store"
-	"github.com/palo-krnac/fiscus/backend/internal/store/storetest"
+	"github.com/fiskus-online/fiskus/backend/internal/store"
+	"github.com/fiskus-online/fiskus/backend/internal/store/storetest"
 )
 
 func TestContract(t *testing.T) {

@@ -3,7 +3,7 @@ package chart
 import (
 	"strings"
 
-	"github.com/palo-krnac/fiscus/backend/internal/invoice"
+	"github.com/fiskus-online/fiskus/backend/internal/invoice"
 )
 
 // Center je stredisko (útvar, prevádzka) na sledovanie nákladov a výnosov.

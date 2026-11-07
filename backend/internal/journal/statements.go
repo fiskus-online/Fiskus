@@ -1,6 +1,6 @@
 package journal
 
-import "github.com/palo-krnac/fiscus/backend/internal/money"
+import "github.com/fiskus-online/fiskus/backend/internal/money"
 
 // Účtovná závierka v jednoduchom účtovníctve fyzickej osoby (opatrenie
 // MF SR č. MF/27076/2007-74 v znení MF/15523/2014-74, vzory Úč FO 1-01

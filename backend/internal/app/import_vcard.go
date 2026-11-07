@@ -4,11 +4,11 @@ import (
 	"bytes"
 	"context"
 
-	"github.com/palo-krnac/fiscus/backend/internal/auth"
-	"github.com/palo-krnac/fiscus/backend/internal/tabimport"
-	"github.com/palo-krnac/fiscus/backend/internal/table"
-	"github.com/palo-krnac/fiscus/backend/internal/vat"
-	"github.com/palo-krnac/fiscus/backend/internal/vcard"
+	"github.com/fiskus-online/fiskus/backend/internal/auth"
+	"github.com/fiskus-online/fiskus/backend/internal/tabimport"
+	"github.com/fiskus-online/fiskus/backend/internal/table"
+	"github.com/fiskus-online/fiskus/backend/internal/vat"
+	"github.com/fiskus-online/fiskus/backend/internal/vcard"
 )
 
 // ImportVCard prenesie kontakty z vizitiek vCard (.vcf) do adresára

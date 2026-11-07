@@ -3,8 +3,8 @@ package vatreturn
 import (
 	"errors"
 
-	"github.com/palo-krnac/fiscus/backend/internal/invoice"
-	"github.com/palo-krnac/fiscus/backend/internal/money"
+	"github.com/fiskus-online/fiskus/backend/internal/invoice"
+	"github.com/fiskus-online/fiskus/backend/internal/money"
 )
 
 // Druh priznania (DPHv25, hlavička „Druh priznania“; poučenie bod 11).

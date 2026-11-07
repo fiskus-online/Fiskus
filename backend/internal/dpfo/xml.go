@@ -8,7 +8,7 @@ import (
 	"io"
 	"strings"
 
-	"github.com/palo-krnac/fiscus/backend/internal/money"
+	"github.com/fiskus-online/fiskus/backend/internal/money"
 )
 
 // Šablóna je prázdne XML uložené z formulára DPFOBv25 na portáli finančnej

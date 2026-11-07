@@ -8,9 +8,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/palo-krnac/fiscus/backend/internal/money"
-	"github.com/palo-krnac/fiscus/backend/internal/pdf"
-	"github.com/palo-krnac/fiscus/backend/internal/store"
+	"github.com/fiskus-online/fiskus/backend/internal/money"
+	"github.com/fiskus-online/fiskus/backend/internal/pdf"
+	"github.com/fiskus-online/fiskus/backend/internal/store"
 )
 
 // Farby tlače (rovnaké ako v CSS tlače).

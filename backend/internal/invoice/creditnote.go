@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/palo-krnac/fiscus/backend/internal/money"
+	"github.com/fiskus-online/fiskus/backend/internal/money"
 )
 
 // Correction sú údaje dobropisu (opravnej faktúry podľa § 71 ods. 2 zákona

@@ -64,7 +64,7 @@ Fiškus má zabudovaný MCP server, ku ktorému sa pripojí Claude alebo iný
 asistent. Asistent má práva svojho používateľa, kľúč môže byť iba na
 čítanie a každé volanie je v audite. **DPH, súčty a limity počíta Fiškus**,
 asistent iba zadáva údaje; vystavenie faktúry robí iba na výslovný pokyn.
-Návod na pripojenie je v [README](https://github.com/palo-krnac/Fiscus#ai-asistent-mcp).
+Návod na pripojenie je v [README](https://github.com/fiskus-online/fiskus#ai-asistent-mcp).
 
 ![Prístup pre AI: kľúče pre AI asistenta a čítanie dokladov](../obrazky/ai.webp)
 *Prístup pre AI: kľúče pre AI asistenta a čítanie dokladov*
