@@ -51,7 +51,7 @@ dajú ručné zápisy a interné doklady.
 
 - **Účtovný denník** — zápisy v časovom poradí.
 - **Hlavná kniha** — obratová predvaha, obraty a zostatky účtov.
-- **Kurzové rozdiely** pri úhrade v cudzej mene aj k 31. 12.
+- **Kurzové rozdiely** pri úhrade v cudzej mene (aj pri čiastočných úhradách z eurového účtu) a k 31. 12.
 - **Závierka mikro účtovnej jednotky** — súvaha (Úč MÚJ 1-01) a výkaz
   ziskov a strát (Úč MÚJ 2-01); počiatočné stavy z konečných stavov
   minulého roka.

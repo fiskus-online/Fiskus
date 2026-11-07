@@ -8,6 +8,7 @@ import (
 
 	"github.com/fiskus-online/fiskus/backend/internal/app"
 	"github.com/fiskus-online/fiskus/backend/internal/bank"
+	"github.com/fiskus-online/fiskus/backend/internal/money"
 	"github.com/fiskus-online/fiskus/backend/internal/store"
 )
 
@@ -81,13 +82,14 @@ func (s *Server) matchBank(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var body struct {
-		Kind string `json:"kind"`
-		ID   int64  `json:"id"`
+		Kind    string    `json:"kind"`
+		ID      int64     `json:"id"`
+		Foreign money.Dec `json:"foreignAmount"` // pri faktúre v cudzej mene (prázdne = celý zostatok)
 	}
 	if !decode(w, r, &body) {
 		return
 	}
-	t, err := s.App.MatchTransaction(r.Context(), cid, id, body.Kind, body.ID)
+	t, err := s.App.MatchForeign(r.Context(), cid, id, body.Kind, body.ID, body.Foreign)
 	if err != nil {
 		failBank(w, err)
 		return

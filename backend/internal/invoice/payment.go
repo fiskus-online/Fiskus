@@ -25,6 +25,9 @@ type Payment struct {
 	Amount money.Dec `json:"amount"`
 	Source string    `json:"source"`
 	Ref    int64     `json:"ref,omitempty"` // ID bankového pohybu alebo pokladničného dokladu
+	// EUR je suma platby v eurách pri faktúre v cudzej mene uhradenej
+	// z eurového účtu (Amount je v mene faktúry) — základ kurzového rozdielu.
+	EUR money.Dec `json:"eur,omitzero"`
 }
 
 var (

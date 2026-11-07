@@ -657,11 +657,17 @@ func (a *App) ledgerSources(ctx context.Context, companyID int64, year int, p *p
 				case inv == nil:
 				case inv.Kind == invoice.KindProforma:
 					post.Template = "B-ZALOHA"
-				case inv.Foreign() && single && inv.Status == invoice.StatusPaid:
-					if v, ok := revalued["sale:"+strconv.FormatInt(inv.ID, 10)]; ok {
-						p.setFX(key, v) // prepočítané k 31. 12. minulého roka
-					} else if s, ok := inv.TaxSummary(); ok {
-						p.setFX(key, s.Total)
+				case inv.Foreign():
+					rv, hasRV := revalued["sale:"+strconv.FormatInt(inv.ID, 10)]
+					if v, ok := fxPaymentBook(inv, t.ID, year, rv, hasRV); ok {
+						p.setFX(key, v)
+					} else if single && inv.Status == invoice.StatusPaid {
+						// úhrada bez evidencie platby v mene faktúry: celá faktúra
+						if hasRV {
+							p.setFX(key, rv) // prepočítané k 31. 12. minulého roka
+						} else if s, ok := inv.TaxSummary(); ok {
+							p.setFX(key, s.Total)
+						}
 					}
 				}
 			case "purchase":
