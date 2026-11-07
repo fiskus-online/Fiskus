@@ -28,7 +28,7 @@ func gpc075(code, amount, vs, ks, ss, name, cur, date, ref, counter string) stri
 }
 
 func TestParseGPC(t *testing.T) {
-	head := gpcLine([3]any{1, 3, "074"}, [3]any{4, 19, "0000002900123456"}, [3]any{20, 39, "Krnac"}, [3]any{40, 45, "011026"},
+	head := gpcLine([3]any{1, 3, "074"}, [3]any{4, 19, "0000002900123456"}, [3]any{20, 39, "Novak"}, [3]any{40, 45, "011026"},
 		[3]any{46, 59, "00000000100000"}, [3]any{60, 60, "+"}, [3]any{106, 108, "010"}, [3]any{109, 114, "291026"})
 	lines := []string{
 		head,

@@ -67,7 +67,7 @@ func TestProgressive(t *testing.T) {
 func TestXML(t *testing.T) {
 	in := Input{Year: 2026, Income: m("30000"), Expenses: m("12000"), Prepaid: m("2000"), NGOICO: "31 821 715", NGOName: "Občianske združenie Pomoc deťom a mládeži Banská Bystrica",
 		RefundIBAN: "sk31 1200 0000 1987 4263 7541", Date: "15.03.2027",
-		Taxpayer: Taxpayer{DIC: "1012345678", Surname: "Krnáč", Name: "Pavol", Street: "Hlavná", Number: "1", Zip: "974 01", City: "Banská Bystrica", Country: "Slovenská republika", NACE: "43.21.0", Activity: "Elektrické inštalácie"}}
+		Taxpayer: Taxpayer{DIC: "1012345678", Surname: "Novák", Name: "Ján", Street: "Hlavná", Number: "1", Zip: "974 01", City: "Banská Bystrica", Country: "Slovenská republika", NACE: "43.21.0", Activity: "Elektrické inštalácie"}}
 	in.Table1a[0] = [2]money.Dec{m("1000"), m("800")}
 	res, _ := Compute(in)
 	out, err := XML(in, res)
@@ -85,7 +85,7 @@ func TestXML(t *testing.T) {
 	}
 	s := string(out)
 	for _, want := range []string{
-		"<dic>1012345678</dic>", "<rok>2026</rok>", "<priezvisko>Krnáč</priezvisko>", "<psc>97401</psc>",
+		"<dic>1012345678</dic>", "<rok>2026</rok>", "<priezvisko>Novák</priezvisko>", "<psc>97401</psc>",
 		"<k1>43</k1>", "<k2>21</k2>", "<k3>0</k3>", "<cinnost>Elektrické inštalácie</cinnost>",
 		"<t1r2>\n\t\t\t\t<s1>30000.00</s1>\n\t\t\t\t<s2>12000.00</s2>", "<r39>30000.00</r39>", "<r96>1804.99</r96>",
 		"<r136>195.01</r136>", "<ico>31821715</ico>", "<neuplatnujemPar50>0</neuplatnujemPar50>", "<r152>36.10</r152>",

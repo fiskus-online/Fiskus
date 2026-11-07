@@ -76,7 +76,7 @@ Referenčný prehľad funkcií pochádza z českých systémov  (MIT) a  ([docs/
 - [x] Fiškus v prehliadači bez inštalácie: program v Go ako WebAssembly, SQLite v úložisku prehliadača (OPFS), funkcie nainštalovaného programu s výzvou na inštaláciu, šifrovaná záloha a obnova `.fbk` kompatibilná s nainštalovaným Fiškusom
 - [ ] Fiškus v prehliadači: nasadenie na `app.fiskus.online`, odkaz „Otvoriť v prehliadači“ na fiskus.online
 - [ ] Podpísané inštalačky (Authenticode, notarizácia Apple), automatická aktualizácia, AppImage
-- [x] Fiškus je vždy zadarmo: licencie, predaj cez Paddle a limit počtu firiem zrušené
+- [x] Bez licencií: licencie, predaj cez Paddle a limit počtu firiem zrušené
 - [x] Web fiskus.online (priečinok `site/`): funkcie, stiahnutie podľa systému, Fiškus v prehliadači, ochrana údajov
 - [x] E-faktúra UBL 2.1 (EN 16931, Peppol BIS Billing 3.0): vytvorenie z vystavenej faktúry a dobropisu (adresa 0245:DIČ), načítanie prijatej e-faktúry ako nákladu
 - [x] E-faktúra: všeobecné napojenie na digitálneho poštára — priečinky (synchronizácia aplikáciou poskytovateľa) alebo HTTP API adaptéra; odoslanie, schránka prijatých, zoznam odoslaných a prevzatých
