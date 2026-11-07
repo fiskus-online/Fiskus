@@ -719,3 +719,11 @@ export const savingsYearColumns = [
   money('Čisté úroky €', (r) => r.interest),
   money('Zostatok €', (r) => r.balance),
 ]
+
+// tlačivá
+export const formDocColumns = (forms) => [
+  t('Názov', (r) => r.title, 36),
+  t('Tlačivo', (r) => forms.find((f) => f.key === r.formKey)?.name ?? r.formKey, 28),
+  date('Upravené', (r) => r.updated),
+  t('Pokladničný doklad', (r) => r.cashNumber ?? '', 18),
+]

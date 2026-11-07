@@ -9,6 +9,7 @@ package store
 import (
 	"context"
 	"errors"
+	"github.com/fiskus-online/fiskus/backend/internal/forms"
 	"time"
 
 	"github.com/fiskus-online/fiskus/backend/internal/asset"
@@ -406,6 +407,13 @@ type Store interface {
 	ListHHObligations(ctx context.Context, companyID int64) ([]household.Obligation, error)
 	SaveHHObligation(ctx context.Context, companyID int64, o *household.Obligation) error
 	DeleteHHObligation(ctx context.Context, companyID, id int64) error
+
+	// Tlačivá: vyplnené tlačivá a vzory firmy (definície vlastných tlačív
+	// sú v nastaveniach).
+	ListFormDocs(ctx context.Context, companyID int64) ([]forms.Doc, error)
+	GetFormDoc(ctx context.Context, companyID, id int64) (forms.Doc, error)
+	SaveFormDoc(ctx context.Context, companyID int64, d *forms.Doc) error
+	DeleteFormDoc(ctx context.Context, companyID, id int64) error
 
 	// ListRecurring vráti šablóny pravidelnej fakturácie firmy zoradené podľa ID.
 	ListRecurring(ctx context.Context, companyID int64) ([]recurring.Template, error)

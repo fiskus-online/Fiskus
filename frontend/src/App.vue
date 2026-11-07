@@ -233,7 +233,7 @@ watch(
             <DemoOffer />
           </template>
           <p v-else>Nemáte prístup do žiadnej firmy. Požiadajte správcu, aby vás pridal.</p>
-          <p class="tools">Aj bez firmy: <RouterLink to="/kalkulacky">Kalkulačky</RouterLink></p>
+          <p class="tools">Aj bez firmy: <RouterLink to="/kalkulacky">Kalkulačky</RouterLink>, <RouterLink to="/tlaciva">Tlačivá</RouterLink></p>
         </div>
         <div v-else-if="session.ready && !allowed" class="fatal muted-box">
           <i class="pi pi-lock" />

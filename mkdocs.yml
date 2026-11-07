@@ -71,6 +71,7 @@ nav:
   - Mobil: mobil/index.md
   - Nástroje:
       - nastroje/kalkulacky.md
+      - nastroje/tlaciva.md
   - Nastavenia a bezpečnosť: nastavenia/index.md
   - Plán vývoja: ROADMAP.md
   - Prehľad zmien: changelog.md

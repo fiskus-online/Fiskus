@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/fiskus-online/fiskus/backend/internal/catalog"
+	"github.com/fiskus-online/fiskus/backend/internal/forms"
 	"github.com/fiskus-online/fiskus/backend/internal/journal"
 	"reflect"
 	"sync"
@@ -763,6 +764,52 @@ func Run(t *testing.T, newStore Factory) {
 		}
 		if list, _ := s.ListHHEntries(ctx, b.ID, 0); len(list) != 1 {
 			t.Fatal("zmazanie domácnosti zmazalo pohyby inej")
+		}
+	})
+
+	t.Run("tlačivá", func(t *testing.T) {
+		s := newStore(t)
+		a, _ := s.CreateCompany(ctx, store.Company{Name: "Alfa"})
+		b, _ := s.CreateCompany(ctx, store.Company{Name: "Beta"})
+		d := forms.Doc{FormKey: "dodaci-list", Title: "DL 1", Values: forms.Values{"date": "2026-11-07", "partner": "Odberateľ"},
+			Items: []forms.Item{{Desc: "Kábel", Qty: m.MustParse("2"), Unit: "m", Price: m.MustParse("1.5")}}, Updated: invoice.MustDate("2026-11-07")}
+		if err := s.SaveFormDoc(ctx, a.ID, &d); err != nil || d.ID == 0 || d.CompanyID != a.ID {
+			t.Fatalf("tlačivo: %+v %v", d, err)
+		}
+		tpl := forms.Doc{FormKey: "ppd", Title: "Vzor PPD", Values: forms.Values{"issuer": "Alfa"}, Template: true, Items: []forms.Item{}}
+		if err := s.SaveFormDoc(ctx, a.ID, &tpl); err != nil {
+			t.Fatal(err)
+		}
+		if got, err := s.GetFormDoc(ctx, a.ID, d.ID); err != nil || !reflect.DeepEqual(got, d) {
+			t.Fatalf("načítanie:\n got %+v\nwant %+v", got, d)
+		}
+		d.CashID, d.CashNumber = 7, "PPD20260001"
+		if err := s.SaveFormDoc(ctx, a.ID, &d); err != nil {
+			t.Fatal(err)
+		}
+		if list, _ := s.ListFormDocs(ctx, a.ID); len(list) != 2 || list[0].CashNumber != "PPD20260001" || !list[1].Template {
+			t.Fatalf("zoznam: %+v", list)
+		}
+		if _, err := s.GetFormDoc(ctx, b.ID, d.ID); !errors.Is(err, store.ErrNotFound) {
+			t.Fatal("tlačivo inej firmy")
+		}
+		if err := s.SaveFormDoc(ctx, b.ID, &d); !errors.Is(err, store.ErrNotFound) {
+			t.Fatal("úprava tlačiva inej firmy")
+		}
+		if err := s.DeleteFormDoc(ctx, b.ID, d.ID); !errors.Is(err, store.ErrNotFound) {
+			t.Fatal("zmazanie tlačiva inej firmy")
+		}
+		if err := s.DeleteFormDoc(ctx, a.ID, d.ID); err != nil {
+			t.Fatal(err)
+		}
+		if list, _ := s.ListFormDocs(ctx, a.ID); len(list) != 1 {
+			t.Fatalf("po zmazaní: %d", len(list))
+		}
+		if err := s.DeleteCompany(ctx, a.ID); err != nil {
+			t.Fatal(err)
+		}
+		if list, _ := s.ListFormDocs(ctx, a.ID); len(list) != 0 {
+			t.Fatalf("tlačivá po zmazaní firmy: %d", len(list))
 		}
 	})
 
