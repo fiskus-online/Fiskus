@@ -154,13 +154,23 @@ const sheetClass = computed(() => [cash.value ? 'cash' : 'doc', props.form.paper
   justify-content: center;
   align-items: center;
   gap: 1.5mm;
-  font-size: 8pt;
+  line-height: 1;
   font-weight: 600;
   color: #1f3a5c;
 }
 .brand svg {
+  display: block;
+  flex: none;
   width: 4mm;
   height: 4mm;
+}
+/* text zarovnaný na stred ikony (veľké písmená bez horného priestoru písma) */
+.brand span {
+  display: block;
+  font-size: 9pt;
+  line-height: 4mm;
+  height: 4mm;
+  transform: translateY(0.1mm);
 }
 .sheet.doc {
   padding-bottom: 14mm !important;
