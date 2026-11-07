@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/fiskus-online/fiskus/backend/internal/money"
 	"strings"
 	"time"
 
@@ -183,7 +184,23 @@ func (a *App) pair(ctx context.Context, companyID int64, t *bank.Transaction, c 
 		if inv.Kind == invoice.KindCreditNote {
 			amount = amount.Neg()
 		}
-		if _, err := a.AddPayment(ctx, companyID, c.ID, invoice.Payment{Date: t.Date, Amount: amount, Source: invoice.PaymentBank, Ref: t.ID}, false); err != nil {
+		pay := invoice.Payment{Date: t.Date, Amount: amount, Source: invoice.PaymentBank, Ref: t.ID}
+		if inv.Foreign() && currencyCode(t.Currency) == "EUR" {
+			// faktúra v cudzej mene z eurového účtu: suma v mene faktúry
+			// a v eurách (kurzový rozdiel)
+			if inv.Kind != invoice.KindInvoice {
+				return ErrWrongDirection
+			}
+			rest := inv.Remaining()
+			pay.Amount, pay.EUR = c.Amount, t.Amount
+			if pay.Amount.IsZero() {
+				pay.Amount = rest
+			}
+			if pay.Amount.Sign() <= 0 || pay.Amount.Cmp(rest) > 0 {
+				return vErr("foreignAmount", fmt.Sprintf("Uhradená suma v %s je 0,01 až %s", inv.Currency, rest.String()))
+			}
+		}
+		if _, err := a.AddPayment(ctx, companyID, c.ID, pay, false); err != nil {
 			return err
 		}
 		number = inv.Number
@@ -243,7 +260,38 @@ func (a *App) Suggestions(ctx context.Context, companyID, id int64) ([]bank.Sugg
 	return out, nil
 }
 
-// OpenDocuments vráti neuhradené doklady pre ručné párovanie (podľa smeru platby).
+// foreignCandidates sú neuhradené faktúry a prijaté faktúry v cudzej mene —
+// pri ručnom párovaní ich možno uhradiť z eurového účtu (kurzový rozdiel
+// sa zaúčtuje v podvojnom účtovníctve).
+func (a *App) foreignCandidates(ctx context.Context, companyID int64) ([]bank.Candidate, error) {
+	invs, err := a.Store.ListInvoices(ctx, companyID, store.InvoiceFilter{Status: invoice.StatusIssued})
+	if err != nil {
+		return nil, err
+	}
+	var out []bank.Candidate
+	for _, inv := range invs {
+		if inv.Status != invoice.StatusIssued || inv.Kind != invoice.KindInvoice || !inv.Foreign() {
+			continue
+		}
+		out = append(out, bank.Candidate{Kind: "invoice", ID: inv.ID, Number: inv.Number, VS: inv.VariableSymbol, Partner: inv.Customer.Name,
+			Amount: inv.Remaining(), Direction: bank.In, Due: inv.DueDate, Currency: inv.Currency})
+	}
+	purs, err := a.Store.ListPurchases(ctx, companyID, store.PurchaseFilter{})
+	if err != nil {
+		return nil, err
+	}
+	for _, p := range purs {
+		if p.Status != purchase.StatusBooked || !p.Foreign() {
+			continue
+		}
+		out = append(out, bank.Candidate{Kind: "purchase", ID: p.ID, Number: p.Number, VS: p.VariableSymbol, Partner: p.Supplier.Name,
+			Amount: p.Summary.Total, Direction: bank.Out, Due: p.DueDate, Currency: p.Currency})
+	}
+	return out, nil
+}
+
+// OpenDocuments vráti neuhradené doklady pre ručné párovanie (podľa smeru
+// platby), pri eurovom pohybe aj doklady v cudzej mene.
 func (a *App) OpenDocuments(ctx context.Context, companyID, id int64) ([]bank.Candidate, error) {
 	t, err := a.bankTx(ctx, companyID, id, auth.PermBankRead)
 	if err != nil {
@@ -252,6 +300,13 @@ func (a *App) OpenDocuments(ctx context.Context, companyID, id int64) ([]bank.Ca
 	cands, err := a.candidates(ctx, companyID)
 	if err != nil {
 		return nil, err
+	}
+	if t.Currency == "" || t.Currency == "EUR" {
+		foreign, err := a.foreignCandidates(ctx, companyID)
+		if err != nil {
+			return nil, err
+		}
+		cands = append(cands, foreign...)
 	}
 	out := []bank.Candidate{}
 	for _, c := range cands {
@@ -264,6 +319,13 @@ func (a *App) OpenDocuments(ctx context.Context, companyID, id int64) ([]bank.Ca
 
 // MatchTransaction ručne spáruje pohyb s dokladom.
 func (a *App) MatchTransaction(ctx context.Context, companyID, id int64, kind string, docID int64) (bank.Transaction, error) {
+	return a.MatchForeign(ctx, companyID, id, kind, docID, money.Zero)
+}
+
+// MatchForeign ručne spáruje pohyb s dokladom; pri faktúre v cudzej mene
+// uhradenej z eurového účtu je foreign suma uhradená v mene faktúry
+// (nula = celý zostatok, menej = čiastočná úhrada).
+func (a *App) MatchForeign(ctx context.Context, companyID, id int64, kind string, docID int64, foreign money.Dec) (bank.Transaction, error) {
 	t, err := a.bankTx(ctx, companyID, id, auth.PermBankWrite)
 	if err != nil {
 		return t, err
@@ -274,7 +336,7 @@ func (a *App) MatchTransaction(ctx context.Context, companyID, id int64, kind st
 	if t.Status == bank.StatusMatched {
 		return t, ErrAlreadyMatched
 	}
-	err = a.pair(ctx, companyID, &t, bank.Candidate{Kind: kind, ID: docID}, false)
+	err = a.pair(ctx, companyID, &t, bank.Candidate{Kind: kind, ID: docID, Amount: foreign}, false)
 	return t, err
 }
 

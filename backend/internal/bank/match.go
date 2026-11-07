@@ -19,6 +19,9 @@ type Candidate struct {
 	Amount    money.Dec    `json:"amount"`
 	Direction Direction    `json:"direction"` // smer platby, ktorou sa doklad uhrádza
 	Due       invoice.Date `json:"due"`
+	// Currency je mena dokladu v cudzej mene (prázdna = euro); Amount je
+	// potom zostatok v tejto mene.
+	Currency string `json:"currency,omitempty"`
 }
 
 // Suggestion je návrh spárovania so skóre a dôvodom.

@@ -24,6 +24,17 @@ a sumy. Čo si nie je istý, ponúkne ako návrh; zvyšok spárujete ručne aleb
 necháte ako nepárovaný pohyb (poplatky, vklady), ktorý sa v peňažnom
 denníku zapíše ručne. Čiastočné úhrady sa sčítajú.
 
+**Faktúra v cudzej mene z eurového účtu.** Pri ručnom párovaní eurovej
+platby sa v zozname „Iný doklad“ ponúknu aj faktúry v cudzej mene (hľadať sa
+dá aj podľa meny, napr. CZK). Fiškus sa opýta, koľko v mene faktúry platba
+uhrádza — predvolený je celý zostatok, pri menšej sume ostane faktúra
+čiastočne uhradená a čaká na ďalšiu platbu. V podvojnom účtovníctve sa pri
+každej platbe odpíše z účtu 311 pomerná časť sumy faktúry v eurách
+(posledná platba zvyšok) a rozdiel je kurzový zisk (663) alebo strata (563).
+
+![Eurová platba k faktúre v CZK: koľko korún uhrádza](../obrazky/banka-cudzia-mena.webp)
+*Eurová platba k faktúre v CZK: koľko korún uhrádza*
+
 :::info[Prečo párovanie, a nie odškrtnutie „uhradené“]
 Úhrada je udalosť s dátumom a sumou. Z nej sa počíta peňažný denník,
 kurzový rozdiel aj stav pohľadávok k ľubovoľnému dňu. Faktúra s odškrtnutým
