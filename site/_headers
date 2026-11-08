@@ -1,0 +1,7 @@
+# config.js nesie verziu a odkazy na inštalátory z posledného vydania — prehliadač ho má vždy overiť
+/config.js
+  Cache-Control: no-cache
+/
+  Cache-Control: no-cache
+/index.html
+  Cache-Control: no-cache
