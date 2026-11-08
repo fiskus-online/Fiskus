@@ -16,7 +16,8 @@ on:
   release:
     types: [published]
   # vydanie vytvára workflow Release (GITHUB_TOKEN), čo udalosť „release“
-  # nespustí — preto nasadenie aj po úspešnom Release z tagu v*
+  # nespustí — preto nasadenie aj po úspešnom Release, či už z tagu v*,
+  # alebo spustenom ručne (Run workflow so značkou)
   workflow_run:
     workflows: [Release]
     types: [completed]
@@ -36,7 +37,7 @@ env:
 jobs:
   site:
     name: fiskus.online
-    if: vars.CLOUDFLARE_ACCOUNT_ID != '' && (github.event_name != 'workflow_run' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push'))
+    if: vars.CLOUDFLARE_ACCOUNT_ID != '' && (github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -62,7 +63,7 @@ jobs:
 
   docs:
     name: docs.fiskus.online
-    if: vars.CLOUDFLARE_ACCOUNT_ID != '' && (github.event_name != 'workflow_run' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push'))
+    if: vars.CLOUDFLARE_ACCOUNT_ID != '' && (github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -86,12 +87,22 @@ jobs:
     name: app.fiskus.online (Fiškus v prehliadači)
     # iba vydaná verzia — dáta používateľov sú v prehliadači a prechádzajú
     # migráciami, preto nie každá zmena v main
-    if: vars.CLOUDFLARE_ACCOUNT_ID != '' && github.event_name != 'push' && (github.event_name != 'workflow_run' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push'))
+    if: vars.CLOUDFLARE_ACCOUNT_ID != '' && github.event_name != 'push' && (github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.workflow_run.head_branch || github.ref }}
+          fetch-depth: 0
+      # vždy posledné vydanie: pri ručnom Release je head_branch „main“, nie značka
+      - name: Vydaná verzia
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag=$GITHUB_REF_NAME
+          [ "$GITHUB_EVENT_NAME" = release ] || tag=$(gh release view --repo "$GITHUB_REPOSITORY" --json tagName -q .tagName)
+          git checkout -q "$tag"
+          echo "TAG=$tag" >> "$GITHUB_ENV"
+          echo "Fiškus v prehliadači z vydania $tag"
       - uses: actions/setup-go@v5
         with:
           go-version-file: backend/go.mod
@@ -103,13 +114,7 @@ jobs:
       - run: npm ci
         working-directory: frontend
       - name: Zostavenie
-        env:
-          TAG: ${{ github.event.workflow_run.head_branch }}
-        run: |
-          v=dev
-          [ "$GITHUB_EVENT_NAME" = release ] && v=${GITHUB_REF_NAME#v}
-          [ "$GITHUB_EVENT_NAME" = workflow_run ] && v=${TAG#v}
-          make browser VERSION="$v"
+        run: make browser VERSION="${TAG#v}"
       - name: Nasadenie
         run: |
           npx --yes wrangler@3 pages project list >/dev/null || { echo '::error::Token nemá právo Account › Cloudflare Pages › Edit alebo CLOUDFLARE_ACCOUNT_ID nie je Account ID (nie Zone ID)'; exit 1; }
