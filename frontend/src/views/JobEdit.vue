@@ -1,6 +1,7 @@
 <script setup>
 // Zákazka: údaje, ekonomika z prepojených dokladov a súvisiace doklady.
 // Nová ponuka alebo faktúra zo zákazky sa k nej priradí sama (?zakazka=).
+// Výkaz práce a materiál sa dajú vyfakturovať jedným tlačidlom.
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
@@ -13,10 +14,11 @@ import SelectButton from 'primevue/selectbutton'
 import DatePicker from 'primevue/datepicker'
 import FormField from '../components/FormField.vue'
 import RelatedDocs from '../components/RelatedDocs.vue'
+import JobEntries from '../components/JobEntries.vue'
 import { api } from '../lib/api.js'
 import { can, session } from '../lib/session.js'
-import { formatDate, formatMoney, fromISODate, toISODate } from '../lib/format.js'
-import { blankJob, jobPayload, jobStatusOf, jobStatuses, marginText } from '../lib/jobs.js'
+import { formatAmount, formatDate, formatMoney, fromISODate, toISODate } from '../lib/format.js'
+import { blankJob, jobForm, jobPayload, jobStatusOf, jobStatuses, marginText } from '../lib/jobs.js'
 
 const props = defineProps({ id: { type: String, default: '' } })
 const route = useRoute()
@@ -28,13 +30,22 @@ const canWrite = computed(() => can('invoices.write'))
 const job = ref(null) // zo servera (číslo, ekonomika)
 const form = ref(blankJob())
 const contacts = ref([])
+const items = ref([])
+const employees = ref([])
 const errors = ref({})
 const busy = ref(false)
-const dirty = ref(false)
+// zmenené = formulár sa líši od posledne načítaného (porovnanie tela na uloženie)
+const saved = ref('')
+const snapshot = () => JSON.stringify(jobPayload(form.value))
+const dirty = computed({ get: () => snapshot() !== saved.value, set: (v) => !v && (saved.value = snapshot()) })
 
 async function load() {
   errors.value = {}
-  contacts.value = await api.contacts(session.companyId).catch(() => [])
+  ;[contacts.value, items.value, employees.value] = await Promise.all([
+    api.contacts(session.companyId).catch(() => []),
+    api.items(session.companyId).catch(() => []),
+    can('ledger.read') ? api.employees(session.companyId).catch(() => []) : [],
+  ])
   if (props.id) {
     const j = await api.job(session.companyId, props.id)
     setJob(j)
@@ -47,12 +58,10 @@ async function load() {
 }
 function setJob(j) {
   job.value = j
-  form.value = { id: j.id, name: j.name, contactId: j.contactId || 0, customer: j.customer, status: j.status, start: j.start, due: j.due,
-    budget: j.budget && j.budget !== '0.00' ? j.budget : '', note: j.note }
+  form.value = jobForm(j)
 }
 onMounted(load)
 watch(() => props.id, load)
-watch(form, () => (dirty.value = true), { deep: true })
 
 const date = (k) => ({
   get: () => fromISODate(form.value[k]),
@@ -95,6 +104,26 @@ async function refresh() {
   dirty.value = false
 }
 
+// vyfakturovanie práce a materiálu: koncept faktúry, potom ho otvoríme
+const invoicing = ref(false)
+async function invoiceWork() {
+  invoicing.value = true
+  try {
+    const inv = await api.invoiceJob(session.companyId, job.value.id)
+    toast.add({ severity: 'success', summary: 'Koncept faktúry pripravený', detail: 'Skontrolujte ho a vystavte.', life: 3000 })
+    router.push(`/faktury/${inv.id}`)
+  } catch (e) {
+    toast.add({ severity: 'error', summary: 'Faktúra sa nevytvorila', detail: e.fieldMap ? Object.values(e.fieldMap()).join(' ') || e.message : e.message, life: 6000 })
+  } finally {
+    invoicing.value = false
+  }
+}
+const people = computed(() => {
+  const names = new Set(employees.value.map((e) => [e.firstName, e.lastName].filter(Boolean).join(' ')).filter(Boolean))
+  for (const w of form.value.work) if (w.person) names.add(w.person)
+  return [...names]
+})
+
 const status = computed(() => (job.value ? jobStatusOf(job.value) : null))
 const s = computed(() => job.value?.summary)
 const contactOptions = computed(() => contacts.value.map((c) => ({ value: c.id, label: c.name + (c.ico ? ` (${c.ico})` : '') })))
@@ -123,7 +152,10 @@ const newDoc = (path) => {
       <div class="figure"><span class="label">Vyfakturované</span><span class="value">{{ formatMoney(s.invoiced) }}</span></div>
       <div class="figure"><span class="label">Uhradené</span><span class="value">{{ formatMoney(s.paid) }}</span>
         <span v-if="Number(s.unpaid)" class="sub late">na úhradu {{ formatMoney(s.unpaid) }}</span></div>
-      <div class="figure"><span class="label">Náklady</span><span class="value">{{ formatMoney(s.costs) }}</span></div>
+      <div v-if="Number(s.unbilled) || Number(s.hours)" class="figure"><span class="label">Nevyfakturované</span><span class="value">{{ formatMoney(s.unbilled) }}</span>
+        <span v-if="Number(s.hours)" class="sub">odpracované {{ formatAmount(s.hours) }} h</span></div>
+      <div class="figure"><span class="label">Náklady</span><span class="value">{{ formatMoney(s.costs) }}</span>
+        <span v-if="Number(s.workCost) || Number(s.materialCost)" class="sub">práca {{ formatAmount(s.workCost) }} · materiál {{ formatAmount(s.materialCost) }}</span></div>
       <div class="figure"><span class="label">Zisk</span><span class="value" :class="{ loss: Number(s.profit) < 0 }">{{ formatMoney(s.profit) }}</span>
         <span class="sub">marža {{ marginText(s) }}</span></div>
     </section>
@@ -133,12 +165,15 @@ const newDoc = (path) => {
       <FormField label="Názov zákazky" :span="2" :error="errors.name">
         <InputText v-model="form.name" size="small" :disabled="!canWrite" placeholder="Napr. Rekonštrukcia riadiaceho systému etiketovačky" />
       </FormField>
-      <FormField label="Zákazník" :error="errors.contactId">
+      <FormField label="Zákazník" :span="2" :error="errors.contactId">
         <Select v-model="form.contactId" :options="contactOptions" option-label="label" option-value="value" filter show-clear size="small" fluid
           :disabled="!canWrite" placeholder="Z adresára" @update:model-value="(v) => !v && (form.contactId = 0)" />
       </FormField>
       <FormField label="Plánovaná cena €" :error="errors.budget" :hint="s?.net ? 'bez DPH' : ''">
         <InputText v-model="form.budget" size="small" inputmode="decimal" :disabled="!canWrite" />
+      </FormField>
+      <FormField label="Hodinová sadzba €" :error="errors.rate" :hint="s?.net ? 'bez DPH, predvolená pre výkaz práce' : 'predvolená pre výkaz práce'">
+        <InputText v-model="form.rate" size="small" inputmode="decimal" :disabled="!canWrite" />
       </FormField>
       <FormField label="Stav" :span="2" :error="errors.status">
         <SelectButton v-model="form.status" :options="jobStatuses" option-label="label" option-value="value" :allow-empty="false" size="small" :disabled="!canWrite" />
@@ -153,6 +188,17 @@ const newDoc = (path) => {
         <Textarea v-model="form.note" rows="3" auto-resize :disabled="!canWrite" />
       </FormField>
     </form>
+
+    <JobEntries kind="work" :form="form" :errors="errors" :readonly="!canWrite" :people="people" :hours="s?.hours ?? ''" />
+    <JobEntries kind="material" :form="form" :errors="errors" :readonly="!canWrite" :items="items" :total="s?.materialCost ?? ''" />
+    <div v-if="canWrite && (form.work.length || form.material.length)" class="new-docs">
+      <Button v-if="dirty || !job" label="Uložiť výkaz" icon="pi pi-check" size="small" :loading="busy" @click="save" />
+      <template v-else-if="Number(s?.unbilled)">
+        <Button label="Vyfakturovať prácu a materiál" icon="pi pi-file" size="small" :loading="invoicing" @click="invoiceWork" />
+        <span class="muted">{{ formatMoney(s.unbilled) }}{{ s.net ? ' bez DPH' : '' }} do konceptu faktúry</span>
+      </template>
+      <span v-else class="muted">Všetka práca a materiál sú vyfakturované.</span>
+    </div>
 
     <template v-if="job">
       <div v-if="canWrite" class="new-docs">

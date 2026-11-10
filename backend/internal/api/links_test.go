@@ -85,6 +85,21 @@ func TestJobsAPI(t *testing.T) {
 	if len(list) != 1 || list[0].Status != "done" || list[0].Name != "Rekonštrukcia" {
 		t.Fatalf("zoznam: %+v", list)
 	}
-	e.do("DELETE", fmt.Sprintf("%s/%d", base, j.ID), nil, 204, nil)
-	e.do("GET", fmt.Sprintf("%s/%d", base, j.ID), nil, 404, nil)
+	// faktúra z výkazu práce: bez zákazníka z adresára nejde
+	e.do("PUT", fmt.Sprintf("%s/%d", base, j.ID), `{"name":"Rekonštrukcia","status":"active",`+
+		`"work":[{"date":"2026-10-05","description":"Montáž","hours":"3","rate":"40"}]}`, 200, &j)
+	e.do("POST", fmt.Sprintf("%s/%d/invoice", base, j.ID), nil, 422, nil)
+	var ct struct{ ID int64 }
+	e.do("POST", fmt.Sprintf("/api/companies/%d/contacts", e.cid), `{"name":"Zákazník s.r.o.","country":"SK"}`, 201, &ct)
+	e.do("PUT", fmt.Sprintf("%s/%d", base, j.ID), fmt.Sprintf(`{"name":"Rekonštrukcia","status":"active","contactId":%d,`+
+		`"work":[{"date":"2026-10-05","description":"Montáž","hours":"3","rate":"40"}]}`, ct.ID), 200, &j)
+	var drafted struct {
+		Status string
+		Lines  []struct{ Description string }
+	}
+	e.do("POST", fmt.Sprintf("%s/%d/invoice", base, j.ID), nil, 201, &drafted)
+	if drafted.Status != "draft" || len(drafted.Lines) != 1 {
+		t.Fatalf("koncept zo zákazky: %+v", drafted)
+	}
+	e.do("DELETE", fmt.Sprintf("%s/%d", base, j.ID), nil, 422, nil) // má vyfakturovanú prácu
 }

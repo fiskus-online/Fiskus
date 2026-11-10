@@ -431,6 +431,9 @@ func (a *App) DeleteStockDoc(ctx context.Context, companyID, id int64) error {
 	if err != nil {
 		return err
 	}
+	if d.Auto && d.LinkKind == jobStockLink {
+		return mfaFieldErr("kind", autoSource(d)+" — materiál upravte v zákazke")
+	}
 	if d.Auto {
 		return mfaFieldErr("kind", autoSource(d)+" — zmaže sa stornom faktúry alebo zrušením objednávky")
 	}
@@ -768,6 +771,9 @@ func (a *App) ShopOrderIssue(ctx context.Context, companyID int64, token string,
 func autoSource(d stock.Doc) string {
 	if d.LinkKind == "order" {
 		return "Doklad vznikol z objednávky e-shopu " + d.LinkNumber
+	}
+	if d.LinkKind == jobStockLink {
+		return "Doklad vznikol zo zákazky " + d.LinkNumber
 	}
 	return "Doklad vznikol z faktúry " + d.LinkNumber
 }

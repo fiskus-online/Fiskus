@@ -212,6 +212,7 @@ func (s *Server) Handler() http.Handler {
 	need("GET /api/companies/{cid}/jobs/{id}", auth.PermInvoicesRead, s.getCrmJob)
 	need("PUT /api/companies/{cid}/jobs/{id}", auth.PermInvoicesWrite, s.saveCrmJob)
 	need("DELETE /api/companies/{cid}/jobs/{id}", auth.PermInvoicesWrite, s.deleteCrmJob)
+	need("POST /api/companies/{cid}/jobs/{id}/invoice", auth.PermInvoicesWrite, s.invoiceCrmJob)
 	// prepojenia dokladov: práva podľa druhu dokladu overuje aplikácia
 	open("GET /api/companies/{cid}/links/{kind}/{id}", s.docLinks)
 	open("POST /api/companies/{cid}/links/{kind}/{id}", s.linkDocs)

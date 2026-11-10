@@ -2,7 +2,7 @@
 title: Zákazky
 slug: zakazky
 sidebar_position: 4
-description: Ponuky, faktúry, dodacie listy a náklady jednej práce pokope so ziskom a maržou.
+description: Ponuky, faktúry, výkaz práce, materiál zo skladu a náklady jednej práce pokope so ziskom a maržou.
 tags: [predaj, zakazky]
 ---
 
@@ -45,6 +45,50 @@ nezmažete.
 ![Detail zákazky s ekonomikou a dokladmi](../obrazky/zakazka.webp)
 *Detail zákazky s ekonomikou a dokladmi*
 
+## Výkaz práce
+
+V časti **Výkaz práce** zapisujete, kto, kedy a koľko hodín na zákazke
+pracoval. Tlačidlo *+ Práca* pridá riadok s dnešným dátumom, menom
+z predchádzajúceho riadku a **hodinovou sadzbou** zákazky. Mená sa
+ponúkajú zo zamestnancov a z doterajších záznamov.
+
+- **Sadzba €/h** je to, čo zákazníkovi fakturujete (u platiteľa DPH bez DPH).
+- **Náklad €/h** vyplňte pri práci, ktorá vás niečo stojí (zamestnanec,
+  brigádnik, subdodávateľ). Vlastnú prácu nechajte na nule.
+
+## Materiál
+
+V časti **Materiál** zapisujete spotrebovaný materiál:
+
+- **Položka z cenníka** doplní názov, jednotku a predajnú cenu. Ak je
+  položka vedená na **sklade**, po uložení sa vydá zo skladu výdajkou
+  zákazky (jedna výdajka na deň, mení sa spolu so zákazkou) a náklad sa
+  vezme z ocenenia skladu (priemer alebo FIFO).
+- **Materiál mimo cenníka** zadáte názvom; nákupnú cenu doplňte, ak ho
+  nemáte na prijatej faktúre prepojenej so zákazkou (inak by sa náklad
+  zarátal dvakrát).
+
+Výdajku zákazky nemožno upraviť ani zmazať v sklade – materiál meníte
+v zákazke. Zmazaním zákazky sa materiál vráti na sklad.
+
+## Faktúra z výkazu
+
+Keď je výkaz uložený, tlačidlo **Vyfakturovať prácu a materiál**
+pripraví koncept faktúry pre zákazníka zákazky:
+
+- práca ako hodiny so sadzbou (v popise dátum a meno),
+- materiál s množstvom a predajnou cenou,
+- dátum dodania podľa posledného záznamu, predmet podľa názvu zákazky.
+
+Faktúra sa k zákazke prepojí sama a zapísané riadky sa označia číslom
+faktúry. Vyfakturovanú prácu ani materiál už nemožno zmeniť ani zmazať.
+Ak koncept zmažete alebo faktúru stornujete, riadky sa uvoľnia a možno
+ich vyfakturovať znova. Materiál na faktúre z výkazu sa zo skladu
+nevydáva druhýkrát.
+
+![Výkaz práce a materiál na zákazke](../obrazky/zakazka-vykaz.webp)
+*Výkaz práce a materiál na zákazke*
+
 ## Ekonomika zákazky
 
 Hore v detaile je prehľad:
@@ -54,7 +98,8 @@ Hore v detaile je prehľad:
 | Ponúknuté | vystavené, prijaté a vyfakturované cenové ponuky |
 | Vyfakturované | vystavené faktúry a dobropisy |
 | Uhradené | čo zákazník zaplatil, pod tým suma, ktorá ešte ostáva na úhradu |
-| Náklady | prijaté faktúry prepojené so zákazkou |
+| Nevyfakturované | práca a materiál z výkazu, ktoré ešte nie sú na faktúre, a odpracované hodiny |
+| Náklady | prijaté faktúry prepojené so zákazkou, náklad práce a materiálu |
 | Zisk | vyfakturované mínus náklady, pod tým marža v percentách |
 
 U platiteľa DPH sú ponuky, fakturácia a náklady **bez DPH**, úhrady s DPH.
