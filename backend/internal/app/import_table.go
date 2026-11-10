@@ -99,6 +99,8 @@ func tableParty(p tabimport.Party) (invoice.Party, string) {
 }
 
 func tableMigration(m *migration, sh tabimport.Sheet) {
+	// cenové ponuky: odberatelia sa doplnia do adresára (ako pri prenose z programov)
+	m.ContactsFromDocs = m.ContactsFromDocs || sh.Kind == tabimport.KindQuotes
 	for _, c := range sh.Contacts {
 		p, warn := tableParty(c.Party)
 		if warn != "" {
@@ -116,6 +118,10 @@ func tableMigration(m *migration, sh tabimport.Sheet) {
 		var err error
 		if d.Err != "" {
 			err = errors.New(d.Err)
+		}
+		if sh.Kind == tabimport.KindQuotes {
+			m.Quotes = append(m.Quotes, tableQuote(d, p, err))
+			continue
 		}
 		if sh.Kind == tabimport.KindPurchases {
 			mp := migPurchase{Ref: firstNonBlank(d.SupplierNumber, d.Number, ref), Paid: d.Paid, PaidDate: d.PaidDate, Err: err}

@@ -26,6 +26,7 @@ const (
 	KindItems     = "items"
 	KindInvoices  = "invoices"
 	KindPurchases = "purchases"
+	KindQuotes    = "quotes" // cenové ponuky
 )
 
 // Party sú údaje partnera z riadku.
@@ -59,7 +60,9 @@ type Doc struct {
 	PaidDate       invoice.Date
 	Credit         bool
 	Original       string
-	Err            string // dôvod, prečo sa riadok nedá preniesť
+	Valid          invoice.Date // cenová ponuka: platnosť do
+	Status         string       // text stĺpca Stav (cenová ponuka: Vytvorená, Vyfakturovaná…)
+	Err            string       // dôvod, prečo sa riadok nedá preniesť
 }
 
 // Contact je kontakt z jedného riadku.
@@ -108,12 +111,13 @@ const (
 	cFirst
 	cLast
 	cIBAN
+	cValid // platnosť cenovej ponuky
 )
 
 var colNames = map[int]string{cName: "Názov", cStreet: "Ulica", cCity: "Obec", cZip: "PSČ", cCountry: "Štát", cICO: "IČO", cDIC: "DIČ",
 	cICDPH: "IČ DPH", cEmail: "E-mail", cPhone: "Telefón", cNote: "Poznámka", cNumber: "Číslo", cSupplierNumber: "Číslo dodávateľa",
 	cVS: "VS", cIssue: "Vystavená", cDelivery: "Dodanie", cDue: "Splatnosť", cSubject: "Predmet", cBase: "Základ", cVAT: "DPH",
-	cRate: "Sadzba DPH", cTotal: "Spolu", cPaid: "Uhradená", cPaidDate: "Dátum úhrady", cType: "Druh", cOriginal: "Pôvodná faktúra"}
+	cRate: "Sadzba DPH", cTotal: "Spolu", cPaid: "Uhradená", cPaidDate: "Dátum úhrady", cType: "Druh", cOriginal: "Pôvodná faktúra", cValid: "Platnosť do"}
 
 // aliases: hlavička (catalog.Key) → stĺpec.
 var aliases = map[string]int{}
@@ -156,6 +160,9 @@ func init() {
 	add(cOriginal, "povodna faktura", "opravuje", "k fakture", "opravovana faktura", "puvodni doklad", "original invoice", "dobropis k")
 	add(cFirst, "meno osoby", "krstne meno", "first name", "given name", "jmeno osoby", "krestni jmeno")
 	add(cLast, "priezvisko", "last name", "family name", "surname", "prijmeni")
+	add(cNumber, "cislo cenovej ponuky", "cislo ponuky", "ponuka", "cenova ponuka", "cislo nabidky", "quote number", "quote no")
+	add(cName, "nazov/meno", "meno/nazov", "nazov / meno", "nazev/jmeno", "odberatel/meno")
+	add(cValid, "platnost do", "platnost", "platna do", "platnost ponuky", "platnost nabidky", "valid until", "valid to")
 	add(cIBAN, "iban", "bankovy ucet", "cislo uctu", "ucet", "bank account", "bankovni ucet")
 	// Outlook a Google Kontakty (anglicky aj slovensky)
 	add(cName, "organization name", "organization 1 - name", "spolocnost", "company name", "display name", "zobrazovane meno")
@@ -228,15 +235,34 @@ func readLayout(head []string) layout {
 var companyKeys = map[string]bool{"firma": true, "nazov firmy": true, "obchodne meno": true, "company": true, "company name": true,
 	"organization name": true, "organization 1 - name": true, "spolocnost": true, "obchodni jmeno": true, "nazov": true}
 
-// Detect odhadne druh tabuľky z hlavičky: cenník, adresár; pri faktúrach
-// nevie, či sú vydané alebo prijaté (vráti "").
+// headerRow nájde riadok s hlavičkou: niektoré programy dajú nad tabuľku
+// nadpis a dátum exportu („Zoznam cenových ponúk“, „Exportované: …“).
+func headerRow(rows [][]string) int {
+	for i := 0; i < len(rows) && i < 10; i++ {
+		l := readLayout(rows[i])
+		n := 0
+		for _, ii := range l.col {
+			n += len(ii)
+		}
+		if n >= 3 || (n >= 2 && (l.has(cName) || l.has(cFirst) || l.has(cLast) || l.has(cPrice))) {
+			return i
+		}
+	}
+	return 0
+}
+
+// Detect odhadne druh tabuľky z hlavičky: cenník, adresár, cenové ponuky;
+// pri faktúrach nevie, či sú vydané alebo prijaté (vráti "").
 func Detect(rows [][]string) string {
 	if len(rows) == 0 {
 		return ""
 	}
+	rows = rows[headerRow(rows):]
 	l := readLayout(rows[0])
 	docs := l.has(cIssue) || l.has(cTotal) || l.has(cBase) || len(l.baseRate) > 0
 	switch {
+	case l.has(cValid) && l.has(cNumber):
+		return KindQuotes
 	case docs:
 		return ""
 	case l.has(cPrice):
@@ -253,6 +279,8 @@ var ErrNeedKind = fmt.Errorf("vyberte, či sú v tabuľke vydané alebo prijaté
 // Parse prečíta adresár alebo faktúry (prvý riadok = hlavička).
 // defRate je sadzba pre faktúry iba so sumou a bez stĺpca sadzby.
 func Parse(rows [][]string, kind string, defRate vat.Rate) (Sheet, error) {
+	h := headerRow(rows) // riadky nad hlavičkou (čísla riadkov v hláseniach ostanú ako v súbore)
+	rows = rows[h:]
 	if len(rows) < 2 {
 		return Sheet{}, fmt.Errorf("tabuľka je prázdna — v prvom riadku má byť hlavička, v ďalších záznamy")
 	}
@@ -276,6 +304,9 @@ func Parse(rows [][]string, kind string, defRate vat.Rate) (Sheet, error) {
 	})
 	for i := range sh.Columns {
 		sh.Columns[i] = strings.SplitN(sh.Columns[i], ":", 2)[1]
+		if kind == KindQuotes && sh.Columns[i] == colNames[cPaid] {
+			sh.Columns[i] = "Stav" // pri ponukách stav, nie úhrada
+		}
 	}
 	if !l.has(cName) && !l.has(cFirst) && !l.has(cLast) {
 		return sh, fmt.Errorf("v hlavičke chýba stĺpec s názvom partnera (Názov, Odberateľ, Dodávateľ, Firma…)")
@@ -286,16 +317,19 @@ func Parse(rows [][]string, kind string, defRate vat.Rate) (Sheet, error) {
 			if blank(row) {
 				continue
 			}
-			sh.Contacts = append(sh.Contacts, Contact{Line: n + 2, Party: l.party(row)})
+			sh.Contacts = append(sh.Contacts, Contact{Line: n + 2 + h, Party: l.party(row)})
 		}
 		return sh, nil
-	case KindInvoices, KindPurchases:
+	case KindInvoices, KindPurchases, KindQuotes:
 	case "":
 		return sh, ErrNeedKind
 	default:
 		return sh, fmt.Errorf("neznámy druh tabuľky %q", kind)
 	}
 	if !l.has(cNumber) && !(kind == KindPurchases && l.has(cSupplierNumber)) {
+		if kind == KindQuotes {
+			return sh, fmt.Errorf("v hlavičke chýba stĺpec s číslom ponuky (Číslo, Číslo cenovej ponuky…)")
+		}
 		return sh, fmt.Errorf("v hlavičke chýba stĺpec s číslom faktúry (Číslo, Číslo faktúry, Doklad…)")
 	}
 	if !l.has(cTotal) && !l.has(cBase) && len(l.baseRate) == 0 {
@@ -305,7 +339,7 @@ func Parse(rows [][]string, kind string, defRate vat.Rate) (Sheet, error) {
 		if blank(row) {
 			continue
 		}
-		sh.Docs = append(sh.Docs, l.doc(row, n+2, defRate))
+		sh.Docs = append(sh.Docs, l.doc(row, n+2+h, defRate))
 	}
 	return sh, nil
 }
@@ -384,6 +418,10 @@ func (l layout) doc(row []string, line int, defRate vat.Rate) Doc {
 	if d.Due, ok = Date(g(cDue)); !ok {
 		return fail("chybná splatnosť „%s“", g(cDue))
 	}
+	if d.Valid, ok = Date(g(cValid)); !ok {
+		return fail("chybná platnosť „%s“", g(cValid))
+	}
+	d.Status = g(cPaid)
 	if d.Issue.IsZero() {
 		return fail("chýba dátum vystavenia")
 	}

@@ -147,7 +147,21 @@ func (a *App) IssueQuote(ctx context.Context, companyID, id int64) (quote.Quote,
 	if format == "" {
 		format = ExtraFormats[QuoteFormatKey]
 	}
-	if err := q.Issue(invoice.FormatNumberWith(format, year, month, seq)); err != nil {
+	number := invoice.FormatNumberWith(format, year, month, seq)
+	// číslo už môže mať ponuka prenesená z iného programu → ďalšie v rade
+	if all, err := a.Store.ListQuotes(ctx, companyID, 0); err == nil {
+		taken := map[string]bool{}
+		for _, x := range all {
+			taken[x.Number] = x.Number != ""
+		}
+		for i := 0; i < 1000 && taken[number]; i++ {
+			if seq, err = a.Store.NextSequence(ctx, companyID, quoteSeries, year); err != nil {
+				return q, err
+			}
+			number = invoice.FormatNumberWith(format, year, month, seq)
+		}
+	}
+	if err := q.Issue(number); err != nil {
 		return q, err
 	}
 	if err := a.Store.SaveQuote(ctx, companyID, &q); err != nil {

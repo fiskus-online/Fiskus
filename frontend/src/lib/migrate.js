@@ -72,7 +72,7 @@ export const sources = [
     kinds: true,
     pick: 'Vybrať tabuľku',
     accept: '.csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    hint: 'Tabuľka z ľubovoľného programu: v prvom riadku hlavička, potom jeden kontakt, položka alebo faktúra na riadok. Stĺpce sa rozpoznajú podľa názvu — stiahnite si vzor.',
+    hint: 'Tabuľka z ľubovoľného programu: v prvom riadku hlavička, potom jeden kontakt, položka, faktúra alebo cenová ponuka na riadok (nadpis nad tabuľkou nevadí). Stĺpce sa rozpoznajú podľa názvu — stiahnite si vzor.',
   },
 ]
 
@@ -93,6 +93,7 @@ export const tableKinds = [
   { value: 'items', label: 'Cenník' },
   { value: 'invoices', label: 'Vydané faktúry' },
   { value: 'purchases', label: 'Prijaté faktúry' },
+  { value: 'quotes', label: 'Cenové ponuky' },
 ]
 
 /** Vzory tabuliek: hlavička a ukážkový riadok. */
@@ -112,6 +113,10 @@ export const tableTemplates = {
   purchases: [
     ['Číslo dodávateľa', 'Dodávateľ', 'IČO', 'IČ DPH', 'Obec', 'Vystavená', 'Dodanie', 'Splatnosť', 'Predmet', 'Základ 23 %', 'DPH 23 %', 'Základ 19 %', 'DPH 19 %', 'Základ 0 %', 'Spolu', 'Dátum úhrady'],
     ['2026001234', 'Elektro Veľkoobchod a.s.', '35757442', 'SK2021757441', 'Zvolen', '5.3.2026', '5.3.2026', '19.3.2026', 'Materiál', '100,00', '23,00', '', '', '', '123,00', ''],
+  ],
+  quotes: [
+    ['Číslo cenovej ponuky', 'Popis', 'Odberateľ', 'IČO', 'IČ DPH', 'Vystavenie', 'Platnosť do', 'Spolu', 'Stav'],
+    ['CP20260001', 'Montáž rozvádzača', 'Kováč a syn s.r.o.', '36123455', 'SK2020123457', '2.3.2026', '16.3.2026', '1 200,00', 'Vytvorená'],
   ],
 }
 
@@ -134,15 +139,18 @@ const groups = [
   ['items', 'Skladové karty do cenníka'],
   ['invoices', 'Vydané faktúry a dobropisy'],
   ['purchases', 'Prijaté faktúry'],
+  ['quotes', 'Cenové ponuky'],
 ]
 
 /** Riadky zhrnutia: čo pribudne, čo už je a čo sa preskočí. */
 export function summaryRows(report) {
   if (!report) return []
-  return groups.map(([key, label]) => {
-    const c = report[key] ?? {}
-    return { key, label, new: c.new ?? 0, existing: c.existing ?? 0, skipped: c.skipped ?? 0 }
-  })
+  return groups
+    .map(([key, label]) => {
+      const c = report[key] ?? {}
+      return { key, label, new: c.new ?? 0, existing: c.existing ?? 0, skipped: c.skipped ?? 0 }
+    })
+    .filter((r) => r.key !== 'quotes' || r.new + r.existing + r.skipped > 0) // ponuky iba keď sú v súbore
 }
 
 /** Počet nových záznamov spolu (či má zmysel spustiť prenos). */

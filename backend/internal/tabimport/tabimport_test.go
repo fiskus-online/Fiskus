@@ -195,3 +195,32 @@ func TestParseContactExports(t *testing.T) {
 		})
 	}
 }
+
+// export cenových ponúk s nadpisom nad tabuľkou (Zoznam cenových ponúk)
+func TestQuotes(t *testing.T) {
+	rows := [][]string{
+		{"", "", ""},
+		{"Zoznam cenových ponúk"},
+		{"Exportované: 10. 11. 2026 9:50:55"},
+		{},
+		{"Číslo cenovej ponuky", "Popis", "Názov/Meno", "IČO", "IČ DPH", "DIČ", "Vystavenie", "Platnosť do", "Spolu", "Mena", "Stav"},
+		{"CP20260011", "Servis riadiaceho systému", "FARMOL SLOVAKIA, s.r.o.", "50473484", "SK2120345150", "2120345150", "2026-10-27", "2026-11-10", "220", "EUR", "Vyfakturovaná"},
+		{"CP20260009", "Riadiaci systém SLES.\nRozsah dodávky:\n- programové vybavenie", "FARMOL SLOVAKIA, s.r.o.", "50473484", "", "", "2026-10-23", "2026-11-06", "6740", "EUR", "Vytvorená"},
+		{"CP20260001", "Chybná", "Firma", "", "", "", "2026-10-23", "zajtra", "1", "EUR", "Vytvorená"},
+	}
+	if k := Detect(rows); k != KindQuotes {
+		t.Fatalf("druh %q", k)
+	}
+	sh, err := Parse(rows, KindQuotes, vat.Rate0)
+	if err != nil || len(sh.Docs) != 3 {
+		t.Fatalf("%v %+v", err, sh)
+	}
+	d := sh.Docs[0]
+	if d.Number != "CP20260011" || d.Valid.String() != "2026-11-10" || d.Status != "Vyfakturovaná" || d.Total.String() != "220.00" ||
+		d.Party.ICO != "50473484" || d.Party.ICDPH != "SK2120345150" || d.Line != 6 {
+		t.Fatalf("%+v", d)
+	}
+	if !strings.HasPrefix(sh.Docs[1].Subject, "Riadiaci systém SLES.\n") || sh.Docs[2].Err == "" {
+		t.Fatalf("%+v", sh.Docs[1:])
+	}
+}

@@ -134,7 +134,7 @@ async function run() {
         <h2>{{ selected.name }}</h2>
         <p class="hint">{{ selected.hint }}</p>
         <p class="hint">
-          Prenesú sa kontakty, skladové karty (do cenníka), vydané faktúry s dobropismi a prijaté faktúry v eurách.
+          Prenesú sa kontakty, skladové karty (do cenníka), vydané faktúry s dobropismi, prijaté faktúry a z tabuľky aj cenové ponuky, všetko v eurách.
           Čísla dokladov ostanú. Čo už vo Fiškuse je, sa znova nevytvorí.
         </p>
 
@@ -185,7 +185,7 @@ async function run() {
           </table>
           <p v-if="other" class="hint">V súbore sú aj ďalšie agendy, ktoré sa neprenášajú: {{ other }}.</p>
 
-          <div v-if="!report.done" class="paid">
+          <div v-if="!report.done && report.kind !== 'quotes'" class="paid">
             <label class="paid-check">
               <Checkbox v-model="paidOn" binary input-id="paid-on" />
               <span>Faktúry so splatnosťou do</span>
