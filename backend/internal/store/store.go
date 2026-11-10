@@ -12,6 +12,7 @@ import (
 	"github.com/fiskus-online/fiskus/backend/internal/forms"
 	"github.com/fiskus-online/fiskus/backend/internal/job"
 	"github.com/fiskus-online/fiskus/backend/internal/link"
+	"github.com/fiskus-online/fiskus/backend/internal/porder"
 	"time"
 
 	"github.com/fiskus-online/fiskus/backend/internal/asset"
@@ -435,6 +436,12 @@ type Store interface {
 	GetJob(ctx context.Context, companyID, id int64) (job.Job, error)
 	SaveJob(ctx context.Context, companyID int64, j *job.Job) error
 	DeleteJob(ctx context.Context, companyID, id int64) error
+
+	// Objednávky dodávateľom (porder). Číslo je vo firme jedinečné (ErrDuplicate).
+	ListPurchaseOrders(ctx context.Context, companyID int64) ([]porder.Order, error)
+	GetPurchaseOrder(ctx context.Context, companyID, id int64) (porder.Order, error)
+	SavePurchaseOrder(ctx context.Context, companyID int64, o *porder.Order) error
+	DeletePurchaseOrder(ctx context.Context, companyID, id int64) error
 
 	// ListRecurring vráti šablóny pravidelnej fakturácie firmy zoradené podľa ID.
 	ListRecurring(ctx context.Context, companyID int64) ([]recurring.Template, error)

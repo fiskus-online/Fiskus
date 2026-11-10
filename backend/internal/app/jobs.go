@@ -13,6 +13,7 @@ import (
 	"github.com/fiskus-online/fiskus/backend/internal/link"
 	"github.com/fiskus-online/fiskus/backend/internal/money"
 	"github.com/fiskus-online/fiskus/backend/internal/quote"
+	"github.com/fiskus-online/fiskus/backend/internal/stock"
 	"github.com/fiskus-online/fiskus/backend/internal/store"
 )
 
@@ -39,6 +40,9 @@ type JobSummary struct {
 	Unbilled     money.Dec `json:"unbilled"`
 	WorkCost     money.Dec `json:"workCost"`
 	MaterialCost money.Dec `json:"materialCost"`
+	// GoodsCost je nákupná cena tovaru zo skladu predaného faktúrami zákazky
+	// (výdajky faktúr mínus vrátenia z dobropisov).
+	GoodsCost money.Dec `json:"goodsCost"`
 	// Margin je zisk v % z fakturovaného (nil, kým nie je fakturácia).
 	Margin *int `json:"margin,omitempty"`
 	Docs   int  `json:"docs"`
@@ -74,6 +78,7 @@ func (a *App) jobSummary(ctx context.Context, companyID int64, j *job.Job, vatPa
 		return sum
 	}
 	self := link.Ref{Kind: link.Job, ID: j.ID}
+	soldFrom := map[int64]bool{} // faktúry zákazky (tovar zo skladu = náklad)
 	links, err := a.Store.ListDocLinks(ctx, companyID, self)
 	if err != nil {
 		return s, err
@@ -96,9 +101,10 @@ func (a *App) jobSummary(ctx context.Context, companyID int64, j *job.Job, vatPa
 				continue
 			}
 			s.Docs++
-			if inv.Status == invoice.StatusDraft || (inv.Kind != invoice.KindInvoice && inv.Kind != invoice.KindCreditNote) {
-				continue // koncept, zálohová faktúra a doklad k platbe sa do fakturácie neratajú
+			if inv.Status == invoice.StatusDraft || inv.Status == invoice.StatusCancelled || (inv.Kind != invoice.KindInvoice && inv.Kind != invoice.KindCreditNote) {
+				continue // koncept, storno, zálohová faktúra a doklad k platbe sa do fakturácie neratajú
 			}
+			soldFrom[inv.ID] = true
 			ts, ok := inv.TaxSummary()
 			if !ok {
 				continue
@@ -137,7 +143,8 @@ func (a *App) jobSummary(ctx context.Context, companyID int64, j *job.Job, vatPa
 			s.Unbilled = s.Unbilled.Add(m.Amount())
 		}
 	}
-	s.Costs = s.Costs.Add(s.WorkCost).Add(s.MaterialCost)
+	s.GoodsCost = a.goodsCost(ctx, companyID, soldFrom)
+	s.Costs = s.Costs.Add(s.WorkCost).Add(s.MaterialCost).Add(s.GoodsCost)
 	s.Unpaid = s.Gross.Sub(s.Paid)
 	s.Profit = s.Invoiced.Sub(s.Costs)
 	if s.Invoiced.Sign() > 0 {
@@ -150,6 +157,44 @@ func (a *App) jobSummary(ctx context.Context, companyID int64, j *job.Job, vatPa
 		s.Margin = &m
 	}
 	return s, nil
+}
+
+// goodsCost spočíta ocenenie výdajok (mínus vrátenia) vystavených faktúr.
+func (a *App) goodsCost(ctx context.Context, companyID int64, invoices map[int64]bool) money.Dec {
+	total := money.Zero
+	if len(invoices) == 0 {
+		return total
+	}
+	docs, err := a.Store.ListStockDocs(ctx, companyID)
+	if err != nil {
+		return total
+	}
+	found := false
+	for _, d := range docs {
+		if d.Auto && d.LinkKind == "invoice" && invoices[d.LinkID] {
+			found = true
+			break
+		}
+	}
+	if !found {
+		return total
+	}
+	cfg, err := a.loadStock(ctx, companyID)
+	if err != nil {
+		return total
+	}
+	_, costed, _ := stock.Valuate(docs, cfg.Method)
+	for _, d := range costed {
+		if !d.Auto || d.LinkKind != "invoice" || !invoices[d.LinkID] {
+			continue
+		}
+		if d.Kind == stock.Receipt {
+			total = total.Sub(d.Total)
+		} else {
+			total = total.Add(d.Total)
+		}
+	}
+	return total
 }
 
 // paidEUR: uhradená časť faktúry v eurách (pri cudzej mene pomerne).

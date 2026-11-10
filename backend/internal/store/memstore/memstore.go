@@ -10,6 +10,7 @@ import (
 	"github.com/fiskus-online/fiskus/backend/internal/fx"
 	"github.com/fiskus-online/fiskus/backend/internal/job"
 	"github.com/fiskus-online/fiskus/backend/internal/link"
+	"github.com/fiskus-online/fiskus/backend/internal/porder"
 	"sort"
 	"sync"
 
@@ -58,6 +59,7 @@ type Store struct {
 	cashClosings  map[int64]cash.Closing
 	docLinks      map[int64]link.Link
 	jobs          map[int64]job.Job
+	porders       map[int64]porder.Order
 	hhPhotos      map[int64]store.HHPhoto
 	recurring     map[int64]recurring.Template
 	reminders     map[int64]reminder.Reminder

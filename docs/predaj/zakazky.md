@@ -99,7 +99,7 @@ Hore v detaile je prehľad:
 | Vyfakturované | vystavené faktúry a dobropisy |
 | Uhradené | čo zákazník zaplatil, pod tým suma, ktorá ešte ostáva na úhradu |
 | Nevyfakturované | práca a materiál z výkazu, ktoré ešte nie sú na faktúre, a odpracované hodiny |
-| Náklady | prijaté faktúry prepojené so zákazkou, náklad práce a materiálu |
+| Náklady | prijaté faktúry prepojené so zákazkou, náklad práce a materiálu a nákupná cena tovaru zo skladu predaného faktúrami zákazky |
 | Zisk | vyfakturované mínus náklady, pod tým marža v percentách |
 
 U platiteľa DPH sú ponuky, fakturácia a náklady **bez DPH**, úhrady s DPH.

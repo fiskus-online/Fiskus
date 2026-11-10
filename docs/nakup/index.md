@@ -1,11 +1,14 @@
 ---
 title: Nákup
 sidebar_position: 4
-description: Prijaté faktúry, odpočet DPH, vyťaženie z PDF, bločky a e-faktúry.
+description: Prijaté faktúry, odpočet DPH, vyťaženie z PDF, bločky, e-faktúry a objednávky dodávateľom.
 tags: [nákup, dph]
 ---
 
 # Nákup
+
+Objednávky tovaru a materiálu u dodávateľov a ich príjem na sklad sú
+opísané v časti [Objednávky dodávateľom](objednavky.md).
 
 ## Prijaté faktúry
 

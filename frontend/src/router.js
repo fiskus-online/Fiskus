@@ -32,6 +32,9 @@ import CashPrint from './views/CashPrint.vue'
 import QuoteList from './views/QuoteList.vue'
 import Jobs from './views/Jobs.vue'
 import JobEdit from './views/JobEdit.vue'
+import PurchaseOrders from './views/PurchaseOrders.vue'
+import PurchaseOrderEdit from './views/PurchaseOrderEdit.vue'
+import PurchaseOrderPrint from './views/PurchaseOrderPrint.vue'
 import RecurringList from './views/RecurringList.vue'
 import PublicQuote from './views/PublicQuote.vue'
 import Reminders from './views/Reminders.vue'
@@ -89,7 +92,10 @@ export const modules = [
   },
   {
     group: 'Nákup',
-    items: [{ path: '/prijate', label: 'Prijaté faktúry', icon: 'pi-file-import', ready: true, perm: 'purchases.read' }],
+    items: [
+      { path: '/prijate', label: 'Prijaté faktúry', icon: 'pi-file-import', ready: true, perm: 'purchases.read' },
+      { path: '/objednavky', label: 'Objednávky', icon: 'pi-shopping-cart', ready: true, perm: 'purchases.read', biz: true },
+    ],
   },
   {
     group: 'Peniaze',
@@ -187,6 +193,10 @@ export const router = createRouter({
     { path: '/upomienky/:id(\\d+)/tlac', component: ReminderPrint, props: true, meta: { title: 'Upomienka', bare: true, perm: 'invoices.read' } },
     { path: '/parovanie', component: Pairing, meta: { title: 'Spárovať telefón', public: true } },
     { path: '/m', component: Mobile, meta: { title: 'Bločky', perm: 'purchases.read', mobile: true } },
+    { path: '/objednavky', component: PurchaseOrders, meta: { title: 'Objednávky', perm: 'purchases.read' } },
+    { path: '/objednavky/nova', component: PurchaseOrderEdit, meta: { title: 'Nová objednávka', perm: 'purchases.write' } },
+    { path: '/objednavky/:id(\\d+)', component: PurchaseOrderEdit, props: true, meta: { title: 'Objednávka', perm: 'purchases.read' } },
+    { path: '/objednavky/:id(\\d+)/tlac', component: PurchaseOrderPrint, props: true, meta: { title: 'Objednávka', bare: true, perm: 'purchases.read' } },
     { path: '/prijate', component: PurchaseList, meta: { title: 'Prijaté faktúry', perm: 'purchases.read' } },
     { path: '/vykazy-ju', component: Statements, meta: { title: 'Výkazy jednoduchého účtovníctva', perm: 'ledger.read' } },
     { path: '/pohladavky-zavazky', component: OpenItems, meta: { title: 'Pohľadávky a záväzky', perm: 'ledger.read' } },

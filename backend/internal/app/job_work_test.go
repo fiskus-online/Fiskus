@@ -7,6 +7,7 @@ import (
 	"github.com/fiskus-online/fiskus/backend/internal/edition"
 	"github.com/fiskus-online/fiskus/backend/internal/invoice"
 	"github.com/fiskus-online/fiskus/backend/internal/job"
+	"github.com/fiskus-online/fiskus/backend/internal/link"
 	"github.com/fiskus-online/fiskus/backend/internal/money"
 	"github.com/fiskus-online/fiskus/backend/internal/stock"
 	"github.com/fiskus-online/fiskus/backend/internal/store"
@@ -142,5 +143,47 @@ func TestJobInvoiceDraftNonPayer(t *testing.T) {
 	if len(inv.Lines) != 1 || inv.Lines[0].Description != "Kontrola (3. 11. 2026)" || inv.Lines[0].Rate != vat.Rate0 ||
 		inv.Subject != "Servis" || inv.Note != "Zákazka Z2026003." || inv.DeliveryDate.String() != "2026-11-03" {
 		t.Fatalf("koncept %+v", inv)
+	}
+}
+
+func TestJobGoodsCost(t *testing.T) {
+	a, c := newApp(t, edition.Desktop)
+	m := money.MustParse
+	d := invoice.MustDate
+	rele, _ := a.SaveItem(ctx, c.ID, catalog.Item{Code: "REL", Name: "Relé 24 V", Unit: "ks", Price: m("12"), PriceMode: vat.PriceNet, Rate: vat.Rate23})
+	if _, err := a.SaveStockConfig(ctx, c.ID, StockConfig{Warehouses: []Warehouse{{Code: "HL", Name: "Hlavný"}}, Items: []StockItem{{ItemID: rele.ID, Kind: stock.Goods}}}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := a.SaveStockDoc(ctx, c.ID, stock.Doc{Kind: stock.Receipt, Date: d("2026-10-01"), Warehouse: "HL",
+		Lines: []stock.Line{{ItemID: rele.ID, Quantity: m("10"), UnitCost: m("7.50")}}}); err != nil {
+		t.Fatal(err)
+	}
+	v, _ := a.SaveCrmJob(ctx, c.ID, job.Job{Name: "Dodávka relé"})
+	dr := validDraft()
+	dr.Lines = []invoice.Line{{Description: rele.Name, Quantity: m("4"), Unit: "ks", UnitPrice: m("12"), Rate: vat.Rate23, ItemID: rele.ID}}
+	dr, _ = a.SaveDraft(ctx, c.ID, dr)
+	inv, err := a.Issue(ctx, c.ID, dr.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	jref := link.Ref{Kind: link.Job, ID: v.ID}
+	if _, err := a.LinkDocs(ctx, c.ID, jref, link.Ref{Kind: link.Invoice, ID: inv.ID}); err != nil {
+		t.Fatal(err)
+	}
+	cn, _ := a.CreateCreditNote(ctx, c.ID, inv.ID)
+	cn.Lines = []invoice.Line{{Description: rele.Name, Quantity: m("-1"), Unit: "ks", UnitPrice: m("12"), Rate: vat.Rate23, ItemID: rele.ID}}
+	cn.Correction.Reason = "Vrátené relé"
+	cn, _ = a.SaveDraft(ctx, c.ID, cn)
+	cn, err = a.Issue(ctx, c.ID, cn.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := a.LinkDocs(ctx, c.ID, jref, link.Ref{Kind: link.Invoice, ID: cn.ID}); err != nil {
+		t.Fatal(err)
+	}
+	v, _ = a.CrmJob(ctx, c.ID, v.ID)
+	// predané 4 − vrátené 1 = 3 × 7,50; fakturované 48 − 12 = 36
+	if v.Summary.GoodsCost.String() != "22.50" || v.Summary.Costs.String() != "22.50" || v.Summary.Invoiced.String() != "36.00" || v.Summary.Profit.String() != "13.50" {
+		t.Fatalf("tovar zo skladu %+v", v.Summary)
 	}
 }
