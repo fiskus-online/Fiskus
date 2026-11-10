@@ -2,6 +2,7 @@ package api
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/fiskus-online/fiskus/backend/internal/job"
 )
@@ -85,4 +86,16 @@ func (s *Server) invoiceCrmJob(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusCreated, inv)
+}
+
+// crmJobStats: GET /jobs-stats?year= — ziskovosť zákaziek podľa zákazníka.
+func (s *Server) crmJobStats(w http.ResponseWriter, r *http.Request) {
+	cid, _ := pathID(w, r, "cid")
+	year, _ := strconv.Atoi(r.URL.Query().Get("year"))
+	out, err := s.App.CrmJobStats(r.Context(), cid, year)
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, out)
 }

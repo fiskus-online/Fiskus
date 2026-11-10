@@ -1,7 +1,7 @@
 <script setup>
 // Zákazky (jednoduché CRM): stav, termín a ekonomika z prepojených dokladov.
 // Súčty v hlavičke sú súčtom už vypočítaných súm zo servera.
-import { computed, onBeforeUnmount, onMounted, ref, shallowRef } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { AgGridVue } from 'ag-grid-vue3'
 import Button from 'primevue/button'
@@ -17,9 +17,32 @@ import { matches, searchTerms } from '../lib/search.js'
 import { crmJobColumns } from '../lib/columns.js'
 import { jobStatusOf, jobViews, marginText, matchesJobView } from '../lib/jobs.js'
 import ExportButton from '../components/ExportButton.vue'
+import JobBoard from '../components/JobBoard.vue'
+import JobStats from '../components/JobStats.vue'
 
 const router = useRouter()
 const view = ref('open')
+// zobrazenie: zoznam, nástenka podľa stavu alebo ziskovosť podľa zákazníka (pamätá sa v prehliadači)
+const modes = [
+  { value: 'list', label: 'Zoznam', icon: 'pi pi-list' },
+  { value: 'board', label: 'Nástenka', icon: 'pi pi-th-large' },
+  { value: 'stats', label: 'Podľa zákazníka', icon: 'pi pi-chart-bar' },
+]
+const savedMode = (() => {
+  try {
+    return localStorage.getItem('fiskus.jobsMode') || 'list'
+  } catch {
+    return 'list'
+  }
+})()
+const mode = ref(modes.some((m) => m.value === savedMode) ? savedMode : 'list')
+watch(mode, (m) => {
+  try {
+    localStorage.setItem('fiskus.jobsMode', m)
+  } catch {
+    /* prehliadač bez úložiska */
+  }
+})
 const search = ref('')
 const searchEl = ref(null)
 const rows = shallowRef([])
@@ -39,6 +62,10 @@ async function load() {
 }
 onMounted(load)
 
+const boardRows = computed(() => {
+  const terms = searchTerms(search.value)
+  return rows.value.filter((r) => matches(terms, [r.number, r.name, r.customer, r.note, jobStatusOf(r).label, r.budget]))
+})
 const visibleRows = computed(() => {
   const terms = searchTerms(search.value)
   return rows.value.filter((r) => matchesJobView(r, view.value) && matches(terms, [r.number, r.name, r.customer, r.note, jobStatusOf(r).label, r.budget]))
@@ -152,6 +179,9 @@ onBeforeUnmount(() => {
   <div class="page">
     <header class="head">
       <h1>Zákazky</h1>
+      <SelectButton v-model="mode" :options="modes" option-label="label" option-value="value" :allow-empty="false" size="small" class="modes" aria-label="Zobrazenie">
+        <template #option="{ option }"><i :class="option.icon" :title="option.label" /><span class="ml">{{ option.label }}</span></template>
+      </SelectButton>
       <div class="spacer" />
       <Button v-if="can('invoices.write')" size="small" @click="router.push('/zakazky/nova')">
         <template #default>
@@ -160,6 +190,8 @@ onBeforeUnmount(() => {
       </Button>
     </header>
 
+    <JobStats v-if="mode === 'stats'" />
+    <template v-else>
     <section class="ledger" aria-label="Prehľad zákaziek">
       <button class="figure figure-link" :disabled="!ledger.openCount" @click="view = 'open'">
         <span class="label">Bežiace ({{ ledger.openCount }}), plánovaná cena</span>
@@ -180,17 +212,18 @@ onBeforeUnmount(() => {
     </section>
 
     <div class="toolbar">
-      <SelectButton v-model="view" :options="jobViews" option-label="label" option-value="value" :allow-empty="false" size="small" aria-label="Zobraziť" />
+      <SelectButton v-if="mode === 'list'" v-model="view" :options="jobViews" option-label="label" option-value="value" :allow-empty="false" size="small" aria-label="Zobraziť" />
       <IconField class="search">
         <InputIcon class="pi pi-search" />
         <InputText ref="searchEl" v-model="search" placeholder="Hľadať číslo, názov, zákazníka" size="small" aria-label="Hľadať" />
       </IconField>
-      <ExportButton name="Zákazky" :columns="crmJobColumns" :rows="() => gridRows(gridApi, visibleRows)" />
+      <ExportButton name="Zákazky" :columns="crmJobColumns" :rows="() => (mode === 'board' ? boardRows : gridRows(gridApi, visibleRows))" />
     </div>
 
     <p v-if="loadError" class="error">{{ loadError }}</p>
 
-    <div class="grid-wrap">
+    <JobBoard v-if="mode === 'board'" :rows="boardRows" :can-write="can('invoices.write')" @changed="load" />
+    <div v-else class="grid-wrap">
       <AgGridVue
         class="grid"
         :theme="fiskusGridTheme"
@@ -208,6 +241,7 @@ onBeforeUnmount(() => {
         @row-clicked="open"
       />
     </div>
+    </template>
   </div>
 </template>
 
@@ -229,6 +263,9 @@ onBeforeUnmount(() => {
 }
 .spacer {
   flex: 1;
+}
+.modes :deep(.p-togglebutton i) {
+  margin-right: 5px;
 }
 .hint {
   margin-left: 6px;
@@ -344,6 +381,12 @@ onBeforeUnmount(() => {
   }
   .hint {
     display: none;
+  }
+  .ml {
+    display: none;
+  }
+  .modes :deep(.p-togglebutton i) {
+    margin-right: 0;
   }
   .ledger {
     overflow-x: auto;

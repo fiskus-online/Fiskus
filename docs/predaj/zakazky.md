@@ -107,7 +107,28 @@ Neplatiteľ vidí všetko vrátane DPH. Koncepty sa nerátajú. Zálohové fakt�
 sa do fakturácie nerátajú – zaráta sa až vyúčtovacia faktúra, aby suma
 nebola dvakrát.
 
-## Zoznam zákaziek
+## Zoznam, nástenka a ziskovosť
+
+Hore v Zákazkách prepínate tri zobrazenia (Fiškus si posledné zapamätá):
+
+- **Zoznam** – tabuľka so záložkami a súčtami (nižšie).
+- **Nástenka** – stĺpce Dopyt, Ponuka, V realizácii, Dokončená a Stratená
+  s kartami zákaziek a súčtom plánovanej ceny. Kartu **presuniete myšou**
+  do iného stĺpca a zákazka zmení stav; kliknutím ju otvoríte. Na mobile
+  sa stĺpce posúvajú prstom do strany.
+- **Podľa zákazníka** – ziskovosť za zvolený rok: počet zákaziek,
+  vyfakturované, náklady, zisk a marža pre každého zákazníka, zoradené
+  od najziskovejšieho. Hore je **úspešnosť** (koľko z uzavretých zákaziek
+  ste dokončili, nie stratili). Zákazka patrí do roka, v ktorom sa
+  uzavrela; bežiaca do roka začiatku.
+
+![Nástenka zákaziek](../obrazky/zakazky-nastenka.webp)
+*Nástenka zákaziek*
+
+![Ziskovosť zákaziek podľa zákazníka](../obrazky/zakazky-ziskovost.webp)
+*Ziskovosť zákaziek podľa zákazníka*
+
+### Zoznam
 
 Zoznam má záložky *Bežiace*, *Všetky*, *Po termíne*, *Dokončené* a
 *Stratené*. Bežiaca zákazka, ktorej termín dokončenia už prešiel, je

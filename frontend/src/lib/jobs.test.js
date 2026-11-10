@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { blankJob, blankMaterial, blankWork, jobForm, jobPayload, pickItem, jobStatusOf, marginText, matchesJobView } from './jobs.js'
+import { boardColumns, movePayload, pct, blankJob, blankMaterial, blankWork, jobForm, jobPayload, pickItem, jobStatusOf, marginText, matchesJobView } from './jobs.js'
 
 describe('zákazky', () => {
   it.each([
@@ -45,5 +45,17 @@ describe('zákazky', () => {
     expect(p.work[1]).toEqual({ id: 0, date: '2026-11-10', person: 'Palo', description: 'Revízia', hours: '1.5', rate: '35.00', costRate: '0' })
     expect(p.material[0]).toEqual({ id: 0, date: '2026-11-10', itemId: 4, name: 'Kábel CYKY', unit: 'm', quantity: '25', unitPrice: '1.60', unitCost: '0' })
     expect(p.rate).toBe('35.00')
+  })
+
+  it('nástenka', () => {
+    const rows = [{ id: 1, status: 'lead' }, { id: 2, status: 'active' }, { id: 3, status: 'active' }]
+    const cols = boardColumns(rows)
+    expect(cols.map((c) => c.value)).toEqual(['lead', 'offer', 'active', 'done', 'lost'])
+    expect(cols[2].jobs.map((j) => j.id)).toEqual([2, 3])
+    const p = movePayload({ id: 2, name: 'RS', status: 'active', budget: '9500.00', rate: '35.00', work: [{ id: 4, date: '2026-11-02', hours: '2.00', rate: '35.00', costRate: '0.00' }] }, 'done')
+    expect(p).toMatchObject({ name: 'RS', status: 'done', budget: '9500.00', rate: '35.00' })
+    expect(p.work[0]).toMatchObject({ id: 4, hours: '2.00' })
+    expect(pct(57)).toBe('57 %')
+    expect(pct(null)).toBe('—')
   })
 })

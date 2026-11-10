@@ -226,3 +226,17 @@ func TestActivitiesAPI(t *testing.T) {
 	}
 	e.do("DELETE", fmt.Sprintf("%s/%d", base, x.ID), nil, 204, nil)
 }
+
+func TestJobStatsAPI(t *testing.T) {
+	e := setup(t, edition.Desktop)
+	e.do("POST", fmt.Sprintf("/api/companies/%d/jobs", e.cid), `{"name":"Servis","status":"done","start":"2026-05-01"}`, 201, nil)
+	var st struct {
+		Rows  []struct{ Customer string }
+		Total struct{ Jobs int }
+		Years []int
+	}
+	e.do("GET", fmt.Sprintf("/api/companies/%d/jobs-stats?year=2026", e.cid), nil, 200, &st)
+	if len(st.Rows) != 1 || st.Rows[0].Customer != "Bez zákazníka" || st.Total.Jobs != 1 || len(st.Years) != 1 {
+		t.Fatalf("štatistika %+v", st)
+	}
+}

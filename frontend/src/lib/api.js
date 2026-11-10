@@ -396,6 +396,7 @@ export const api = {
   deleteActivity: (cid, id) => request('DELETE', `/api/companies/${cid}/activities/${id}`),
   activityDone: (cid, id, done) => request('POST', `/api/companies/${cid}/activities/${id}/done`, { done }),
   jobs: (cid) => request('GET', `/api/companies/${cid}/jobs`),
+  jobStats: (cid, year) => request('GET', `/api/companies/${cid}/jobs-stats` + query({ year })),
   job: (cid, id) => request('GET', `/api/companies/${cid}/jobs/${id}`),
   deliveries: (cid) => request('GET', `/api/companies/${cid}/deliveries`),
   delivery: (cid, id) => request('GET', `/api/companies/${cid}/deliveries/${id}`),
