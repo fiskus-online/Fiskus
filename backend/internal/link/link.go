@@ -17,10 +17,11 @@ const (
 	Quote    Kind = "quote"    // cenová ponuka
 	Purchase Kind = "purchase" // prijatá faktúra
 	Form     Kind = "form"     // tlačivo (dodací list, objednávka, preberací protokol…)
+	Job      Kind = "job"      // zákazka (internal/job)
 )
 
 // Kinds sú druhy, ktoré sa dajú prepojiť.
-var Kinds = []Kind{Invoice, Quote, Purchase, Form}
+var Kinds = []Kind{Invoice, Quote, Purchase, Form, Job}
 
 // Known: je druh podporovaný?
 func (k Kind) Known() bool {

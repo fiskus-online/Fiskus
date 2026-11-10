@@ -53,3 +53,38 @@ func TestLinksAPI(t *testing.T) {
 		t.Fatalf("z faktúry: %+v", list)
 	}
 }
+
+func TestJobsAPI(t *testing.T) {
+	e := setup(t, edition.Desktop)
+	base := fmt.Sprintf("/api/companies/%d/jobs", e.cid)
+	type jobRow struct {
+		ID      int64
+		Number  string
+		Name    string
+		Status  string
+		Summary struct{ Docs int }
+		Docs    []struct{ Kind string }
+	}
+	var j jobRow
+	e.do("POST", base, `{"name":""}`, 422, nil)
+	e.do("POST", base, `{"name":"Rekonštrukcia RS","status":"active","budget":"8690"}`, 201, &j)
+	if j.Number == "" || j.Status != "active" {
+		t.Fatalf("nová: %+v", j)
+	}
+	var inv struct{ ID int64 }
+	e.do("POST", fmt.Sprintf("/api/companies/%d/invoices", e.cid), `{"customer":{"name":"Zákazník s.r.o.","country":"SK"},"issueDate":"2026-10-01","deliveryDate":"2026-10-01","dueDate":"2026-10-15",`+
+		`"lines":[{"description":"Práca","quantity":"2","unit":"hod","unitPrice":"50","vatRate":23}]}`, 201, &inv)
+	e.do("POST", fmt.Sprintf("/api/companies/%d/links/job/%d", e.cid, j.ID), fmt.Sprintf(`{"kind":"invoice","id":%d}`, inv.ID), 200, nil)
+	e.do("GET", fmt.Sprintf("%s/%d", base, j.ID), nil, 200, &j)
+	if j.Summary.Docs != 1 || len(j.Docs) != 1 || j.Docs[0].Kind != "invoice" {
+		t.Fatalf("detail: %+v", j)
+	}
+	e.do("PUT", fmt.Sprintf("%s/%d", base, j.ID), `{"name":"Rekonštrukcia","status":"done"}`, 200, &j)
+	var list []jobRow
+	e.do("GET", base, nil, 200, &list)
+	if len(list) != 1 || list[0].Status != "done" || list[0].Name != "Rekonštrukcia" {
+		t.Fatalf("zoznam: %+v", list)
+	}
+	e.do("DELETE", fmt.Sprintf("%s/%d", base, j.ID), nil, 204, nil)
+	e.do("GET", fmt.Sprintf("%s/%d", base, j.ID), nil, 404, nil)
+}

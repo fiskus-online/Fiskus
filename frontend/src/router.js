@@ -30,6 +30,8 @@ import BrowserBackups from './views/BrowserBackups.vue'
 import { inBrowser } from './lib/install.js'
 import CashPrint from './views/CashPrint.vue'
 import QuoteList from './views/QuoteList.vue'
+import Jobs from './views/Jobs.vue'
+import JobEdit from './views/JobEdit.vue'
 import RecurringList from './views/RecurringList.vue'
 import PublicQuote from './views/PublicQuote.vue'
 import Reminders from './views/Reminders.vue'
@@ -77,6 +79,7 @@ export const modules = [
     group: 'Predaj',
     items: [
       { path: '/faktury', label: 'Vydané faktúry', icon: 'pi-file-export', ready: true, perm: 'invoices.read' },
+      { path: '/zakazky', label: 'Zákazky', icon: 'pi-folder-open', ready: true, perm: 'invoices.read', biz: true },
       { path: '/ponuky', label: 'Cenové ponuky', icon: 'pi-file-edit', ready: true, perm: 'invoices.read' },
       { path: '/pravidelne', label: 'Pravidelná fakturácia', icon: 'pi-replay', ready: true, perm: 'invoices.read' },
       { path: '/upomienky', label: 'Upomienky', icon: 'pi-bell', ready: true, perm: 'invoices.read' },
@@ -157,6 +160,9 @@ export const router = createRouter({
     { path: '/faktury/:id(\\d+)', component: InvoiceEdit, props: true, meta: { title: 'Faktúra', perm: 'invoices.read' } },
     { path: '/faktury/:id(\\d+)/tlac', component: InvoicePrint, props: true, meta: { title: 'Faktúra', bare: true, perm: 'invoices.read' } },
     { path: '/ponuky', component: QuoteList, meta: { title: 'Cenové ponuky', perm: 'invoices.read' } },
+    { path: '/zakazky', component: Jobs, meta: { title: 'Zákazky', perm: 'invoices.read' } },
+    { path: '/zakazky/nova', component: JobEdit, meta: { title: 'Nová zákazka', perm: 'invoices.write' } },
+    { path: '/zakazky/:id(\\d+)', component: JobEdit, props: true, meta: { title: 'Zákazka', perm: 'invoices.read' } },
     { path: '/ponuky/nova', component: InvoiceEdit, props: { quote: true }, meta: { title: 'Nová ponuka', perm: 'invoices.write' } },
     { path: '/ponuky/:id(\\d+)', component: InvoiceEdit, props: (r) => ({ id: r.params.id, quote: true }), meta: { title: 'Cenová ponuka', perm: 'invoices.read' } },
     { path: '/ponuky/:id(\\d+)/tlac', component: InvoicePrint, props: (r) => ({ id: r.params.id, quote: true }), meta: { title: 'Cenová ponuka', bare: true, perm: 'invoices.read' } },

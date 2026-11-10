@@ -11,6 +11,7 @@ import { tripTime } from './logbook.js'
 import { accountKindLabel, accountName, entryCategory, typeLabel, entryType, frequencyLabel, obligationKindLabel, obligationTone, monthsLabel } from './household.js'
 import { moveLabel } from './itemcard.js'
 import { plain } from './richtext.js'
+import { jobStatusOf, marginText } from './jobs.js'
 import { kindLabel as calendarKind, repeatLabel, stateOf } from './calendar.js'
 import { docKindLabel, emailStatus } from './emails.js'
 import { addressText, personsText } from './contacts.js'
@@ -740,4 +741,25 @@ export const closingColumns = [
   t('PPD', (r) => r.inNumber, 14),
   t('VPD', (r) => r.outNumber, 14),
   t('Stav', (r) => (r.cancelled ? 'stornovaná' : ''), 10),
+]
+
+/** Zákazky (CRM). */
+export const crmJobColumns = [
+  t('Číslo', (r) => r.number, 12),
+  t('Názov', (r) => r.name, 32),
+  t('Zákazník', (r) => r.customer, 28),
+  t('Stav', (r) => jobStatusOf(r).label, 18),
+  date('Začiatok', (r) => r.start),
+  date('Termín', (r) => r.due),
+  date('Dokončená', (r) => r.closed),
+  money('Plánovaná cena', (r) => r.budget),
+  money('Ponúknuté', (r) => r.summary?.offered),
+  money('Vyfakturované', (r) => r.summary?.invoiced),
+  money('Uhradené', (r) => r.summary?.paid),
+  money('Na úhradu', (r) => r.summary?.unpaid),
+  money('Náklady', (r) => r.summary?.costs),
+  money('Zisk', (r) => r.summary?.profit),
+  t('Marža', (r) => marginText(r.summary), 8),
+  { header: 'Dokladov', value: (r) => r.summary?.docs ?? 0, type: 'number', width: 9 },
+  t('Poznámka', (r) => r.note, 30),
 ]

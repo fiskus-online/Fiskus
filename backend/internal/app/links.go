@@ -36,6 +36,7 @@ type LinkedDoc struct {
 	FormKey  string       `json:"formKey,omitempty"` // tlačivo: druh (na otvorenie)
 }
 
+// zákazky číta a mení každý, kto číta a mení faktúry
 func linkReadPerm(k link.Kind) auth.Perm {
 	if k == link.Purchase {
 		return auth.PermPurchasesRead
@@ -78,6 +79,9 @@ func (a *App) docInfo(ctx context.Context, companyID int64, r link.Ref) (LinkedD
 		}
 		d.Type, d.Number, d.Partner, d.Date = "Prijatá faktúra", firstNonBlank(p.SupplierNumber, p.Number), p.Supplier.Name, p.IssueDate
 		d.Total, d.Currency, d.Status = p.Summary.Total, p.Currency, string(p.Status)
+		if d.Currency == "" {
+			d.Currency = "EUR" // prázdna mena prijatej faktúry = euro
+		}
 	case link.Form:
 		fd, err := a.Store.GetFormDoc(ctx, companyID, r.ID)
 		if err != nil {
@@ -115,6 +119,16 @@ func (a *App) docInfo(ctx context.Context, companyID int64, r link.Ref) (LinkedD
 		if fd.CashID != 0 {
 			d.Status = "posted"
 		}
+	case link.Job:
+		j, err := a.Store.GetJob(ctx, companyID, r.ID)
+		if err != nil {
+			return d, err
+		}
+		d.Type, d.Number, d.Partner, d.Date = "Zákazka", j.Number, firstNonBlank(j.Customer, j.Name), firstDate(j.Start, j.Created)
+		if j.Customer != "" {
+			d.Partner = j.Customer + " — " + j.Name
+		}
+		d.Total, d.Currency, d.Status = j.Budget, "EUR", string(j.Status)
 	default:
 		return d, link.ErrUnknown
 	}

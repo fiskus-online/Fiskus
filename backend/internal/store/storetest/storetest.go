@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"github.com/fiskus-online/fiskus/backend/internal/catalog"
 	"github.com/fiskus-online/fiskus/backend/internal/forms"
+	"github.com/fiskus-online/fiskus/backend/internal/job"
 	"github.com/fiskus-online/fiskus/backend/internal/journal"
 	"github.com/fiskus-online/fiskus/backend/internal/link"
 	"reflect"
@@ -765,6 +766,59 @@ func Run(t *testing.T, newStore Factory) {
 		}
 		if list, _ := s.ListHHEntries(ctx, b.ID, 0); len(list) != 1 {
 			t.Fatal("zmazanie domácnosti zmazalo pohyby inej")
+		}
+	})
+
+	t.Run("zákazky", func(t *testing.T) {
+		s := newStore(t)
+		a, _ := s.CreateCompany(ctx, store.Company{Name: "Alfa"})
+		b, _ := s.CreateCompany(ctx, store.Company{Name: "Beta"})
+		j1 := job.Job{Number: "Z2026001", Name: "Rekonštrukcia RS", ContactID: 3, Customer: "Farmol", Status: job.Active,
+			Start: invoice.MustDate("2026-10-01"), Due: invoice.MustDate("2026-10-31"), Budget: m.MustParse("8690"), Note: "etiketovačka", Created: invoice.MustDate("2026-10-01")}
+		j2 := job.Job{Number: "Z2026002", Name: "Servis", Status: job.Lead}
+		for _, j := range []*job.Job{&j1, &j2} {
+			if err := s.SaveJob(ctx, a.ID, j); err != nil || j.ID == 0 {
+				t.Fatalf("zákazka: %v", err)
+			}
+		}
+		dup := job.Job{Number: "Z2026001", Name: "x", Status: job.Lead}
+		if err := s.SaveJob(ctx, a.ID, &dup); !errors.Is(err, store.ErrDuplicate) {
+			t.Fatalf("rovnaké číslo: %v", err)
+		}
+		other := job.Job{Number: "Z2026001", Name: "y", Status: job.Lead}
+		if err := s.SaveJob(ctx, b.ID, &other); err != nil {
+			t.Fatalf("rovnaké číslo v inej firme: %v", err)
+		}
+		j1.Status, j1.Closed = job.Done, invoice.MustDate("2026-11-05")
+		if err := s.SaveJob(ctx, a.ID, &j1); err != nil {
+			t.Fatal(err)
+		}
+		if got, err := s.GetJob(ctx, a.ID, j1.ID); err != nil || !reflect.DeepEqual(got, j1) {
+			t.Fatalf("načítanie:\n got %+v\nwant %+v", got, j1)
+		}
+		if list, _ := s.ListJobs(ctx, a.ID); len(list) != 2 || list[0].ID != j2.ID {
+			t.Fatalf("zoznam (najnovšie prvé): %+v", list)
+		}
+		if _, err := s.GetJob(ctx, b.ID, j1.ID); !errors.Is(err, store.ErrNotFound) {
+			t.Fatal("zákazka inej firmy")
+		}
+		if err := s.SaveJob(ctx, b.ID, &j1); !errors.Is(err, store.ErrNotFound) {
+			t.Fatal("úprava zákazky inej firmy")
+		}
+		if err := s.DeleteJob(ctx, b.ID, j2.ID); !errors.Is(err, store.ErrNotFound) {
+			t.Fatal("zmazanie zákazky inej firmy")
+		}
+		if err := s.DeleteJob(ctx, a.ID, j2.ID); err != nil {
+			t.Fatal(err)
+		}
+		if err := s.DeleteCompany(ctx, a.ID); err != nil {
+			t.Fatal(err)
+		}
+		if list, _ := s.ListJobs(ctx, a.ID); len(list) != 0 {
+			t.Fatal("zákazky po zmazaní firmy")
+		}
+		if list, _ := s.ListJobs(ctx, b.ID); len(list) != 1 {
+			t.Fatal("zmazanie firmy zmazalo zákazky inej")
 		}
 	})
 

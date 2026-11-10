@@ -48,6 +48,7 @@ nav:
       - predaj/faktury.md
       - predaj/zalohy.md
       - predaj/ponuky.md
+      - predaj/zakazky.md
       - predaj/upomienky.md
       - predaj/cennik.md
   - Nákup: nakup/index.md
