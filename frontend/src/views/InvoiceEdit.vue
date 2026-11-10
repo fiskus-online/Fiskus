@@ -6,7 +6,7 @@ import { useConfirm } from 'primevue/useconfirm'
 import { AgGridVue } from 'ag-grid-vue3'
 import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
-import Textarea from 'primevue/textarea'
+import RichTextEditor from '../components/RichTextEditor.vue'
 import DatePicker from 'primevue/datepicker'
 import Dialog from 'primevue/dialog'
 import SelectButton from 'primevue/selectbutton'
@@ -1439,12 +1439,12 @@ const customerFields = reactive([
                 :invalid="!!fieldError('subject')" @update:model-value="upd(inv, 'subject')($event)" />
               <small v-if="fieldError('subject')" class="err">{{ fieldError('subject') }}</small>
             </label>
-            <label>
+            <div class="field-rt">
               <span>Text nad položkami</span>
-              <Textarea :model-value="inv.intro" :disabled="!editable" rows="2" auto-resize class="note"
+              <RichTextEditor :model-value="inv.intro" :disabled="!editable" label="Text nad položkami" class="note"
                 :placeholder="!editable ? '' : isQuote ? 'Napr. Na základe vášho dopytu vám ponúkame:' : 'Napr. Na základe objednávky č. 12 vám fakturujeme:'"
                 @update:model-value="upd(inv, 'intro')($event)" />
-            </label>
+            </div>
           </div>
         </fieldset>
 
@@ -1502,7 +1502,7 @@ const customerFields = reactive([
 
         <fieldset v-if="editable || inv.note" class="block">
           <legend>Text pod položkami</legend>
-          <Textarea :model-value="inv.note" :disabled="!editable" rows="2" auto-resize class="note"
+          <RichTextEditor :model-value="inv.note" :disabled="!editable" label="Text pod položkami" class="note"
             :placeholder="editable ? 'Napr. Ďakujeme za spoluprácu.' : ''" @update:model-value="upd(inv, 'note')($event)" />
         </fieldset>
 
@@ -1856,9 +1856,16 @@ legend {
   gap: 3px;
   min-width: 0;
 }
-.fields label > span {
+.fields label > span,
+.fields .field-rt > span {
   font-size: var(--fs-sm);
   color: var(--ink-soft);
+}
+.fields .field-rt {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
 }
 .fields label.wide {
   grid-column: span 2;

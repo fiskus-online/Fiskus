@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/fiskus-online/fiskus/backend/internal/richtext"
 	"log"
 	"strings"
 
@@ -62,7 +63,8 @@ func (a *App) prepareRecurring(ctx context.Context, companyID int64, t *recurrin
 	if t.NonVATPayer {
 		t.ReverseCharge = false
 	}
-	t.Name, t.Note = strings.TrimSpace(t.Name), strings.TrimSpace(t.Note)
+	t.Name = strings.TrimSpace(t.Name)
+	t.Intro, t.Note = richtext.Sanitize(t.Intro), richtext.Sanitize(t.Note)
 	return t.Recalculate()
 }
 

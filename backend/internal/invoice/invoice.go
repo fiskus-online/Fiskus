@@ -5,6 +5,7 @@ package invoice
 import (
 	"errors"
 	"fmt"
+	"github.com/fiskus-online/fiskus/backend/internal/richtext"
 	"strings"
 
 	"github.com/fiskus-online/fiskus/backend/internal/fx"
@@ -223,6 +224,8 @@ func ToEUR(s vat.Summary, rate money.Dec) vat.Summary {
 
 // Recalculate prepočíta sumy položiek a rekapituláciu DPH.
 func (inv *Invoice) Recalculate() error {
+	// texty nad a pod položkami: iba povolené formátovanie (richtext)
+	inv.Intro, inv.Note = richtext.Sanitize(inv.Intro), richtext.Sanitize(inv.Note)
 	if inv.PriceMode == "" {
 		inv.PriceMode = vat.PriceNet
 	}

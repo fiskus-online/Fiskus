@@ -118,6 +118,17 @@ func (p *Page) Text(x, y float64, f *Font, size float64, c Color, s string) {
 	fmt.Fprintf(&p.buf, "BT /F%d %s Tf %s rg %s %s Td <%s> Tj ET\n", idx+1, num(size), c.rgb(), num(x), num(PageHeight-y), hex.String())
 }
 
+// TextOblique napíše text šikmo (kurzíva z bežného písma, sklon ~11°).
+func (p *Page) TextOblique(x, y float64, f *Font, size float64, c Color, s string) {
+	p.texts = append(p.texts, s)
+	idx := p.doc.fontIndex(f)
+	var hex strings.Builder
+	for _, r := range s {
+		fmt.Fprintf(&hex, "%04X", f.glyph(r))
+	}
+	fmt.Fprintf(&p.buf, "BT /F%d %s Tf %s rg 1 0 0.2 1 %s %s Tm <%s> Tj ET\n", idx+1, num(size), c.rgb(), num(x), num(PageHeight-y), hex.String())
+}
+
 // TextRight napíše text zarovnaný doprava k x.
 func (p *Page) TextRight(x, y float64, f *Font, size float64, c Color, s string) {
 	p.Text(x-f.Width(s, size), y, f, size, c, s)
