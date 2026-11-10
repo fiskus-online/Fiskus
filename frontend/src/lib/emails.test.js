@@ -26,6 +26,8 @@ describe('pomocníci', () => {
   it('cesta k dokladu', () => {
     expect(rows.map(docRoute)).toEqual(['/faktury/7', '/upomienky/3/tlac', null])
     expect(docRoute({ docKind: 'quote', docId: 5 })).toBe('/ponuky/5')
+    expect(docRoute({ docKind: 'delivery', docId: 4 })).toBe('/dodacie-listy/4')
+    expect(docRoute({ docKind: 'porder', docId: 6 })).toBe('/objednavky/6')
     expect(docRoute({ docKind: 'notice', docId: 0 })).toBe('/pravidelne')
   })
   it('stav', () => {

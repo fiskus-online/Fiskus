@@ -62,10 +62,12 @@ const (
 	KindInvoice  = "invoice"
 	KindQuote    = "quote"
 	KindReminder = "reminder"
+	KindDelivery = "delivery"
+	KindPOrder   = "porder"
 )
 
 // Kinds sú druhy šablón v poradí v nastaveniach.
-var Kinds = []string{KindInvoice, KindQuote, KindReminder}
+var Kinds = []string{KindInvoice, KindQuote, KindReminder, KindDelivery, KindPOrder}
 
 // DefaultTemplates sú predvolené texty správ.
 func DefaultTemplates() map[string]Template {
@@ -79,6 +81,15 @@ func DefaultTemplates() map[string]Template {
 			Subject: "Cenová ponuka {cislo} – {firma}",
 			Body: "Dobrý deň,\n\nv prílohe Vám posielame cenovú ponuku {cislo} na sumu {suma}. Ponuka platí do {platna_do}.\n\n" +
 				"{prijatie}V prípade otázok nás neváhajte kontaktovať.\n\nS pozdravom\n{firma}",
+		},
+		KindDelivery: {
+			Subject: "Dodací list {cislo} – {firma}",
+			Body:    "Dobrý deň,\n\nv prílohe Vám posielame dodací list {cislo} zo dňa {datum}.\n\nS pozdravom\n{firma}",
+		},
+		KindPOrder: {
+			Subject: "Objednávka {cislo} – {firma}",
+			Body: "Dobrý deň,\n\nv prílohe Vám posielame objednávku {cislo}{dodanie}.\nProsíme o potvrdenie objednávky " +
+				"a termínu dodania.\n\nS pozdravom\n{firma}",
 		},
 		KindReminder: {
 			Subject: "{Doklad} {cislo} – {firma}",

@@ -14,7 +14,7 @@ import { can, session } from '../lib/session.js'
 import { emailStatus } from '../lib/emails.js'
 
 const props = defineProps({
-  kind: { type: String, required: true }, // invoices | quotes | reminders
+  kind: { type: String, required: true }, // invoices | quotes | reminders | deliveries | purchase-orders
   id: { type: [String, Number], default: null },
 })
 const visible = defineModel('visible', { type: Boolean, default: false })

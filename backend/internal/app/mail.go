@@ -5,15 +5,18 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/fiskus-online/fiskus/backend/internal/audit"
 	"github.com/fiskus-online/fiskus/backend/internal/auth"
+	"github.com/fiskus-online/fiskus/backend/internal/delivery"
 	"github.com/fiskus-online/fiskus/backend/internal/invoice"
 	"github.com/fiskus-online/fiskus/backend/internal/mail"
 	"github.com/fiskus-online/fiskus/backend/internal/money"
+	"github.com/fiskus-online/fiskus/backend/internal/porder"
 	"github.com/fiskus-online/fiskus/backend/internal/printout"
 	"github.com/fiskus-online/fiskus/backend/internal/quote"
 	"github.com/fiskus-online/fiskus/backend/internal/reminder"
@@ -34,6 +37,8 @@ const (
 	MailInvoice  = "invoice"
 	MailQuote    = "quote"
 	MailReminder = "reminder"
+	MailDelivery = "delivery"
+	MailPOrder   = "porder"
 	MailTest     = "test"
 )
 
@@ -213,6 +218,7 @@ type mailDoc struct {
 	to       string // e-mail odberateľa
 	file     string // názov prílohy
 	sendable bool
+	write    auth.Perm // právo na odoslanie (prázdne = faktúry)
 	vars     map[string]string
 	pdf      func() (Document, error)
 }
@@ -303,6 +309,33 @@ func (a *App) mailDoc(ctx context.Context, companyID int64, kind string, id int6
 		return mailDoc{kind: kind, id: id, number: r.Number, file: printout.FileName("Upomienka", r.Number), to: a.contactEmail(ctx, companyID, r.Customer, r.ContactID),
 			sendable: true, vars: vars,
 			pdf: func() (Document, error) { return a.ReminderPDF(ctx, companyID, id) }}, nil
+	case MailDelivery:
+		n, err := a.Delivery(ctx, companyID, id)
+		if err != nil {
+			return mailDoc{}, err
+		}
+		vars["Doklad"], vars["doklad"] = "Dodací list", "dodací list"
+		vars["cislo"], vars["datum"], vars["suma"] = n.Number, n.Date.Display(), money2(n.Summary.Total, "")
+		vars["odberatel"] = n.Customer.Name
+		return mailDoc{kind: kind, id: id, number: n.Number, file: printout.FileName("Dodaci-list", n.Number), to: a.contactEmail(ctx, companyID, n.Customer, n.ContactID),
+			sendable: n.Status == delivery.Issued || n.Status == delivery.Invoiced, vars: vars, write: auth.PermInvoicesWrite,
+			pdf: func() (Document, error) { return a.DeliveryPDF(ctx, companyID, id, true) }}, nil
+	case MailPOrder:
+		o, err := a.PurchaseOrder(ctx, companyID, id)
+		if err != nil {
+			return mailDoc{}, err
+		}
+		party := a.porderParty(ctx, companyID, o)
+		vars["Doklad"], vars["doklad"] = "Objednávka", "objednávku"
+		vars["cislo"], vars["datum"], vars["suma"] = o.Number, o.Date.Display(), money2(o.Total, "")
+		vars["dodanie"] = ""
+		if !o.Expected.IsZero() {
+			vars["dodanie"] = " s požadovaným dodaním do " + o.Expected.Display()
+		}
+		vars["odberatel"] = o.Supplier
+		return mailDoc{kind: kind, id: id, number: o.Number, file: printout.FileName("Objednavka", o.Number), to: party.Email,
+			sendable: o.Status != porder.Cancelled, vars: vars, write: auth.PermPurchasesWrite,
+			pdf: func() (Document, error) { return a.POrderPDF(ctx, companyID, id) }}, nil
 	}
 	return mailDoc{}, store.ErrNotFound
 }
@@ -347,11 +380,15 @@ func (a *App) MailDraft(ctx context.Context, companyID int64, kind string, id in
 
 // SendMail pošle doklad e-mailom s PDF v prílohe.
 func (a *App) SendMail(ctx context.Context, companyID int64, kind string, id int64, req MailRequest) (store.Email, error) {
-	if err := a.Require(ctx, companyID, auth.PermInvoicesWrite); err != nil {
-		return store.Email{}, err
-	}
 	doc, err := a.mailDoc(ctx, companyID, kind, id)
 	if err != nil {
+		return store.Email{}, err
+	}
+	perm := doc.write
+	if perm == "" {
+		perm = auth.PermInvoicesWrite
+	}
+	if err := a.Require(ctx, companyID, perm); err != nil {
 		return store.Email{}, err
 	}
 	if !doc.sendable {
@@ -386,12 +423,21 @@ func (a *App) SendMail(ctx context.Context, companyID int64, kind string, id int
 	m := mail.Message{To: to, Cc: cc, Subject: subject, Body: req.Body,
 		Attachments: []mail.Attachment{{Name: pdf.Name, ContentType: "application/pdf", Data: pdf.Data}}}
 	e, sendErr := a.deliver(ctx, companyID, s, m, store.Email{DocKind: kind, DocID: id, DocNumber: doc.number})
-	cat := map[string]audit.Category{MailInvoice: audit.CatInvoices, MailQuote: audit.CatQuotes, MailReminder: audit.CatInvoices}[kind]
+	cat := map[string]audit.Category{MailInvoice: audit.CatInvoices, MailQuote: audit.CatQuotes, MailReminder: audit.CatInvoices,
+		MailDelivery: audit.CatInvoices, MailPOrder: audit.CatPurchases}[kind]
 	summary := fmt.Sprintf("E-mail %s %s → %s", doc.vars["Doklad"], doc.number, e.To)
 	if sendErr != nil {
 		summary += " (neodoslaný: " + sendErr.Error() + ")"
 	}
 	a.record(ctx, companyID, cat, "email", kind, id, summary, nil, e)
+	// odoslaná rozpracovaná objednávka je odoslaná dodávateľovi
+	if sendErr == nil && kind == MailPOrder {
+		if o, err := a.Store.GetPurchaseOrder(ctx, companyID, id); err == nil && o.Status == porder.Draft {
+			if _, err := a.SendPurchaseOrder(ctx, companyID, id); err != nil {
+				log.Printf("objednávka %s po odoslaní e-mailom: %v", o.Number, err)
+			}
+		}
+	}
 	return e, sendErr
 }
 

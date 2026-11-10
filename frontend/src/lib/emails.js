@@ -5,6 +5,8 @@ export const docKinds = {
   invoice: { label: 'Faktúra', url: 'invoices' },
   quote: { label: 'Cenová ponuka', url: 'quotes' },
   reminder: { label: 'Upomienka', url: 'reminders' },
+  delivery: { label: 'Dodací list', url: 'deliveries' },
+  porder: { label: 'Objednávka', url: 'purchase-orders' },
   test: { label: 'Skúšobná správa', url: '' },
   notice: { label: 'Upozornenie', url: '' },
 }
@@ -20,6 +22,10 @@ export function docRoute(e) {
       return `/ponuky/${e.docId}`
     case 'reminder':
       return `/upomienky/${e.docId}/tlac`
+    case 'delivery':
+      return `/dodacie-listy/${e.docId}`
+    case 'porder':
+      return `/objednavky/${e.docId}`
     case 'notice':
       return '/pravidelne'
   }
@@ -84,10 +90,13 @@ export const placeholders = [
   ['{iban}', 'váš IBAN'],
   ['{vs}', 'variabilný symbol'],
   ['{datum}', 'dátum dokladu'],
+  ['{dodanie}', 'požadované dodanie (objednávka)'],
 ]
 
 export const templateKinds = [
   { kind: 'invoice', label: 'Faktúry' },
   { kind: 'quote', label: 'Cenové ponuky' },
   { kind: 'reminder', label: 'Upomienky' },
+  { kind: 'delivery', label: 'Dodacie listy' },
+  { kind: 'porder', label: 'Objednávky' },
 ]

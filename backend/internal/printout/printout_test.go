@@ -7,8 +7,10 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/fiskus-online/fiskus/backend/internal/delivery"
 	"github.com/fiskus-online/fiskus/backend/internal/invoice"
 	"github.com/fiskus-online/fiskus/backend/internal/money"
+	"github.com/fiskus-online/fiskus/backend/internal/porder"
 	"github.com/fiskus-online/fiskus/backend/internal/quote"
 	"github.com/fiskus-online/fiskus/backend/internal/reminder"
 	"github.com/fiskus-online/fiskus/backend/internal/store"
@@ -280,5 +282,56 @@ func TestRichTextLayout(t *testing.T) {
 	got, _ := text(t)(quoteSheet(q, supplier))
 	if !strings.Contains(got, "šikmo") || !strings.Contains(got, "podčiarknuté slová") {
 		t.Fatalf("text: %s", got)
+	}
+}
+
+func TestDeliveryAndPOrder(t *testing.T) {
+	n := delivery.Note{Number: "DL20260003", Status: delivery.Issued, Customer: invoice.Party{Name: "Agro Liptov", City: "Liptovský Mikuláš"},
+		Date: invoice.MustDate("2026-11-10"), Place: "Sušička", Order: "OBJ-77", Receiver: "J. Kováč", PriceMode: vat.PriceNet,
+		Lines: []invoice.Line{{Description: "Kábel CYKY", Quantity: money.MustParse("40"), Unit: "m", UnitPrice: money.MustParse("2.19"), Rate: 23}}}
+	inv := invoice.Invoice{Lines: n.Lines, PriceMode: n.PriceMode}
+	_ = inv.Recalculate()
+	n.Lines, n.Summary = inv.Lines, inv.Summary
+	o := porder.Order{Number: "OB20260002", Status: porder.Sent, Supplier: "Elektro Hron", Date: invoice.MustDate("2026-11-10"),
+		Expected: invoice.MustDate("2026-11-17"), Lines: []porder.Line{{Name: "Istič B16", SupplierCode: "EH-B16", Unit: "ks",
+			Quantity: money.MustParse("10"), UnitPrice: money.MustParse("4.10"), Total: money.MustParse("41.00")}}, Total: money.MustParse("41.00")}
+	tests := []struct {
+		name string
+		s    func() (*sheet, error)
+		want []string
+		not  []string
+	}{
+		{"dodací list s cenami", func() (*sheet, error) { return deliverySheet(n, true, supplier) },
+			[]string{"Dodací list", "DL20260003", "Objednávka", "OBJ-77", "Sušička", "Kábel CYKY", "87,60", "Odovzdal", "Prevzal — J. Kováč", "nie je daňový doklad"},
+			[]string{"IBAN", "K úhrade", "PAY by square"}},
+		{"dodací list bez cien", func() (*sheet, error) { return deliverySheet(n, false, supplier) },
+			[]string{"Kábel CYKY", "40"}, []string{"87,60", "2,19", "Spolu"}},
+		{"koncept dodacieho listu", func() (*sheet, error) {
+			d := n
+			d.Status, d.Number = delivery.Draft, ""
+			return deliverySheet(d, true, supplier)
+		}, []string{"Koncept"}, nil},
+		{"objednávka", func() (*sheet, error) {
+			return porderSheet(o, invoice.Party{Name: "Elektro Hron s.r.o.", ICO: "46123458"}, supplier)
+		},
+			[]string{"Objednávka", "OB20260002", "Objednávateľ", "Novák s.r.o.", "Dodávateľ", "Elektro Hron s.r.o.", "Istič B16 (kód EH-B16)",
+				"Požadované dodanie", "17. 11. 2026", "Spolu bez DPH", "41,00"},
+			[]string{"IBAN", "nie je platiteľ DPH", "K úhrade"}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s, err := tt.s()
+			txt, _ := check(t, s, err)
+			for _, w := range tt.want {
+				if !strings.Contains(txt, w) {
+					t.Errorf("chýba %q", w)
+				}
+			}
+			for _, w := range tt.not {
+				if strings.Contains(txt, w) {
+					t.Errorf("nemá byť %q", w)
+				}
+			}
+		})
 	}
 }

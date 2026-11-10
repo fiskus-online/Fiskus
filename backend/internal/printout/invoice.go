@@ -4,21 +4,32 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/fiskus-online/fiskus/backend/internal/delivery"
 	"github.com/fiskus-online/fiskus/backend/internal/invoice"
 	"github.com/fiskus-online/fiskus/backend/internal/money"
 	"github.com/fiskus-online/fiskus/backend/internal/party"
 	"github.com/fiskus-online/fiskus/backend/internal/pdf"
+	"github.com/fiskus-online/fiskus/backend/internal/porder"
 	"github.com/fiskus-online/fiskus/backend/internal/quote"
 	"github.com/fiskus-online/fiskus/backend/internal/vat"
 )
 
-// view sú údaje spoločné pre faktúru a cenovú ponuku.
+// view sú údaje spoločné pre faktúru, cenovú ponuku, dodací list
+// a objednávku dodávateľovi.
 type view struct {
 	inv        invoice.Invoice
 	quote      bool
+	delivery   bool   // dodací list: bez platby, s podpismi
+	porder     bool   // objednávka: firma je objednávateľ, ceny bez DPH
+	ref        string // číslo objednávky odberateľa (dodací list)
+	noPrices   bool   // dodací list bez cien (iba popis, množstvo, MJ)
+	receiver   string // kto prevzal (dodací list)
 	validUntil invoice.Date
 	stamp      string
 }
+
+// document: doklad, ktorý nie je daňový ani platobný (bez úhrady a QR).
+func (v view) document() bool { return v.quote || v.delivery || v.porder }
 
 // Invoice vytvorí PDF faktúry (aj dobropisu, zálohovej faktúry a dokladu k platbe).
 func Invoice(inv invoice.Invoice, sup Supplier) ([]byte, error) {
@@ -32,6 +43,58 @@ func invoiceSheet(inv invoice.Invoice, sup Supplier) (*sheet, error) {
 		v.stamp = "Koncept"
 	case invoice.StatusCancelled:
 		v.stamp = "Stornovaná"
+	}
+	return render(v, sup)
+}
+
+// Delivery vytvorí PDF dodacieho listu (s cenami alebo bez nich).
+func Delivery(n delivery.Note, prices bool, sup Supplier) ([]byte, error) {
+	return bytesOf(deliverySheet(n, prices, sup))
+}
+
+func deliverySheet(n delivery.Note, prices bool, sup Supplier) (*sheet, error) {
+	inv := invoice.Invoice{Kind: invoice.KindInvoice, Status: invoice.StatusIssued, Number: n.Number, Customer: n.Customer,
+		IssueDate: n.Date, DeliveryDate: n.Date, Currency: "EUR", PriceMode: n.PriceMode, NonVATPayer: n.NonVATPayer,
+		Note: n.Note, Lines: n.Lines, Summary: n.Summary}
+	if n.Place != "" {
+		inv.Delivery = &invoice.Address{Name: n.Place}
+	}
+	v := view{delivery: true, inv: inv, ref: n.Order, receiver: n.Receiver}
+	switch n.Status {
+	case delivery.Draft:
+		v.stamp, v.inv.Number = "Koncept", ""
+	case delivery.Cancelled:
+		v.stamp = "Stornovaný"
+	}
+	if !prices {
+		v.inv.Lines = nil
+		for _, l := range n.Lines {
+			v.inv.Lines = append(v.inv.Lines, invoice.Line{Description: l.Description, Quantity: l.Quantity, Unit: l.Unit})
+		}
+		v.noPrices = true
+	}
+	return render(v, sup)
+}
+
+// POrder vytvorí PDF objednávky dodávateľovi.
+func POrder(o porder.Order, supplier invoice.Party, sup Supplier) ([]byte, error) {
+	return bytesOf(porderSheet(o, supplier, sup))
+}
+
+func porderSheet(o porder.Order, supplier invoice.Party, sup Supplier) (*sheet, error) {
+	inv := invoice.Invoice{Kind: invoice.KindInvoice, Status: invoice.StatusIssued, Number: o.Number, Customer: supplier,
+		IssueDate: o.Date, DueDate: o.Expected, Currency: "EUR", PriceMode: vat.PriceNet, NonVATPayer: true, Note: o.Note,
+		Summary: vat.Summary{Total: o.Total}}
+	for _, l := range o.Lines {
+		desc := l.Name
+		if l.SupplierCode != "" {
+			desc += " (kód " + l.SupplierCode + ")"
+		}
+		inv.Lines = append(inv.Lines, invoice.Line{Description: desc, Quantity: l.Quantity, Unit: l.Unit, UnitPrice: l.UnitPrice, Amount: l.Total})
+	}
+	v := view{porder: true, inv: inv}
+	if o.Status == porder.Cancelled {
+		v.stamp = "Zrušená"
 	}
 	return render(v, sup)
 }
@@ -69,8 +132,13 @@ func FileName(kind, number string) string {
 }
 
 func (v view) title() string {
-	if v.quote {
+	switch {
+	case v.quote:
 		return "Cenová ponuka"
+	case v.delivery:
+		return "Dodací list"
+	case v.porder:
+		return "Objednávka"
 	}
 	return v.inv.Title()
 }
@@ -82,8 +150,8 @@ func render(v view, sup Supplier) (*sheet, error) {
 		number = "Koncept"
 	}
 	label := v.title() + " " + number
-	if v.quote {
-		label = "Cenová ponuka " + number
+	if v.document() {
+		label = v.title() + " " + number
 	} else if inv.Kind == invoice.KindInvoice {
 		label = "Faktúra " + number
 	}
@@ -118,18 +186,23 @@ func render(v view, sup Supplier) (*sheet, error) {
 		s.panel(fs)
 		s.y += pdf.MM(4)
 	}
-	if !v.quote && !receipt {
+	if !v.document() && !receipt {
 		s.payment(inv, sup)
 	}
 	s.intro(inv)
-	s.lines(inv)
+	s.lines(v)
 	s.below(inv)
 	if len(deductions) > 0 {
 		s.y += pdf.MM(4)
 		s.deductions(inv, deductions)
 	}
-	s.totals(v, len(deductions) > 0, sup)
+	if !v.noPrices {
+		s.totals(v, len(deductions) > 0, sup)
+	}
 	s.notes(v)
+	if v.delivery {
+		s.signs("Odovzdal", firstText(prefixed("Prevzal — ", v.receiver), "Prevzal"))
+	}
 	return s.finish(), nil
 }
 
@@ -140,6 +213,16 @@ func (s *sheet) head(v view, number string, logo []byte) {
 	switch {
 	case v.quote:
 		dates = []field{{"Dátum ponuky", inv.IssueDate.Display()}, {"Platná do", v.validUntil.Display()}}
+	case v.delivery:
+		dates = []field{{"Dátum dodania", inv.DeliveryDate.Display()}}
+		if v.ref != "" {
+			dates = append([]field{{"Objednávka", v.ref}}, dates...)
+		}
+	case v.porder:
+		dates = []field{{"Dátum objednávky", inv.IssueDate.Display()}}
+		if !inv.DueDate.IsZero() {
+			dates = append(dates, field{"Požadované dodanie", inv.DueDate.Display()})
+		}
 	case inv.Kind == invoice.KindAdvanceReceipt:
 		dates = []field{{"Dátum vystavenia", inv.IssueDate.Display()}, {"Dátum prijatia platby", inv.DeliveryDate.Display()}}
 	default:
@@ -230,13 +313,20 @@ func (s *sheet) parties(v view, sup Supplier) {
 	if party.Foreign(c.Country) {
 		custLines = append(custLines, party.CountryName(c.Country))
 	}
-	to := "Odberateľ"
-	if v.quote {
+	from, to := "Dodávateľ", "Odberateľ"
+	switch {
+	case v.quote:
 		to = "Pre"
+	case v.porder:
+		from, to = "Objednávateľ", "Dodávateľ"
 	}
 	custContact := []field{{"E-mail", c.Email}}
 	if p := v.inv.Attention; p != nil {
 		custContact = []field{{"Kontakt", p.Name}, {"Tel.", p.Phone}, {"E-mail", firstText(p.Email, c.Email)}}
+	}
+	placeLabel := "Dodacia adresa"
+	if v.delivery {
+		placeLabel = "Miesto dodania"
 	}
 	var delivery []string
 	if d := v.inv.Delivery; d != nil && !d.IsZero() {
@@ -249,7 +339,7 @@ func (s *sheet) parties(v view, sup Supplier) {
 		}
 	}
 	blocks := []block{
-		{"Dodávateľ", co.Name, addressLines(co.Street, co.Zip, co.City), [][]field{
+		{from, co.Name, addressLines(co.Street, co.Zip, co.City), [][]field{
 			nonEmpty(field{"IČO", co.ICO}, field{"DIČ", co.DIC}, field{"IČ DPH", co.ICDPH}),
 			nonEmpty(field{"Tel.", co.Phone}, field{"E-mail", co.Email}),
 		}, nil},
@@ -299,7 +389,7 @@ func (s *sheet) parties(v view, sup Supplier) {
 		}
 		if len(b.delivery) > 0 {
 			y += pdf.MM(3)
-			s.text(x, y, s.f.Semibold, 8, muted, "Dodacia adresa")
+			s.text(x, y, s.f.Semibold, 8, muted, placeLabel)
 			y += lh(8) + pdf.MM(1)
 			for _, l := range b.delivery {
 				s.text(x, y, s.f.Regular, 9.5, ink, l)
@@ -361,22 +451,28 @@ func dash(v string) string {
 }
 
 // lines: tabuľka položiek; pri zalomení strany sa hlavička zopakuje.
-func (s *sheet) lines(inv invoice.Invoice) {
+func (s *sheet) lines(v view) {
+	inv := v.inv
 	nonVat := inv.NonVATPayer
 	price := "Cena za MJ"
 	total := "Spolu"
-	if !nonVat {
+	if v.porder {
+		price, total = "Cena za MJ bez DPH", "Spolu bez DPH"
+	} else if !nonVat {
 		if inv.PriceMode == vat.PriceGross {
 			price, total = "Cena za MJ s DPH", "Spolu s DPH"
 		} else {
 			price, total = "Cena za MJ bez DPH", "Základ"
 		}
 	}
-	cols := []column{{"Popis", 0, false}, {"Množstvo", pdf.MM(20), true}, {"MJ", pdf.MM(14), false}, {price, pdf.MM(30), true}}
-	if !nonVat {
-		cols = append(cols, column{"DPH", pdf.MM(14), true})
+	cols := []column{{"Popis", 0, false}, {"Množstvo", pdf.MM(20), true}, {"MJ", pdf.MM(14), false}}
+	if !v.noPrices {
+		cols = append(cols, column{price, pdf.MM(30), true})
+		if !nonVat {
+			cols = append(cols, column{"DPH", pdf.MM(14), true})
+		}
+		cols = append(cols, column{total, pdf.MM(26), true})
 	}
-	cols = append(cols, column{total, pdf.MM(26), true})
 	var used float64
 	for _, c := range cols {
 		used += c.w
@@ -391,8 +487,12 @@ func (s *sheet) lines(inv invoice.Invoice) {
 			{l.Description, s.f.Regular, ink},
 			{quantity(l.Quantity), s.f.Regular, ink},
 			{l.Unit, s.f.Regular, ink},
-			{amount(l.UnitPrice), s.f.Regular, ink},
 		}
+		if v.noPrices {
+			t.row(cells, pdf.MM(1.8), true)
+			continue
+		}
+		cells = append(cells, cellText{amount(l.UnitPrice), s.f.Regular, ink})
 		if !nonVat {
 			r := fmt.Sprintf("%d %%", l.Rate)
 			if inv.ReverseCharge {
@@ -475,7 +575,7 @@ func (s *sheet) totals(v view, deducted bool, sup Supplier) {
 		h += lh(9.5) + pdf.MM(3)
 	}
 	code := ""
-	if !v.quote {
+	if !v.document() {
 		code = payCode(inv, sup.Company)
 	}
 	qrSize := pdf.MM(30)
@@ -525,6 +625,10 @@ func (s *sheet) totals(v view, deducted bool, sup Supplier) {
 	switch {
 	case v.quote:
 		label = "Cena spolu"
+	case v.delivery:
+		label = "Spolu"
+	case v.porder:
+		label = "Spolu bez DPH"
 	case inv.Kind == invoice.KindCreditNote:
 		label = "Suma dobropisu"
 	case inv.Kind == invoice.KindAdvanceReceipt:
@@ -618,7 +722,9 @@ func (s *sheet) notes(v view) {
 		c    pdf.Color
 	}
 	var ns []note
-	if inv.NonVATPayer {
+	if v.porder {
+		// objednávka: ceny sú nákupné bez DPH, poznámky o DPH sa netýkajú
+	} else if inv.NonVATPayer {
 		ns = append(ns, note{"Dodávateľ nie je platiteľ DPH.", muted})
 	} else if t := invoice.ExemptionNote(inv.ReverseCharge, inv.Customer, inv.SupplyKind); t != "" {
 		ns = append(ns, note{t, muted})
@@ -628,6 +734,9 @@ func (s *sheet) notes(v view) {
 	}
 	if v.quote {
 		ns = append(ns, note{"Cenová ponuka nie je daňový doklad.", muted})
+	}
+	if v.delivery {
+		ns = append(ns, note{"Dodací list nie je daňový doklad.", muted})
 	}
 	s.y += pdf.MM(8)
 	for _, n := range ns {
@@ -646,4 +755,18 @@ func rateLabel(r vat.RateSummary) string {
 		return "PDP"
 	}
 	return fmt.Sprintf("%d %%", r.Rate)
+}
+
+// signs: čiary na podpisy na konci dokladu.
+func (s *sheet) signs(labels ...string) {
+	s.y += pdf.MM(16)
+	s.ensure(pdf.MM(10))
+	gap := pdf.MM(10)
+	w := (width - gap*float64(len(labels)-1)) / float64(len(labels))
+	for i, l := range labels {
+		x := left + float64(i)*(w+gap)
+		s.p.Line(x, s.y, x+w, s.y, 0.75, ink)
+		s.text(x+(w-s.f.Regular.Width(l, 8))/2, s.y+pdf.MM(1.5), s.f.Regular, 8, muted, l)
+	}
+	s.y += pdf.MM(8)
 }
