@@ -47,7 +47,8 @@ func TestJobWorkAndMaterial(t *testing.T) {
 	// náklad: kábel 25 × 0,80 = 20 zo skladu, istič 3 × 5,50 = 16,50, brigádnik 4 × 12 = 48
 	s := v.Summary
 	if v.Material[0].Cost.String() != "20.00" || v.Material[1].Cost.String() != "16.50" || s.MaterialCost.String() != "36.50" ||
-		s.WorkCost.String() != "48.00" || s.Costs.String() != "84.50" || s.Hours.String() != "10.00" || s.Unbilled.String() != "377.00" {
+		s.WorkCost.String() != "48.00" || s.Costs.String() != "84.50" || s.Hours.String() != "10.00" || s.Unbilled.String() != "377.00" ||
+		s.Reported.String() != "377.00" {
 		t.Fatalf("ekonomika %+v, materiál %+v", s, v.Material)
 	}
 	sv, _ := a.Stock(ctx, c.ID)
@@ -89,7 +90,8 @@ func TestJobWorkAndMaterial(t *testing.T) {
 		t.Fatalf("faktúra %+v / %+v", inv, inv.Lines)
 	}
 	v, _ = a.CrmJob(ctx, c.ID, v.ID)
-	if !v.Work[0].Billed() || v.Work[0].InvoiceNumber != "koncept" || !v.Summary.Unbilled.IsZero() || len(v.Docs) != 1 {
+	if !v.Work[0].Billed() || v.Work[0].InvoiceNumber != "koncept" || !v.Summary.Unbilled.IsZero() || len(v.Docs) != 1 ||
+		v.Summary.Reported.String() != "385.00" || v.Summary.WorkTotal.Add(v.Summary.MaterialTotal).String() != "385.00" {
 		t.Fatalf("po fakturácii %+v %+v", v.Work[0], v.Summary)
 	}
 	if _, err := a.InvoiceCrmJob(ctx, c.ID, v.ID); !fieldErr(err, "work") {

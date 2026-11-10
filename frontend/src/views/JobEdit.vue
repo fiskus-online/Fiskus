@@ -20,6 +20,7 @@ import JobKindDetails from '../components/JobKindDetails.vue'
 import { api } from '../lib/api.js'
 import { can, session } from '../lib/session.js'
 import { formatAmount, formatDate, formatMoney, fromISODate, toISODate } from '../lib/format.js'
+import { printTitle } from '../lib/jobPrint.js'
 import { blankJob, contactAddress, jobForm, jobKinds, jobPayload, jobStatusOf, jobStatuses, marginText, setKind } from '../lib/jobs.js'
 
 const props = defineProps({ id: { type: String, default: '' } })
@@ -117,6 +118,12 @@ async function save() {
   }
 }
 
+// tlač: neuložené zmeny sa najprv uložia, aby boli na papieri
+async function printJob() {
+  if (dirty.value && canWrite.value) await save()
+  if (!dirty.value) router.push(`/zakazky/${job.value.id}/tlac`)
+}
+
 function remove() {
   confirm.require({
     header: 'Zmazať zákazku',
@@ -179,6 +186,7 @@ const newDoc = (path) => {
       <h1>{{ job ? `Zákazka ${job.number}` : 'Nová zákazka' }}</h1>
       <span v-if="status" class="tag" :data-tone="status.tone"><span class="tag-text">{{ status.label }}</span></span>
       <span class="spacer" />
+      <Button v-if="job" :label="printTitle(form.kind)" icon="pi pi-print" text size="small" @click="printJob" />
       <template v-if="canWrite">
         <Button v-if="job" label="Zmazať" severity="danger" text size="small" @click="remove" />
         <Button label="Uložiť" icon="pi pi-check" size="small" :loading="busy" :disabled="job && !dirty" @click="save" />

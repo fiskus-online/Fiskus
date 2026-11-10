@@ -57,6 +57,24 @@ Nová zákazka dostane druh, ktorý ste použili naposledy.
   z výkazu práce (napr. „Výmena bŕzd – BB482KE Škoda Octavia“).
 - Keď zmeníte druh, údaje predchádzajúceho druhu sa pri uložení zahodia.
 
+### Tlač zákazky
+
+Tlačidlo v hlavičke zákazky vytlačí (alebo uloží do PDF) tlačivo podľa druhu:
+
+| Druh | Tlačivo | Podpisy |
+|---|---|---|
+| Autoservis | **zákazkový list** s vozidlom, závadou a poškodeniami pri príjme | vozidlo odovzdal, prevzal servis, po oprave prevzal |
+| Montáž | **montážny protokol** s miestom, montážnikmi a rozsahom prác, miesto na výhrady | za zhotoviteľa, dielo prevzal |
+| Servis zariadenia | **servisný list** so zariadením, výrobným číslom, zárukou a príslušenstvom | zariadenie odovzdal, prevzal servis, po oprave prevzal |
+| Všeobecná | **zákazkový list** | za zhotoviteľa, zákazník |
+
+Na tlačive je výkaz práce a materiál s cenami alebo bez nich (prepínač
+*s cenami*) a súčet. Kým výkaz ešte nič neobsahuje (napríklad pri príjme
+vozidla), sú na tlačive prázdne riadky na ručné doplnenie prác.
+
+![Zákazkový list autoservisu](../obrazky/zakazkovy-list.webp)
+*Zákazkový list autoservisu pri príjme vozidla*
+
 ## Doklady k zákazke
 
 V detaile zákazky sú tlačidlá **Nový doklad k zákazke: Ponuka / Faktúra /

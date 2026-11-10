@@ -38,10 +38,15 @@ type JobSummary struct {
 	Profit   money.Dec `json:"profit"`   // fakturované − náklady
 	// Hours je odpracovaný čas, Unbilled predajná hodnota nevyfakturovanej
 	// práce a materiálu; WorkCost a MaterialCost sú časti nákladov.
-	Hours        money.Dec `json:"hours"`
-	Unbilled     money.Dec `json:"unbilled"`
-	WorkCost     money.Dec `json:"workCost"`
-	MaterialCost money.Dec `json:"materialCost"`
+	Hours    money.Dec `json:"hours"`
+	Unbilled money.Dec `json:"unbilled"`
+	WorkCost money.Dec `json:"workCost"`
+	// WorkTotal a MaterialTotal sú predajné hodnoty celého výkazu práce
+	// a materiálu (aj vyfakturovaného), Reported ich súčet (zákazkový list).
+	WorkTotal     money.Dec `json:"workTotal"`
+	MaterialTotal money.Dec `json:"materialTotal"`
+	Reported      money.Dec `json:"reported"`
+	MaterialCost  money.Dec `json:"materialCost"`
 	// GoodsCost je nákupná cena tovaru zo skladu predaného faktúrami zákazky
 	// (výdajky faktúr mínus vrátenia z dobropisov).
 	GoodsCost money.Dec `json:"goodsCost"`
@@ -134,6 +139,7 @@ func (a *App) jobSummary(ctx context.Context, companyID int64, j *job.Job, vatPa
 		w.Total = w.Amount()
 		s.Hours = s.Hours.Add(w.Hours)
 		s.WorkCost = s.WorkCost.Add(w.Cost())
+		s.WorkTotal = s.WorkTotal.Add(w.Total)
 		if !w.Billed() {
 			s.Unbilled = s.Unbilled.Add(w.Amount())
 		}
@@ -142,10 +148,12 @@ func (a *App) jobSummary(ctx context.Context, companyID int64, j *job.Job, vatPa
 		m := &j.Material[i]
 		m.Total = m.Amount()
 		s.MaterialCost = s.MaterialCost.Add(m.Cost)
+		s.MaterialTotal = s.MaterialTotal.Add(m.Total)
 		if !m.Billed() {
 			s.Unbilled = s.Unbilled.Add(m.Amount())
 		}
 	}
+	s.Reported = s.WorkTotal.Add(s.MaterialTotal)
 	s.GoodsCost = a.goodsCost(ctx, companyID, soldFrom)
 	s.Costs = s.Costs.Add(s.WorkCost).Add(s.MaterialCost).Add(s.GoodsCost)
 	s.Unpaid = s.Gross.Sub(s.Paid)
