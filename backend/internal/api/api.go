@@ -3,6 +3,7 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"io/fs"
@@ -259,6 +260,14 @@ func (s *Server) Handler() http.Handler {
 	need("GET /api/companies/{cid}/reminders", auth.PermInvoicesRead, s.listReminders)
 	need("GET /api/companies/{cid}/reminders/{id}", auth.PermInvoicesRead, s.getReminder)
 	need("GET /api/companies/{cid}/reminders/{id}/email", auth.PermInvoicesRead, s.mailDoc(app.MailReminder))
+	need("GET /api/companies/{cid}/deliveries/{id}/pdf", auth.PermInvoicesRead, s.pdfHandler(func(a *app.App, ctx context.Context, cid, id int64) (app.Document, error) {
+		return a.DeliveryPDF(ctx, cid, id, true)
+	}, fail))
+	need("GET /api/companies/{cid}/purchase-orders/{id}/pdf", auth.PermPurchasesRead, s.pdfHandler((*app.App).POrderPDF, fail))
+	need("GET /api/companies/{cid}/deliveries/{id}/email", auth.PermInvoicesRead, s.mailDoc(app.MailDelivery))
+	need("POST /api/companies/{cid}/deliveries/{id}/email", auth.PermInvoicesWrite, s.mailDoc(app.MailDelivery))
+	need("GET /api/companies/{cid}/purchase-orders/{id}/email", auth.PermPurchasesRead, s.mailDoc(app.MailPOrder))
+	need("POST /api/companies/{cid}/purchase-orders/{id}/email", auth.PermPurchasesWrite, s.mailDoc(app.MailPOrder))
 	need("POST /api/companies/{cid}/reminders/{id}/email", auth.PermInvoicesWrite, s.mailDoc(app.MailReminder))
 	need("GET /api/companies/{cid}/emails", auth.PermInvoicesRead, s.listEmails)
 	need("GET /api/companies/{cid}/einvoice-settings", auth.PermInvoicesRead, s.getEInvoiceSettings)

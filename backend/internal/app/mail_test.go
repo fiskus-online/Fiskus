@@ -11,9 +11,12 @@ import (
 
 	"github.com/fiskus-online/fiskus/backend/internal/audit"
 	"github.com/fiskus-online/fiskus/backend/internal/auth"
+	"github.com/fiskus-online/fiskus/backend/internal/delivery"
 	"github.com/fiskus-online/fiskus/backend/internal/edition"
 	"github.com/fiskus-online/fiskus/backend/internal/invoice"
 	"github.com/fiskus-online/fiskus/backend/internal/mail"
+	"github.com/fiskus-online/fiskus/backend/internal/money"
+	"github.com/fiskus-online/fiskus/backend/internal/porder"
 	"github.com/fiskus-online/fiskus/backend/internal/quote"
 	"github.com/fiskus-online/fiskus/backend/internal/recurring"
 	"github.com/fiskus-online/fiskus/backend/internal/store"
@@ -270,5 +273,62 @@ func TestRecurringSendsMail(t *testing.T) {
 	all, _ := a.Emails(ctx, c.ID, 2026)
 	if len(all) != 1 || all[0].User != "automaticky" {
 		t.Fatalf("zoznam: %+v", all)
+	}
+}
+
+func TestMailDeliveryAndPOrder(t *testing.T) {
+	a, c, f := mailApp(t)
+	if _, err := a.SetMailSettings(ctx, c.ID, smtpOK, false); err != nil {
+		t.Fatal(err)
+	}
+	cust := store.Contact{Name: "Agro s.r.o.", Email: "sklad@agro.sk"}
+	sup := store.Contact{Name: "Elektro Hron s.r.o.", Email: "objednavky@hron.sk", ICO: "46123458"}
+	for _, x := range []*store.Contact{&cust, &sup} {
+		if err := a.Store.SaveContact(ctx, c.ID, x); err != nil {
+			t.Fatal(err)
+		}
+	}
+	d := validDraft()
+	n, err := a.SaveDelivery(ctx, c.ID, delivery.Note{ContactID: cust.ID, Date: invoice.MustDate("2026-11-10"), Lines: d.Lines})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if md, err := a.MailDraft(ctx, c.ID, MailDelivery, n.ID); err != nil || md.Sendable || md.To != "sklad@agro.sk" {
+		t.Fatalf("koncept dodacieho listu: %+v %v", md, err)
+	}
+	if n, err = a.IssueDelivery(ctx, c.ID, n.ID); err != nil {
+		t.Fatal(err)
+	}
+	md, err := a.MailDraft(ctx, c.ID, MailDelivery, n.ID)
+	if err != nil || !md.Sendable || md.Subject != "Dodací list "+n.Number+" – Moja firma" || !strings.Contains(md.Body, "zo dňa 10. 11. 2026") {
+		t.Fatalf("dodací list: %+v %v", md, err)
+	}
+	if _, err := a.SendMail(ctx, c.ID, MailDelivery, n.ID, MailRequest{To: md.To, Body: md.Body}); err != nil {
+		t.Fatal(err)
+	}
+	if att := f.last().Attachments[0]; att.Name != "Dodaci-list-"+n.Number+".pdf" || !bytes.HasPrefix(att.Data, []byte("%PDF-")) {
+		t.Fatalf("príloha %s", att.Name)
+	}
+
+	o, err := a.SavePurchaseOrder(ctx, c.ID, porder.Order{ContactID: sup.ID, Date: invoice.MustDate("2026-11-10"), Expected: invoice.MustDate("2026-11-17"),
+		Lines: []porder.Line{{Name: "Istič B16", Quantity: money.MustParse("10"), UnitPrice: money.MustParse("4.10")}}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	md, err = a.MailDraft(ctx, c.ID, MailPOrder, o.ID)
+	if err != nil || md.To != "objednavky@hron.sk" || !md.Sendable || !strings.Contains(md.Body, "s požadovaným dodaním do 17. 11. 2026") {
+		t.Fatalf("objednávka: %+v %v", md, err)
+	}
+	if _, err := a.SendMail(ctx, c.ID, MailPOrder, o.ID, MailRequest{To: md.To, Subject: md.Subject, Body: md.Body}); err != nil {
+		t.Fatal(err)
+	}
+	if o, _ = a.PurchaseOrder(ctx, c.ID, o.ID); o.Status != porder.Sent {
+		t.Fatalf("po odoslaní e-mailom má byť odoslaná: %s", o.Status)
+	}
+	if f.last().Attachments[0].Name != "Objednavka-"+o.Number+".pdf" {
+		t.Fatalf("príloha %s", f.last().Attachments[0].Name)
+	}
+	if es, _ := a.Emails(ctx, c.ID, 0); len(es) != 2 || es[0].DocKind == "" {
+		t.Fatalf("zoznam e-mailov %+v", es)
 	}
 }

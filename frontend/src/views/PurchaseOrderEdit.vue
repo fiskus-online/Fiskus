@@ -13,6 +13,7 @@ import DatePicker from 'primevue/datepicker'
 import Dialog from 'primevue/dialog'
 import FormField from '../components/FormField.vue'
 import RelatedDocs from '../components/RelatedDocs.vue'
+import SendMailDialog from '../components/SendMailDialog.vue'
 import { api } from '../lib/api.js'
 import { can, session } from '../lib/session.js'
 import { formatAmount, formatDate, formatMoney, fromISODate, toISODate } from '../lib/format.js'
@@ -52,6 +53,15 @@ async function load() {
     form.value = blankPorder(ct, today())
     saved.value = snapshot()
   }
+}
+// e-mail dodávateľovi s PDF; rozpracovaná sa odoslaním označí ako odoslaná
+const mailOpen = ref(false)
+async function openMail() {
+  if (dirty.value && !(await save())) return
+  mailOpen.value = true
+}
+async function mailed() {
+  setOrder(await api.porder(session.companyId, order.value.id))
 }
 function setOrder(o) {
   order.value = o
@@ -180,6 +190,7 @@ const date = (k) => ({
       <span v-if="status" class="tag" :data-tone="status.tone"><span class="tag-text">{{ status.label }}</span></span>
       <span class="spacer" />
       <Button v-if="order" label="Tlač / PDF" icon="pi pi-print" text size="small" @click="print" />
+      <Button v-if="canWrite && order && order.status !== 'cancelled'" label="E-mail" icon="pi pi-envelope" text size="small" @click="openMail" />
       <template v-if="canWrite && order">
         <Button v-if="order.status === 'draft'" label="Zmazať" severity="danger" text size="small" @click="remove" />
         <Button v-else-if="editable" label="Zrušiť" severity="danger" text size="small" @click="cancel" />
@@ -271,6 +282,7 @@ const date = (k) => ({
         <Button label="Zapísať príjem" icon="pi pi-check" size="small" :loading="busy" @click="receive" />
       </template>
     </Dialog>
+    <SendMailDialog v-if="order" v-model:visible="mailOpen" kind="purchase-orders" :id="order.id" @sent="mailed" />
   </div>
 </template>
 

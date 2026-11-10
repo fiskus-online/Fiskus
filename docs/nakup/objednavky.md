@@ -33,8 +33,13 @@ Ak očakávané dodanie prešlo a objednávka je ešte otvorená, je označená
    a poslednú nákupnú cenu z karty produktu. Iný tovar zadáte názvom.
 4. Uložte. Objednávka dostane číslo (OB20260001…).
 
-Tlačidlom **Tlač / PDF** objednávku vytlačíte alebo uložíte ako PDF
-a pošlete dodávateľovi. Potom ju označte tlačidlom **Odoslaná**.
+Tlačidlom **E-mail** pošlete objednávku dodávateľovi s PDF v prílohe;
+adresa sa doplní z adresára. Rozpracovaná objednávka sa odoslaním
+označí ako **odoslaná**. Text správy (aj s požadovaným termínom dodania)
+upravíte v **E-maily → Nastavenie → Texty správ** (záložka *Objednávky*).
+
+Tlačidlom **Tlač / PDF** objednávku vytlačíte alebo uložíte ako PDF;
+ak ju pošlete inak, označte ju tlačidlom **Odoslaná**.
 
 ## Príjem na sklad
 

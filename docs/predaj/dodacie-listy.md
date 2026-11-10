@@ -49,6 +49,11 @@ vráti na sklad.
 **Tlač / PDF** pripraví dodací list na A4 s miestom na podpis *Odovzdal*
 a *Prevzal*. Prepínačom **s cenami** zvolíte, či sa ceny vytlačia.
 
+Vydaný dodací list pošlete odberateľovi tlačidlom **E-mail** – v prílohe
+je PDF s cenami, príjemca sa predvyplní z dokladu alebo z adresára.
+Text správy upravíte v **E-maily → Nastavenie → Texty správ** (záložka
+*Dodacie listy*), odoslané správy sú v zozname e-mailov.
+
 ## Faktúra z dodacích listov
 
 - Z jedného dodacieho listu: tlačidlo **Vyfakturovať** v detaile.

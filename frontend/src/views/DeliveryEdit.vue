@@ -13,6 +13,7 @@ import SelectButton from 'primevue/selectbutton'
 import DatePicker from 'primevue/datepicker'
 import FormField from '../components/FormField.vue'
 import RelatedDocs from '../components/RelatedDocs.vue'
+import SendMailDialog from '../components/SendMailDialog.vue'
 import { api } from '../lib/api.js'
 import { can, session } from '../lib/session.js'
 import { formatAmount, formatMoney, fromISODate, toISODate } from '../lib/format.js'
@@ -139,6 +140,11 @@ async function invoice() {
     busy.value = false
   }
 }
+const mailOpen = ref(false)
+async function openMail() {
+  if (dirty.value && !(await save())) return
+  mailOpen.value = true
+}
 async function print() {
   if ((dirty.value || !note.value) && !(await save())) return
   router.push(`/dodacie-listy/${note.value.id}/tlac`)
@@ -182,6 +188,7 @@ const fresh = computed(() => note.value && !dirty.value)
       <RouterLink v-if="note?.invoiceId" :to="`/faktury/${note.invoiceId}`" class="inv">faktúra {{ note.invoiceNumber }}</RouterLink>
       <span class="spacer" />
       <Button v-if="note" label="Tlač / PDF" icon="pi pi-print" text size="small" @click="print" />
+      <Button v-if="canWrite && (note?.status === 'issued' || note?.status === 'invoiced')" label="E-mail" icon="pi pi-envelope" text size="small" @click="openMail" />
       <template v-if="canWrite && note">
         <Button v-if="note.status === 'draft'" label="Zmazať" severity="danger" text size="small" @click="remove" />
         <Button v-else-if="note.status === 'issued'" label="Stornovať" severity="danger" text size="small" @click="cancel" />
@@ -263,6 +270,7 @@ const fresh = computed(() => note.value && !dirty.value)
     </section>
 
     <RelatedDocs v-if="note" kind="delivery" :id="Number(note.id)" :can-write="canWrite" />
+    <SendMailDialog v-if="note" v-model:visible="mailOpen" kind="deliveries" :id="note.id" />
   </div>
 </template>
 

@@ -6,6 +6,7 @@ import (
 
 	"github.com/fiskus-online/fiskus/backend/internal/auth"
 	"github.com/fiskus-online/fiskus/backend/internal/invoice"
+	"github.com/fiskus-online/fiskus/backend/internal/porder"
 	"github.com/fiskus-online/fiskus/backend/internal/printout"
 	"github.com/fiskus-online/fiskus/backend/internal/store"
 )
@@ -97,4 +98,49 @@ func (a *App) ReminderPDF(ctx context.Context, companyID, id int64) (Document, e
 		return Document{}, err
 	}
 	return Document{Name: printout.FileName("Upomienka", r.Number), Data: data}, nil
+}
+
+// DeliveryPDF vytvorí PDF dodacieho listu (s cenami alebo bez nich).
+func (a *App) DeliveryPDF(ctx context.Context, companyID, id int64, prices bool) (Document, error) {
+	n, err := a.Delivery(ctx, companyID, id)
+	if err != nil {
+		return Document{}, err
+	}
+	sup, err := a.supplier(ctx, companyID)
+	if err != nil {
+		return Document{}, err
+	}
+	data, err := printout.Delivery(n, prices, sup)
+	if err != nil {
+		return Document{}, err
+	}
+	return Document{Name: printout.FileName("Dodaci-list", n.Number), Data: data}, nil
+}
+
+// porderParty vráti dodávateľa objednávky z adresára (adresa, IČO, e-mail),
+// inak iba názov z objednávky.
+func (a *App) porderParty(ctx context.Context, companyID int64, o porder.Order) invoice.Party {
+	if o.ContactID != 0 {
+		if c, err := a.Store.GetContact(ctx, companyID, o.ContactID); err == nil {
+			return PartyFromContact(c)
+		}
+	}
+	return invoice.Party{Name: o.Supplier}
+}
+
+// POrderPDF vytvorí PDF objednávky dodávateľovi.
+func (a *App) POrderPDF(ctx context.Context, companyID, id int64) (Document, error) {
+	o, err := a.PurchaseOrder(ctx, companyID, id)
+	if err != nil {
+		return Document{}, err
+	}
+	sup, err := a.supplier(ctx, companyID)
+	if err != nil {
+		return Document{}, err
+	}
+	data, err := printout.POrder(o, a.porderParty(ctx, companyID, o), sup)
+	if err != nil {
+		return Document{}, err
+	}
+	return Document{Name: printout.FileName("Objednavka", o.Number), Data: data}, nil
 }
