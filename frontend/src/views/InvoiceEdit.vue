@@ -11,6 +11,7 @@ import RelatedDocs from '../components/RelatedDocs.vue'
 import DocPicker from '../components/DocPicker.vue'
 import DatePicker from 'primevue/datepicker'
 import Dialog from 'primevue/dialog'
+import Menu from 'primevue/menu'
 import SelectButton from 'primevue/selectbutton'
 import Select from 'primevue/select'
 import { codes, ratesOn, supplyKindsFor, isForeign, supplyHint, domesticRCOptions, needsCommodity, countries } from '../lib/codes.js'
@@ -29,7 +30,7 @@ import {
 } from '../lib/format.js'
 import { fiskusGridTheme, skGridLocale } from '../lib/grid.js'
 import { addressKindLabel, addressText, contactFromCustomer, customerFromContact, defaultDelivery, defaultPerson, dueDaysFor, filterContacts } from '../lib/contacts.js'
-import { quoteActions, quoteStatusOf, shareInfo, validDays as quoteValidDays } from '../lib/quotes.js'
+import { partDraft, partPayload, partPercent, quoteActions, quoteStatusOf, shareInfo, validDays as quoteValidDays } from '../lib/quotes.js'
 import { firstOfNextMonth, intervals, placeholders, recurringStatusOf } from '../lib/recurring.js'
 import InputNumber from 'primevue/inputnumber'
 import { filterItems, itemFromLine, lineFromItem, sameNameItem } from '../lib/catalog.js'
@@ -784,6 +785,47 @@ function deleteRecurring() {
 // ---- akcie ponuky ----
 // ponuka vyfakturovaná faktúrou, ktorá už existuje (vystavená mimo ponuky)
 const related = ref(null)
+// menej časté akcie ponuky v menu „Viac“
+const quoteMenu = ref(null)
+const quoteMore = computed(() => {
+  const q = inv.value
+  if (!q || !isQuote.value) return []
+  return [
+    qa.value.copy && { label: 'Kópia (nová verzia)', icon: 'pi pi-copy', command: copyQuote },
+    qa.value.renumber && { label: 'Zmeniť číslo', icon: 'pi pi-hashtag', command: openRenumber },
+    ['issued', 'accepted', 'invoiced'].includes(q.status) && { label: 'Dodací list', icon: 'pi pi-truck', command: deliveryFromQuote },
+    qa.value.invoice && { label: 'Už vyfakturovaná…', icon: 'pi pi-link', command: () => (invoicedOpen.value = true) },
+    qa.value.reject && { label: 'Odmietnutá', icon: 'pi pi-thumbs-down', command: () => quoteStep('reject', 'Ponuka označená ako odmietnutá') },
+  ].filter(Boolean)
+})
+// čiastková faktúra k ponuke: množstvá po riadkoch alebo percento
+const partOpen = ref(false)
+const partQty = ref([])
+const partPct = ref('')
+const partError = ref('')
+function openPart() {
+  partQty.value = partDraft(inv.value)
+  partPct.value = ''
+  partError.value = ''
+  partOpen.value = true
+}
+function applyPct() {
+  partQty.value = partPercent(inv.value, partPct.value)
+}
+async function invoicePart() {
+  busy.value = true
+  partError.value = ''
+  try {
+    const created = await api.invoiceQuotePart(session.companyId, inv.value.id, partPayload(partQty.value))
+    partOpen.value = false
+    toast.add({ severity: 'success', summary: 'Koncept čiastkovej faktúry vytvorený', life: 3000 })
+    router.push(`/faktury/${created.id}`)
+  } catch (e) {
+    partError.value = e.fieldMap ? Object.values(e.fieldMap()).join(' ') || e.message : e.message
+  } finally {
+    busy.value = false
+  }
+}
 const invoicedOpen = ref(false)
 const issuedInvoice = (c) => !c.draft
 async function invoicedBy(c) {
@@ -1065,16 +1107,13 @@ const customerFields = reactive([
         <Button label="Vystaviť" icon="pi pi-check" size="small" :disabled="busy" @click="issue" />
       </template>
       <template v-else-if="isQuote && canWrite">
-        <Button v-if="qa.copy" label="Kópia" icon="pi pi-copy" severity="secondary" text size="small" :disabled="busy"
-          v-tooltip.bottom="'Nová verzia ponuky ako koncept'" @click="copyQuote" />
-        <Button v-if="qa.renumber" label="Zmeniť číslo" icon="pi pi-hashtag" severity="secondary" text size="small" :disabled="busy" @click="openRenumber" />
-        <Button v-if="qa.reject" label="Odmietnutá" severity="secondary" text size="small" :disabled="busy" @click="quoteStep('reject', 'Ponuka označená ako odmietnutá')" />
+        <Button v-if="quoteMore.length" label="Viac" icon="pi pi-ellipsis-h" severity="secondary" text size="small" :disabled="busy"
+          aria-haspopup="true" aria-controls="quote-more" @click="(e) => quoteMenu.toggle(e)" />
+        <Menu id="quote-more" ref="quoteMenu" :model="quoteMore" popup />
         <Button v-if="qa.accept" label="Prijatá" icon="pi pi-thumbs-up" severity="secondary" outlined size="small" :disabled="busy" @click="quoteStep('accept', 'Ponuka označená ako prijatá')" />
-        <Button v-if="['issued', 'accepted', 'invoiced'].includes(inv.status)" label="Dodací list" icon="pi pi-truck" severity="secondary" text size="small" :disabled="busy"
-          v-tooltip.bottom="'Koncept dodacieho listu s položkami ponuky'" @click="deliveryFromQuote" />
-        <Button v-if="qa.invoice" label="Už vyfakturovaná…" icon="pi pi-link" severity="secondary" text size="small" :disabled="busy"
-          v-tooltip.bottom="'Ponuka je vyfakturovaná faktúrou, ktorá už existuje'" @click="invoicedOpen = true" />
-        <Button v-if="qa.invoice" label="Vytvoriť faktúru" icon="pi pi-file-export" size="small" :disabled="busy" @click="invoiceQuote" />
+        <Button v-if="qa.invoice" label="Čiastková faktúra…" icon="pi pi-percentage" severity="secondary" outlined size="small" :disabled="busy"
+          v-tooltip.bottom="'Faktúra na časť ponuky — percentom alebo po položkách'" @click="openPart" />
+        <Button v-if="qa.invoice" :label="inv.billed?.length ? 'Faktúra za zvyšok' : 'Vytvoriť faktúru'" icon="pi pi-file-export" size="small" :disabled="busy" @click="invoiceQuote" />
       </template>
       <template v-else-if="!isQuote && canWrite && (inv.status === 'issued' || inv.status === 'paid')">
         <Button v-if="canSettle(inv)" label="Vyúčtovať" icon="pi pi-calculator" size="small" :disabled="busy"
@@ -1721,6 +1760,26 @@ const customerFields = reactive([
       </template>
     </Dialog>
     <SendMailDialog v-if="canMail" v-model:visible="mailOpen" :kind="isQuote ? 'quotes' : 'invoices'" :id="inv.id" />
+    <Dialog v-if="isQuote" v-model:visible="partOpen" modal header="Čiastková faktúra k ponuke" :style="{ width: '600px' }" :breakpoints="{ '760px': '96vw' }">
+      <div class="part-pct">
+        <label for="part-pct">Percento ponuky</label>
+        <InputText id="part-pct" v-model="partPct" size="small" inputmode="decimal" placeholder="napr. 50" @update:model-value="applyPct" />
+        <span class="hint">alebo upravte množstvá po položkách</span>
+      </div>
+      <div class="part-lines">
+        <div v-for="(l, i) in inv.lines" :key="i" class="part-row">
+          <span class="part-name">{{ l.description }}
+            <small class="hint">v ponuke {{ formatQuantity(l.quantity) }} {{ l.unit }}<template v-if="inv.remaining">, zostáva {{ formatQuantity(inv.remaining[i]) }}</template></small></span>
+          <InputText v-model="partQty[i]" size="small" inputmode="decimal" class="part-qty" :aria-label="`Fakturovať ${l.description}`" />
+          <span class="hint">{{ l.unit }}</span>
+        </div>
+      </div>
+      <small v-if="partError" class="err">{{ partError }}</small>
+      <template #footer>
+        <Button label="Zrušiť" severity="secondary" text size="small" @click="partOpen = false" />
+        <Button label="Vytvoriť čiastkovú faktúru" icon="pi pi-check" size="small" :loading="busy" @click="invoicePart" />
+      </template>
+    </Dialog>
     <DocPicker v-if="isQuote" v-model:visible="invoicedOpen" header="Ponuka vyfakturovaná faktúrou" :kinds="['invoice']" :accept="issuedInvoice" @pick="invoicedBy" />
     <Dialog v-if="isQuote" v-model:visible="renumberOpen" modal header="Číslo ponuky" :style="{ width: '22rem' }" :breakpoints="{ '760px': '96vw' }">
       <form id="renumber-form" class="renumber" @submit.prevent="renumber">
@@ -1738,6 +1797,40 @@ const customerFields = reactive([
 </template>
 
 <style scoped>
+.part-pct {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.part-pct :deep(input) {
+  width: 90px;
+  text-align: right;
+}
+.part-lines {
+  display: flex;
+  flex-direction: column;
+}
+.part-row {
+  display: grid;
+  grid-template-columns: 1fr 100px 40px;
+  gap: 8px;
+  align-items: center;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--rule);
+}
+.part-name small {
+  display: block;
+}
+.part-qty {
+  text-align: right;
+}
+.part-pct .hint,
+.part-row .hint {
+  color: var(--ink-faint);
+  font-size: var(--fs-sm);
+}
 .extras .extra {
   margin-bottom: 8px;
 }

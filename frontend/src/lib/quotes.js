@@ -10,6 +10,7 @@ const STATES = {
 
 /** Stav ponuky vrátane uplynutej platnosti (backend posiela `expired`). */
 export function quoteStatusOf(q) {
+  if (q.billed?.length && q.status !== 'invoiced') return { label: `Čiastočne vyfakturovaná (${q.billed.length})`, tone: 'issued' }
   if (q.expired) return { label: 'Po platnosti', tone: 'overdue' }
   return STATES[q.status] ?? { label: q.status, tone: 'draft' }
 }
@@ -21,12 +22,36 @@ export function quoteActions(q) {
     edit: s === 'draft',
     issue: s === 'draft',
     accept: s === 'issued' || s === 'rejected',
-    reject: s === 'issued' || s === 'accepted',
+    reject: (s === 'issued' || s === 'accepted') && !q?.billed?.length,
     invoice: s === 'issued' || s === 'accepted',
     copy: !!q?.id,
     renumber: !!q?.id && s !== 'draft', // číslo vystavenej ponuky (napr. po prenose)
   }
 }
+
+/** Čiastková faktúra: zostatky riadkov ako text do formulára (server posiela remaining). */
+export function partDraft(q) {
+  return (q.lines ?? []).map((l, i) => {
+    const left = Number(q.remaining?.[i] ?? l.quantity)
+    return left ? String(left) : ''
+  })
+}
+
+/** Množstvá pre zadané percento ponuky (nie viac, ako zostáva), na 4 desatinné miesta. */
+export function partPercent(q, pct) {
+  const p = Number(String(pct).replace(',', '.'))
+  return (q.lines ?? []).map((l, i) => {
+    const qty = Number(l.quantity)
+    const left = Number(q.remaining?.[i] ?? l.quantity)
+    if (!p || !left) return ''
+    let v = Math.round(((qty * p) / 100) * 10000) / 10000
+    if (Math.abs(v) > Math.abs(left)) v = left
+    return v ? String(v) : ''
+  })
+}
+
+/** Telo čiastkovej faktúry (prázdne = 0). */
+export const partPayload = (qty) => ({ quantity: qty.map((x) => String(x ?? '').replace(/\s/g, '').replace(',', '.') || '0') })
 
 /** Filtre zoznamu ponúk. */
 export const quoteViews = [

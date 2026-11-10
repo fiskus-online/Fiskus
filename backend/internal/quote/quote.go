@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/fiskus-online/fiskus/backend/internal/invoice"
+	"github.com/fiskus-online/fiskus/backend/internal/money"
 	"github.com/fiskus-online/fiskus/backend/internal/vat"
 )
 
@@ -51,6 +52,17 @@ type Quote struct {
 	InvoiceNumber string `json:"invoiceNumber"`
 	// Share je odkaz pre zákazníka (prijatie ponuky online); nil = nezdieľaná.
 	Share *Share `json:"share,omitempty"`
+	// Billed sú čiastkové faktúry: koľko z ktorého riadku už bolo
+	// vyfakturované. Remaining je zostatok riadkov (dopĺňa aplikácia).
+	Billed    []Billing   `json:"billed,omitempty"`
+	Remaining []money.Dec `json:"remaining,omitempty"`
+}
+
+// Billing je čiastková faktúra k ponuke: množstvá po riadkoch ponuky.
+type Billing struct {
+	InvoiceID     int64       `json:"invoiceId"`
+	InvoiceNumber string      `json:"invoiceNumber"`
+	Quantity      []money.Dec `json:"quantity"`
 }
 
 var (
@@ -122,8 +134,94 @@ func (q *Quote) Editable() bool { return q.Status == "" || q.Status == StatusDra
 
 // Amendable: vystavenú ponuku (aj prijatú či odmietnutú) možno upraviť,
 // kým nie je vyfakturovaná — číslo a stav ostanú. Ponuka nie je daňový doklad.
+// Po čiastkovej faktúre sa ponuka už nemení (faktúry sa odvolávajú na jej riadky).
 func (q *Quote) Amendable() bool {
-	return q.Status == StatusIssued || q.Status == StatusAccepted || q.Status == StatusRejected
+	return (q.Status == StatusIssued || q.Status == StatusAccepted || q.Status == StatusRejected) && len(q.Billed) == 0
+}
+
+// Left vráti zostatok riadkov na fakturáciu (množstvo mínus čiastkové faktúry).
+func (q *Quote) Left() []money.Dec {
+	out := make([]money.Dec, len(q.Lines))
+	for i, l := range q.Lines {
+		out[i] = l.Quantity
+	}
+	for _, b := range q.Billed {
+		for i, x := range b.Quantity {
+			if i < len(out) {
+				out[i] = out[i].Sub(x)
+			}
+		}
+	}
+	return out
+}
+
+// ErrPart je chyba čiastkovej fakturácie.
+type ErrPart string
+
+func (e ErrPart) Error() string { return string(e) }
+
+// BillPart zapíše čiastkovú faktúru s množstvami po riadkoch. Množstvo
+// nesmie prekročiť zostatok (pri zápornom riadku – zľave – platí to isté
+// v absolútnej hodnote a so znamienkom riadku). Keď je všetko
+// vyfakturované, ponuka prejde do stavu vyfakturovaná.
+func (q *Quote) BillPart(invoiceID int64, qty []money.Dec) error {
+	if !q.Invoiceable() {
+		return ErrBadTransition
+	}
+	if len(qty) != len(q.Lines) {
+		return ErrPart("Počet množstiev nesedí s položkami ponuky")
+	}
+	left := q.Left()
+	any := false
+	for i, x := range qty {
+		if x.IsZero() {
+			continue
+		}
+		if x.Sign() != q.Lines[i].Quantity.Sign() || x.Abs().Cmp(left[i].Abs()) > 0 || left[i].Sign() != q.Lines[i].Quantity.Sign() {
+			return ErrPart("Položka " + q.Lines[i].Description + ": najviac " + left[i].String() + " " + q.Lines[i].Unit)
+		}
+		any = true
+	}
+	if !any {
+		return ErrPart("Zadajte, čo sa má fakturovať")
+	}
+	q.Billed = append(q.Billed, Billing{InvoiceID: invoiceID, Quantity: append([]money.Dec(nil), qty...)})
+	done := true
+	for _, x := range q.Left() {
+		if !x.IsZero() {
+			done = false
+		}
+	}
+	if done {
+		q.Status, q.InvoiceID = StatusInvoiced, invoiceID
+	}
+	return nil
+}
+
+// ReleaseParts vyradí čiastkové faktúry, ktoré už neplatia (zmazaný
+// koncept, storno). Ak tým vznikne zostatok, vyfakturovaná ponuka sa vráti
+// medzi prijaté. Vráti true pri zmene.
+func (q *Quote) ReleaseParts(valid func(invoiceID int64) bool) bool {
+	if len(q.Billed) == 0 {
+		return false
+	}
+	kept := q.Billed[:0]
+	changed := false
+	for _, b := range q.Billed {
+		if valid(b.InvoiceID) {
+			kept = append(kept, b)
+		} else {
+			changed = true
+		}
+	}
+	q.Billed = kept
+	if len(q.Billed) == 0 {
+		q.Billed = nil
+	}
+	if changed && q.Status == StatusInvoiced {
+		q.Status, q.InvoiceID, q.InvoiceNumber = StatusAccepted, 0, ""
+	}
+	return changed
 }
 
 // Issue vystaví koncept: pridelí číslo a uzamkne ho.
@@ -152,7 +250,7 @@ func (q *Quote) Accept() error {
 
 // Reject označí ponuku ako odmietnutú.
 func (q *Quote) Reject() error {
-	if q.Status != StatusIssued && q.Status != StatusAccepted {
+	if (q.Status != StatusIssued && q.Status != StatusAccepted) || len(q.Billed) > 0 { // čiastočne vyfakturovaná sa neodmieta
 		return ErrBadTransition
 	}
 	q.Status = StatusRejected

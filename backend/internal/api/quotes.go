@@ -3,6 +3,7 @@ package api
 import (
 	"errors"
 	"github.com/fiskus-online/fiskus/backend/internal/app"
+	"github.com/fiskus-online/fiskus/backend/internal/money"
 	"net/http"
 	"strconv"
 
@@ -174,6 +175,27 @@ func (s *Server) invoiceQuote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	inv, err := s.App.InvoiceQuote(r.Context(), cid, id)
+	if err != nil {
+		failQuote(w, err)
+		return
+	}
+	writeJSON(w, http.StatusCreated, inv)
+}
+
+// invoiceQuotePart: POST /quotes/{id}/invoice-part {quantity} — čiastková faktúra.
+func (s *Server) invoiceQuotePart(w http.ResponseWriter, r *http.Request) {
+	cid, _ := pathID(w, r, "cid")
+	id, ok := pathID(w, r, "id")
+	if !ok {
+		return
+	}
+	var body struct {
+		Quantity []money.Dec `json:"quantity"`
+	}
+	if !decodeLoose(w, r, &body) {
+		return
+	}
+	inv, err := s.App.InvoiceQuotePart(r.Context(), cid, id, body.Quantity)
 	if err != nil {
 		failQuote(w, err)
 		return
