@@ -280,6 +280,7 @@ const fmtShort = (iso) => {
   /* farby druhov termínov */
   --k-tax: var(--blue-deep);
   --k-own: var(--blue);
+  --k-task: var(--ink);
   --k-pay: var(--tone-draft);
   --k-receive: var(--tone-paid);
   --k-recurring: var(--ink-faint);
@@ -314,6 +315,7 @@ const fmtShort = (iso) => {
 }
 .k-tax { --k: var(--k-tax); }
 .k-own { --k: var(--k-own); }
+.k-task { --k: var(--k-task); }
 .k-pay { --k: var(--k-pay); }
 .k-receive { --k: var(--k-receive); }
 .k-recurring { --k: var(--k-recurring); }

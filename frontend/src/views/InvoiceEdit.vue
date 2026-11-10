@@ -12,6 +12,7 @@ import DocPicker from '../components/DocPicker.vue'
 import DatePicker from 'primevue/datepicker'
 import Dialog from 'primevue/dialog'
 import Menu from 'primevue/menu'
+import ActivityPanel from '../components/ActivityPanel.vue'
 import SelectButton from 'primevue/selectbutton'
 import Select from 'primevue/select'
 import { codes, ratesOn, supplyKindsFor, isForeign, supplyHint, domesticRCOptions, needsCommodity, countries } from '../lib/codes.js'
@@ -1588,6 +1589,7 @@ const customerFields = reactive([
         </fieldset>
 
         <RelatedDocs v-if="inv.id && !isRecurring" ref="related" :kind="isQuote ? 'quote' : 'invoice'" :id="Number(inv.id)" :can-write="canWrite" />
+        <ActivityPanel v-if="isQuote && inv.id" :quote-id="Number(inv.id)" :can-write="canWrite" />
 
         <fieldset v-if="isRecurring && inv.id" class="block">
           <legend>Vytvorené faktúry <span class="muted">{{ inv.generated || 0 }}</span></legend>

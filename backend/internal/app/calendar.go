@@ -90,6 +90,13 @@ func (a *App) Calendar(ctx context.Context, companyID int64, from, to invoice.Da
 			return CalendarView{}, err
 		}
 		add(es...)
+		if !household {
+			ts, err := a.taskEvents(ctx, companyID, to, today)
+			if err != nil {
+				return CalendarView{}, err
+			}
+			add(ts...)
+		}
 	}
 	if can(auth.PermPurchasesRead) {
 		ps, err := a.Store.ListPurchases(ctx, companyID, store.PurchaseFilter{})

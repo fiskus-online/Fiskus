@@ -9,6 +9,7 @@ package store
 import (
 	"context"
 	"errors"
+	"github.com/fiskus-online/fiskus/backend/internal/activity"
 	"github.com/fiskus-online/fiskus/backend/internal/delivery"
 	"github.com/fiskus-online/fiskus/backend/internal/forms"
 	"github.com/fiskus-online/fiskus/backend/internal/job"
@@ -450,6 +451,13 @@ type Store interface {
 	GetDelivery(ctx context.Context, companyID, id int64) (delivery.Note, error)
 	SaveDelivery(ctx context.Context, companyID int64, n *delivery.Note) error
 	DeleteDelivery(ctx context.Context, companyID, id int64) error
+
+	// CRM aktivity (activity): poznámky, telefonáty a úlohy firmy,
+	// najnovšie (podľa dátumu, potom ID) prvé.
+	ListActivities(ctx context.Context, companyID int64) ([]activity.Activity, error)
+	GetActivity(ctx context.Context, companyID, id int64) (activity.Activity, error)
+	SaveActivity(ctx context.Context, companyID int64, a *activity.Activity) error
+	DeleteActivity(ctx context.Context, companyID, id int64) error
 
 	// ListRecurring vráti šablóny pravidelnej fakturácie firmy zoradené podľa ID.
 	ListRecurring(ctx context.Context, companyID int64) ([]recurring.Template, error)

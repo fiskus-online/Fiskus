@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/fiskus-online/fiskus/backend/internal/activity"
 	"github.com/fiskus-online/fiskus/backend/internal/app"
 	"github.com/fiskus-online/fiskus/backend/internal/asset"
 	"github.com/fiskus-online/fiskus/backend/internal/auth"
@@ -938,6 +939,16 @@ func seedStock(ctx context.Context, a *app.App, c store.Company, contactIDs []in
 			if _, err := a.LinkDocs(ctx, c.ID, link.Ref{Kind: link.Job, ID: j.ID}, link.Ref{Kind: link.Delivery, ID: n.ID}); err != nil {
 				return err
 			}
+		}
+	}
+	// CRM: telefonát a úlohy k zákazke
+	for _, x := range []activity.Activity{
+		{Kind: activity.Call, Text: "Ing. Hrnčiar potvrdil odstávku dopravníka na stredu od 6:00.", Date: day(5), JobID: j.ID},
+		{Kind: activity.Task, Text: "Poslať fotodokumentáciu zapojenia", Date: day(3), Due: day(1), JobID: j.ID},
+		{Kind: activity.Task, Text: "Dohodnúť revíziu rozvádzača", Date: day(2), Due: day(-4), JobID: j.ID},
+	} {
+		if _, err := a.SaveActivity(ctx, c.ID, x); err != nil {
+			return err
 		}
 	}
 	return nil
