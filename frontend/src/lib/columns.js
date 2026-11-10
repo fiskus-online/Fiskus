@@ -14,6 +14,7 @@ import { plain } from './richtext.js'
 import { jobStatusOf, marginText } from './jobs.js'
 import { porderStatusOf } from './porders.js'
 import { deliveryStatusOf } from './deliveries.js'
+import { salesOrderStatusOf } from './sorders.js'
 import { kindLabel as calendarKind, repeatLabel, stateOf } from './calendar.js'
 import { docKindLabel, emailStatus } from './emails.js'
 import { addressText, personsText } from './contacts.js'
@@ -585,6 +586,8 @@ export const stockCardColumns = [
   money('Hodnota', (r) => r.value),
   num('Minimum', (r) => r.min),
   t('Pod minimom', (r) => yes(r.low), 10),
+  num('Rezervované', (r) => r.reserved ?? 0),
+  num('Voľné', (r) => r.free ?? r.quantity),
 ]
 
 /** Skladové doklady — riadky z lib/stock.js docRows. */
@@ -786,6 +789,7 @@ export const reorderColumns = [
   t('Kód dodávateľa', (r) => r.supplierCode, 14),
   { header: 'Minimum', value: (r) => Number(r.min), type: 'number', width: 10 },
   { header: 'Na sklade', value: (r) => Number(r.stock), type: 'number', width: 10 },
+  { header: 'Rezervované', value: (r) => Number(r.reserved ?? 0), type: 'number', width: 10 },
   { header: 'Objednané', value: (r) => Number(r.onOrder), type: 'number', width: 10 },
   { header: 'Objednať', value: (r) => Number(r.suggested), type: 'number', width: 10 },
   t('MJ', (r) => r.unit, 6),
@@ -805,6 +809,21 @@ export const deliveryColumns = [
   money('Základ', (r) => r.summary?.base),
   money('Spolu', (r) => r.summary?.total),
   t('Prevzal', (r) => r.receiver, 18),
+]
+
+// Prijaté objednávky od zákazníkov
+export const salesOrderColumns = [
+  t('Číslo', (r) => r.number, 12),
+  t('Odberateľ', (r) => r.customer?.name, 30),
+  t('IČO', (r) => r.customer?.ico, 10),
+  date('Prijatá', (r) => r.date),
+  date('Dodať do', (r) => r.due),
+  t('Číslo u zákazníka', (r) => r.ref, 16),
+  t('Stav', (r) => salesOrderStatusOf(r).label, 16),
+  t('Dodané doklady', (r) => (r.fulfils ?? []).map((f) => f.number).join(', '), 24),
+  money('Základ', (r) => r.summary?.base),
+  money('Spolu', (r) => r.summary?.total),
+  t('Miesto dodania', (r) => r.place, 24),
 ]
 
 // Ziskovosť zákaziek podľa zákazníka

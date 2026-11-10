@@ -15,6 +15,7 @@ import (
 	"github.com/fiskus-online/fiskus/backend/internal/job"
 	"github.com/fiskus-online/fiskus/backend/internal/link"
 	"github.com/fiskus-online/fiskus/backend/internal/porder"
+	"github.com/fiskus-online/fiskus/backend/internal/sorder"
 	"time"
 
 	"github.com/fiskus-online/fiskus/backend/internal/asset"
@@ -451,6 +452,13 @@ type Store interface {
 	GetDelivery(ctx context.Context, companyID, id int64) (delivery.Note, error)
 	SaveDelivery(ctx context.Context, companyID int64, n *delivery.Note) error
 	DeleteDelivery(ctx context.Context, companyID, id int64) error
+
+	// Prijaté objednávky od zákazníkov (sorder). Číslo je vo firme
+	// jedinečné (ErrDuplicate).
+	ListSalesOrders(ctx context.Context, companyID int64) ([]sorder.Order, error)
+	GetSalesOrder(ctx context.Context, companyID, id int64) (sorder.Order, error)
+	SaveSalesOrder(ctx context.Context, companyID int64, o *sorder.Order) error
+	DeleteSalesOrder(ctx context.Context, companyID, id int64) error
 
 	// CRM aktivity (activity): poznámky, telefonáty a úlohy firmy,
 	// najnovšie (podľa dátumu, potom ID) prvé.

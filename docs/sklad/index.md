@@ -65,6 +65,7 @@ Položku s pohybmi nemožno zo skladu vyradiť.
 | Dobropis | príjem vrátenej zásoby ocenený priemernou cenou |
 | Prijatá faktúra | príjemka k nej jedným tlačidlom |
 | Vydaný [dodací list](../predaj/dodacie-listy.md) | výdajka (storno dodacieho listu ju zruší) |
+| [Prijatá objednávka](../predaj/prijate-objednavky.md) | rezervácia: zvyšok na dodanie sa odpočíta od voľného množstva |
 | Príjem z [objednávky](../nakup/objednavky.md) | príjemka v nákupnej cene z objednávky |
 | Materiál na [zákazke](../predaj/zakazky.md#material) | výdajka zákazky (upravuje sa so zákazkou) |
 | Objednávka z e-shopu | výdajka |

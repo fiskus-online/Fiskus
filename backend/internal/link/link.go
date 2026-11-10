@@ -20,10 +20,11 @@ const (
 	Job      Kind = "job"      // zákazka (internal/job)
 	POrder   Kind = "porder"   // objednávka dodávateľovi (internal/porder)
 	Delivery Kind = "delivery" // dodací list (internal/delivery)
+	SOrder   Kind = "sorder"   // prijatá objednávka (internal/sorder)
 )
 
 // Kinds sú druhy, ktoré sa dajú prepojiť.
-var Kinds = []Kind{Invoice, Quote, Purchase, Form, Job, POrder, Delivery}
+var Kinds = []Kind{Invoice, Quote, Purchase, Form, Job, POrder, Delivery, SOrder}
 
 // Known: je druh podporovaný?
 func (k Kind) Known() bool {

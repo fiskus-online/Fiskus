@@ -36,6 +36,8 @@ import PurchaseOrders from './views/PurchaseOrders.vue'
 import Deliveries from './views/Deliveries.vue'
 import DeliveryEdit from './views/DeliveryEdit.vue'
 import DeliveryPrint from './views/DeliveryPrint.vue'
+import SalesOrders from './views/SalesOrders.vue'
+import SalesOrderEdit from './views/SalesOrderEdit.vue'
 import PurchaseOrderEdit from './views/PurchaseOrderEdit.vue'
 import PurchaseOrderPrint from './views/PurchaseOrderPrint.vue'
 import RecurringList from './views/RecurringList.vue'
@@ -86,6 +88,7 @@ export const modules = [
     items: [
       { path: '/faktury', label: 'Vydané faktúry', icon: 'pi-file-export', ready: true, perm: 'invoices.read' },
       { path: '/zakazky', label: 'Zákazky', icon: 'pi-folder-open', ready: true, perm: 'invoices.read', biz: true },
+      { path: '/prijate-objednavky', label: 'Prijaté objednávky', icon: 'pi-inbox', ready: true, perm: 'invoices.read', biz: true },
       { path: '/dodacie-listy', label: 'Dodacie listy', icon: 'pi-truck', ready: true, perm: 'invoices.read', biz: true },
       { path: '/ponuky', label: 'Cenové ponuky', icon: 'pi-file-edit', ready: true, perm: 'invoices.read' },
       { path: '/pravidelne', label: 'Pravidelná fakturácia', icon: 'pi-replay', ready: true, perm: 'invoices.read' },
@@ -170,6 +173,9 @@ export const router = createRouter({
     { path: '/faktury/:id(\\d+)', component: InvoiceEdit, props: true, meta: { title: 'Faktúra', perm: 'invoices.read' } },
     { path: '/faktury/:id(\\d+)/tlac', component: InvoicePrint, props: true, meta: { title: 'Faktúra', bare: true, perm: 'invoices.read' } },
     { path: '/ponuky', component: QuoteList, meta: { title: 'Cenové ponuky', perm: 'invoices.read' } },
+    { path: '/prijate-objednavky', component: SalesOrders, meta: { title: 'Prijaté objednávky', perm: 'invoices.read' } },
+    { path: '/prijate-objednavky/nova', component: SalesOrderEdit, meta: { title: 'Nová objednávka', perm: 'invoices.write' } },
+    { path: '/prijate-objednavky/:id(\\d+)', component: SalesOrderEdit, props: true, meta: { title: 'Prijatá objednávka', perm: 'invoices.read' } },
     { path: '/dodacie-listy', component: Deliveries, meta: { title: 'Dodacie listy', perm: 'invoices.read' } },
     { path: '/dodacie-listy/novy', component: DeliveryEdit, meta: { title: 'Nový dodací list', perm: 'invoices.write' } },
     { path: '/dodacie-listy/:id(\\d+)', component: DeliveryEdit, props: true, meta: { title: 'Dodací list', perm: 'invoices.read' } },

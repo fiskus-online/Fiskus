@@ -407,6 +407,15 @@ export const api = {
   invoiceDeliveries: (cid, ids) => request('POST', `/api/companies/${cid}/deliveries/invoice`, { ids }),
   invoiceQuotePart: (cid, id, body) => request('POST', `/api/companies/${cid}/quotes/${id}/invoice-part`, body),
   deliveryFromQuote: (cid, quoteId) => request('POST', `/api/companies/${cid}/quotes/${quoteId}/delivery`),
+  // prijaté objednávky od zákazníkov
+  salesOrders: (cid) => request('GET', `/api/companies/${cid}/sales-orders`),
+  salesOrder: (cid, id) => request('GET', `/api/companies/${cid}/sales-orders/${id}`),
+  saveSalesOrder: (cid, o, id) =>
+    id ? request('PUT', `/api/companies/${cid}/sales-orders/${id}`, o) : request('POST', `/api/companies/${cid}/sales-orders`, o),
+  deleteSalesOrder: (cid, id) => request('DELETE', `/api/companies/${cid}/sales-orders/${id}`),
+  salesOrderAction: (cid, id, action) => request('POST', `/api/companies/${cid}/sales-orders/${id}/${action}`),
+  fulfilSalesOrder: (cid, id, body) => request('POST', `/api/companies/${cid}/sales-orders/${id}/fulfil`, body),
+  salesOrderFromQuote: (cid, quoteId) => request('POST', `/api/companies/${cid}/quotes/${quoteId}/sales-order`),
   porders: (cid) => request('GET', `/api/companies/${cid}/purchase-orders`),
   porder: (cid, id) => request('GET', `/api/companies/${cid}/purchase-orders/${id}`),
   savePorder: (cid, o, id) =>
