@@ -2,7 +2,7 @@
 // Sklad: zásoby na kartách (vážený aritmetický priemer), skladové doklady
 // a nastavenie skladov a skladových položiek. Ocenenie počíta server.
 import { computed, onMounted, ref, watch } from 'vue'
-import { RouterLink, useRouter } from 'vue-router'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
 import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
 import Textarea from 'primevue/textarea'
@@ -17,6 +17,7 @@ import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
 import FormField from '../components/FormField.vue'
 import ExportButton from '../components/ExportButton.vue'
+import ReorderPanel from '../components/ReorderPanel.vue'
 import { api, ApiError } from '../lib/api.js'
 import { can, session } from '../lib/session.js'
 import { formatAmount, formatDate, formatMoney, fromISODate, toISODate } from '../lib/format.js'
@@ -30,12 +31,14 @@ const confirm = useConfirm()
 const canWrite = computed(() => can('purchases.write'))
 
 const v = ref(null)
-const tab = ref('cards')
 const tabs = [
   { value: 'cards', label: 'Zásoby' },
   { value: 'docs', label: 'Doklady' },
+  { value: 'reorder', label: 'Na objednanie' },
   { value: 'setup', label: 'Nastavenie' },
 ]
+const route = useRoute()
+const tab = ref(tabs.some((t) => t.value === route.query.tab) ? route.query.tab : 'cards')
 const search = ref('')
 const warehouse = ref('all')
 const low = ref(false)
@@ -58,6 +61,7 @@ const wh = computed(() => (warehouse.value === 'all' ? '' : warehouse.value))
 const cards = computed(() => (v.value ? filterCards(v.value.cards, { search: search.value, warehouse: wh.value, low: low.value }) : []))
 const docs = computed(() => (v.value ? filterDocs(v.value.docs, { search: search.value, kind: kind.value === 'all' ? '' : kind.value, warehouse: wh.value }) : []))
 const exportDocs = () => docRows(docs.value)
+const autoTag = (d) => ({ job: 'zo zákazky', order: 'z e-shopu' })[d.linkKind] ?? 'z faktúry'
 const lowCount = computed(() => (v.value?.cards ?? []).filter((c) => c.low).length)
 const qty = (c) => `${formatAmount(c.quantity).replace(/,00$/, '')} ${c.unit}`
 const multi = computed(() => (v.value?.warehouses.length ?? 0) > 1)
@@ -279,10 +283,10 @@ async function revokeFeed() {
       <section class="summary" aria-label="Súhrn skladu">
         <div class="cell"><span class="label">Hodnota zásob</span><span class="value"><span class="grand">{{ formatMoney(v.value) }}</span></span></div>
         <div class="cell"><span class="label">Skladové položky</span><span class="value">{{ v.items.length }}</span></div>
-        <div class="cell">
+        <button class="cell link" :disabled="!lowCount" @click="tab = 'reorder'">
           <span class="label">Pod minimom</span>
           <span class="value" :class="{ bad: lowCount }">{{ lowCount }}</span>
-        </div>
+        </button>
         <div class="cell"><span class="label">Ocenenie</span><span class="value small">{{ methodLabel }}</span></div>
       </section>
 
@@ -296,7 +300,9 @@ async function revokeFeed() {
         Pri vystavení faktúry s takou položkou (vloženou z cenníka) sa výdajka vytvorí sama.
       </p>
 
-      <template v-if="tab !== 'setup'">
+      <ReorderPanel v-if="tab === 'reorder'" />
+
+      <template v-else-if="tab !== 'setup'">
         <div class="toolbar">
           <IconField class="search">
             <InputIcon class="pi pi-search" />
@@ -341,7 +347,8 @@ async function revokeFeed() {
                 <td class="date">{{ formatDate(d.date) }}</td>
                 <td>
                   <b>{{ d.number }}</b> <span class="kind">{{ docLabel(d) }}<template v-if="multi"> · {{ d.warehouse }}<template v-if="d.to"> → {{ d.to }}</template></template></span>
-                  <span v-if="d.auto" class="tag">z faktúry</span>
+                  <span v-if="d.auto" class="tag">{{ autoTag(d) }}</span>
+                  <span v-else-if="d.linkKind === 'porder'" class="tag">z objednávky</span>
                 </td>
                 <td class="text">
                   {{ [d.partner, d.linkNumber].filter(Boolean).join(' · ') }}
@@ -539,6 +546,22 @@ async function revokeFeed() {
 }
 .cell:last-child {
   border-right: 0;
+}
+button.cell {
+  border-top: 0;
+  border-bottom: 0;
+  border-left: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+button.cell:hover:not(:disabled) {
+  background: var(--blue-wash);
+}
+button.cell:disabled {
+  cursor: default;
 }
 .label {
   font-size: var(--fs-sm);

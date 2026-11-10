@@ -346,8 +346,17 @@ func (a *App) checkStockDoc(ctx context.Context, companyID int64, cfg StockConfi
 			if d.Partner == "" {
 				d.Partner = p.Supplier.Name
 			}
+		case porderStockLink:
+			o, err := a.Store.GetPurchaseOrder(ctx, companyID, d.LinkID)
+			if err != nil {
+				return mfaFieldErr("linkId", "Objednávka neexistuje")
+			}
+			d.LinkNumber = o.Number
+			if d.Partner == "" {
+				d.Partner = o.Supplier
+			}
 		default:
-			return mfaFieldErr("linkKind", "Skladový doklad sa ručne viaže iba na prijatú faktúru")
+			return mfaFieldErr("linkKind", "Skladový doklad sa ručne viaže iba na prijatú faktúru alebo objednávku")
 		}
 	}
 	for i := range d.Lines {

@@ -64,6 +64,7 @@ Položku s pohybmi nemožno zo skladu vyradiť.
 | Vystavená faktúra so skladovou položkou | výdajka zo skladu (upravuje sa s faktúrou) |
 | Dobropis | príjem vrátenej zásoby ocenený priemernou cenou |
 | Prijatá faktúra | príjemka k nej jedným tlačidlom |
+| Príjem z [objednávky](../nakup/objednavky.md) | príjemka v nákupnej cene z objednávky |
 | Materiál na [zákazke](../predaj/zakazky.md#material) | výdajka zákazky (upravuje sa so zákazkou) |
 | Objednávka z e-shopu | výdajka |
 | Výkaz o majetku a záväzkoch (JÚ) | hodnota zásob |

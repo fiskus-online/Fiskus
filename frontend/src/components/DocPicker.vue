@@ -44,6 +44,7 @@ async function load(k) {
     else if (k === 'quote') rows = candidates(k, await api.quotes(cid))
     else if (k === 'purchase') rows = candidates(k, await api.purchases(cid, {}))
     else if (k === 'job') rows = candidates(k, await api.jobs(cid))
+    else if (k === 'porder') rows = candidates(k, await api.porders(cid))
     else if (k === 'form') {
       const [docs, cat] = await Promise.all([api.formDocs(cid), api.forms(cid)])
       rows = candidates(k, docs, cat.forms)

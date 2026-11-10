@@ -38,14 +38,14 @@ type LinkedDoc struct {
 
 // zákazky číta a mení každý, kto číta a mení faktúry
 func linkReadPerm(k link.Kind) auth.Perm {
-	if k == link.Purchase {
+	if k == link.Purchase || k == link.POrder {
 		return auth.PermPurchasesRead
 	}
 	return auth.PermInvoicesRead
 }
 
 func linkWritePerm(k link.Kind) auth.Perm {
-	if k == link.Purchase {
+	if k == link.Purchase || k == link.POrder {
 		return auth.PermPurchasesWrite
 	}
 	return auth.PermInvoicesWrite
@@ -129,6 +129,13 @@ func (a *App) docInfo(ctx context.Context, companyID int64, r link.Ref) (LinkedD
 			d.Partner = j.Customer + " — " + j.Name
 		}
 		d.Total, d.Currency, d.Status = j.Budget, "EUR", string(j.Status)
+	case link.POrder:
+		o, err := a.Store.GetPurchaseOrder(ctx, companyID, r.ID)
+		if err != nil {
+			return d, err
+		}
+		d.Type, d.Number, d.Partner, d.Date = "Objednávka", o.Number, o.Supplier, o.Date
+		d.Total, d.Currency, d.Status = o.Total, "EUR", string(o.Status)
 	default:
 		return d, link.ErrUnknown
 	}

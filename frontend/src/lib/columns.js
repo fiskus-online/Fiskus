@@ -12,6 +12,7 @@ import { accountKindLabel, accountName, entryCategory, typeLabel, entryType, fre
 import { moveLabel } from './itemcard.js'
 import { plain } from './richtext.js'
 import { jobStatusOf, marginText } from './jobs.js'
+import { porderStatusOf } from './porders.js'
 import { kindLabel as calendarKind, repeatLabel, stateOf } from './calendar.js'
 import { docKindLabel, emailStatus } from './emails.js'
 import { addressText, personsText } from './contacts.js'
@@ -762,4 +763,30 @@ export const crmJobColumns = [
   t('Marža', (r) => marginText(r.summary), 8),
   { header: 'Dokladov', value: (r) => r.summary?.docs ?? 0, type: 'number', width: 9 },
   t('Poznámka', (r) => r.note, 30),
+]
+
+// Objednávky dodávateľom
+export const porderColumns = [
+  t('Číslo', (r) => r.number, 12),
+  t('Dodávateľ', (r) => r.supplier, 30),
+  date('Dátum', (r) => r.date),
+  date('Dodanie', (r) => r.expected),
+  t('Stav', (r) => porderStatusOf(r).label, 18),
+  { header: 'Položiek', value: (r) => r.lines?.length ?? 0, type: 'number', width: 9 },
+  money('Suma bez DPH', (r) => r.total),
+  t('Poznámka', (r) => r.note, 30),
+]
+
+// Na objednanie (sklad)
+export const reorderColumns = [
+  t('Kód', (r) => r.code, 10),
+  t('Položka', (r) => r.name, 32),
+  t('Dodávateľ', (r) => r.supplier, 24),
+  t('Kód dodávateľa', (r) => r.supplierCode, 14),
+  { header: 'Minimum', value: (r) => Number(r.min), type: 'number', width: 10 },
+  { header: 'Na sklade', value: (r) => Number(r.stock), type: 'number', width: 10 },
+  { header: 'Objednané', value: (r) => Number(r.onOrder), type: 'number', width: 10 },
+  { header: 'Objednať', value: (r) => Number(r.suggested), type: 'number', width: 10 },
+  t('MJ', (r) => r.unit, 6),
+  money('Nákupná cena', (r) => r.purchasePrice),
 ]

@@ -124,6 +124,13 @@ const people = computed(() => {
   return [...names]
 })
 
+// rozpad nákladov (iba nenulové časti)
+const costParts = computed(() =>
+  [['práca', s.value?.workCost], ['materiál', s.value?.materialCost], ['tovar zo skladu', s.value?.goodsCost]]
+    .filter(([, v]) => Number(v))
+    .map(([l, v]) => `${l} ${formatAmount(v)}`)
+    .join(' · '),
+)
 const status = computed(() => (job.value ? jobStatusOf(job.value) : null))
 const s = computed(() => job.value?.summary)
 const contactOptions = computed(() => contacts.value.map((c) => ({ value: c.id, label: c.name + (c.ico ? ` (${c.ico})` : '') })))
@@ -155,7 +162,7 @@ const newDoc = (path) => {
       <div v-if="Number(s.unbilled) || Number(s.hours)" class="figure"><span class="label">Nevyfakturované</span><span class="value">{{ formatMoney(s.unbilled) }}</span>
         <span v-if="Number(s.hours)" class="sub">odpracované {{ formatAmount(s.hours) }} h</span></div>
       <div class="figure"><span class="label">Náklady</span><span class="value">{{ formatMoney(s.costs) }}</span>
-        <span v-if="Number(s.workCost) || Number(s.materialCost)" class="sub">práca {{ formatAmount(s.workCost) }} · materiál {{ formatAmount(s.materialCost) }}</span></div>
+        <span v-if="costParts" class="sub">{{ costParts }}</span></div>
       <div class="figure"><span class="label">Zisk</span><span class="value" :class="{ loss: Number(s.profit) < 0 }">{{ formatMoney(s.profit) }}</span>
         <span class="sub">marža {{ marginText(s) }}</span></div>
     </section>
