@@ -1,6 +1,7 @@
 <script setup>
 // Cenová ponuka pre zákazníka cez tajný odkaz: zobrazenie, PDF, prijatie s objednávkou alebo odmietnutie.
 import { computed, onMounted, ref } from 'vue'
+import { toHTML } from '../lib/richtext.js'
 import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
 import Textarea from 'primevue/textarea'
@@ -72,7 +73,7 @@ async function send() {
         <div><dt>Platí do</dt><dd :class="{ late: q.expired }">{{ formatDate(q.validUntil) }}</dd></div>
       </dl>
 
-      <p v-if="q.intro" class="text">{{ q.intro }}</p>
+      <div v-if="q.intro" class="text rich" v-html="toHTML(q.intro)" />
 
       <div class="lines-wrap">
         <table class="lines">
@@ -111,7 +112,7 @@ async function send() {
         </div>
       </section>
 
-      <p v-if="q.note" class="text">{{ q.note }}</p>
+      <div v-if="q.note" class="text rich" v-html="toHTML(q.note)" />
 
       <!-- odpoveď -->
       <section class="answer" :data-verdict="verdict" aria-live="polite">
@@ -385,5 +386,13 @@ h1 .num {
   .totals {
     max-width: none;
   }
+}
+.rich :deep(p) {
+  margin: 0 0 0.3em;
+}
+.rich :deep(ul),
+.rich :deep(ol) {
+  margin: 0 0 0.3em;
+  padding-left: 1.3em;
 }
 </style>

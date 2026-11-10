@@ -10,6 +10,7 @@ import { assetStatus, disposalOptions, periodLabel } from './assets.js'
 import { tripTime } from './logbook.js'
 import { accountKindLabel, accountName, entryCategory, typeLabel, entryType, frequencyLabel, obligationKindLabel, obligationTone, monthsLabel } from './household.js'
 import { moveLabel } from './itemcard.js'
+import { plain } from './richtext.js'
 import { kindLabel as calendarKind, repeatLabel, stateOf } from './calendar.js'
 import { docKindLabel, emailStatus } from './emails.js'
 import { addressText, personsText } from './contacts.js'
@@ -49,7 +50,7 @@ export const invoiceColumns = [
   money('Zostáva €', (r) => (r.status === 'issued' ? eurBalance(r) : '0')),
   t('Prenesenie DPH', (r) => yes(r.reverseCharge), 8),
   t('Stav', (r) => statusOf(r).label, 18),
-  t('Poznámka', (r) => r.note, 30),
+  t('Poznámka', (r) => plain(r.note), 30),
 ]
 
 export const purchaseColumns = [
@@ -92,7 +93,7 @@ export const contactColumns = [
   { header: 'Splatnosť (dni)', value: (r) => r.dueDays || '', type: 'number', width: 10 },
   t('Kontaktné osoby', (r) => personsText(r), 36),
   t('Dodacie adresy', (r) => (r.addresses ?? []).filter((a) => a.kind === 'delivery').map(addressText).join(' | '), 40),
-  t('Poznámka', (r) => r.note, 30),
+  t('Poznámka', (r) => plain(r.note), 30),
 ]
 
 const roleLabel = (code) => codes.roles?.find((r) => r.code === code)?.label ?? code
@@ -177,7 +178,7 @@ export const bankColumns = [
   t('Správa', (r) => r.message, 40),
   t('Stav', (r) => bankStatus[r.status] ?? r.status, 14),
   t('Doklad', (r) => r.match?.number, 14),
-  t('Poznámka', (r) => r.note, 24),
+  t('Poznámka', (r) => plain(r.note), 24),
   t('Účet', (r) => r.account, 26),
 ]
 
@@ -213,7 +214,7 @@ export const cashColumns = [
   money('Suma €', (r) => (r.kind === 'out' ? `-${r.amountEur ?? r.amount}` : r.amountEur ?? r.amount)),
   t('Doklad', (r) => r.linkNumber, 14),
   t('Stav', (r) => (r.cancelled ? 'stornovaný' : ''), 10),
-  t('Poznámka', (r) => r.note, 24),
+  t('Poznámka', (r) => plain(r.note), 24),
 ]
 
 /** Peňažný denník: pohyb, platidlo a suma v každom stĺpci (§ 4 ods. 6). */
@@ -229,7 +230,7 @@ export function journalExportColumns(cols = codes.journalColumns ?? []) {
     money('Suma', (r) => r.amount),
     ...cols.map((c) => money(c.label, (r) => amountIn(r, c.code))),
     t('Rozpis', (r) => (!r.lines?.length ? 'nerozpísaný' : r.auto ? 'návrh' : 'ručne'), 11),
-    t('Poznámka', (r) => r.note, 24),
+    t('Poznámka', (r) => plain(r.note), 24),
   ]
 }
 
@@ -288,7 +289,7 @@ export const quoteColumns = [
   money('Spolu €', (r) => eurSummary(r)?.total),
   t('Stav', (r) => quoteStatusOf(r).label, 16),
   t('Faktúra', (r) => (r.invoiceId ? r.invoiceNumber || 'koncept' : ''), 14),
-  t('Poznámka', (r) => r.note, 30),
+  t('Poznámka', (r) => plain(r.note), 30),
 ]
 
 export const recurringColumns = [
@@ -319,7 +320,7 @@ export const reminderColumns = [
   money('Paušálna náhrada', (r) => r.fees),
   money('Spolu', (r) => r.total),
   date('Uhradiť do', (r) => r.payBy),
-  t('Poznámka', (r) => r.note, 30),
+  t('Poznámka', (r) => plain(r.note), 30),
 ]
 
 export const overdueColumns = [
@@ -354,7 +355,7 @@ export const tripColumns = [
   money('PHM €', (r) => r.cost?.fuel ?? ''),
   money('Opotrebenie €', (r) => r.cost?.wear ?? ''),
   money('Náklady spolu €', (r) => r.cost?.total ?? ''),
-  t('Poznámka', (r) => r.note, 24),
+  t('Poznámka', (r) => plain(r.note), 24),
 ]
 
 export const fuelColumns = [
@@ -365,7 +366,7 @@ export const fuelColumns = [
   t('Plná nádrž', (r) => yes(r.full), 8),
   t('Čerpacia stanica', (r) => r.station, 22),
   t('Doklad', (r) => r.docNumber, 16),
-  t('Poznámka', (r) => r.note, 24),
+  t('Poznámka', (r) => plain(r.note), 24),
 ]
 
 export const kmRateColumns = [
@@ -407,7 +408,7 @@ export const itemColumns = [
   t('Parametre', (r) => (r.params ?? []).map((p) => `${p.name}: ${p.value}${p.unit ? ' ' + p.unit : ''}`).join('; '), 40),
   t('Popis', (r) => r.description, 40),
   t('Archivovaná', (r) => yes(r.archived), 10),
-  t('Poznámka', (r) => r.note, 30),
+  t('Poznámka', (r) => plain(r.note), 30),
 ]
 
 // Register majetku za rok (riadky z /assets?year=); stav sa ráta k roku riadku.
@@ -430,7 +431,7 @@ export const assetColumns = [
   t('Účet', (r) => r.accountOrDefault, 6),
   money('Účtovný odpis v roku', (r) => r.accYear?.amount),
   money('Účtovná ZC na konci roka', (r) => r.accYear?.residual),
-  t('Poznámka', (r) => r.note, 30),
+  t('Poznámka', (r) => plain(r.note), 30),
 ]
 
 export const emailColumns = [
@@ -470,7 +471,7 @@ export const ownEventColumns = [
   t('Opakovanie', (r) => repeatLabel(r.repeat), 16),
   date('Do', (r) => r.until),
   t('Posun na pracovný deň', (r) => yes(r.workday), 10),
-  t('Poznámka', (r) => r.note, 40),
+  t('Poznámka', (r) => plain(r.note), 40),
 ]
 
 export const accountColumns = [
@@ -479,14 +480,14 @@ export const accountColumns = [
   t('Druh', (r) => ({ A: 'aktívny', P: 'pasívny', X: 'aktívny / pasívny', N: 'nákladový', V: 'výnosový', Z: 'závierkový', S: 'podsúvahový' })[r.type] ?? r.type, 16),
   t('Nedaňový', (r) => yes(r.nonTax), 9),
   t('Používa sa', (r) => yes(r.active), 9),
-  t('Poznámka', (r) => r.note, 30),
+  t('Poznámka', (r) => plain(r.note), 30),
 ]
 
 export const centerColumns = [
   t('Kód', (r) => r.code, 10),
   t('Stredisko', (r) => r.name, 36),
   t('Aktívne', (r) => yes(r.active), 8),
-  t('Poznámka', (r) => r.note, 30),
+  t('Poznámka', (r) => plain(r.note), 30),
 ]
 
 export const jobColumns = [
@@ -496,7 +497,7 @@ export const jobColumns = [
   date('Od', (r) => r.from),
   date('Do', (r) => r.to),
   t('Aktívna', (r) => yes(r.active), 8),
-  t('Poznámka', (r) => r.note, 30),
+  t('Poznámka', (r) => plain(r.note), 30),
 ]
 
 export const templateColumns = [
@@ -506,7 +507,7 @@ export const templateColumns = [
   t('Má dať', (r) => r.lines.filter((l) => l.side === 'MD').map((l) => l.account).join(', '), 20),
   t('Dal', (r) => r.lines.filter((l) => l.side === 'D').map((l) => l.account).join(', '), 20),
   t('Používa sa', (r) => yes(r.active), 9),
-  t('Poznámka', (r) => r.note, 30),
+  t('Poznámka', (r) => plain(r.note), 30),
 ]
 
 const docName = (d) => ({ sale: 'Vydaná faktúra', purchase: 'Prijatá faktúra', bank: 'Banka', cash: 'Pokladňa', internal: 'Interný doklad' })[d] ?? d
@@ -597,7 +598,7 @@ export const stockDocColumns = [
   t('MJ', (r) => r.line.unit, 6),
   money('Cena za MJ', (r) => r.line.unitCost),
   money('Spolu', (r) => r.line.total),
-  t('Poznámka', (r) => r.note, 24),
+  t('Poznámka', (r) => plain(r.note), 24),
 ]
 
 /** Pohyby na skladovej karte produktu. */
@@ -622,7 +623,7 @@ export const householdEntryColumns = (accounts) => [
   t('Kategória', (r) => entryCategory(r, accounts), 24),
   t('Obchod / komu', (r) => r.payee, 26),
   money('Suma €', (r) => r.amount),
-  t('Poznámka', (r) => r.note, 30),
+  t('Poznámka', (r) => plain(r.note), 30),
 ]
 
 export const householdAccountColumns = [
@@ -665,7 +666,7 @@ export const householdObligationColumns = [
   t('IBAN', (r) => r.iban, 26),
   t('Adresa', (r) => r.address, 30),
   t('Mesiace', (r) => monthsLabel(r.months), 20),
-  t('Poznámka', (r) => r.note, 30),
+  t('Poznámka', (r) => plain(r.note), 30),
 ]
 
 export const employeeColumns = [

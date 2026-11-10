@@ -596,11 +596,7 @@ func (s *sheet) intro(inv invoice.Invoice) {
 		s.y += pdf.MM(1)
 	}
 	if intro != "" {
-		for _, l := range s.wrap(s.f.Regular, 9.5, width, intro) {
-			s.ensure(lh(9.5))
-			s.text(left, s.y, s.f.Regular, 9.5, ink, l)
-			s.y += lh(9.5)
-		}
+		s.richText(intro, 9.5)
 	}
 	s.y += pdf.MM(4)
 }
@@ -612,11 +608,7 @@ func (s *sheet) below(inv invoice.Invoice) {
 		return
 	}
 	s.y += pdf.MM(3)
-	for _, l := range s.wrap(s.f.Regular, 9.5, width, t) {
-		s.ensure(lh(9.5))
-		s.text(left, s.y, s.f.Regular, 9.5, ink, l)
-		s.y += lh(9.5)
-	}
+	s.richText(t, 9.5)
 }
 
 func (s *sheet) notes(v view) {

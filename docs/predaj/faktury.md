@@ -25,6 +25,25 @@ Sumy, DPH a rekapituláciu podľa sadzieb počíta server pri každej zmene
 riadku — rozhranie iba ukazuje výsledok. Konečná suma je dvojito podčiarknutá
 ako v účtovnej knihe.
 
+## Texty nad položkami a pod nimi
+
+Predmet, text nad položkami a text pod položkami má každý doklad: faktúra,
+zálohová faktúra, cenová ponuka aj pravidelná faktúra. Texty nad a pod
+položkami sa dajú formátovať tlačidlami nad poľom (alebo Ctrl+B, Ctrl+I,
+Ctrl+U):
+
+- **tučné**, *kurzíva*, podčiarknuté,
+- odrážky a číslovaný zoznam,
+- odseky a zalomenie riadku.
+
+Text skopírovaný z Wordu, Excelu, e-mailu alebo webu sa pri vložení
+vyčistí: odrážky, číslovanie, tučné a kurzíva ostanú, písma, farby a
+veľkosti zmiznú, tabuľka sa zmení na riadky. Na doklade (PDF aj tlač) je
+text rovnako. E-faktúra a e-mail nesú obyčajný text s odrážkami „•“.
+
+![Formátovaný text nad položkami ponuky](../obrazky/text-editor.webp)
+*Formátovaný text nad položkami ponuky*
+
 ## Úprava vystavenej faktúry
 
 Vystavenú faktúru možno opraviť (číslo ostane, zmena ide do auditu), kým:

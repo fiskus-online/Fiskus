@@ -79,6 +79,7 @@ func (q *Quote) Recalculate() error {
 		return err
 	}
 	q.Lines, q.Summary, q.PriceMode, q.Currency = inv.Lines, inv.Summary, inv.PriceMode, inv.Currency
+	q.Intro, q.Note = inv.Intro, inv.Note // vyčistené formátovanie
 	return nil
 }
 

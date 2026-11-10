@@ -383,3 +383,12 @@ func TestWriteFinalWithAdvance(t *testing.T) {
 		})
 	}
 }
+
+// e-faktúra nesie formátovaný text ako obyčajný (odrážky „•“, bez HTML)
+func TestNotesPlain(t *testing.T) {
+	inv := invoice.Invoice{Intro: "<p><strong>Rozsah:</strong></p><ul><li>panel</li></ul>", Note: "<ol><li>Ďakujeme &amp; tešíme sa</li></ol>", NonVATPayer: true}
+	got := strings.Join(notes(inv), "|")
+	if got != "Rozsah:\n• panel|Dodávateľ nie je platiteľ DPH.|1. Ďakujeme & tešíme sa" {
+		t.Fatalf("%q", got)
+	}
+}

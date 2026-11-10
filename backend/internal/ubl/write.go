@@ -8,6 +8,7 @@ import (
 	"encoding/xml"
 	"errors"
 	"fmt"
+	"github.com/fiskus-online/fiskus/backend/internal/richtext"
 	"strings"
 
 	"github.com/fiskus-online/fiskus/backend/internal/invoice"
@@ -314,7 +315,7 @@ func vatID(payer bool, id string) string {
 // prenesenie) a text pod položkami.
 func notes(inv invoice.Invoice) []string {
 	var out []string
-	for _, t := range []string{inv.Subject, inv.Intro} {
+	for _, t := range []string{inv.Subject, richtext.Plain(inv.Intro)} {
 		if t = strings.TrimSpace(t); t != "" {
 			out = append(out, t)
 		}
@@ -328,7 +329,7 @@ func notes(inv invoice.Invoice) []string {
 	if inv.NonVATPayer {
 		out = append(out, "Dodávateľ nie je platiteľ DPH.")
 	}
-	if n := strings.TrimSpace(inv.Note); n != "" {
+	if n := richtext.Plain(inv.Note); n != "" { // e-faktúra nesie iba obyčajný text
 		out = append(out, n)
 	}
 	return out

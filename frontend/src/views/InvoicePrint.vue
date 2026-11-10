@@ -2,6 +2,7 @@
 // Faktúra alebo cenová ponuka (quote) na tlač / uloženie do PDF (A4).
 // PDF vytvorí prehliadač cez „Tlačiť → Uložiť ako PDF“.
 import { computed, onMounted, ref } from 'vue'
+import { toHTML } from '../lib/richtext.js'
 import PrintFooter from '../components/PrintFooter.vue'
 import { addressLines, customerGroups, deliveryLines, supplierGroups } from '../lib/parties.js'
 import { useRouter } from 'vue-router'
@@ -141,7 +142,7 @@ const deliveryOf = (i) => deliveryLines(i, countryName)
 
       <section v-if="inv.subject || inv.intro" class="intro">
         <p v-if="inv.subject" class="subject">{{ inv.subject }}</p>
-        <p v-if="inv.intro" class="intro-text">{{ inv.intro }}</p>
+        <div v-if="inv.intro" class="intro-text rich" v-html="toHTML(inv.intro)" />
       </section>
 
       <table class="lines">
@@ -166,7 +167,7 @@ const deliveryOf = (i) => deliveryLines(i, countryName)
           </tr>
         </tbody>
       </table>
-      <p v-if="inv.note" class="user-note below">{{ inv.note }}</p>
+      <div v-if="inv.note" class="user-note below rich" v-html="toHTML(inv.note)" />
 
       <table v-if="deductions.length" class="lines deduct">
         <thead>
@@ -645,5 +646,16 @@ td:last-child {
   .p-toast {
     display: none !important;
   }
+}
+.rich p {
+  margin: 0 0 0.3em;
+}
+.rich p:last-child {
+  margin-bottom: 0;
+}
+.rich ul,
+.rich ol {
+  margin: 0 0 0.3em;
+  padding-left: 1.3em;
 }
 </style>

@@ -233,6 +233,10 @@ func TestSubjectAndIntro(t *testing.T) {
 	withTexts.Note = "Text pod položkami"
 	q := quote.Quote{Status: quote.StatusIssued, Number: "CP2026002", Customer: base.Customer, IssueDate: base.IssueDate,
 		Subject: "Ponuka na servis", Intro: "Ponúkame vám:", Lines: base.Lines, Summary: base.Summary}
+	rich := q
+	rich.Subject = "Riadiaci systém"
+	rich.Intro = "<p><strong>Rozsah dodávky:</strong></p><ul><li>doplnenie HMI</li></ul><ol><li><em>oživenie</em></li></ol>"
+	rich.Note = "<p>Platba <u>do 14 dní</u>.</p>"
 	cases := []struct {
 		name  string
 		sheet func() (*sheet, error)
@@ -245,6 +249,9 @@ func TestSubjectAndIntro(t *testing.T) {
 			[]string{base.Lines[0].Description}, []string{"Servis klimatizácie"}},
 		{"ponuka", func() (*sheet, error) { return quoteSheet(q, supplier) },
 			[]string{"Ponuka na servis", "Ponúkame vám:", base.Lines[0].Description}, nil},
+		{"formátovaný text", func() (*sheet, error) { return quoteSheet(rich, supplier) },
+			[]string{"Riadiaci systém", "Rozsah dodávky:", "•", "doplnenie HMI", "1.", "oživenie", base.Lines[0].Description, "Platba", "do 14 dní"},
+			[]string{"<p>", "<strong>"}},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
@@ -263,5 +270,15 @@ func TestSubjectAndIntro(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+// kurzíva je šikmé písmo, podčiarknutie čiara, zoznam s odsadením
+func TestRichTextLayout(t *testing.T) {
+	q := quote.Quote{Status: quote.StatusIssued, Number: "CP1", Customer: sample(nil).Customer, IssueDate: sample(nil).IssueDate,
+		Intro: "<p><em>šikmo</em> a <u>podčiarknuté slová</u> " + strings.Repeat("dlhý text ", 40) + "</p>", Lines: sample(nil).Lines, Summary: sample(nil).Summary}
+	got, _ := text(t)(quoteSheet(q, supplier))
+	if !strings.Contains(got, "šikmo") || !strings.Contains(got, "podčiarknuté slová") {
+		t.Fatalf("text: %s", got)
 	}
 }

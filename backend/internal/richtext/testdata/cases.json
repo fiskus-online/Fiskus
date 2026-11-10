@@ -1,0 +1,86 @@
+[
+ {
+  "name": "obyčajný text ostane",
+  "in": "  Riadok 1\nRiadok 2  ",
+  "out": "Riadok 1\nRiadok 2",
+  "plain": "Riadok 1\nRiadok 2"
+ },
+ {
+  "name": "prázdne",
+  "in": "<p> </p><p><br></p>",
+  "out": "",
+  "plain": ""
+ },
+ {
+  "name": "odseky a formát",
+  "in": "<p>Dodávka <b>do 7 dní</b>, <i>záruka</i> <u>24 mesiacov</u>.</p><p>Druhý</p>",
+  "out": "<p>Dodávka <strong>do 7 dní</strong>, <em>záruka</em> <u>24 mesiacov</u>.</p><p>Druhý</p>",
+  "plain": "Dodávka do 7 dní, záruka 24 mesiacov.\nDruhý"
+ },
+ {
+  "name": "vnorený formát",
+  "in": "<strong>Tučné <em>aj kurzíva <u>aj podčiarknuté</u></em></strong>",
+  "out": "<p><strong>Tučné </strong><strong><em>aj kurzíva </em></strong><strong><em><u>aj podčiarknuté</u></em></strong></p>",
+  "plain": "Tučné aj kurzíva aj podčiarknuté"
+ },
+ {
+  "name": "zoznamy",
+  "in": "<p>Rozsah dodávky:</p><ul><li>riadiaci systém</li><li>HMI <b>panel</b></li></ul><ol><li>oživenie</li><li>skúšky</li></ol>",
+  "out": "<p>Rozsah dodávky:</p><ul><li>riadiaci systém</li><li>HMI <strong>panel</strong></li></ul><ol><li>oživenie</li><li>skúšky</li></ol>",
+  "plain": "Rozsah dodávky:\n• riadiaci systém\n• HMI panel\n1. oživenie\n2. skúšky"
+ },
+ {
+  "name": "vnorený zoznam sa narovná",
+  "in": "<ul><li>A<ul><li>A1</li></ul></li><li>B</li></ul>",
+  "out": "<ul><li>A</li><li>A1</li><li>B</li></ul>",
+  "plain": "• A\n• A1\n• B"
+ },
+ {
+  "name": "zalomenie riadku",
+  "in": "<p>Prvý riadok <br>druhý<br><br></p>",
+  "out": "<p>Prvý riadok<br>druhý</p>",
+  "plain": "Prvý riadok\ndruhý"
+ },
+ {
+  "name": "Word: štýly, písma a zoznam",
+  "in": "<html xmlns:o=\"urn:schemas-microsoft-com:office:office\"><head><style>p.MsoNormal{font-family:Calibri}</style></head><body lang=SK><!--StartFragment--><p class=MsoNormal><span style='font-size:11.0pt;font-family:\"Calibri\",sans-serif'>Čas realizácie <b>7 dní</b><o:p></o:p></span></p><p class=MsoListParagraph style='text-indent:-18.0pt;mso-list:l0 level1 lfo1'><![if !supportLists]><span style='font-family:Symbol'><span style='mso-list:Ignore'>·<span style='font:7.0pt \"Times New Roman\"'>&nbsp;&nbsp;&nbsp; </span></span></span><![endif]>programové vybavenie<o:p></o:p></p><p class=MsoListParagraph style='mso-list:l1 level1 lfo2'><![if !supportLists]><span style='mso-list:Ignore'>1.<span>&nbsp;&nbsp;</span></span><![endif]>oživenie</p><!--EndFragment--></body></html>",
+  "out": "<p>Čas realizácie <strong>7 dní</strong></p><ul><li>programové vybavenie</li></ul><ol><li>oživenie</li></ol>",
+  "plain": "Čas realizácie 7 dní\n• programové vybavenie\n1. oživenie"
+ },
+ {
+  "name": "Google Docs: tučné štýlom",
+  "in": "<meta charset=\"utf-8\"><b style=\"font-weight:normal;\" id=\"docs-internal-guid-1\"><p dir=\"ltr\"><span style=\"font-size:11pt;font-weight:700;color:#000000\">Cena</span><span style=\"font-size:11pt;font-weight:400;font-style:italic\"> bez DPH</span></p></b>",
+  "out": "<p><strong>Cena</strong><em> bez DPH</em></p>",
+  "plain": "Cena bez DPH"
+ },
+ {
+  "name": "skripty a odkazy preč",
+  "in": "<p onclick=\"x()\">Text<script>alert(1)</script> <a href=\"javascript:x\">odkaz</a> <img src=x onerror=alert(1)></p><style>p{}</style>",
+  "out": "<p>Text odkaz</p>",
+  "plain": "Text odkaz"
+ },
+ {
+  "name": "entity a znaky",
+  "in": "<p>5 &lt; 10 &amp; &quot;OK&quot; &#8211; it's</p>",
+  "out": "<p>5 &lt; 10 &amp; &#34;OK&#34; – it&#39;s</p>",
+  "plain": "5 < 10 & \"OK\" – it's"
+ },
+ {
+  "name": "prehliadač: div ako riadok",
+  "in": "Prvý<div>Druhý</div><div><br></div><div>Tretí</div>",
+  "out": "<p>Prvý</p><p>Druhý</p><p>Tretí</p>",
+  "plain": "Prvý\nDruhý\nTretí"
+ },
+ {
+  "name": "tabuľka z Excelu na riadky",
+  "in": "<table><tr><td>Položka</td><td>Cena</td></tr><tr><td>Panel</td><td>120 €</td></tr></table>",
+  "out": "<p>Položka Cena</p><p>Panel 120 €</p>",
+  "plain": "Položka Cena\nPanel 120 €"
+ },
+ {
+  "name": "nadpis je tučný odsek",
+  "in": "<h2>Podmienky</h2><p>Platba vopred.</p>",
+  "out": "<p><strong>Podmienky</strong></p><p>Platba vopred.</p>",
+  "plain": "Podmienky\nPlatba vopred."
+ }
+]

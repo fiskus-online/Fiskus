@@ -3,6 +3,7 @@ package invoice
 import (
 	"errors"
 	"fmt"
+	"github.com/fiskus-online/fiskus/backend/internal/richtext"
 	"strings"
 
 	"github.com/fiskus-online/fiskus/backend/internal/money"
@@ -553,7 +554,7 @@ func (inv *Invoice) AddAdvance(proforma Invoice, receipts []Invoice) error {
 	}
 	inv.Advance.Deductions = append(inv.Advance.Deductions, ds...)
 	inv.Lines = append(inv.Lines, proforma.Lines...)
-	inv.Note = strings.TrimSpace(inv.Note + " Vyúčtovanie zálohovej faktúry " + proforma.Number + ".")
+	inv.Note = richtext.Append(inv.Note, "Vyúčtovanie zálohovej faktúry "+proforma.Number+".")
 	return inv.Recalculate()
 }
 
