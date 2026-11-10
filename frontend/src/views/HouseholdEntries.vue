@@ -23,6 +23,8 @@ import {
 import ExportButton from '../components/ExportButton.vue'
 import HouseholdEntryDialog from '../components/HouseholdEntryDialog.vue'
 import HouseholdReceiptDialog from '../components/HouseholdReceiptDialog.vue'
+import FioPanel from '../components/FioPanel.vue'
+import { importSummary } from '../lib/fio.js'
 
 const route = useRoute()
 const toast = useToast()
@@ -127,6 +129,7 @@ async function importFile(ev) {
     const r = await api.hhImportBank(session.companyId, importAccount.value, file)
     importOpen.value = false
     const parts = [`${r.added} nových pohybov`]
+    if (r.paired) parts.push(`${r.paired} spárovaných s bločkami`)
     if (r.skipped) parts.push(`${r.skipped} už bolo`)
     if (r.foreign) parts.push(`${r.foreign} v cudzej mene vynechaných`)
     toast.add({ severity: 'success', summary: 'Výpis načítaný', detail: parts.join(', ') + '. Kategórie skontrolujte.', life: 6000 })
@@ -135,6 +138,39 @@ async function importFile(ev) {
     toast.add({ severity: 'error', summary: 'Výpis sa nenačítal', detail: e.fields?.[0]?.message ?? e.message, life: 8000 })
   } finally {
     importBusy.value = false
+  }
+}
+
+// ---- Fio API (nie v prehliadači: banka nedovolí volanie z webovej stránky) ----
+const fioOn = computed(() => canWrite.value && !session.caps?.browser)
+const fioAccounts = ref([])
+const fioOpen = ref(false)
+const fioBusy = ref(false)
+async function loadFio() {
+  if (!fioOn.value) return
+  try {
+    fioAccounts.value = await api.fioAccounts(session.companyId)
+  } catch {
+    fioAccounts.value = []
+  }
+}
+onMounted(loadFio)
+async function syncAllFio() {
+  fioBusy.value = true
+  try {
+    for (const a of fioAccounts.value) {
+      try {
+        const r = await api.syncFio(session.companyId, a.id)
+        toast.add({ severity: 'success', summary: `Stiahnuté z Fio (${a.label})`, detail: importSummary(r, true) + '. Kategórie skontrolujte.', life: 6000 })
+        for (const w of r.warnings || []) toast.add({ severity: 'warn', summary: 'Upozornenie', detail: w, life: 8000 })
+      } catch (e) {
+        const f = e.fields?.find((x) => x.field === 'fio' || x.field === 'householdAccountId')
+        toast.add({ severity: 'error', summary: `Sťahovanie z Fio zlyhalo (${a.label})`, detail: f?.message || e.message, life: 8000 })
+      }
+    }
+    await Promise.all([load(), loadFio()])
+  } finally {
+    fioBusy.value = false
   }
 }
 
@@ -186,6 +222,12 @@ async function importDraws() {
         <Button label="Prevod" icon="pi pi-arrow-right-arrow-left" size="small" severity="secondary" text @click="add('transfer')" />
         <Button label="Bloček" icon="pi pi-receipt" size="small" severity="secondary" outlined @click="receiptOpen = true" />
         <Button label="Nahrať výpis" icon="pi pi-upload" size="small" severity="secondary" text @click="openImport" />
+        <template v-if="fioOn">
+          <Button v-if="fioAccounts.length" size="small" icon="pi pi-download" label="Stiahnuť z Fio" severity="secondary" outlined :loading="fioBusy"
+            v-tooltip.bottom="'Nové pohyby priamo z Fio banky, platby kartou sa spoja s bločkami'" @click="syncAllFio" />
+          <Button size="small" text severity="secondary" :icon="fioAccounts.length ? 'pi pi-cog' : 'pi pi-link'" :label="fioAccounts.length ? undefined : 'Napojiť Fio'"
+            :aria-label="fioAccounts.length ? 'Fio banka – napojenie' : undefined" @click="fioOpen = true" />
+        </template>
         <Button label="Zo živnosti" icon="pi pi-briefcase" size="small" severity="secondary" text @click="openDraws" />
       </template>
     </header>
@@ -232,6 +274,8 @@ async function importDraws() {
     <HouseholdEntryDialog :entry="editing" :accounts="accounts" :categories="categories" :payees="payees" :obligations="obligations" :can-write="canWrite"
       @close="editing = null" @saved="load" />
 
+    <FioPanel v-if="fioOn" v-model:visible="fioOpen" :cid="session.companyId" :can-write="canWrite" :accounts="fioAccounts" :household-accounts="accounts"
+      @changed="(l) => (fioAccounts = l)" @synced="() => Promise.all([load(), loadFio()])" />
     <HouseholdReceiptDialog v-model:visible="receiptOpen" :accounts="accounts" :categories="categories" @saved="load" />
 
     <Dialog v-model:visible="importOpen" header="Nahrať výpis z banky" modal :style="{ width: '30rem' }" :breakpoints="{ '560px': '94vw' }">

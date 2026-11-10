@@ -210,6 +210,7 @@ function remove() {
 
           <section v-if="form.receipt" class="rcpt" aria-label="Údaje bločku">
             <h4>Bloček {{ form.source?.startsWith('photo:') ? '(prečítaný z fotky)' : 'z eKasy' }}</h4>
+            <p v-if="form.paired" class="paired"><i class="pi pi-link" aria-hidden="true" /> Spárovaný s platbou kartou z banky — je to jeden výdavok.</p>
             <dl>
               <template v-for="[k, v] in facts" :key="k"><dt>{{ k }}</dt><dd>{{ v }}</dd></template>
             </dl>
@@ -388,5 +389,10 @@ function remove() {
   .hh-panel.p-drawer {
     width: 100vw !important;
   }
+}
+.paired {
+  margin: 0 0 0.4rem;
+  font-size: 0.85rem;
+  color: var(--ink-soft);
 }
 </style>

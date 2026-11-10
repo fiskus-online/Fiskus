@@ -64,6 +64,10 @@ type Entry struct {
 	// predajňa, pokladnica, položky s cenou za kus a DPH, rekapitulácia DPH.
 	// Ukladajú sa pri zápise bločku a ďalej sa nemenia.
 	Receipt *ekasa.Receipt `json:"receipt,omitempty"`
+	// Paired je pôvod pohybu z banky ("bank:<odtlačok>"), s ktorým je bloček
+	// spárovaný (zaplatený kartou): bloček je potom na bankovom účte a ten
+	// pohyb z banky sa už znova nenačíta.
+	Paired string `json:"paired,omitempty"`
 }
 
 // Split je položka rozdeleného pohybu (suma so znamienkom ako pohyb).
@@ -317,6 +321,9 @@ func fold(s string) string {
 	}
 	return strings.Join(strings.Fields(b.String()), " ")
 }
+
+// Words rozdelí text na slová bez diakritiky a malými písmenami.
+func Words(s string) []string { return strings.Fields(fold(s)) }
 
 var foldMap = map[rune]rune{'á': 'a', 'ä': 'a', 'č': 'c', 'ď': 'd', 'é': 'e', 'ě': 'e', 'í': 'i', 'ĺ': 'l', 'ľ': 'l', 'ň': 'n',
 	'ó': 'o', 'ô': 'o', 'ö': 'o', 'ŕ': 'r', 'ř': 'r', 'š': 's', 'ť': 't', 'ú': 'u', 'ů': 'u', 'ü': 'u', 'ý': 'y', 'ž': 'z'}

@@ -1,7 +1,7 @@
 <script setup>
 // Napojenie na Fio banku: token z internetbankingu (iba na čítanie pohybov).
 // Token sa po uložení už nikdy nezobrazí — server vracia iba, že je nastavený.
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
 import Drawer from 'primevue/drawer'
@@ -11,13 +11,18 @@ import Password from 'primevue/password'
 import FormField from './FormField.vue'
 import { api } from '../lib/api.js'
 import { formatDate } from '../lib/format.js'
-import { fioError, fioPayload, importSummary, lastSyncLabel, validToken } from '../lib/fio.js'
+import Select from 'primevue/select'
+import { defaultHouseholdAccount, fioError, fioPayload, householdAccountName, importSummary, lastSyncLabel, validToken } from '../lib/fio.js'
 
 const props = defineProps({
   cid: { type: Number, required: true },
   canWrite: { type: Boolean, default: false },
   accounts: { type: Array, default: () => [] },
+  // domácnosť: účty domácnosti, na ktoré môžu pohyby ísť (inak firma)
+  householdAccounts: { type: Array, default: null },
 })
+const household = computed(() => Array.isArray(props.householdAccounts))
+const hhOptions = computed(() => (props.householdAccounts ?? []).filter((x) => !x.closed && x.kind !== 'cash'))
 const visible = defineModel('visible', { type: Boolean, default: false })
 const emit = defineEmits(['changed', 'synced'])
 const toast = useToast()
@@ -34,11 +39,11 @@ watch(visible, (v) => {
 })
 
 function openNew() {
-  form.value = { id: 0, label: 'Fio – bežný účet', token: '' }
+  form.value = { id: 0, label: 'Fio – bežný účet', token: '', householdAccountId: household.value ? defaultHouseholdAccount(props.householdAccounts ?? []) : 0 }
   errs.value = {}
 }
 function openEdit(a) {
-  form.value = { id: a.id, label: a.label, token: '' }
+  form.value = { id: a.id, label: a.label, token: '', householdAccountId: a.householdAccountId || 0 }
   errs.value = {}
 }
 
@@ -83,7 +88,7 @@ async function sync(a) {
   syncing.value = a.id
   try {
     const r = await api.syncFio(props.cid, a.id)
-    toast.add({ severity: 'success', summary: `Stiahnuté z Fio (${a.label})`, detail: importSummary(r), life: 6000 })
+    toast.add({ severity: 'success', summary: `Stiahnuté z Fio (${a.label})`, detail: importSummary(r, household.value), life: 6000 })
     for (const w of r.warnings || []) toast.add({ severity: 'warn', summary: 'Upozornenie', detail: w, life: 8000 })
     emit('synced', r)
   } catch (e) {
@@ -105,6 +110,7 @@ async function sync(a) {
           <div class="who">
             <strong>{{ a.label }}</strong>
             <span class="meta">{{ a.account || 'účet sa zistí pri prvom stiahnutí' }}</span>
+            <span v-if="household" class="meta">do účtu {{ householdAccountName(a, householdAccounts) || '?' }}</span>
             <span class="meta">{{ lastSyncLabel(a, formatDate) }}</span>
           </div>
           <div class="acts">
@@ -119,8 +125,12 @@ async function sync(a) {
         <FormField label="Názov" :error="errs.label">
           <InputText v-model="form.label" size="small" />
         </FormField>
+        <FormField v-if="household" label="Účet domácnosti" :error="errs.householdAccountId" hint="kam sa pohyby z Fio zapíšu">
+          <Select v-model="form.householdAccountId" :options="hhOptions" option-label="name" option-value="id" size="small" fluid
+            placeholder="Vyberte účet" input-id="fio-hh-account" />
+        </FormField>
         <FormField label="Token Fio API" :error="errs.token" :hint="form.id ? 'prázdne = ponechať uložený token' : 'uloží sa vo Fiškuse, už sa nikde nezobrazí'">
-          <Password v-model="form.token" :feedback="false" toggle-mask size="small" fluid autocomplete="off" input-id="fio-token" />
+          <Password v-model="form.token" :feedback="false" toggle-mask size="small" fluid autocomplete="off" input-id="fio-token" placeholder="Vložte token" />
         </FormField>
         <div class="row">
           <Button type="submit" size="small" icon="pi pi-check" :label="form.id ? 'Uložiť' : 'Napojiť účet'" :loading="busy" />
@@ -129,7 +139,7 @@ async function sync(a) {
       </form>
       <Button v-else-if="canWrite" size="small" outlined icon="pi pi-plus" label="Napojiť ďalší účet" @click="openNew" />
 
-      <p class="note">Pri prvom stiahnutí Fiškus načíta pohyby za posledných 90 dní, potom vždy od posledného stiahnutého dňa. Fio dovolí jedno stiahnutie za 30 sekúnd. Už načítané pohyby sa nezdvoja a párujú sa s faktúrami rovnako ako z výpisu.</p>
+      <p class="note">Pri prvom stiahnutí Fiškus načíta pohyby za posledných 90 dní, potom vždy od posledného stiahnutého dňa. Fio dovolí jedno stiahnutie za 30 sekúnd. Už načítané pohyby sa nezdvoja{{ household ? '. Platba kartou sa spojí s bločkom, ak sedí suma a prišla v deň nákupu alebo do 4 dní' : ' a párujú sa s faktúrami rovnako ako z výpisu' }}.</p>
     </div>
   </Drawer>
 </template>
