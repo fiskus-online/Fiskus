@@ -49,6 +49,9 @@ nedá upraviť ani označiť ako odmietnutá.
 ![Čiastková faktúra k ponuke](../obrazky/ciastkova-faktura.webp)
 *Čiastková faktúra k ponuke*
 
+Pod ponukou sú [záznamy a úlohy](zakazky.md#zaznamy-a-ulohy) – napríklad
+úloha *ozvať sa k ponuke* s termínom, ktorá sa ukáže v kalendári.
+
 Menej časté akcie ponuky (kópia, zmena čísla, dodací list, „už
 vyfakturovaná“, odmietnutá) sú v ponuke **Viac**.
 

@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/fiskus-online/fiskus/backend/internal/activity"
 	"github.com/fiskus-online/fiskus/backend/internal/catalog"
 	"github.com/fiskus-online/fiskus/backend/internal/delivery"
 	"github.com/fiskus-online/fiskus/backend/internal/forms"
@@ -879,6 +880,51 @@ func Run(t *testing.T, newStore Factory) {
 		}
 		if list, _ := s.ListDeliveries(ctx, a.ID); len(list) != 0 {
 			t.Fatal("dodacie listy po zmazaní firmy")
+		}
+	})
+
+	t.Run("CRM aktivity", func(t *testing.T) {
+		s := newStore(t)
+		a, _ := s.CreateCompany(ctx, store.Company{Name: "Alfa"})
+		b, _ := s.CreateCompany(ctx, store.Company{Name: "Beta"})
+		created := time.Date(2026, 11, 10, 9, 30, 0, 0, time.UTC)
+		x1 := activity.Activity{Kind: activity.Task, Text: "Ozvať sa k ponuke", Date: invoice.MustDate("2026-11-10"), Due: invoice.MustDate("2026-11-17"),
+			ContactID: 4, JobID: 7, QuoteID: 9, Author: "Ján", Created: created}
+		x2 := activity.Activity{Kind: activity.Call, Text: "Volal", Date: invoice.MustDate("2026-11-12"), ContactID: 4, Created: created}
+		x3 := activity.Activity{Kind: activity.Note, Text: "Staré", Date: invoice.MustDate("2026-10-01"), ContactID: 4, Created: created}
+		for _, x := range []*activity.Activity{&x1, &x2, &x3} {
+			if err := s.SaveActivity(ctx, a.ID, x); err != nil || x.ID == 0 {
+				t.Fatalf("aktivita: %v", err)
+			}
+		}
+		x1.Done, x1.DoneDate = true, invoice.MustDate("2026-11-15")
+		if err := s.SaveActivity(ctx, a.ID, &x1); err != nil {
+			t.Fatal(err)
+		}
+		got, err := s.GetActivity(ctx, a.ID, x1.ID)
+		if err != nil || !reflect.DeepEqual(got, x1) {
+			t.Fatalf("načítanie:\n got %+v\nwant %+v", got, x1)
+		}
+		if list, _ := s.ListActivities(ctx, a.ID); len(list) != 3 || list[0].ID != x2.ID || list[2].ID != x3.ID {
+			t.Fatalf("zoznam (najnovšie prvé): %+v", list)
+		}
+		if _, err := s.GetActivity(ctx, b.ID, x1.ID); !errors.Is(err, store.ErrNotFound) {
+			t.Fatal("aktivita inej firmy")
+		}
+		if err := s.SaveActivity(ctx, b.ID, &x1); !errors.Is(err, store.ErrNotFound) {
+			t.Fatal("úprava aktivity inej firmy")
+		}
+		if err := s.DeleteActivity(ctx, b.ID, x2.ID); !errors.Is(err, store.ErrNotFound) {
+			t.Fatal("zmazanie aktivity inej firmy")
+		}
+		if err := s.DeleteActivity(ctx, a.ID, x2.ID); err != nil {
+			t.Fatal(err)
+		}
+		if err := s.DeleteCompany(ctx, a.ID); err != nil {
+			t.Fatal(err)
+		}
+		if list, _ := s.ListActivities(ctx, a.ID); len(list) != 0 {
+			t.Fatal("aktivity po zmazaní firmy")
 		}
 	})
 

@@ -72,7 +72,7 @@ func alarms(days int) []string {
 
 var kindLabel = map[Kind]string{
 	KindTax: "Dane", KindReceive: "Pohľadávky", KindPay: "Záväzky", KindRecurring: "Pravidelné faktúry",
-	KindQuote: "Ponuky", KindOwn: "Vlastné termíny", KindHoliday: "Sviatky",
+	KindQuote: "Ponuky", KindOwn: "Vlastné termíny", KindTask: "Úlohy", KindHoliday: "Sviatky",
 }
 
 func description(e Event) string {
@@ -140,6 +140,6 @@ func Summary(e Event) (title, desc string, remind, ok bool) {
 		}
 		desc += "Fiškus · " + c
 	}
-	remind = !e.Done && (e.Kind == KindTax || e.Kind == KindOwn || e.Kind == KindPay)
+	remind = !e.Done && (e.Kind == KindTax || e.Kind == KindOwn || e.Kind == KindPay || e.Kind == KindTask)
 	return title, desc, remind, true
 }

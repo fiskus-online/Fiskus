@@ -118,10 +118,31 @@ hľadanie a export do Excelu a CSV.
 ![Zoznam zákaziek](../obrazky/zakazky.webp)
 *Zoznam zákaziek*
 
+## Záznamy a úlohy
+
+Pri zákazke, cenovej ponuke aj kontakte v adresári je časť **Záznamy
+a úlohy** – jednoduchá história komunikácie so zákazníkom:
+
+- **Záznam** – poznámka, telefonát, e-mail alebo stretnutie (čo sa
+  dohodlo, kto volal).
+- **Úloha** – čo treba urobiť a do kedy, napríklad *ozvať sa k ponuke*.
+  Navrhnutý termín je o týždeň.
+
+Nesplnené úlohy sú hore zoradené podľa termínu, úloha po termíne je
+červená. Splnenú úlohu odškrtnete. Úlohy s termínom sú aj v
+[kalendári](../dane/index.md#kalendar-terminov) (druh *Úlohy*) a v jeho
+odbere do mobilu či Google Kalendára.
+
+Záznam zo zákazky alebo ponuky sa ukáže aj pri kontakte zákazníka,
+s odkazom na zákazku či ponuku.
+
+![Záznamy a úlohy pri zákazke](../obrazky/zaznamy-ulohy.webp)
+*Záznamy a úlohy pri zákazke*
+
 ## Zákazky a doklady pri kontakte
 
-V adresári sa pri kontakte zobrazujú jeho zákazky a posledné faktúry
-a ponuky. Kliknutím ich otvoríte.
+V adresári sa pri kontakte zobrazujú jeho záznamy a úlohy, zákazky
+a posledné faktúry a ponuky. Kliknutím ich otvoríte.
 
 !!! note "Zákazka v účtovníctve je niečo iné"
     V podvojnom účtovníctve je ešte analytická *zákazka* v účtovom rozvrhu

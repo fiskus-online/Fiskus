@@ -15,6 +15,7 @@ import DatePicker from 'primevue/datepicker'
 import FormField from '../components/FormField.vue'
 import RelatedDocs from '../components/RelatedDocs.vue'
 import JobEntries from '../components/JobEntries.vue'
+import ActivityPanel from '../components/ActivityPanel.vue'
 import { api } from '../lib/api.js'
 import { can, session } from '../lib/session.js'
 import { formatAmount, formatDate, formatMoney, fromISODate, toISODate } from '../lib/format.js'
@@ -215,6 +216,7 @@ const newDoc = (path) => {
         <Button label="Dodací list" icon="pi pi-truck" size="small" outlined @click="newDoc('/dodacie-listy/novy')" />
       </div>
       <RelatedDocs kind="job" :id="Number(job.id)" :can-write="canWrite" @changed="refresh" />
+      <ActivityPanel :job-id="Number(job.id)" :can-write="canWrite" />
     </template>
   </div>
 </template>

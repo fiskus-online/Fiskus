@@ -6,6 +6,7 @@ import { can, session } from '../lib/session.js'
 import { formatDate, formatMoney, statusOf } from '../lib/format.js'
 import { jobStatusOf } from '../lib/jobs.js'
 import { quoteStatusOf } from '../lib/quotes.js'
+import ActivityPanel from './ActivityPanel.vue'
 
 const props = defineProps({ contactId: { type: Number, required: true } })
 const jobs = ref([])
@@ -36,6 +37,7 @@ const empty = computed(() => loaded.value && !jobs.value.length && !docs.value.l
 </script>
 
 <template>
+  <ActivityPanel class="crm-panel" :contact-id="contactId" :can-write="can('invoices.write')" show-about />
   <section v-if="loaded && !empty" class="hist" aria-label="Zákazky a doklady kontaktu">
     <template v-if="jobs.length">
       <h3>Zákazky</h3>
@@ -60,6 +62,9 @@ const empty = computed(() => loaded.value && !jobs.value.length && !docs.value.l
 </template>
 
 <style scoped>
+.crm-panel {
+  margin-top: 10px;
+}
 .hist h3 {
   margin: 0.6rem 0 0.25rem;
   font-size: var(--fs-md, 0.95rem);

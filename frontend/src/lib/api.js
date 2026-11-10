@@ -391,6 +391,10 @@ export const api = {
       ? request('PUT', `/api/companies/${cid}/quotes/${q.id}`, q)
       : request('POST', `/api/companies/${cid}/quotes`, q),
   previewQuote: (cid, q) => request('POST', `/api/companies/${cid}/quotes/preview`, q),
+  activities: (cid, q = {}) => request('GET', `/api/companies/${cid}/activities` + query(q)),
+  saveActivity: (cid, a, id) => (id ? request('PUT', `/api/companies/${cid}/activities/${id}`, a) : request('POST', `/api/companies/${cid}/activities`, a)),
+  deleteActivity: (cid, id) => request('DELETE', `/api/companies/${cid}/activities/${id}`),
+  activityDone: (cid, id, done) => request('POST', `/api/companies/${cid}/activities/${id}/done`, { done }),
   jobs: (cid) => request('GET', `/api/companies/${cid}/jobs`),
   job: (cid, id) => request('GET', `/api/companies/${cid}/jobs/${id}`),
   deliveries: (cid) => request('GET', `/api/companies/${cid}/deliveries`),

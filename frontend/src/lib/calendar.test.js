@@ -90,6 +90,6 @@ describe('druhy termínov podľa firmy', () => {
   it('domácnosť: vlastné, splátky, majú vrátiť', async () => {
     const { kindsFor } = await import('./calendar.js')
     expect(kindsFor({ bookkeeping: 'household' }).map((k) => k.label)).toEqual(['Vlastné', 'Splátky', 'Majú vrátiť'])
-    expect(kindsFor({ bookkeeping: 'simple' })).toHaveLength(6)
+    expect(kindsFor({ bookkeeping: 'simple' })).toHaveLength(7)
   })
 })

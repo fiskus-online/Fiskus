@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/fiskus-online/fiskus/backend/internal/activity"
 	"github.com/fiskus-online/fiskus/backend/internal/catalog"
 	"github.com/fiskus-online/fiskus/backend/internal/delivery"
 	"github.com/fiskus-online/fiskus/backend/internal/forms"
@@ -62,6 +63,7 @@ type Store struct {
 	jobs          map[int64]job.Job
 	porders       map[int64]porder.Order
 	deliveries    map[int64]delivery.Note
+	activities    map[int64]activity.Activity
 	hhPhotos      map[int64]store.HHPhoto
 	recurring     map[int64]recurring.Template
 	reminders     map[int64]reminder.Reminder

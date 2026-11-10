@@ -4,6 +4,7 @@
 export const kinds = [
   { id: 'tax', label: 'Dane', short: 'Daň' },
   { id: 'own', label: 'Vlastné', short: 'Vlastný' },
+  { id: 'task', label: 'Úlohy', short: 'Úloha' },
   { id: 'pay', label: 'Na úhradu', short: 'Úhrada' },
   { id: 'receive', label: 'Pohľadávky', short: 'Splatnosť' },
   { id: 'recurring', label: 'Pravidelné faktúry', short: 'Pravidelná' },
@@ -102,8 +103,8 @@ export function relative(today, date) {
   return `pred ${-n} dňami`
 }
 
-/** Termín je povinnosť používateľa (nie pohľadávka, ponuka ani pravidelná faktúra). */
-export const mine = (e) => e.kind === 'tax' || e.kind === 'own' || e.kind === 'pay'
+/** Termín je povinnosť používateľa (dane, úhrady, vlastné termíny a úlohy CRM — nie pohľadávka, ponuka ani pravidelná faktúra). */
+export const mine = (e) => e.kind === 'tax' || e.kind === 'own' || e.kind === 'pay' || e.kind === 'task'
 
 /**
  * Odznak v menu: vlastné povinnosti (dane, úhrady, vlastné termíny) do 7 dní

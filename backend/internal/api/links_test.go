@@ -195,3 +195,34 @@ func TestQuotePartAPI(t *testing.T) {
 		t.Fatalf("čiastková %+v %+v", inv, q)
 	}
 }
+
+func TestActivitiesAPI(t *testing.T) {
+	e := setup(t, edition.Desktop)
+	base := fmt.Sprintf("/api/companies/%d/activities", e.cid)
+	var ct struct{ ID int64 }
+	e.do("POST", fmt.Sprintf("/api/companies/%d/contacts", e.cid), `{"name":"Zákazník s.r.o.","country":"SK"}`, 201, &ct)
+	type row struct {
+		ID    int64
+		Kind  string
+		Done  bool
+		Late  bool
+		About string
+	}
+	e.do("POST", base, `{"text":"x"}`, 422, nil)
+	var x row
+	e.do("POST", base, fmt.Sprintf(`{"kind":"task","text":"Zavolať","due":"2026-10-01","contactId":%d}`, ct.ID), 201, &x)
+	if x.Kind != "task" || !x.Late || x.About != "Zákazník s.r.o." {
+		t.Fatalf("úloha %+v", x)
+	}
+	e.do("POST", fmt.Sprintf("%s/%d/done", base, x.ID), `{"done":true}`, 200, &x)
+	var list []row
+	e.do("GET", fmt.Sprintf("%s?contact=%d", base, ct.ID), nil, 200, &list)
+	if !x.Done || len(list) != 1 {
+		t.Fatalf("splnená %+v %+v", x, list)
+	}
+	e.do("GET", base+"?open=1", nil, 200, &list)
+	if len(list) != 0 {
+		t.Fatalf("otvorené %+v", list)
+	}
+	e.do("DELETE", fmt.Sprintf("%s/%d", base, x.ID), nil, 204, nil)
+}

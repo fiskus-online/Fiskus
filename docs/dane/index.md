@@ -41,7 +41,8 @@ nepodáva — podanie vyžaduje vaše prihlásenie na portáli.
 
 Lehoty pre DPH, kontrolný a súhrnný výkaz, daň z príjmov a daň z motorových
 vozidiel — posunuté na pracovný deň. K tomu splatnosti faktúr, pravidelné
-faktúry a vlastné opakované termíny (odvody, STK, poistky). Kalendár sa dá
+faktúry, vlastné opakované termíny (odvody, STK, poistky) a úlohy zo
+[zákaziek, ponúk a adresára](../predaj/zakazky.md#zaznamy-a-ulohy). Kalendár sa dá
 odoberať do mobilu (iCalendar) alebo prepojiť s Google Kalendárom a
 Outlookom.
 
