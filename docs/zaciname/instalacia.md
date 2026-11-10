@@ -30,6 +30,26 @@ Ak Fiškus už beží, ikona iba otvorí jeho okno. Vo Windows ho ukončíte
 pravým tlačidlom na ikone pri hodinách → **Ukončiť**.
 :::
 
+### Aktualizácia
+
+Fiškus sa aktualizuje sám. Po spustení zistí, či je nová verzia. Ak áno,
+stiahne ju, zavrie sa, nainštaluje ju a znova sa otvorí. Otvorené okno sa
+samo načíta. Počas toho okno ukazuje priebeh, takže sa nič rozpracované
+nestratí. Pri zatvorení sa ako vždy uloží záloha.
+
+- Stiahnutý súbor sa pred inštaláciou overí súčtom SHA-256 z vydania na
+  GitHube; ak nesedí, nič sa nenainštaluje.
+- Sťahovanie sa dá zastaviť tlačidlom **Teraz nie**. Aktualizácia potom
+  počká na ďalšie spustenie.
+- V **Nastaveniach → Aktualizácie** sa dá automatická aktualizácia
+  vypnúť, novú verziu zistiť hneď alebo nainštalovať tlačidlom.
+- Na Linuxe s balíkom `.deb` alebo `.rpm` si inštalácia vypýta heslo
+  správcu. Ak sa Fiškus sám aktualizovať nedá (napríklad do jeho priečinka
+  sa nedá zapisovať), Nastavenia ukážu odkaz na stiahnutie.
+
+![Nastavenia → Aktualizácie](../obrazky/aktualizacie.webp)
+*Nastavenia → Aktualizácie*
+
 ## V prehliadači bez inštalácie
 
 Fiškus sa dá spustiť aj priamo v prehliadači, bez inštalácie. Celý program

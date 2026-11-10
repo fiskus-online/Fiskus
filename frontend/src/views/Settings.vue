@@ -21,6 +21,7 @@ import EshopSettings from '../components/EshopSettings.vue'
 import DeleteCompany from '../components/DeleteCompany.vue'
 import EmailSettings from '../components/EmailSettings.vue'
 import MobileSettings from '../components/MobileSettings.vue'
+import UpdateSettings from '../components/UpdateSettings.vue'
 import { currentSetting, errorSection } from '../lib/settingsNav.js'
 import { bookkeepingOptions, migrationNote } from '../lib/setup.js'
 import { useRouter } from 'vue-router'
@@ -296,6 +297,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
       <EmailSettings v-if="section === 'e-mail'" />
       <CalendarSyncPanel v-if="section === 'kalendar'" />
       <MobileSettings v-if="section === 'mobil'" />
+      <UpdateSettings v-if="section === 'aktualizacie'" />
       <SecuritySettings v-if="section === 'bezpecnost'" />
       <EshopSettings v-if="section === 'e-shopy'" />
       <DeleteCompany v-if="section === 'firma' && isSuperAdmin()" />

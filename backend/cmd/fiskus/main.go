@@ -21,6 +21,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"os/exec"
 	"os/signal"
 	"path/filepath"
 	"runtime"
@@ -43,6 +44,7 @@ import (
 	"github.com/fiskus-online/fiskus/backend/internal/store"
 	"github.com/fiskus-online/fiskus/backend/internal/store/memstore"
 	"github.com/fiskus-online/fiskus/backend/internal/tray"
+	"github.com/fiskus-online/fiskus/backend/internal/update"
 	"github.com/fiskus-online/fiskus/backend/internal/web"
 )
 
@@ -81,6 +83,7 @@ func main() {
 	adminEmail := flag.String("admin-email", "", "e-mail prvého správcu (server); heslo v FISKUS_ADMIN_PASSWORD")
 	showVersion := flag.Bool("version", false, "vypíše verziu a skončí")
 	openBrowser := flag.Bool("open", true, "aplikácia: otvoriť prehliadač po spustení (most fiskus-mcp spúšťa bez neho)")
+	updateURL := flag.String("update-url", update.DefaultURL, "aplikácia: adresa posledného vydania (automatická aktualizácia); prázdne = vypnutá")
 	appMode := flag.Bool("app", false, "aplikácia (spustenie z inštalátora): dáta v priečinku používateľa, otvorí prehliadač, skončí po zatvorení okna")
 	flag.Parse()
 	dirFixed := false
@@ -96,6 +99,7 @@ func main() {
 	if *mode == string(edition.Desktop) && *dbPath == "" && !*demoData {
 		*appMode = true
 	}
+	dataDir := ""
 	if *appMode {
 		if !set["addr"] {
 			*addr = desktop.Addr
@@ -111,6 +115,7 @@ func main() {
 		if err != nil {
 			log.Fatalf("priečinok dát: %v", err)
 		}
+		dataDir = dir
 		if f, err := desktop.LogFile(dir); err == nil {
 			log.SetOutput(io.MultiWriter(f, quietStderr{}))
 			defer f.Close()
@@ -216,9 +221,22 @@ func main() {
 	}
 	apiSrv := &api.Server{App: a, Web: webFS, Registry: lookup, VAT: vies, MCP: mcp.New(a, version), Version: version, PublicURL: *publicURL}
 	var watchdog *desktop.Watchdog
+	// po aktualizácii: čo sa spustí po riadnom ukončení (nový Fiškus, inštalátor)
+	var afterMu sync.Mutex
+	var afterExit func() error
+	var updater *update.Manager
 	if *appMode {
 		watchdog = desktop.NewWatchdog()
 		apiSrv.Desktop = watchdog
+		if *updateURL != "" && !*demoData {
+			updater = newUpdater(version, *updateURL, filepath.Join(dataDir, "aktualizacia"), func(after func() error) {
+				afterMu.Lock()
+				afterExit = after
+				afterMu.Unlock()
+				watchdog.Quit()
+			})
+			apiSrv.Update = updater
+		}
 	}
 	srv := &http.Server{
 		Addr:              *addr,
@@ -278,6 +296,9 @@ func main() {
 	go eshopLoop(runCtx, a)
 	go deadlineLoop(runCtx, a)
 	go einvoiceLoop(runCtx, a)
+	if updater != nil {
+		go updater.Startup(runCtx, 3*time.Second)
+	}
 
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
@@ -295,6 +316,53 @@ func main() {
 	stopRecurring()
 	_ = srv.Shutdown(ctx)
 	cleanup() // pri SQLite: záverečná záloha
+	afterMu.Lock()
+	after := afterExit
+	afterMu.Unlock()
+	if after != nil {
+		log.Print("aktualizácia: spúšťam novú verziu")
+		if err := after(); err != nil {
+			log.Printf("aktualizácia: novú verziu sa nepodarilo spustiť: %v", err)
+		}
+	}
+}
+
+// newUpdater pripraví automatickú aktualizáciu podľa toho, kde a ako je
+// Fiškus nainštalovaný.
+func newUpdater(version, url, dir string, restart func(after func() error)) *update.Manager {
+	exe, err := os.Executable()
+	if err == nil {
+		if real, err := filepath.EvalSymlinks(exe); err == nil {
+			exe = real
+		}
+	}
+	target := update.Detect(update.Env{
+		GOOS: runtime.GOOS, GOARCH: runtime.GOARCH, Exe: exe,
+		Exists:   func(p string) bool { _, err := os.Stat(p); return err == nil },
+		Writable: writableDir,
+		LookPath: func(name string) bool { _, err := exec.LookPath(name); return err == nil },
+		GUI:      runtime.GOOS == "windows" && update.IsGUI(exe),
+	})
+	if exe == "" {
+		target.Manual = "Program nevie, kde je nainštalovaný."
+	}
+	m := &update.Manager{Version: version, URL: url, Client: &http.Client{}, Target: target,
+		GOOS: runtime.GOOS, GOARCH: runtime.GOARCH, Dir: dir, Restart: restart}
+	m.Init()
+	log.Printf("aktualizácia: %s (%s)", target.Kind, exe)
+	return m
+}
+
+// writableDir: dá sa do priečinka zapisovať (skúšobný súbor)?
+func writableDir(dir string) bool {
+	f, err := os.CreateTemp(dir, ".fiskus-zapis-*")
+	if err != nil {
+		return false
+	}
+	name := f.Name()
+	f.Close()
+	_ = os.Remove(name)
+	return true
 }
 
 // ratesLoop sťahuje kurzy ECB: krátko po štarte a potom každých 6 hodín

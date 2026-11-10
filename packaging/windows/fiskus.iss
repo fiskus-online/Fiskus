@@ -55,6 +55,15 @@ Name: "{autodesktop}\Fiškus"; Filename: "{app}\fiskus.exe"; Parameters: "-app";
 
 [Run]
 Filename: "{app}\fiskus.exe"; Parameters: "-app"; Description: "Spustiť Fiškus"; Flags: nowait postinstall skipifsilent
+; automatická aktualizácia (tichá inštalácia s /aktualizacia=1): Fiškus sa
+; po inštalácii znova spustí; otvorené okno sa samo načíta, nové sa neotvára
+Filename: "{app}\fiskus.exe"; Parameters: "-app -open=false"; Flags: nowait; Check: PoAktualizacii
 
 [UninstallRun]
 Filename: "{sys}\taskkill.exe"; Parameters: "/IM fiskus.exe /F"; Flags: runhidden; RunOnceId: "StopFiskus"
+
+[Code]
+function PoAktualizacii: Boolean;
+begin
+  Result := ExpandConstant('{param:aktualizacia|0}') = '1';
+end;

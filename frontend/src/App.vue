@@ -22,6 +22,7 @@ import { startHeartbeat } from './lib/desktop.js'
 import { attention, badgeText, refreshCalendar, refreshDrafts } from './lib/attention.js'
 import { badgeRange, soonCount } from './lib/calendar.js'
 import DemoOffer from './components/DemoOffer.vue'
+import UpdateOverlay from './components/UpdateOverlay.vue'
 
 const route = useRoute()
 // Fiškus v prehliadači: funkcia nainštalovaného programu → výzva na inštaláciu
@@ -115,6 +116,7 @@ watch(
 </script>
 
 <template>
+  <UpdateOverlay v-if="session.caps.update && !stopped" />
   <div v-if="stopped" class="stopped">
     <p><strong>Fiškus je ukončený.</strong> Toto okno môžete zavrieť. Program znova otvoríte ikonou Fiškus.</p>
   </div>

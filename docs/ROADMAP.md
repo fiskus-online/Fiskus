@@ -46,6 +46,7 @@ Všetky časti (podvojné účtovníctvo, sklad, majetok, EPO, mzdy) píšeme od
 - [x] Banka: import výpisov camt.053, automatické párovanie podľa VS a sumy, návrhy, ručné párovanie, nepárované pohyby
 - [x] Banka: výpisy GPC, CSV a Excel, čiastočné úhrady
 - [x] Banka: platobné príkazy SEPA (pain.001) z prijatých faktúr
+- [x] Automatická aktualizácia nainštalovaného programu (Windows inštalátor aj bez inštalácie, macOS .app, Linux deb/rpm aj samotný program; súčet SHA-256)
 - [x] Banka: napojenie na Fio banku cez API (token iba na čítanie, posledných 90 dní, potom od posledného dňa, limit 30 s, bez zdvojenia)
 - [ ] Banka: napojenie na ďalšie banky (PSD2 vyžaduje licenciu NBS — podľa možností agregátora)
 - [x] Pokladňa: príjmové a výdavkové doklady (PPD/VPD), kontrola záporného zostatku, úhrada faktúr v hotovosti, storno, tlač so sumou slovom
