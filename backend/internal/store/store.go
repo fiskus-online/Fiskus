@@ -9,6 +9,7 @@ package store
 import (
 	"context"
 	"errors"
+	"github.com/fiskus-online/fiskus/backend/internal/delivery"
 	"github.com/fiskus-online/fiskus/backend/internal/forms"
 	"github.com/fiskus-online/fiskus/backend/internal/job"
 	"github.com/fiskus-online/fiskus/backend/internal/link"
@@ -442,6 +443,13 @@ type Store interface {
 	GetPurchaseOrder(ctx context.Context, companyID, id int64) (porder.Order, error)
 	SavePurchaseOrder(ctx context.Context, companyID int64, o *porder.Order) error
 	DeletePurchaseOrder(ctx context.Context, companyID, id int64) error
+
+	// Dodacie listy (delivery). Číslo je vo firme jedinečné (ErrDuplicate),
+	// koncept nemá číslo.
+	ListDeliveries(ctx context.Context, companyID int64) ([]delivery.Note, error)
+	GetDelivery(ctx context.Context, companyID, id int64) (delivery.Note, error)
+	SaveDelivery(ctx context.Context, companyID int64, n *delivery.Note) error
+	DeleteDelivery(ctx context.Context, companyID, id int64) error
 
 	// ListRecurring vráti šablóny pravidelnej fakturácie firmy zoradené podľa ID.
 	ListRecurring(ctx context.Context, companyID int64) ([]recurring.Template, error)

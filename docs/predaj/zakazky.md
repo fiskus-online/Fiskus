@@ -32,9 +32,9 @@ Zákazku založíte aj priamo z kontaktu v adresári tlačidlom *Nová zákazka*
 
 ## Doklady k zákazke
 
-V detaile zákazky sú tlačidlá **Nový doklad k zákazke: Ponuka / Faktúra**.
-Nová ponuka alebo faktúra má predvyplneného zákazníka a po uložení sa
-k zákazke prepojí sama.
+V detaile zákazky sú tlačidlá **Nový doklad k zákazke: Ponuka / Faktúra /
+Dodací list**. Nový doklad má predvyplneného zákazníka a po uložení sa
+k zákazke prepojí sám.
 
 Už existujúce doklady pridáte v časti **Súvisiace doklady** tlačidlom
 *Prepojiť doklad* – rovnako ako pri [faktúrach](faktury.md#suvisiace-doklady).

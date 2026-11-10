@@ -212,6 +212,7 @@ const newDoc = (path) => {
         <span class="muted">Nový doklad k zákazke:</span>
         <Button label="Ponuka" icon="pi pi-file-edit" size="small" outlined @click="newDoc('/ponuky/nova')" />
         <Button label="Faktúra" icon="pi pi-file" size="small" outlined @click="newDoc('/faktury/nova')" />
+        <Button label="Dodací list" icon="pi pi-truck" size="small" outlined @click="newDoc('/dodacie-listy/novy')" />
       </div>
       <RelatedDocs kind="job" :id="Number(job.id)" :can-write="canWrite" @changed="refresh" />
     </template>

@@ -869,6 +869,20 @@ async function copyQuote() {
   }
 }
 
+// dodací list z ponuky (koncept s odberateľom a položkami, prepojený s ponukou)
+async function deliveryFromQuote() {
+  busy.value = true
+  try {
+    const n = await api.deliveryFromQuote(session.companyId, inv.value.id)
+    toast.add({ severity: 'success', summary: 'Koncept dodacieho listu vytvorený', life: 3000 })
+    router.push(`/dodacie-listy/${n.id}`)
+  } catch (e) {
+    applyError(e)
+  } finally {
+    busy.value = false
+  }
+}
+
 function invoiceQuote() {
   confirm.require({
     header: 'Vytvoriť faktúru z ponuky',
@@ -1056,6 +1070,8 @@ const customerFields = reactive([
         <Button v-if="qa.renumber" label="Zmeniť číslo" icon="pi pi-hashtag" severity="secondary" text size="small" :disabled="busy" @click="openRenumber" />
         <Button v-if="qa.reject" label="Odmietnutá" severity="secondary" text size="small" :disabled="busy" @click="quoteStep('reject', 'Ponuka označená ako odmietnutá')" />
         <Button v-if="qa.accept" label="Prijatá" icon="pi pi-thumbs-up" severity="secondary" outlined size="small" :disabled="busy" @click="quoteStep('accept', 'Ponuka označená ako prijatá')" />
+        <Button v-if="['issued', 'accepted', 'invoiced'].includes(inv.status)" label="Dodací list" icon="pi pi-truck" severity="secondary" text size="small" :disabled="busy"
+          v-tooltip.bottom="'Koncept dodacieho listu s položkami ponuky'" @click="deliveryFromQuote" />
         <Button v-if="qa.invoice" label="Už vyfakturovaná…" icon="pi pi-link" severity="secondary" text size="small" :disabled="busy"
           v-tooltip.bottom="'Ponuka je vyfakturovaná faktúrou, ktorá už existuje'" @click="invoicedOpen = true" />
         <Button v-if="qa.invoice" label="Vytvoriť faktúru" icon="pi pi-file-export" size="small" :disabled="busy" @click="invoiceQuote" />

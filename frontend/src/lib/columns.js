@@ -13,6 +13,7 @@ import { moveLabel } from './itemcard.js'
 import { plain } from './richtext.js'
 import { jobStatusOf, marginText } from './jobs.js'
 import { porderStatusOf } from './porders.js'
+import { deliveryStatusOf } from './deliveries.js'
 import { kindLabel as calendarKind, repeatLabel, stateOf } from './calendar.js'
 import { docKindLabel, emailStatus } from './emails.js'
 import { addressText, personsText } from './contacts.js'
@@ -789,4 +790,19 @@ export const reorderColumns = [
   { header: 'Objednať', value: (r) => Number(r.suggested), type: 'number', width: 10 },
   t('MJ', (r) => r.unit, 6),
   money('Nákupná cena', (r) => r.purchasePrice),
+]
+
+// Dodacie listy
+export const deliveryColumns = [
+  t('Číslo', (r) => r.number || 'koncept', 12),
+  t('Odberateľ', (r) => r.customer?.name, 30),
+  t('IČO', (r) => r.customer?.ico, 10),
+  date('Dátum', (r) => r.date),
+  t('Miesto dodania', (r) => r.place, 24),
+  t('Objednávka', (r) => r.order, 14),
+  t('Stav', (r) => deliveryStatusOf(r).label, 14),
+  t('Faktúra', (r) => r.invoiceNumber, 12),
+  money('Základ', (r) => r.summary?.base),
+  money('Spolu', (r) => r.summary?.total),
+  t('Prevzal', (r) => r.receiver, 18),
 ]
