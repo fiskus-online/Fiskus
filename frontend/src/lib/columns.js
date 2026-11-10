@@ -768,6 +768,21 @@ export const crmJobColumns = [
   t('Poznámka', (r) => r.note, 30),
 ]
 
+// Vozidlá zo zákaziek autoservisu
+export const vehicleColumns = [
+  t('EČV', (r) => r.plate, 10),
+  t('VIN', (r) => r.vin, 20),
+  t('Značka', (r) => r.make, 14),
+  t('Model', (r) => r.model, 22),
+  { header: 'Rok výroby', value: (r) => r.year || null, type: 'number', width: 9 },
+  t('Zákazník', (r) => r.customer, 28),
+  date('Posledná návšteva', (r) => r.last),
+  { header: 'Návštev', value: (r) => r.visits, type: 'number', width: 8 },
+  { header: 'Tachometer (km)', value: (r) => r.mileage || null, type: 'number', width: 12 },
+  date('STK/EK do', (r) => r.inspection),
+  date('Ďalší servis', (r) => r.nextService),
+]
+
 // Objednávky dodávateľom
 export const porderColumns = [
   t('Číslo', (r) => r.number, 12),

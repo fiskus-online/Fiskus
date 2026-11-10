@@ -24,7 +24,7 @@ export const jobKindLabel = (k) => jobKinds.find((x) => x.value === (k ?? ''))?.
 export function kindDetails(kind) {
   switch (kind) {
     case 'auto':
-      return { vehicle: { plate: '', vin: '', make: '', model: '', year: '', mileage: '', fuel: '', fault: '', damage: '' } }
+      return { vehicle: { plate: '', vin: '', make: '', model: '', year: '', mileage: '', fuel: '', fault: '', damage: '', inspection: '', nextService: '' } }
     case 'install':
       return { site: { address: '', workers: '', contact: '', scope: '' } }
     case 'service':
@@ -108,7 +108,7 @@ export function jobForm(j) {
     material: (j.material ?? []).map((m) => ({ ...m, unitCost: zero(m.unitCost) })),
     kind: j.kind ?? '',
     ...kindDetails(j.kind ?? ''),
-    ...(j.vehicle && { vehicle: { ...j.vehicle, year: j.vehicle.year || '', mileage: j.vehicle.mileage || '' } }),
+    ...(j.vehicle && { vehicle: { ...j.vehicle, year: j.vehicle.year || '', mileage: j.vehicle.mileage || '', inspection: j.vehicle.inspection || '', nextService: j.vehicle.nextService || '' } }),
     ...(j.site && { site: { ...j.site } }),
     ...(j.device && { device: { ...j.device, purchased: j.device.purchased || '' } }),
   }
@@ -193,3 +193,44 @@ export function movePayload(row, status) {
 
 /** Marža zo súhrnu ziskovosti na zobrazenie. */
 export const pct = (v) => (v == null ? '—' : `${v} %`)
+
+/** EČV ako ho ukladá server: veľkými písmenami bez medzier a pomlčiek. */
+export const normalizePlate = (s) => String(s ?? '').toUpperCase().replace(/[^\p{L}\p{N}]/gu, '')
+
+/** Kľúč vozidla: EČV, bez neho VIN (rovnako ako server). */
+export const vehicleKey = (v) => normalizePlate(v?.plate) || String(v?.vin ?? '').toUpperCase().replace(/\s/g, '')
+
+/**
+ * Doplnenie známeho vozidla podľa EČV: prázdne údaje vozidla a zákazníka
+ * sa vezmú z karty vozidla (z predchádzajúcich zákaziek). Vráti nový formulár
+ * alebo null, ak sa vozidlo nenašlo.
+ */
+export function fillFromVehicle(f, cards) {
+  const key = vehicleKey(f?.vehicle)
+  const c = key && (cards ?? []).find((x) => x.key === key)
+  if (!c) return null
+  const v = { ...f.vehicle }
+  for (const k of ['vin', 'make', 'model', 'inspection', 'nextService']) if (!v[k] && c[k]) v[k] = c[k]
+  if (!v.year && c.year) v.year = c.year
+  const out = { ...f, vehicle: v }
+  if (!out.contactId && c.contactId) out.contactId = c.contactId
+  return out
+}
+
+/** Predchádzajúce zákazky toho istého vozidla (bez tejto), najnovšie prvé. */
+export function vehicleHistory(rows, vehicle, selfId = 0) {
+  const key = vehicleKey(vehicle)
+  if (!key) return []
+  return (rows ?? [])
+    .filter((r) => r.id !== selfId && r.vehicle && vehicleKey(r.vehicle) === key)
+    .sort((a, b) => String(b.start || b.created || '').localeCompare(String(a.start || a.created || '')) || b.id - a.id)
+}
+
+/** Stav termínu (STK, servis): 'late' po termíne, 'soon' do 30 dní, inak ''. */
+export function dueState(date, today) {
+  if (!date || !today) return ''
+  if (date < today) return 'late'
+  const d = new Date(`${today}T00:00:00Z`)
+  d.setUTCDate(d.getUTCDate() + 30)
+  return date <= d.toISOString().slice(0, 10) ? 'soon' : ''
+}

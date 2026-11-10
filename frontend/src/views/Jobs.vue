@@ -20,6 +20,7 @@ import { jobKindLabel, jobKinds, jobStatusOf, jobViews, kindSearchText, marginTe
 import ExportButton from '../components/ExportButton.vue'
 import JobBoard from '../components/JobBoard.vue'
 import JobStats from '../components/JobStats.vue'
+import JobVehicles from '../components/JobVehicles.vue'
 
 const router = useRouter()
 const view = ref('open')
@@ -28,6 +29,7 @@ const modes = [
   { value: 'list', label: 'Zoznam', icon: 'pi pi-list' },
   { value: 'board', label: 'Nástenka', icon: 'pi pi-th-large' },
   { value: 'stats', label: 'Podľa zákazníka', icon: 'pi pi-chart-bar' },
+  { value: 'vehicles', label: 'Vozidlá', icon: 'pi pi-car' },
 ]
 const savedMode = (() => {
   try {
@@ -63,6 +65,8 @@ async function load() {
 }
 onMounted(load)
 
+// vozidlá iba pri autoservise (alebo keď je to práve zvolené zobrazenie)
+const shownModes = computed(() => modes.filter((m) => m.value !== 'vehicles' || mode.value === 'vehicles' || rows.value.some((r) => r.kind === 'auto')))
 // druh zákazky: filter sa ukáže, keď firma používa iné ako všeobecné zákazky
 const kind = ref(null)
 const usedKinds = computed(() => jobKinds.filter((k) => rows.value.some((r) => (r.kind ?? '') === k.value)))
@@ -187,18 +191,19 @@ onBeforeUnmount(() => {
   <div class="page">
     <header class="head">
       <h1>Zákazky</h1>
-      <SelectButton v-model="mode" :options="modes" option-label="label" option-value="value" :allow-empty="false" size="small" class="modes" aria-label="Zobrazenie">
+      <SelectButton v-model="mode" :options="shownModes" option-label="label" option-value="value" :allow-empty="false" size="small" class="modes" aria-label="Zobrazenie">
         <template #option="{ option }"><i :class="option.icon" :title="option.label" /><span class="ml">{{ option.label }}</span></template>
       </SelectButton>
       <div class="spacer" />
-      <Button v-if="can('invoices.write')" size="small" @click="router.push('/zakazky/nova')">
+      <Button v-if="can('invoices.write')" size="small" aria-label="Nová zákazka" @click="router.push('/zakazky/nova')">
         <template #default>
-          <i class="pi pi-plus" /><span>Nová zákazka</span><kbd class="hint">N</kbd>
+          <i class="pi pi-plus" /><span class="blabel">Nová zákazka</span><kbd class="hint">N</kbd>
         </template>
       </Button>
     </header>
 
     <JobStats v-if="mode === 'stats'" />
+    <JobVehicles v-else-if="mode === 'vehicles'" />
     <template v-else>
     <section class="ledger" aria-label="Prehľad zákaziek">
       <button class="figure figure-link" :disabled="!ledger.openCount" @click="view = 'open'">
@@ -384,6 +389,11 @@ onBeforeUnmount(() => {
 .error {
   color: var(--tone-overdue);
   margin: 0;
+}
+@media (max-width: 440px) {
+  .blabel {
+    display: none;
+  }
 }
 @media (max-width: 760px) {
   .kindsel {

@@ -96,6 +96,11 @@ func (a *App) Calendar(ctx context.Context, companyID int64, from, to invoice.Da
 				return CalendarView{}, err
 			}
 			add(ts...)
+			vs, err := a.vehicleEvents(ctx, companyID, minDate(from, today.AddDays(-31)), to, today)
+			if err != nil {
+				return CalendarView{}, err
+			}
+			add(vs...)
 		}
 	}
 	if can(auth.PermPurchasesRead) {

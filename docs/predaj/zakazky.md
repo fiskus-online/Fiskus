@@ -41,7 +41,7 @@ Nová zákazka dostane druh, ktorý ste použili naposledy.
 | Druh | Údaje navyše |
 |---|---|
 | Všeobecná | žiadne |
-| Autoservis | **vozidlo**: EČV, VIN, značka, model, rok výroby, stav tachometra a paliva pri príjme, závada či požiadavka zákazníka, poškodenia zistené pri príjme |
+| Autoservis | **vozidlo**: EČV, VIN, značka, model, rok výroby, stav tachometra a paliva pri príjme, závada či požiadavka zákazníka, poškodenia zistené pri príjme, STK/EK a ďalší servis |
 | Montáž | **miesto montáže** (predvyplní sa adresa zákazníka), montážnici, kontakt na mieste, rozsah prác |
 | Servis zariadenia | **zariadenie**: druh, výrobca, typ, výrobné číslo, záručná oprava s dátumom kúpy, popis závady, prevzaté príslušenstvo |
 
@@ -56,6 +56,28 @@ Nová zákazka dostane druh, ktorý ste použili naposledy.
 - Pri vozidle a zariadení sa predmet dostane aj do predmetu faktúry
   z výkazu práce (napr. „Výmena bŕzd – BB482KE Škoda Octavia“).
 - Keď zmeníte druh, údaje predchádzajúceho druhu sa pri uložení zahodia.
+
+### Vozidlá
+
+Pri autoservise si Fiškus vozidlá pamätá podľa EČV (bez EČV podľa VIN):
+
+- **Známe vozidlo**: keď v novej zákazke zadáte EČV vozidla, ktoré už
+  bolo v servise, doplnia sa VIN, značka, model, rok výroby, termíny
+  a zákazník z predchádzajúcich zákaziek. Vyplnené údaje sa neprepíšu.
+- **História vozidla**: pod údajmi vozidla sú jeho predchádzajúce
+  zákazky s dátumom, stavom tachometra a stavom.
+- **STK/EK platí do** a **Ďalší servis**: termíny sa zobrazia
+  v [kalendári](../dane/index.md#kalendar-terminov) (druh *Vozidlá*)
+  s odkazom na poslednú zákazku vozidla, takže môžete zákazníka včas
+  osloviť.
+- **Zákazky → Vozidlá** (zobrazenie sa ukáže pri prvej zákazke
+  autoservisu): zoznam vozidiel s posledným zákazníkom, poslednou
+  návštevou, najvyšším stavom tachometra a termínmi. Termín po lehote je
+  červený, termín do 30 dní tučný; prepínač *STK alebo servis do 30 dní*
+  ukáže iba vozidlá, ktoré treba osloviť. Zoznam má hľadanie a export.
+
+![Vozidlá zákazníkov](../obrazky/zakazky-vozidla.webp)
+*Vozidlá zákazníkov s termínmi STK a servisu*
 
 ### Tlač zákazky
 

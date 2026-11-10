@@ -397,6 +397,7 @@ export const api = {
   activityDone: (cid, id, done) => request('POST', `/api/companies/${cid}/activities/${id}/done`, { done }),
   jobs: (cid) => request('GET', `/api/companies/${cid}/jobs`),
   jobStats: (cid, year) => request('GET', `/api/companies/${cid}/jobs-stats` + query({ year })),
+  jobVehicles: (cid) => request('GET', `/api/companies/${cid}/jobs-vehicles`),
   job: (cid, id) => request('GET', `/api/companies/${cid}/jobs/${id}`),
   deliveries: (cid) => request('GET', `/api/companies/${cid}/deliveries`),
   delivery: (cid, id) => request('GET', `/api/companies/${cid}/deliveries/${id}`),

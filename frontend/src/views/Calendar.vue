@@ -185,7 +185,7 @@ const fmtShort = (iso) => {
 
     <div class="toolbar">
       <div class="chips" role="group" aria-label="Druhy termínov">
-        <button v-for="k in kindsFor(session.company)" :key="k.id" type="button" class="chip" :class="['k-' + k.id, { off: hidden.has(k.id) }]"
+        <button v-for="k in kindsFor(session.company, [...(view?.events ?? []), ...(view?.overdue ?? [])])" :key="k.id" type="button" class="chip" :class="['k-' + k.id, { off: hidden.has(k.id) }]"
           :aria-pressed="!hidden.has(k.id)" @click="toggle(k.id)">
           <span class="swatch" aria-hidden="true" />{{ k.label }}<span class="cnt">{{ counts[k.id] ?? 0 }}</span>
         </button>
@@ -281,6 +281,7 @@ const fmtShort = (iso) => {
   --k-tax: var(--blue-deep);
   --k-own: var(--blue);
   --k-task: var(--ink);
+  --k-vehicle: var(--blue-deep);
   --k-pay: var(--tone-draft);
   --k-receive: var(--tone-paid);
   --k-recurring: var(--ink-faint);
@@ -316,6 +317,7 @@ const fmtShort = (iso) => {
 .k-tax { --k: var(--k-tax); }
 .k-own { --k: var(--k-own); }
 .k-task { --k: var(--k-task); }
+.k-vehicle { --k: var(--k-vehicle); }
 .k-pay { --k: var(--k-pay); }
 .k-receive { --k: var(--k-receive); }
 .k-recurring { --k: var(--k-recurring); }
