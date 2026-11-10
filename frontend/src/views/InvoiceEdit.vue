@@ -7,6 +7,8 @@ import { AgGridVue } from 'ag-grid-vue3'
 import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
 import RichTextEditor from '../components/RichTextEditor.vue'
+import RelatedDocs from '../components/RelatedDocs.vue'
+import DocPicker from '../components/DocPicker.vue'
 import DatePicker from 'primevue/datepicker'
 import Dialog from 'primevue/dialog'
 import SelectButton from 'primevue/selectbutton'
@@ -776,6 +778,24 @@ function deleteRecurring() {
 }
 
 // ---- akcie ponuky ----
+// ponuka vyfakturovaná faktúrou, ktorá už existuje (vystavená mimo ponuky)
+const related = ref(null)
+const invoicedOpen = ref(false)
+const issuedInvoice = (c) => !c.draft
+async function invoicedBy(c) {
+  busy.value = true
+  try {
+    inv.value = await api.quoteInvoicedBy(session.companyId, inv.value.id, c.id)
+    invoicedOpen.value = false
+    toast.add({ severity: 'success', summary: `Ponuka vyfakturovaná faktúrou ${c.number}`, life: 3000 })
+    related.value?.load()
+  } catch (e) {
+    toast.add({ severity: 'error', summary: 'Nepodarilo sa', detail: e.fields?.[0]?.message ?? e.message, life: 6000 })
+  } finally {
+    busy.value = false
+  }
+}
+
 // zmena čísla vystavenej ponuky (napr. po prenose z iného programu)
 const renumberOpen = ref(false)
 const renumberValue = ref('')
@@ -1032,6 +1052,8 @@ const customerFields = reactive([
         <Button v-if="qa.renumber" label="Zmeniť číslo" icon="pi pi-hashtag" severity="secondary" text size="small" :disabled="busy" @click="openRenumber" />
         <Button v-if="qa.reject" label="Odmietnutá" severity="secondary" text size="small" :disabled="busy" @click="quoteStep('reject', 'Ponuka označená ako odmietnutá')" />
         <Button v-if="qa.accept" label="Prijatá" icon="pi pi-thumbs-up" severity="secondary" outlined size="small" :disabled="busy" @click="quoteStep('accept', 'Ponuka označená ako prijatá')" />
+        <Button v-if="qa.invoice" label="Už vyfakturovaná…" icon="pi pi-link" severity="secondary" text size="small" :disabled="busy"
+          v-tooltip.bottom="'Ponuka je vyfakturovaná faktúrou, ktorá už existuje'" @click="invoicedOpen = true" />
         <Button v-if="qa.invoice" label="Vytvoriť faktúru" icon="pi pi-file-export" size="small" :disabled="busy" @click="invoiceQuote" />
       </template>
       <template v-else-if="!isQuote && canWrite && (inv.status === 'issued' || inv.status === 'paid')">
@@ -1506,6 +1528,8 @@ const customerFields = reactive([
             :placeholder="editable ? 'Napr. Ďakujeme za spoluprácu.' : ''" @update:model-value="upd(inv, 'note')($event)" />
         </fieldset>
 
+        <RelatedDocs v-if="inv.id && !isRecurring" ref="related" :kind="isQuote ? 'quote' : 'invoice'" :id="Number(inv.id)" :can-write="canWrite" />
+
         <fieldset v-if="isRecurring && inv.id" class="block">
           <legend>Vytvorené faktúry <span class="muted">{{ inv.generated || 0 }}</span></legend>
           <p v-if="!inv.history?.length" class="muted">Zatiaľ žiadna.</p>
@@ -1677,6 +1701,7 @@ const customerFields = reactive([
       </template>
     </Dialog>
     <SendMailDialog v-if="canMail" v-model:visible="mailOpen" :kind="isQuote ? 'quotes' : 'invoices'" :id="inv.id" />
+    <DocPicker v-if="isQuote" v-model:visible="invoicedOpen" header="Ponuka vyfakturovaná faktúrou" :kinds="['invoice']" :accept="issuedInvoice" @pick="invoicedBy" />
     <Dialog v-if="isQuote" v-model:visible="renumberOpen" modal header="Číslo ponuky" :style="{ width: '22rem' }" :breakpoints="{ '760px': '96vw' }">
       <form id="renumber-form" class="renumber" @submit.prevent="renumber">
         <label for="renumber-input">Nové číslo</label>

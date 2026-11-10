@@ -14,6 +14,7 @@ import AutoComplete from 'primevue/autocomplete'
 import FormField from '../components/FormField.vue'
 import IcoInput from '../components/IcoInput.vue'
 import VatIdInput from '../components/VatIdInput.vue'
+import RelatedDocs from '../components/RelatedDocs.vue'
 import { api, ApiError } from '../lib/api.js'
 import { session, can } from '../lib/session.js'
 import { codes, ratesOn, supplyKindsFor, isForeign, supplyHint } from '../lib/codes.js'
@@ -546,6 +547,8 @@ watch(() => !!p.value?.customs, (on) => on && !imports.value.length && loadImpor
           <legend>Poznámka</legend>
           <Textarea :model-value="p.note" :disabled="locked" rows="2" auto-resize class="note" @update:model-value="set(p, 'note')($event)" />
         </fieldset>
+
+        <RelatedDocs v-if="p.id" kind="purchase" :id="Number(p.id)" :can-write="canWrite" />
       </div>
 
       <aside class="recap" aria-label="Súhrn dokladu">

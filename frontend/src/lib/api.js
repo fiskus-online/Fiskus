@@ -391,6 +391,10 @@ export const api = {
       ? request('PUT', `/api/companies/${cid}/quotes/${q.id}`, q)
       : request('POST', `/api/companies/${cid}/quotes`, q),
   previewQuote: (cid, q) => request('POST', `/api/companies/${cid}/quotes/preview`, q),
+  docLinks: (cid, kind, id) => request('GET', `/api/companies/${cid}/links/${kind}/${id}`),
+  linkDoc: (cid, kind, id, to) => request('POST', `/api/companies/${cid}/links/${kind}/${id}`, to),
+  unlinkDoc: (cid, kind, id, linkId) => request('DELETE', `/api/companies/${cid}/links/${kind}/${id}/${linkId}`),
+  quoteInvoicedBy: (cid, id, invoiceId) => request('POST', `/api/companies/${cid}/quotes/${id}/invoiced`, { invoiceId }),
   renumberQuote: (cid, id, number) => request('PUT', `/api/companies/${cid}/quotes/${id}/number`, { number }),
   quoteAction: (cid, id, action) => request('POST', `/api/companies/${cid}/quotes/${id}/${action}`),
   unshareQuote: (cid, id) => request('DELETE', `/api/companies/${cid}/quotes/${id}/share`),

@@ -44,6 +44,22 @@ text rovnako. E-faktúra a e-mail nesú obyčajný text s odrážkami „•“.
 ![Formátovaný text nad položkami ponuky](../obrazky/text-editor.webp)
 *Formátovaný text nad položkami ponuky*
 
+## Súvisiace doklady
+
+Na faktúre, cenovej ponuke, prijatej faktúre aj uloženom tlačive (dodací
+list, objednávka, preberací protokol…) je časť **Súvisiace doklady**.
+Tlačidlom *Prepojiť doklad* vyberiete doklad, ktorý k nemu patrí (hľadá sa
+podľa čísla, partnera aj sumy). Prepojenie platí z oboch strán: na
+dodacom liste uvidíte faktúru a na faktúre dodací list. Kliknutím na číslo
+doklad otvoríte.
+
+Niektoré väzby Fiškus vie sám a ukáže ich vždy: faktúra vytvorená
+z ponuky, dobropis k faktúre, zálohová faktúra, doklad k platbe a
+vyúčtovanie. Tie sa zrušiť nedajú; ručné prepojenie zrušíte krížikom.
+
+![Súvisiace doklady na faktúre](../obrazky/suvisiace-doklady.webp)
+*Súvisiace doklady na faktúre*
+
 ## Úprava vystavenej faktúry
 
 Vystavenú faktúru možno opraviť (číslo ostane, zmena ide do auditu), kým:

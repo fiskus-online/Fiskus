@@ -10,6 +10,7 @@ import (
 	"github.com/fiskus-online/fiskus/backend/internal/catalog"
 	"github.com/fiskus-online/fiskus/backend/internal/forms"
 	"github.com/fiskus-online/fiskus/backend/internal/journal"
+	"github.com/fiskus-online/fiskus/backend/internal/link"
 	"reflect"
 	"sync"
 	"testing"
@@ -764,6 +765,53 @@ func Run(t *testing.T, newStore Factory) {
 		}
 		if list, _ := s.ListHHEntries(ctx, b.ID, 0); len(list) != 1 {
 			t.Fatal("zmazanie domácnosti zmazalo pohyby inej")
+		}
+	})
+
+	t.Run("prepojenia dokladov", func(t *testing.T) {
+		s := newStore(t)
+		a, _ := s.CreateCompany(ctx, store.Company{Name: "Alfa"})
+		b, _ := s.CreateCompany(ctx, store.Company{Name: "Beta"})
+		inv, q, dl := link.Ref{Kind: link.Invoice, ID: 7}, link.Ref{Kind: link.Quote, ID: 3}, link.Ref{Kind: link.Form, ID: 11}
+		l1, _ := link.New(q, inv)
+		l2, _ := link.New(inv, dl)
+		for _, l := range []*link.Link{&l1, &l2} {
+			if err := s.SaveDocLink(ctx, a.ID, l); err != nil || l.ID == 0 || l.Created.IsZero() {
+				t.Fatalf("prepojenie: %+v %v", l, err)
+			}
+		}
+		dup, _ := link.New(inv, q)
+		if err := s.SaveDocLink(ctx, a.ID, &dup); !errors.Is(err, store.ErrDuplicate) {
+			t.Fatalf("rovnaká dvojica: %v", err)
+		}
+		other := l1
+		other.ID = 0
+		if err := s.SaveDocLink(ctx, b.ID, &other); err != nil {
+			t.Fatalf("rovnaká dvojica inej firmy: %v", err)
+		}
+		if list, _ := s.ListDocLinks(ctx, a.ID, inv); len(list) != 2 || list[0].ID != l1.ID || list[1].Other(inv) != dl {
+			t.Fatalf("prepojenia faktúry: %+v", list)
+		}
+		if list, _ := s.ListDocLinks(ctx, a.ID, q); len(list) != 1 || list[0].A != inv || list[0].B != q {
+			t.Fatalf("prepojenia ponuky: %+v", list)
+		}
+		if err := s.DeleteDocLink(ctx, b.ID, l1.ID); !errors.Is(err, store.ErrNotFound) {
+			t.Fatal("zmazanie prepojenia inej firmy")
+		}
+		if err := s.DeleteDocLink(ctx, a.ID, l1.ID); err != nil {
+			t.Fatal(err)
+		}
+		if list, _ := s.ListDocLinks(ctx, a.ID, q); len(list) != 0 {
+			t.Fatalf("po zmazaní: %+v", list)
+		}
+		if err := s.DeleteCompany(ctx, a.ID); err != nil {
+			t.Fatal(err)
+		}
+		if list, _ := s.ListDocLinks(ctx, a.ID, inv); len(list) != 0 {
+			t.Fatal("prepojenia po zmazaní firmy")
+		}
+		if list, _ := s.ListDocLinks(ctx, b.ID, q); len(list) != 1 {
+			t.Fatal("zmazanie firmy zmazalo prepojenia inej")
 		}
 	})
 
