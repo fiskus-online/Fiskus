@@ -51,6 +51,9 @@ func TestItemCard(t *testing.T) {
 	if len(card.Moves) != 3 || card.Moves[0].Date.String() != "2026-10-05" || card.Moves[2].Kind != stock.Receipt {
 		t.Errorf("pohyby %+v", card.Moves)
 	}
+	if len(card.Purchases) != 1 || !card.Purchases[0].UnitCost.Equal(m.MustParse("7.50")) || len(card.Suppliers) != 1 || card.Suppliers[0].Count != 1 {
+		t.Errorf("nákupy %+v %+v", card.Purchases, card.Suppliers)
+	}
 	// zoznam cenníka: stav a hlavný obrázok
 	img1, err := a.AddItemImage(ctx, c.ID, id, "predok.png", pngHeader)
 	if err != nil || img1.ContentType != "image/png" || img1.Data != nil {
