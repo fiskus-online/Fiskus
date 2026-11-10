@@ -44,6 +44,7 @@ type ImportReport struct {
 	Items     ImportCount    `json:"items"`
 	Invoices  ImportCount    `json:"invoices"`
 	Purchases ImportCount    `json:"purchases"`
+	Quotes    ImportCount    `json:"quotes"`
 	Other     map[string]int `json:"other"` // agendy, ktoré sa neprenášajú
 	Warnings  []string       `json:"warnings"`
 	Done      bool           `json:"done"`
@@ -103,6 +104,7 @@ type migration struct {
 	Items     []catalog.Item
 	Invoices  []migInvoice
 	Purchases []migPurchase
+	Quotes    []migQuote
 	// Skips sú doklady, ktoré sa neprenášajú (zálohy…), s dôvodom.
 	Skips    []migSkip
 	Other    map[string]int
@@ -191,6 +193,11 @@ func (a *App) migrate(ctx context.Context, companyID int64, m migration, opt Mig
 		for _, mp := range m.Purchases {
 			if mp.Err == nil && mp.P.Supplier.Name != "" {
 				list0 = append(list0, migContact{Party: mp.P.Supplier, fromDoc: true})
+			}
+		}
+		for _, mq := range m.Quotes {
+			if mq.Err == nil && mq.Q.Customer.Name != "" {
+				list0 = append(list0, migContact{Party: mq.Q.Customer, fromDoc: true})
 			}
 		}
 	}
@@ -349,6 +356,10 @@ func (a *App) migrate(ctx context.Context, companyID int64, m migration, opt Mig
 		}
 	}
 
+	if err := a.migQuotes(ctx, companyID, m, apply, &rep); err != nil {
+		return rep, err
+	}
+
 	for _, s := range m.Skips {
 		switch s.Agenda {
 		case agContacts:
@@ -369,8 +380,8 @@ func (a *App) migrate(ctx context.Context, companyID int64, m migration, opt Mig
 	}
 	if apply {
 		a.record(ctx, companyID, audit.CatSettings, "import", "migrate", 0, fmt.Sprintf(
-			"Prenos z %s: adresár %d, cenník %d, vydané faktúry %d, prijaté faktúry %d",
-			m.Source, rep.Contacts.New, rep.Items.New, rep.Invoices.New, rep.Purchases.New), nil, nil)
+			"Prenos z %s: adresár %d, cenník %d, vydané faktúry %d, prijaté faktúry %d, cenové ponuky %d",
+			m.Source, rep.Contacts.New, rep.Items.New, rep.Invoices.New, rep.Purchases.New, rep.Quotes.New), nil, nil)
 	}
 	return rep, nil
 }

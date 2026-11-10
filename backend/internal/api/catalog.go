@@ -79,7 +79,7 @@ func (s *Server) importItems(w http.ResponseWriter, r *http.Request) {
 }
 
 // importMigrate: POST …/import/{source} — prenos dát z iného programu
-// (pohoda, money: XML export; omega: textový export KROS Omega; idoklad: ZIP s XML pre POHODU; mrp: XML tabuľky MRP-K/S; table: Excel/CSV s ?kind=contacts|items|invoices|purchases). ?apply=1 prenos vykoná, inak vráti
+// (pohoda, money: XML export; omega: textový export KROS Omega; idoklad: ZIP s XML pre POHODU; mrp: XML tabuľky MRP-K/S; table: Excel/CSV s ?kind=contacts|items|invoices|purchases|quotes). ?apply=1 prenos vykoná, inak vráti
 // náhľad; ?paidUntil=RRRR-MM-DD označí faktúry so splatnosťou do toho dňa
 // ako uhradené.
 func (s *Server) importMigrate(w http.ResponseWriter, r *http.Request) {

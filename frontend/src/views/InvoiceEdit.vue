@@ -136,9 +136,10 @@ const previewErrors = ref({})
 
 const canWrite = computed(() => can('invoices.write'))
 const todayISO = toISODate(new Date())
-// koncept; vystavenú faktúru tiež, kým nie je uhradená (amendable zo servera)
+// koncept; vystavenú faktúru tiež, kým nie je uhradená, a ponuku, kým nie je
+// vyfakturovaná (amendable zo servera)
 const isDraftDoc = computed(() => !inv.value?.status || inv.value.status === 'draft')
-const amending = computed(() => !isDraftDoc.value && !isQuote.value && !isRecurring.value && !!inv.value?.amendable)
+const amending = computed(() => !isDraftDoc.value && !isRecurring.value && !!inv.value?.amendable)
 const editable = computed(() => canWrite.value && (isDraftDoc.value || amending.value))
 // neplatiteľ DPH: faktúra bez DPH (o režime rozhoduje backend podľa nastavení firmy)
 const nonVat = computed(() => !!inv.value?.nonVatPayer)
@@ -551,7 +552,7 @@ async function save({ quiet = false } = {}) {
     lines.value = saved.lines.length ? saved.lines.map(withKey) : [blankLine()]
     dirty.value = false
     errors.value = {}
-    if (!quiet) toast.add({ severity: 'success', summary: isRecurring.value ? 'Pravidelná faktúra uložená' : wasAmend ? `Faktúra ${saved.number} upravená` : 'Koncept uložený', life: 2500 })
+    if (!quiet) toast.add({ severity: 'success', summary: isRecurring.value ? 'Pravidelná faktúra uložená' : wasAmend ? `${isQuote.value ? 'Ponuka' : 'Faktúra'} ${saved.number} upravená` : 'Koncept uložený', life: 2500 })
     if (wasNew) router.replace(`${base.value}/${saved.id}`)
     return saved
   } catch (e) {
@@ -566,7 +567,7 @@ function issue() {
   confirm.require({
     header: isQuote.value ? 'Vystaviť ponuku' : 'Vystaviť faktúru',
     message: isQuote.value
-      ? 'Ponuka dostane číslo z radu ponúk a už sa nebude dať upravovať. Novú verziu vytvoríte kópiou.'
+      ? 'Ponuka dostane číslo z radu ponúk. Upravovať ju pôjde, kým nie je vyfakturovaná; novú verziu s novým číslom vytvoríte kópiou.'
       : 'Faktúra dostane číslo z radu. Upravovať ju pôjde, kým nie je uhradená a kým jej obdobie nie je priznané v DPH; potom už iba dobropisom.',
     acceptProps: { label: 'Vystaviť' },
     rejectProps: { label: 'Zrušiť', severity: 'secondary', outlined: true },
@@ -775,6 +776,30 @@ function deleteRecurring() {
 }
 
 // ---- akcie ponuky ----
+// zmena čísla vystavenej ponuky (napr. po prenose z iného programu)
+const renumberOpen = ref(false)
+const renumberValue = ref('')
+const renumberError = ref('')
+function openRenumber() {
+  renumberValue.value = inv.value.number
+  renumberError.value = ''
+  renumberOpen.value = true
+}
+async function renumber() {
+  busy.value = true
+  renumberError.value = ''
+  try {
+    const before = inv.value.number
+    inv.value = await api.renumberQuote(session.companyId, inv.value.id, renumberValue.value)
+    renumberOpen.value = false
+    if (before !== inv.value.number) toast.add({ severity: 'success', summary: `Číslo ponuky zmenené na ${inv.value.number}`, life: 3000 })
+  } catch (e) {
+    renumberError.value = e.fieldMap?.().number || e.message
+  } finally {
+    busy.value = false
+  }
+}
+
 async function quoteStep(action, summary) {
   busy.value = true
   try {
@@ -995,7 +1020,7 @@ const customerFields = reactive([
       <Button v-if="canEInvoice" icon="pi pi-file-export" :label="einvMode ? undefined : 'E-faktúra'" aria-label="Stiahnuť e-faktúru XML" severity="secondary" text size="small" :loading="busyUBL && !einvMode"
         v-tooltip.bottom="'Stiahnuť e-faktúru XML (UBL, Peppol BIS 3.0) — od 1. 1. 2027 povinná medzi platiteľmi DPH'" @click="downloadEInvoice" />
       <Button v-if="amending && canWrite" label="Uložiť zmeny" icon="pi pi-check" :severity="dirty ? undefined : 'secondary'" :outlined="!dirty" size="small" :loading="busy"
-        :disabled="!dirty" v-tooltip.bottom="'Vystavená faktúra sa dá upravovať, kým nie je uhradená (Ctrl+S)'" @click="save()" />
+        :disabled="!dirty" v-tooltip.bottom="isQuote ? 'Vystavená ponuka sa dá upravovať, kým nie je vyfakturovaná (Ctrl+S)' : 'Vystavená faktúra sa dá upravovať, kým nie je uhradená (Ctrl+S)'" @click="save()" />
       <template v-if="editable && isDraftDoc && !isRecurring">
         <Button v-if="inv.id && !isQuote" label="Zmazať" severity="danger" text size="small" :disabled="busy" @click="deleteDraft" />
         <Button label="Uložiť koncept" severity="secondary" outlined size="small" :loading="busy" @click="save()" v-tooltip.bottom="'Ctrl+S'" />
@@ -1004,6 +1029,7 @@ const customerFields = reactive([
       <template v-else-if="isQuote && canWrite">
         <Button v-if="qa.copy" label="Kópia" icon="pi pi-copy" severity="secondary" text size="small" :disabled="busy"
           v-tooltip.bottom="'Nová verzia ponuky ako koncept'" @click="copyQuote" />
+        <Button v-if="qa.renumber" label="Zmeniť číslo" icon="pi pi-hashtag" severity="secondary" text size="small" :disabled="busy" @click="openRenumber" />
         <Button v-if="qa.reject" label="Odmietnutá" severity="secondary" text size="small" :disabled="busy" @click="quoteStep('reject', 'Ponuka označená ako odmietnutá')" />
         <Button v-if="qa.accept" label="Prijatá" icon="pi pi-thumbs-up" severity="secondary" outlined size="small" :disabled="busy" @click="quoteStep('accept', 'Ponuka označená ako prijatá')" />
         <Button v-if="qa.invoice" label="Vytvoriť faktúru" icon="pi pi-file-export" size="small" :disabled="busy" @click="invoiceQuote" />
@@ -1033,7 +1059,8 @@ const customerFields = reactive([
 
     <div class="body">
       <div class="form">
-        <p v-if="amending" class="advance-note"><i class="pi pi-pencil" /> <span>Vystavená faktúra sa dá upravovať, kým nie je uhradená. Číslo ostane; ak ste ju už poslali, pošlite odberateľovi opravenú.</span></p>
+        <p v-if="amending && isQuote" class="advance-note"><i class="pi pi-pencil" /> <span>Vystavená ponuka sa dá upravovať, kým nie je vyfakturovaná. Číslo a stav ostanú; ak ste ju už poslali, pošlite zákazníkovi upravenú.</span></p>
+        <p v-else-if="amending" class="advance-note"><i class="pi pi-pencil" /> <span>Vystavená faktúra sa dá upravovať, kým nie je uhradená. Číslo ostane; ak ste ju už poslali, pošlite odberateľovi opravenú.</span></p>
         <p v-else-if="!isDraftDoc && inv.lockReason && !isQuote && !isRecurring" class="advance-note"><i class="pi pi-lock" /> <span>{{ inv.lockReason }}</span></p>
         <p v-if="einvStatus" class="advance-note einv-status">
           <i class="pi pi-send" /> <span>{{ einvStatus }}</span>
@@ -1650,6 +1677,18 @@ const customerFields = reactive([
       </template>
     </Dialog>
     <SendMailDialog v-if="canMail" v-model:visible="mailOpen" :kind="isQuote ? 'quotes' : 'invoices'" :id="inv.id" />
+    <Dialog v-if="isQuote" v-model:visible="renumberOpen" modal header="Číslo ponuky" :style="{ width: '22rem' }" :breakpoints="{ '760px': '96vw' }">
+      <form id="renumber-form" class="renumber" @submit.prevent="renumber">
+        <label for="renumber-input">Nové číslo</label>
+        <InputText id="renumber-input" v-model="renumberValue" size="small" fluid autofocus :invalid="!!renumberError" />
+        <small v-if="renumberError" class="err">{{ renumberError }}</small>
+        <small v-else class="hint">Napríklad pôvodné číslo z iného programu. Zmena sa zapíše do auditu.</small>
+      </form>
+      <template #footer>
+        <Button label="Zrušiť" severity="secondary" text size="small" @click="renumberOpen = false" />
+        <Button type="submit" form="renumber-form" label="Zmeniť číslo" icon="pi pi-check" size="small" :loading="busy" />
+      </template>
+    </Dialog>
   </div>
 </template>
 
@@ -2396,5 +2435,16 @@ legend {
   .vat-opts {
     grid-template-columns: 1fr;
   }
+}
+.renumber {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.renumber .err {
+  color: var(--tone-overdue);
+}
+.renumber .hint {
+  color: var(--ink-soft);
 }
 </style>

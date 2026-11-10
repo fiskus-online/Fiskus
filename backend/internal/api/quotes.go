@@ -21,11 +21,12 @@ func failQuote(w http.ResponseWriter, err error) {
 // quoteRow je ponuka so stavom platnosti k dnešku.
 type quoteRow struct {
 	quote.Quote
-	Expired bool `json:"expired"`
+	Expired   bool `json:"expired"`
+	Amendable bool `json:"amendable"` // vystavená, ešte nevyfakturovaná — dá sa upraviť
 }
 
 func (s *Server) quoteRow(q quote.Quote) quoteRow {
-	return quoteRow{Quote: q, Expired: q.Expired(s.App.Today())}
+	return quoteRow{Quote: q, Expired: q.Expired(s.App.Today()), Amendable: q.Amendable()}
 }
 
 // listQuotes: GET /api/companies/{cid}/quotes?year=2026 (bez roku = všetky)
@@ -142,6 +143,27 @@ func (s *Server) rejectQuote(r *http.Request, cid, id int64) (quote.Quote, error
 }
 func (s *Server) copyQuote(r *http.Request, cid, id int64) (quote.Quote, error) {
 	return s.App.CopyQuote(r.Context(), cid, id)
+}
+
+// renumberQuote: PUT /quotes/{id}/number {"number": "…"}.
+func (s *Server) renumberQuote(w http.ResponseWriter, r *http.Request) {
+	cid, _ := pathID(w, r, "cid")
+	id, ok := pathID(w, r, "id")
+	if !ok {
+		return
+	}
+	var in struct {
+		Number string `json:"number"`
+	}
+	if !decode(w, r, &in) {
+		return
+	}
+	q, err := s.App.RenumberQuote(r.Context(), cid, id, in.Number)
+	if err != nil {
+		failQuote(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, s.quoteRow(q))
 }
 
 // invoiceQuote: POST /quotes/{id}/invoice → koncept faktúry.

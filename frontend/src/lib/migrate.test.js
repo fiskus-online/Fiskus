@@ -69,3 +69,14 @@ describe('import kontaktov', () => {
 it('všetky zdroje sú hotové', () => {
   expect(sources.filter((s) => !s.ready)).toEqual([])
 })
+
+describe('cenové ponuky v prenose', () => {
+  it('riadok ponúk iba keď sú v súbore', () => {
+    expect(summaryRows({ invoices: { new: 1 } }).map((r) => r.key)).toEqual(['contacts', 'items', 'invoices', 'purchases'])
+    const rows = summaryRows({ quotes: { new: 10, existing: 0, skipped: 0 }, contacts: { new: 2 } })
+    expect(rows.find((r) => r.key === 'quotes')).toEqual({ key: 'quotes', label: 'Cenové ponuky', new: 10, existing: 0, skipped: 0 })
+    expect(newTotal({ quotes: { new: 10 }, contacts: { new: 2 } })).toBe(12)
+    expect(kindLabel('quotes')).toBe('Cenové ponuky')
+    expect(templateExport('quotes').columns[0].header).toBe('Číslo cenovej ponuky')
+  })
+})

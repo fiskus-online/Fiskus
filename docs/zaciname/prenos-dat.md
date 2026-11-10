@@ -23,7 +23,7 @@ pribudne, čo sa zmení a čo sa preskočí a prečo. Až potom sa zapíše.
 | MRP-K/S | export faktúr | vydané a prijaté faktúry, adresy s IBAN, dobropisy, úhrady |
 | iDoklad | export pre POHODU (ZIP) | faktúry, kontakty z odberateľov |
 | SuperFaktúra, Fakturoid | ich export pre účtovníka | formát sa rozpozná sám, aj v ZIP |
-| ľubovoľný program | tabuľka Excel / CSV | adresár, cenník, vydané alebo prijaté faktúry; vzory na stiahnutie |
+| ľubovoľný program | tabuľka Excel / CSV | adresár, cenník, vydané alebo prijaté faktúry, cenové ponuky; vzory na stiahnutie |
 
 Ďalšie dovozy sú priamo pri zoznamoch:
 
@@ -37,3 +37,26 @@ pribudne, čo sa zmení a čo sa preskočí a prečo. Až potom sa zapíše.
 Po prenose faktúr s pôvodnými číslami pokračuje číselný rad za posledným
 preneseným číslom, takže v radoch nevzniknú diery ani duplicity.
 :::
+
+## Cenové ponuky z tabuľky
+
+Zoznam cenových ponúk exportovaný do Excelu alebo CSV sa prenesie
+s pôvodnými číslami a stavmi. Nadpis a dátum exportu nad tabuľkou nevadia.
+Druh tabuľky sa rozpozná podľa stĺpcov *Číslo cenovej ponuky* a
+*Platnosť do*.
+
+- Popis ponuky je predmet (prvý riadok) a úvodný text (ďalšie riadky),
+  suma je jedna položka.
+- Stav: *vyfakturovaná*, *prijatá*, *odmietnutá*; ostatné (napríklad
+  *vytvorená*) sú vystavené ponuky.
+- Vyfakturovaná ponuka sa spojí s faktúrou, ak je vo Fiškuse faktúra
+  rovnakému odberateľovi s rovnakou sumou, vystavená v deň ponuky alebo
+  neskôr.
+- Odberatelia, ktorí v adresári ešte nie sú, sa doň pridajú.
+- Nové ponuky vo Fiškuse preskočia čísla, ktoré už majú prenesené ponuky.
+
+Číslo vystavenej ponuky sa dá zmeniť aj ručne: na ponuke **Zmeniť číslo**
+(napríklad na pôvodné číslo z iného programu). Číslo musí byť jedinečné a
+zmena sa zapíše do auditu. Faktúry takto prečíslovať nejde, sú to daňové
+doklady.
+

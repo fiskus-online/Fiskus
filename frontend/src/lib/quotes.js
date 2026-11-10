@@ -24,6 +24,7 @@ export function quoteActions(q) {
     reject: s === 'issued' || s === 'accepted',
     invoice: s === 'issued' || s === 'accepted',
     copy: !!q?.id,
+    renumber: !!q?.id && s !== 'draft', // číslo vystavenej ponuky (napr. po prenose)
   }
 }
 

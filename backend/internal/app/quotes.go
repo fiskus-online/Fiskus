@@ -90,7 +90,10 @@ func (a *App) SaveQuote(ctx context.Context, companyID int64, q quote.Quote) (qu
 			return q, err
 		}
 		if !old.Editable() {
-			return q, quote.ErrLocked
+			if !old.Amendable() {
+				return q, quote.ErrLocked
+			}
+			return a.amendQuote(ctx, companyID, old, q)
 		}
 		before = &old
 	}
@@ -147,7 +150,21 @@ func (a *App) IssueQuote(ctx context.Context, companyID, id int64) (quote.Quote,
 	if format == "" {
 		format = ExtraFormats[QuoteFormatKey]
 	}
-	if err := q.Issue(invoice.FormatNumberWith(format, year, month, seq)); err != nil {
+	number := invoice.FormatNumberWith(format, year, month, seq)
+	// číslo už môže mať ponuka prenesená z iného programu → ďalšie v rade
+	if all, err := a.Store.ListQuotes(ctx, companyID, 0); err == nil {
+		taken := map[string]bool{}
+		for _, x := range all {
+			taken[x.Number] = x.Number != ""
+		}
+		for i := 0; i < 1000 && taken[number]; i++ {
+			if seq, err = a.Store.NextSequence(ctx, companyID, quoteSeries, year); err != nil {
+				return q, err
+			}
+			number = invoice.FormatNumberWith(format, year, month, seq)
+		}
+	}
+	if err := q.Issue(number); err != nil {
 		return q, err
 	}
 	if err := a.Store.SaveQuote(ctx, companyID, &q); err != nil {
@@ -264,4 +281,65 @@ func (a *App) InvoiceQuote(ctx context.Context, companyID, id int64) (invoice.In
 	a.record(ctx, companyID, audit.CatQuotes, "invoice", "quote", q.ID, "Vyfakturovaná ponuka "+q.Number,
 		state{Status: before}, state{q.Status, inv.ID})
 	return inv, nil
+}
+
+// RenumberQuote zmení číslo vystavenej ponuky (napríklad po prenose
+// z iného programu). Ponuka nie je daňový doklad; číslo musí byť
+// jedinečné a zmena sa zapíše do auditu.
+func (a *App) RenumberQuote(ctx context.Context, companyID, id int64, number string) (quote.Quote, error) {
+	if err := a.Require(ctx, companyID, auth.PermInvoicesWrite); err != nil {
+		return quote.Quote{}, err
+	}
+	q, err := a.Store.GetQuote(ctx, companyID, id)
+	if err != nil {
+		return q, err
+	}
+	number = strings.TrimSpace(number)
+	if q.Status == quote.StatusDraft {
+		return q, vErr("number", "Koncept nemá číslo — číslo dostane pri vystavení")
+	}
+	if number == "" || len([]rune(number)) > 40 {
+		return q, vErr("number", "Zadajte číslo ponuky (najviac 40 znakov)")
+	}
+	if number == q.Number {
+		return q, nil
+	}
+	all, err := a.Store.ListQuotes(ctx, companyID, 0)
+	if err != nil {
+		return q, err
+	}
+	for _, x := range all {
+		if x.ID != q.ID && x.Number == number {
+			return q, vErr("number", "Číslo "+number+" už má iná ponuka")
+		}
+	}
+	before := q
+	q.Number = number
+	if err := a.Store.SaveQuote(ctx, companyID, &q); err != nil {
+		return q, err
+	}
+	a.record(ctx, companyID, audit.CatQuotes, "renumber", "quote", q.ID,
+		"Zmena čísla ponuky "+before.Number+" → "+q.Number+" ("+q.Customer.Name+")", before, q)
+	return q, nil
+}
+
+// amendQuote uloží úpravu vystavenej ponuky: číslo, stav, faktúra a odkaz
+// pre zákazníka ostanú; ponuka musí byť úplná ako pri vystavení.
+func (a *App) amendQuote(ctx context.Context, companyID int64, old, q quote.Quote) (quote.Quote, error) {
+	q.ID, q.Status, q.Number, q.InvoiceID, q.InvoiceNumber, q.Share = old.ID, old.Status, old.Number, old.InvoiceID, old.InvoiceNumber, old.Share
+	if q.IssueDate.IsZero() {
+		q.IssueDate = old.IssueDate
+	}
+	if err := a.prepareQuote(ctx, companyID, &q); err != nil {
+		return q, err
+	}
+	if err := q.Validate(); err != nil {
+		return q, err
+	}
+	if err := a.Store.SaveQuote(ctx, companyID, &q); err != nil {
+		return q, err
+	}
+	a.record(ctx, companyID, audit.CatQuotes, "amend", "quote", q.ID,
+		"Úprava vystavenej ponuky "+q.Number+" pre "+q.Customer.Name+", "+q.Summary.Total.Display()+" €", old, q)
+	return q, nil
 }

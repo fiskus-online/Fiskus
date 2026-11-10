@@ -391,6 +391,7 @@ export const api = {
       ? request('PUT', `/api/companies/${cid}/quotes/${q.id}`, q)
       : request('POST', `/api/companies/${cid}/quotes`, q),
   previewQuote: (cid, q) => request('POST', `/api/companies/${cid}/quotes/preview`, q),
+  renumberQuote: (cid, id, number) => request('PUT', `/api/companies/${cid}/quotes/${id}/number`, { number }),
   quoteAction: (cid, id, action) => request('POST', `/api/companies/${cid}/quotes/${id}/${action}`),
   unshareQuote: (cid, id) => request('DELETE', `/api/companies/${cid}/quotes/${id}/share`),
   // ponuka pre zákazníka cez odkaz (bez prihlásenia)
