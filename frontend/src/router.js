@@ -32,6 +32,7 @@ import CashPrint from './views/CashPrint.vue'
 import QuoteList from './views/QuoteList.vue'
 import Jobs from './views/Jobs.vue'
 import JobEdit from './views/JobEdit.vue'
+import JobPrint from './views/JobPrint.vue'
 import PurchaseOrders from './views/PurchaseOrders.vue'
 import Deliveries from './views/Deliveries.vue'
 import DeliveryEdit from './views/DeliveryEdit.vue'
@@ -177,6 +178,7 @@ export const router = createRouter({
     { path: '/zakazky', component: Jobs, meta: { title: 'Zákazky', perm: 'invoices.read' } },
     { path: '/zakazky/nova', component: JobEdit, meta: { title: 'Nová zákazka', perm: 'invoices.write' } },
     { path: '/zakazky/:id(\\d+)', component: JobEdit, props: true, meta: { title: 'Zákazka', perm: 'invoices.read' } },
+    { path: '/zakazky/:id(\\d+)/tlac', component: JobPrint, props: true, meta: { title: 'Zákazkový list', bare: true, perm: 'invoices.read' } },
     { path: '/ponuky/nova', component: InvoiceEdit, props: { quote: true }, meta: { title: 'Nová ponuka', perm: 'invoices.write' } },
     { path: '/ponuky/:id(\\d+)', component: InvoiceEdit, props: (r) => ({ id: r.params.id, quote: true }), meta: { title: 'Cenová ponuka', perm: 'invoices.read' } },
     { path: '/ponuky/:id(\\d+)/tlac', component: InvoicePrint, props: (r) => ({ id: r.params.id, quote: true }), meta: { title: 'Cenová ponuka', bare: true, perm: 'invoices.read' } },
