@@ -11,11 +11,21 @@ tags: [prehľad]
 Verzie sú značky v repozitári (`v0.2.0`). Podrobný zoznam funkcií po
 etapách je v [pláne vývoja](./ROADMAP.md).
 
-## Pripravuje sa
+## 0.9.0
 
 - **Automatická aktualizácia**: nainštalovaný Fiškus si po spustení sám
   stiahne novú verziu, zavrie sa, nainštaluje ju a znova sa otvorí.
   Funguje od tejto verzie ďalej; na ňu treba ešte raz aktualizovať ručne.
+- **Formátovaný text** nad položkami a pod nimi (tučné, kurzíva,
+  podčiarknuté, odrážky, číslovanie); text vložený z Wordu či webu sa
+  vyčistí. Rovnako vyzerá v PDF aj v tlači.
+- **Cenové ponuky**: prenos z tabuľky Excel/CSV s pôvodnými číslami a
+  stavmi, zmena čísla vystavenej ponuky a úprava vystavenej ponuky, kým
+  nie je vyfakturovaná.
+- **Domácnosť**: napojenie na Fio banku a spojenie bločkov s platbami
+  kartou do jedného výdavku.
+- Fio: zrozumiteľné hlásenie, keď banka token neprijme.
+- Web sa po vydaní novej verzie aktualizuje sám.
 
 ## 0.7.0
 
