@@ -139,3 +139,39 @@ func TestPurchaseOrdersAPI(t *testing.T) {
 	e.do("POST", fmt.Sprintf("/api/companies/%d/stock/reorder", e.cid), `{"picks":[]}`, 422, nil)
 	e.do("DELETE", fmt.Sprintf("%s/%d", base, o.ID), nil, 422, nil)
 }
+
+func TestDeliveriesAPI(t *testing.T) {
+	e := setup(t, edition.Desktop)
+	base := fmt.Sprintf("/api/companies/%d/deliveries", e.cid)
+	type row struct {
+		ID     int64
+		Number string
+		Status string
+	}
+	var n row
+	e.do("POST", base, `{"customer":{"name":"Zákazník s.r.o."},"lines":[]}`, 422, nil)
+	e.do("POST", base, `{"customer":{"name":"Zákazník s.r.o."},"date":"2026-11-10","lines":[{"description":"Montáž","quantity":"2","unit":"hod","unitPrice":"35","vatRate":23}]}`, 201, &n)
+	if n.Status != "draft" || n.Number != "" {
+		t.Fatalf("koncept %+v", n)
+	}
+	e.do("POST", fmt.Sprintf("%s/%d/issue", base, n.ID), nil, 200, &n)
+	if n.Status != "issued" || n.Number == "" {
+		t.Fatalf("vydaný %+v", n)
+	}
+	e.do("DELETE", fmt.Sprintf("%s/%d", base, n.ID), nil, 422, nil)
+	var inv struct {
+		ID     int64
+		Status string
+	}
+	e.do("POST", base+"/invoice", fmt.Sprintf(`{"ids":[%d]}`, n.ID), 201, &inv)
+	if inv.Status != "draft" {
+		t.Fatalf("faktúra %+v", inv)
+	}
+	e.do("POST", fmt.Sprintf("%s/%d/cancel", base, n.ID), nil, 422, nil)
+	var list []row
+	e.do("GET", base, nil, 200, &list)
+	if len(list) != 1 || list[0].Status != "invoiced" {
+		t.Fatalf("zoznam %+v", list)
+	}
+	e.do("POST", fmt.Sprintf("/api/companies/%d/quotes/999/delivery", e.cid), nil, 404, nil)
+}

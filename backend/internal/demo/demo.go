@@ -15,6 +15,7 @@ import (
 	"github.com/fiskus-online/fiskus/backend/internal/cash"
 	"github.com/fiskus-online/fiskus/backend/internal/catalog"
 	"github.com/fiskus-online/fiskus/backend/internal/chart"
+	"github.com/fiskus-online/fiskus/backend/internal/delivery"
 	"github.com/fiskus-online/fiskus/backend/internal/ekasa"
 	"github.com/fiskus-online/fiskus/backend/internal/fx"
 	"github.com/fiskus-online/fiskus/backend/internal/household"
@@ -915,8 +916,31 @@ func seedStock(ctx context.Context, a *app.App, c store.Company, contactIDs []in
 	if err != nil {
 		return err
 	}
-	_, err = a.LinkDocs(ctx, c.ID, link.Ref{Kind: link.Job, ID: j.ID}, link.Ref{Kind: link.Invoice, ID: inv.ID})
-	return err
+	if _, err = a.LinkDocs(ctx, c.ID, link.Ref{Kind: link.Job, ID: j.ID}, link.Ref{Kind: link.Invoice, ID: inv.ID}); err != nil {
+		return err
+	}
+	// dodacie listy k zákazke: dva vydané na zbernú faktúru
+	for i, dl := range []delivery.Note{
+		{ContactID: ct.ID, Date: day(4), Place: "Prevádzka – dopravník č. 2", Receiver: "Ing. Hrnčiar", PriceMode: vat.PriceNet, Lines: []invoice.Line{
+			{Description: cable.Name, Quantity: m.MustParse("30"), Unit: cable.Unit, UnitPrice: cable.Price, Rate: vat.Rate23, ItemID: cable.ID}}},
+		{ContactID: ct.ID, Date: day(2), Place: "Prevádzka – dopravník č. 2", PriceMode: vat.PriceNet, Lines: []invoice.Line{
+			{Description: "Káblové žľaby 60×60", Quantity: m.MustParse("12"), Unit: "m", UnitPrice: m.MustParse("8.40"), Rate: vat.Rate23},
+			{Description: "Montážny materiál", Quantity: m.MustParse("1"), Unit: "súb", UnitPrice: m.MustParse("35"), Rate: vat.Rate23}}},
+	} {
+		n, err := a.SaveDelivery(ctx, c.ID, dl)
+		if err != nil {
+			return err
+		}
+		if n, err = a.IssueDelivery(ctx, c.ID, n.ID); err != nil {
+			return err
+		}
+		if i == 0 {
+			if _, err := a.LinkDocs(ctx, c.ID, link.Ref{Kind: link.Job, ID: j.ID}, link.Ref{Kind: link.Delivery, ID: n.ID}); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }
 
 // seedHousehold založí ukážkovú domácnosť: účty, rozpočet a pohyby za

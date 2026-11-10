@@ -27,6 +27,10 @@ mimo ponuky alebo ste ponuky preniesli z iného programu), použite *Už
 vyfakturovaná…* a vyberte faktúru. Ponuka dostane stav *vyfakturovaná* a
 faktúra sa ukáže v jej súvisiacich dokladoch.
 
+Keď tovar alebo prácu z ponuky odovzdávate po častiach, tlačidlo
+*Dodací list* pripraví koncept [dodacieho listu](dodacie-listy.md)
+s odberateľom a položkami ponuky; faktúru potom urobíte z dodacích listov.
+
 ![Cenové ponuky so stavmi a úspešnosťou](../obrazky/ponuky.webp)
 *Cenové ponuky so stavmi a úspešnosťou*
 

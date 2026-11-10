@@ -5,6 +5,7 @@ import { computed, ref, watch } from 'vue'
 import Dialog from 'primevue/dialog'
 import InputText from 'primevue/inputtext'
 import SelectButton from 'primevue/selectbutton'
+import Select from 'primevue/select'
 import { api } from '../lib/api.js'
 import { can, session } from '../lib/session.js'
 import { candidates, linkKinds, pickable } from '../lib/links.js'
@@ -45,6 +46,7 @@ async function load(k) {
     else if (k === 'purchase') rows = candidates(k, await api.purchases(cid, {}))
     else if (k === 'job') rows = candidates(k, await api.jobs(cid))
     else if (k === 'porder') rows = candidates(k, await api.porders(cid))
+    else if (k === 'delivery') rows = candidates(k, await api.deliveries(cid))
     else if (k === 'form') {
       const [docs, cat] = await Promise.all([api.formDocs(cid), api.forms(cid)])
       rows = candidates(k, docs, cat.forms)
@@ -80,7 +82,8 @@ function pick(c) {
 <template>
   <Dialog v-model:visible="visible" modal :header="header" :style="{ width: '40rem' }" :breakpoints="{ '760px': '96vw' }" class="doc-picker">
     <div class="pick">
-      <SelectButton v-if="options.length > 1" v-model="kind" :options="options" option-label="short" option-value="value" :allow-empty="false" size="small"
+      <Select v-if="options.length > 4" v-model="kind" :options="options" option-label="label" option-value="value" size="small" fluid aria-label="Druh dokladu" />
+      <SelectButton v-else-if="options.length > 1" v-model="kind" :options="options" option-label="short" option-value="value" :allow-empty="false" size="small"
         aria-label="Druh dokladu" />
       <InputText v-model="q" size="small" fluid placeholder="Hľadať číslo, partnera, sumu…" aria-label="Hľadať doklad" autofocus />
       <p v-if="error" class="err">{{ error }}</p>

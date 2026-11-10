@@ -61,7 +61,7 @@ const wh = computed(() => (warehouse.value === 'all' ? '' : warehouse.value))
 const cards = computed(() => (v.value ? filterCards(v.value.cards, { search: search.value, warehouse: wh.value, low: low.value }) : []))
 const docs = computed(() => (v.value ? filterDocs(v.value.docs, { search: search.value, kind: kind.value === 'all' ? '' : kind.value, warehouse: wh.value }) : []))
 const exportDocs = () => docRows(docs.value)
-const autoTag = (d) => ({ job: 'zo zákazky', order: 'z e-shopu' })[d.linkKind] ?? 'z faktúry'
+const autoTag = (d) => ({ job: 'zo zákazky', order: 'z e-shopu', delivery: 'z dodacieho listu' })[d.linkKind] ?? 'z faktúry'
 const lowCount = computed(() => (v.value?.cards ?? []).filter((c) => c.low).length)
 const qty = (c) => `${formatAmount(c.quantity).replace(/,00$/, '')} ${c.unit}`
 const multi = computed(() => (v.value?.warehouses.length ?? 0) > 1)

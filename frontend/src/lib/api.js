@@ -393,6 +393,14 @@ export const api = {
   previewQuote: (cid, q) => request('POST', `/api/companies/${cid}/quotes/preview`, q),
   jobs: (cid) => request('GET', `/api/companies/${cid}/jobs`),
   job: (cid, id) => request('GET', `/api/companies/${cid}/jobs/${id}`),
+  deliveries: (cid) => request('GET', `/api/companies/${cid}/deliveries`),
+  delivery: (cid, id) => request('GET', `/api/companies/${cid}/deliveries/${id}`),
+  saveDelivery: (cid, n, id) =>
+    id ? request('PUT', `/api/companies/${cid}/deliveries/${id}`, n) : request('POST', `/api/companies/${cid}/deliveries`, n),
+  deleteDelivery: (cid, id) => request('DELETE', `/api/companies/${cid}/deliveries/${id}`),
+  deliveryAction: (cid, id, action) => request('POST', `/api/companies/${cid}/deliveries/${id}/${action}`),
+  invoiceDeliveries: (cid, ids) => request('POST', `/api/companies/${cid}/deliveries/invoice`, { ids }),
+  deliveryFromQuote: (cid, quoteId) => request('POST', `/api/companies/${cid}/quotes/${quoteId}/delivery`),
   porders: (cid) => request('GET', `/api/companies/${cid}/purchase-orders`),
   porder: (cid, id) => request('GET', `/api/companies/${cid}/purchase-orders/${id}`),
   savePorder: (cid, o, id) =>

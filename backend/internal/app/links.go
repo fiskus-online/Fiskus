@@ -129,6 +129,13 @@ func (a *App) docInfo(ctx context.Context, companyID int64, r link.Ref) (LinkedD
 			d.Partner = j.Customer + " — " + j.Name
 		}
 		d.Total, d.Currency, d.Status = j.Budget, "EUR", string(j.Status)
+	case link.Delivery:
+		n, err := a.Store.GetDelivery(ctx, companyID, r.ID)
+		if err != nil {
+			return d, err
+		}
+		d.Type, d.Number, d.Partner, d.Date = "Dodací list", firstNonBlank(n.Number, "koncept"), n.Customer.Name, n.Date
+		d.Total, d.Currency, d.Status = n.Summary.Total, "EUR", string(n.Status)
 	case link.POrder:
 		o, err := a.Store.GetPurchaseOrder(ctx, companyID, r.ID)
 		if err != nil {

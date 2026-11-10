@@ -8,6 +8,7 @@ export const linkKinds = [
   { value: 'purchase', label: 'Prijatá faktúra', short: 'Prijaté', perm: 'purchases.read' },
   { value: 'form', label: 'Tlačivo (dodací list…)', short: 'Tlačivá', perm: 'invoices.read' },
   { value: 'job', label: 'Zákazka', short: 'Zákazky', perm: 'invoices.read' },
+  { value: 'delivery', label: 'Dodací list', short: 'Dodacie', perm: 'invoices.read' },
   { value: 'porder', label: 'Objednávka dodávateľovi', short: 'Objednávky', perm: 'purchases.read' },
 ]
 
@@ -26,6 +27,8 @@ export function docPath(d) {
       return `/zakazky/${d.id}`
     case 'porder':
       return `/objednavky/${d.id}`
+    case 'delivery':
+      return `/dodacie-listy/${d.id}`
   }
   return ''
 }
@@ -49,6 +52,8 @@ export function candidates(kind, list, forms = []) {
           return { kind, id: d.id, number: d.supplierNumber || d.number, partner: d.supplier?.name ?? '', date: d.issueDate, total: d.summary?.total ?? d.total }
         case 'job':
           return { kind, id: d.id, number: d.number, partner: [d.customer, d.name].filter(Boolean).join(' — '), date: d.start || d.created, total: d.budget }
+        case 'delivery':
+          return { kind, id: d.id, number: d.number || 'koncept', partner: d.customer?.name ?? '', date: d.date, total: d.summary?.total, draft: !d.number }
         case 'porder':
           return { kind, id: d.id, number: d.number, partner: d.supplier ?? '', date: d.date, total: d.total }
         case 'form':

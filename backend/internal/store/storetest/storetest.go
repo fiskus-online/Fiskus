@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/fiskus-online/fiskus/backend/internal/catalog"
+	"github.com/fiskus-online/fiskus/backend/internal/delivery"
 	"github.com/fiskus-online/fiskus/backend/internal/forms"
 	"github.com/fiskus-online/fiskus/backend/internal/job"
 	"github.com/fiskus-online/fiskus/backend/internal/journal"
@@ -827,6 +828,57 @@ func Run(t *testing.T, newStore Factory) {
 		}
 		if list, _ := s.ListPurchaseOrders(ctx, b.ID); len(list) != 1 {
 			t.Fatal("zmazanie firmy zmazalo objednávky inej")
+		}
+	})
+
+	t.Run("dodacie listy", func(t *testing.T) {
+		s := newStore(t)
+		a, _ := s.CreateCompany(ctx, store.Company{Name: "Alfa"})
+		b, _ := s.CreateCompany(ctx, store.Company{Name: "Beta"})
+		n1 := delivery.Note{Number: "DL20260001", Status: delivery.Invoiced, Customer: invoice.Party{Name: "Agro", Country: "SK"}, ContactID: 4,
+			Date: invoice.MustDate("2026-11-10"), Place: "Sušička", Order: "OBJ-77", Note: "Prevzaté bez výhrad", Receiver: "J. Kováč",
+			PriceMode: vat.PriceNet, Lines: []invoice.Line{{Description: "Kábel", Quantity: m.MustParse("40"), Unit: "m", UnitPrice: m.MustParse("2.19"),
+				Rate: vat.Rate23, Amount: m.MustParse("87.60"), ItemID: 13}},
+			Summary: vat.Summary{Base: m.MustParse("87.60"), VAT: m.MustParse("20.15"), Total: m.MustParse("107.75")}, InvoiceID: 9}
+		n2 := delivery.Note{Status: delivery.Draft}
+		n3 := delivery.Note{Status: delivery.Draft} // dva koncepty bez čísla
+		for _, n := range []*delivery.Note{&n1, &n2, &n3} {
+			if err := s.SaveDelivery(ctx, a.ID, n); err != nil || n.ID == 0 {
+				t.Fatalf("dodací list: %v", err)
+			}
+		}
+		dup := delivery.Note{Number: "DL20260001"}
+		if err := s.SaveDelivery(ctx, a.ID, &dup); !errors.Is(err, store.ErrDuplicate) {
+			t.Fatalf("rovnaké číslo: %v", err)
+		}
+		got, err := s.GetDelivery(ctx, a.ID, n1.ID)
+		if err != nil || !reflect.DeepEqual(got, n1) {
+			t.Fatalf("načítanie:\n got %+v\nwant %+v", got, n1)
+		}
+		got.Lines[0].Description = "zmenené"
+		if again, _ := s.GetDelivery(ctx, a.ID, n1.ID); again.Lines[0].Description != "Kábel" {
+			t.Fatal("zmena načítaného dodacieho listu zmenila uložený")
+		}
+		if list, _ := s.ListDeliveries(ctx, a.ID); len(list) != 3 || list[0].ID != n3.ID {
+			t.Fatalf("zoznam (najnovšie prvé): %+v", list)
+		}
+		if _, err := s.GetDelivery(ctx, b.ID, n1.ID); !errors.Is(err, store.ErrNotFound) {
+			t.Fatal("dodací list inej firmy")
+		}
+		if err := s.SaveDelivery(ctx, b.ID, &n1); !errors.Is(err, store.ErrNotFound) {
+			t.Fatal("úprava dodacieho listu inej firmy")
+		}
+		if err := s.DeleteDelivery(ctx, b.ID, n2.ID); !errors.Is(err, store.ErrNotFound) {
+			t.Fatal("zmazanie dodacieho listu inej firmy")
+		}
+		if err := s.DeleteDelivery(ctx, a.ID, n2.ID); err != nil {
+			t.Fatal(err)
+		}
+		if err := s.DeleteCompany(ctx, a.ID); err != nil {
+			t.Fatal(err)
+		}
+		if list, _ := s.ListDeliveries(ctx, a.ID); len(list) != 0 {
+			t.Fatal("dodacie listy po zmazaní firmy")
 		}
 	})
 
