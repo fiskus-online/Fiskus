@@ -22,6 +22,11 @@ a úprava sa zapíše do auditu. Ak ste ponuku už poslali, pošlite zákazníko
 upravenú. Novú verziu s novým číslom vytvorí *Kópia*. Samotné číslo
 zmeníte tlačidlom *Zmeniť číslo*.
 
+Ak je ponuka vyfakturovaná faktúrou, ktorá už existuje (vystavili ste ju
+mimo ponuky alebo ste ponuky preniesli z iného programu), použite *Už
+vyfakturovaná…* a vyberte faktúru. Ponuka dostane stav *vyfakturovaná* a
+faktúra sa ukáže v jej súvisiacich dokladoch.
+
 ![Cenové ponuky so stavmi a úspešnosťou](../obrazky/ponuky.webp)
 *Cenové ponuky so stavmi a úspešnosťou*
 

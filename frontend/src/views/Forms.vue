@@ -18,6 +18,7 @@ import IconField from 'primevue/iconfield'
 import InputIcon from 'primevue/inputicon'
 import FormField from '../components/FormField.vue'
 import FormSheet from '../components/FormSheet.vue'
+import RelatedDocs from '../components/RelatedDocs.vue'
 import ExportButton from '../components/ExportButton.vue'
 import { api, ApiError } from '../lib/api.js'
 import { session, can } from '../lib/session.js'
@@ -50,9 +51,11 @@ const loadError = ref('')
 
 async function load() {
   try {
-    catalog.value = await api.forms(cid.value)
+    const cat = await api.forms(cid.value)
+    // uložené pred katalógom: otvorenie z adresy ?doc= ich potrebuje
+    if (cid.value) docs.value = await api.formDocs(cid.value)
+    catalog.value = cat
     if (cid.value) {
-      docs.value = await api.formDocs(cid.value)
       if (can('cash.read')) registers.value = (await api.cashRegisters(cid.value).catch(() => [])).filter((r) => !r.archived)
     }
   } catch (e) {
@@ -77,7 +80,7 @@ function open(form, from = null) {
   } else {
     editing.value = { form, id: 0, title: '', template: false, values: blankValues(form, { issuer: catalog.value.issuer, today: catalog.value.today }), items: form.items ? [blankItem(), blankItem()] : [] }
   }
-  router.replace({ query: { t: form.key } })
+  router.replace({ query: from && !from.template ? { t: form.key, doc: from.id } : { t: form.key } })
 }
 function close() {
   editing.value = null
@@ -166,6 +169,7 @@ async function save(asTemplate = false) {
     if (!asTemplate) {
       e.id = saved.id
       e.title = saved.title
+      router.replace({ query: { t: e.form.key, doc: saved.id } })
     }
     toast.add({ severity: 'success', summary: asTemplate ? 'Vzor uložený' : 'Tlačivo uložené', detail: saved.title, life: 2500 })
     docs.value = await api.formDocs(cid.value)
@@ -299,7 +303,10 @@ watch(
   () => catalog.value.forms.length,
   () => {
     const f = catalog.value.forms.find((x) => x.key === route.query.t)
-    if (f && !editing.value) open(f)
+    if (!f || editing.value) return
+    // uložené tlačivo z adresy ?t=…&doc=12 (odkaz zo súvisiacich dokladov)
+    const d = route.query.doc && docs.value.find((x) => String(x.id) === String(route.query.doc))
+    open(f, d || null)
   },
 )
 const builtinForms = computed(() => catalog.value.forms.filter((f) => f.builtin))
@@ -426,6 +433,7 @@ const ownForms = computed(() => catalog.value.forms.filter((f) => !f.builtin))
             </template>
           </div>
           <p v-if="!cid" class="muted small">Bez firmy sa tlačivo neukladá — vytlačte ho alebo uložte ako PDF v dialógu tlače.</p>
+          <RelatedDocs v-if="cid && editing.id && !editing.template" kind="form" :id="Number(editing.id)" :can-write="canWrite" />
         </form>
 
         <div class="preview">

@@ -8,6 +8,7 @@ import (
 	"github.com/fiskus-online/fiskus/backend/internal/catalog"
 	"github.com/fiskus-online/fiskus/backend/internal/forms"
 	"github.com/fiskus-online/fiskus/backend/internal/fx"
+	"github.com/fiskus-online/fiskus/backend/internal/link"
 	"sort"
 	"sync"
 
@@ -54,6 +55,7 @@ type Store struct {
 	hhObligations map[int64]household.Obligation
 	formDocs      map[int64]forms.Doc
 	cashClosings  map[int64]cash.Closing
+	docLinks      map[int64]link.Link
 	hhPhotos      map[int64]store.HHPhoto
 	recurring     map[int64]recurring.Template
 	reminders     map[int64]reminder.Reminder

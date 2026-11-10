@@ -10,6 +10,7 @@ import (
 	"context"
 	"errors"
 	"github.com/fiskus-online/fiskus/backend/internal/forms"
+	"github.com/fiskus-online/fiskus/backend/internal/link"
 	"time"
 
 	"github.com/fiskus-online/fiskus/backend/internal/asset"
@@ -420,6 +421,13 @@ type Store interface {
 	GetFormDoc(ctx context.Context, companyID, id int64) (forms.Doc, error)
 	SaveFormDoc(ctx context.Context, companyID int64, d *forms.Doc) error
 	DeleteFormDoc(ctx context.Context, companyID, id int64) error
+
+	// Prepojenia dokladov (link). ListDocLinks vráti prepojenia dokladu r
+	// (r je na jednom z koncov), najstaršie prvé. SaveDocLink vloží nové
+	// prepojenie; rovnaká dvojica → ErrDuplicate.
+	ListDocLinks(ctx context.Context, companyID int64, r link.Ref) ([]link.Link, error)
+	SaveDocLink(ctx context.Context, companyID int64, l *link.Link) error
+	DeleteDocLink(ctx context.Context, companyID, id int64) error
 
 	// ListRecurring vráti šablóny pravidelnej fakturácie firmy zoradené podľa ID.
 	ListRecurring(ctx context.Context, companyID int64) ([]recurring.Template, error)
