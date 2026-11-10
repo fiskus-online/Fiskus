@@ -70,3 +70,19 @@ func (s *Server) deleteCrmJob(w http.ResponseWriter, r *http.Request) {
 	}
 	w.WriteHeader(http.StatusNoContent)
 }
+
+// invoiceCrmJob: POST /jobs/{id}/invoice — koncept faktúry z nevyfakturovanej
+// práce a materiálu.
+func (s *Server) invoiceCrmJob(w http.ResponseWriter, r *http.Request) {
+	cid, _ := pathID(w, r, "cid")
+	id, ok := pathID(w, r, "id")
+	if !ok {
+		return
+	}
+	inv, err := s.App.InvoiceCrmJob(r.Context(), cid, id)
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	writeJSON(w, http.StatusCreated, inv)
+}

@@ -8,6 +8,13 @@ import (
 	"github.com/fiskus-online/fiskus/backend/internal/store"
 )
 
+// cloneJob skopíruje zákazku vrátane výkazu práce a materiálu.
+func cloneJob(j job.Job) job.Job {
+	j.Work = append([]job.WorkEntry(nil), j.Work...)
+	j.Material = append([]job.MaterialEntry(nil), j.Material...)
+	return j
+}
+
 // ListJobs vráti zákazky, najnovšie (podľa čísla) prvé.
 func (s *Store) ListJobs(_ context.Context, companyID int64) ([]job.Job, error) {
 	s.mu.Lock()
@@ -15,7 +22,7 @@ func (s *Store) ListJobs(_ context.Context, companyID int64) ([]job.Job, error) 
 	out := []job.Job{}
 	for _, j := range s.jobs {
 		if j.CompanyID == companyID {
-			out = append(out, j)
+			out = append(out, cloneJob(j))
 		}
 	}
 	sort.Slice(out, func(i, k int) bool { return out[i].ID > out[k].ID })
@@ -29,7 +36,7 @@ func (s *Store) GetJob(_ context.Context, companyID, id int64) (job.Job, error) 
 	if !ok || j.CompanyID != companyID {
 		return job.Job{}, store.ErrNotFound
 	}
-	return j, nil
+	return cloneJob(j), nil
 }
 
 func (s *Store) SaveJob(_ context.Context, companyID int64, j *job.Job) error {
@@ -52,7 +59,7 @@ func (s *Store) SaveJob(_ context.Context, companyID int64, j *job.Job) error {
 		j.ID = s.id()
 	}
 	j.CompanyID = companyID
-	s.jobs[j.ID] = *j
+	s.jobs[j.ID] = cloneJob(*j)
 	return nil
 }
 

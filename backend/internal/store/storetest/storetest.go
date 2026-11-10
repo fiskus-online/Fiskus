@@ -774,7 +774,11 @@ func Run(t *testing.T, newStore Factory) {
 		a, _ := s.CreateCompany(ctx, store.Company{Name: "Alfa"})
 		b, _ := s.CreateCompany(ctx, store.Company{Name: "Beta"})
 		j1 := job.Job{Number: "Z2026001", Name: "Rekonštrukcia RS", ContactID: 3, Customer: "Farmol", Status: job.Active,
-			Start: invoice.MustDate("2026-10-01"), Due: invoice.MustDate("2026-10-31"), Budget: m.MustParse("8690"), Note: "etiketovačka", Created: invoice.MustDate("2026-10-01")}
+			Start: invoice.MustDate("2026-10-01"), Due: invoice.MustDate("2026-10-31"), Budget: m.MustParse("8690"), Note: "etiketovačka", Created: invoice.MustDate("2026-10-01"), Rate: m.MustParse("35"),
+			Work: []job.WorkEntry{{ID: 1, Date: invoice.MustDate("2026-10-02"), Person: "Palo", Description: "Montáž", Hours: m.MustParse("6.5"),
+				Rate: m.MustParse("35"), CostRate: m.MustParse("0"), Billing: job.Billing{InvoiceID: 9, InvoiceNumber: "FA20260045"}}},
+			Material: []job.MaterialEntry{{ID: 2, Date: invoice.MustDate("2026-10-02"), ItemID: 4, Name: "Kábel", Unit: "m", Quantity: m.MustParse("25"),
+				UnitPrice: m.MustParse("1.60"), UnitCost: m.MustParse("0"), Cost: m.MustParse("20"), Stock: true}}}
 		j2 := job.Job{Number: "Z2026002", Name: "Servis", Status: job.Lead}
 		for _, j := range []*job.Job{&j1, &j2} {
 			if err := s.SaveJob(ctx, a.ID, j); err != nil || j.ID == 0 {
@@ -795,6 +799,12 @@ func Run(t *testing.T, newStore Factory) {
 		}
 		if got, err := s.GetJob(ctx, a.ID, j1.ID); err != nil || !reflect.DeepEqual(got, j1) {
 			t.Fatalf("načítanie:\n got %+v\nwant %+v", got, j1)
+		}
+		if got, _ := s.GetJob(ctx, a.ID, j1.ID); len(got.Work) == 1 { // načítaná kópia nezmení uloženú
+			got.Work[0].Hours = m.MustParse("99")
+			if again, _ := s.GetJob(ctx, a.ID, j1.ID); again.Work[0].Hours.String() != "6.50" {
+				t.Fatal("zmena načítanej zákazky zmenila uloženú")
+			}
 		}
 		if list, _ := s.ListJobs(ctx, a.ID); len(list) != 2 || list[0].ID != j2.ID {
 			t.Fatalf("zoznam (najnovšie prvé): %+v", list)

@@ -31,8 +31,14 @@ type JobSummary struct {
 	Gross    money.Dec `json:"gross"`    // fakturované s DPH
 	Paid     money.Dec `json:"paid"`     // uhradené
 	Unpaid   money.Dec `json:"unpaid"`   // na úhradu
-	Costs    money.Dec `json:"costs"`    // prijaté faktúry
+	Costs    money.Dec `json:"costs"`    // prijaté faktúry, práca a materiál
 	Profit   money.Dec `json:"profit"`   // fakturované − náklady
+	// Hours je odpracovaný čas, Unbilled predajná hodnota nevyfakturovanej
+	// práce a materiálu; WorkCost a MaterialCost sú časti nákladov.
+	Hours        money.Dec `json:"hours"`
+	Unbilled     money.Dec `json:"unbilled"`
+	WorkCost     money.Dec `json:"workCost"`
+	MaterialCost money.Dec `json:"materialCost"`
 	// Margin je zisk v % z fakturovaného (nil, kým nie je fakturácia).
 	Margin *int `json:"margin,omitempty"`
 	Docs   int  `json:"docs"`
@@ -57,8 +63,9 @@ func jobErr(errs []job.FieldError) error {
 	return &invoice.ValidationError{Fields: fe}
 }
 
-// jobSummary spočíta ekonomiku z prepojených dokladov.
-func (a *App) jobSummary(ctx context.Context, companyID int64, j job.Job, vatPayer bool) (JobSummary, error) {
+// jobSummary spočíta ekonomiku z prepojených dokladov, výkazu a materiálu
+// (a doplní záznamom predajnú hodnotu).
+func (a *App) jobSummary(ctx context.Context, companyID int64, j *job.Job, vatPayer bool) (JobSummary, error) {
 	s := JobSummary{Net: vatPayer}
 	amount := func(sum, base money.Dec) money.Dec {
 		if vatPayer {
@@ -113,6 +120,24 @@ func (a *App) jobSummary(ctx context.Context, companyID int64, j job.Job, vatPay
 			}
 		}
 	}
+	for i := range j.Work {
+		w := &j.Work[i]
+		w.Total = w.Amount()
+		s.Hours = s.Hours.Add(w.Hours)
+		s.WorkCost = s.WorkCost.Add(w.Cost())
+		if !w.Billed() {
+			s.Unbilled = s.Unbilled.Add(w.Amount())
+		}
+	}
+	for i := range j.Material {
+		m := &j.Material[i]
+		m.Total = m.Amount()
+		s.MaterialCost = s.MaterialCost.Add(m.Cost)
+		if !m.Billed() {
+			s.Unbilled = s.Unbilled.Add(m.Amount())
+		}
+	}
+	s.Costs = s.Costs.Add(s.WorkCost).Add(s.MaterialCost)
 	s.Unpaid = s.Gross.Sub(s.Paid)
 	s.Profit = s.Invoiced.Sub(s.Costs)
 	if s.Invoiced.Sign() > 0 {
@@ -145,7 +170,13 @@ func paidEUR(inv *invoice.Invoice, totalEUR money.Dec) money.Dec {
 }
 
 func (a *App) jobView(ctx context.Context, companyID int64, j job.Job, vatPayer bool) (JobView, error) {
-	s, err := a.jobSummary(ctx, companyID, j, vatPayer)
+	if a.releaseJob(ctx, companyID, &j) {
+		if err := a.Store.SaveJob(ctx, companyID, &j); err != nil {
+			return JobView{}, err
+		}
+	}
+	a.jobMaterialCosts(ctx, companyID, &j)
+	s, err := a.jobSummary(ctx, companyID, &j, vatPayer)
 	return JobView{Job: j, Late: j.Late(a.Today()), Summary: s}, err
 }
 
@@ -209,10 +240,15 @@ func (a *App) SaveCrmJob(ctx context.Context, companyID int64, j job.Job) (JobVi
 			return JobView{}, err
 		}
 		before = &old
+		a.releaseJob(ctx, companyID, &old)
+		if err := jobErr(j.KeepBilled(old)); err != nil {
+			return JobView{}, err
+		}
 		status := j.Status
 		j.Number, j.Created, j.Closed, j.Status = old.Number, old.Created, old.Closed, old.Status
 		j.SetStatus(status, today)
 	} else {
+		j.KeepBilled(job.Job{}) // pridelí ID záznamom
 		j.Created, j.Closed = today, invoice.Date{}
 		if !j.Status.Open() {
 			j.Closed = today
@@ -230,6 +266,9 @@ func (a *App) SaveCrmJob(ctx context.Context, companyID int64, j job.Job) (JobVi
 	if err := jobErr(j.Validate()); err != nil {
 		return JobView{}, err
 	}
+	if err := a.prepareJobMaterial(ctx, companyID, &j); err != nil {
+		return JobView{}, err
+	}
 	if before == nil {
 		seq, err := a.Store.NextSequence(ctx, companyID, jobSeries, today.Year())
 		if err != nil {
@@ -245,6 +284,9 @@ func (a *App) SaveCrmJob(ctx context.Context, companyID int64, j job.Job) (JobVi
 		action, what = "update", "Úprava zákazky "
 	}
 	a.record(ctx, companyID, audit.CatInvoices, action, "job", j.ID, what+j.Number+" "+j.Name, before, j)
+	if err := a.syncJobStock(ctx, companyID, j); err != nil {
+		return JobView{}, err
+	}
 	return a.CrmJob(ctx, companyID, j.ID)
 }
 
@@ -257,6 +299,17 @@ func (a *App) DeleteCrmJob(ctx context.Context, companyID, id int64) error {
 	if err != nil {
 		return err
 	}
+	a.releaseJob(ctx, companyID, &j)
+	for _, w := range j.Work {
+		if w.Billed() {
+			return vErr("work", "Zákazka má prácu vyfakturovanú na "+w.InvoiceNumber+", nedá sa zmazať")
+		}
+	}
+	for _, m := range j.Material {
+		if m.Billed() {
+			return vErr("material", "Zákazka má materiál vyfakturovaný na "+m.InvoiceNumber+", nedá sa zmazať")
+		}
+	}
 	links, err := a.Store.ListDocLinks(ctx, companyID, link.Ref{Kind: link.Job, ID: id})
 	if err != nil {
 		return err
@@ -265,6 +318,10 @@ func (a *App) DeleteCrmJob(ctx context.Context, companyID, id int64) error {
 		if err := a.Store.DeleteDocLink(ctx, companyID, l.ID); err != nil {
 			return err
 		}
+	}
+	j.Material = nil
+	if err := a.syncJobStock(ctx, companyID, j); err != nil { // výdajky zákazky sa zrušia
+		return err
 	}
 	if err := a.Store.DeleteJob(ctx, companyID, id); err != nil {
 		return err

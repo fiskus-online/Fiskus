@@ -393,6 +393,7 @@ export const api = {
   previewQuote: (cid, q) => request('POST', `/api/companies/${cid}/quotes/preview`, q),
   jobs: (cid) => request('GET', `/api/companies/${cid}/jobs`),
   job: (cid, id) => request('GET', `/api/companies/${cid}/jobs/${id}`),
+  invoiceJob: (cid, id) => request('POST', `/api/companies/${cid}/jobs/${id}/invoice`),
   saveJob: (cid, j, id) => (id ? request('PUT', `/api/companies/${cid}/jobs/${id}`, j) : request('POST', `/api/companies/${cid}/jobs`, j)),
   deleteJob: (cid, id) => request('DELETE', `/api/companies/${cid}/jobs/${id}`),
   docLinks: (cid, kind, id) => request('GET', `/api/companies/${cid}/links/${kind}/${id}`),
