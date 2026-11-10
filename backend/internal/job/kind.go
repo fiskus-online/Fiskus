@@ -43,6 +43,9 @@ type Vehicle struct {
 	Fuel    string `json:"fuel"`    // stav paliva pri príjme (napr. 1/2)
 	Fault   string `json:"fault"`   // popis závady / požiadavka zákazníka
 	Damage  string `json:"damage"`  // poškodenia zistené pri príjme
+	// Inspection: STK/EK platí do; NextService: ďalší servis (oba do kalendára).
+	Inspection  invoice.Date `json:"inspection"`
+	NextService invoice.Date `json:"nextService"`
 }
 
 // Site je miesto a tím montáže.

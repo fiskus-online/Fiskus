@@ -21,6 +21,7 @@ const (
 	KindQuote     Kind = "quote"     // koniec platnosti ponuky
 	KindOwn       Kind = "own"       // vlastný termín
 	KindTask      Kind = "task"      // úloha CRM (zákazka, ponuka, kontakt)
+	KindVehicle   Kind = "vehicle"   // STK/EK a servis vozidla zákazníka (autoservis)
 	KindHoliday   Kind = "holiday"   // deň pracovného pokoja
 )
 
@@ -44,7 +45,7 @@ type Event struct {
 
 // Sort zoradí termíny podľa dátumu, druhu a názvu.
 func Sort(es []Event) {
-	order := map[Kind]int{KindHoliday: 0, KindTax: 1, KindOwn: 2, KindTask: 3, KindPay: 4, KindReceive: 5, KindRecurring: 6, KindQuote: 7}
+	order := map[Kind]int{KindHoliday: 0, KindTax: 1, KindOwn: 2, KindTask: 3, KindVehicle: 4, KindPay: 5, KindReceive: 6, KindRecurring: 7, KindQuote: 8}
 	sort.SliceStable(es, func(i, j int) bool {
 		a, b := es[i], es[j]
 		if a.Date != b.Date {

@@ -10,6 +10,7 @@ import (
 
 	"github.com/fiskus-online/fiskus/backend/internal/audit"
 	"github.com/fiskus-online/fiskus/backend/internal/auth"
+	"github.com/fiskus-online/fiskus/backend/internal/calendar"
 	"github.com/fiskus-online/fiskus/backend/internal/invoice"
 	"github.com/fiskus-online/fiskus/backend/internal/job"
 	"github.com/fiskus-online/fiskus/backend/internal/link"
@@ -496,4 +497,40 @@ func (a *App) CrmJobStats(ctx context.Context, companyID int64, year int) (JobSt
 	})
 	sort.Sort(sort.Reverse(sort.IntSlice(st.Years)))
 	return st, nil
+}
+
+// CrmVehicles vráti vozidlá zo zákaziek autoservisu (najnovšia návšteva prvá).
+func (a *App) CrmVehicles(ctx context.Context, companyID int64) ([]job.VehicleCard, error) {
+	if err := a.Require(ctx, companyID, auth.PermInvoicesRead); err != nil {
+		return nil, err
+	}
+	list, err := a.Store.ListJobs(ctx, companyID)
+	if err != nil {
+		return nil, err
+	}
+	return job.Vehicles(list), nil
+}
+
+// vehicleEvents: STK/EK a ďalší servis vozidiel zákazníkov do kalendára
+// (z najnovšej zákazky vozidla; staršie ako from sa nezobrazia).
+func (a *App) vehicleEvents(ctx context.Context, companyID int64, from, to, today invoice.Date) ([]calendar.Event, error) {
+	list, err := a.Store.ListJobs(ctx, companyID)
+	if err != nil {
+		return nil, err
+	}
+	var out []calendar.Event
+	for _, v := range job.Vehicles(list) {
+		name := strings.TrimSpace(v.Plate + " " + strings.TrimSpace(v.Make+" "+v.Model))
+		for _, t := range []struct {
+			id, what string
+			date     invoice.Date
+		}{{"stk", "STK/EK", v.Inspection}, {"servis", "Servis", v.NextService}} {
+			if t.date.IsZero() || t.date.Before(from) || t.date.After(to) {
+				continue
+			}
+			out = append(out, calendar.Event{ID: fmt.Sprintf("vehicle-%s-%s", t.id, v.Key), Date: t.date, Kind: calendar.KindVehicle,
+				Title: t.what + " – " + name, Detail: v.Customer, Link: fmt.Sprintf("/zakazky/%d", v.LastJobID), Overdue: t.date.Before(today)})
+		}
+	}
+	return out, nil
 }

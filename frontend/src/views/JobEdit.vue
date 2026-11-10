@@ -21,7 +21,7 @@ import { api } from '../lib/api.js'
 import { can, session } from '../lib/session.js'
 import { formatAmount, formatDate, formatMoney, fromISODate, toISODate } from '../lib/format.js'
 import { printTitle } from '../lib/jobPrint.js'
-import { blankJob, contactAddress, jobForm, jobKinds, jobPayload, jobStatusOf, jobStatuses, marginText, setKind } from '../lib/jobs.js'
+import { blankJob, contactAddress, fillFromVehicle, jobForm, jobKinds, jobPayload, jobStatusOf, jobStatuses, marginText, setKind, vehicleHistory } from '../lib/jobs.js'
 
 const props = defineProps({ id: { type: String, default: '' } })
 const route = useRoute()
@@ -88,6 +88,27 @@ const changeKind = (k) => (form.value = setKind(form.value, k ?? '', contactOf(f
 watch(() => form.value.contactId, (id) => {
   if (form.value.kind === 'install' && form.value.site && !form.value.site.address) form.value.site.address = contactAddress(contactOf(id))
 })
+// autoservis: známe vozidlo podľa EČV doplní údaje a zákazníka, pod ním história opráv
+const vehicles = ref(null)
+const allJobs = ref([])
+async function loadVehicles() {
+  if (vehicles.value) return
+  ;[vehicles.value, allJobs.value] = await Promise.all([
+    api.jobVehicles(session.companyId).catch(() => []),
+    api.jobs(session.companyId).catch(() => []),
+  ])
+}
+watch(() => form.value.kind, (k) => k === 'auto' && loadVehicles(), { immediate: true })
+async function onPlate() {
+  await loadVehicles()
+  const filled = canWrite.value && fillFromVehicle(form.value, vehicles.value)
+  if (filled && JSON.stringify(filled) !== JSON.stringify(form.value)) {
+    form.value = filled
+    toast.add({ severity: 'info', summary: 'Známe vozidlo', detail: 'Údaje sa doplnili z predchádzajúcej zákazky.', life: 3000 })
+  }
+}
+const history = computed(() => (form.value.kind === 'auto' ? vehicleHistory(allJobs.value, form.value.vehicle, job.value?.id ?? 0) : []))
+
 const namePlaceholder = computed(() => ({
   auto: 'Napr. Výmena bŕzd a servisná prehliadka',
   install: 'Napr. Montáž tepelného čerpadla',
@@ -241,7 +262,19 @@ const newDoc = (path) => {
       </FormField>
     </form>
 
-    <JobKindDetails :form="form" :errors="errors" :readonly="!canWrite" />
+    <JobKindDetails :form="form" :errors="errors" :readonly="!canWrite" @plate="onPlate" />
+    <section v-if="history.length" class="history" aria-label="História vozidla">
+      <h2>História vozidla</h2>
+      <ul>
+        <li v-for="h in history" :key="h.id">
+          <RouterLink :to="`/zakazky/${h.id}`">{{ h.number }}</RouterLink>
+          <span>{{ formatDate(h.start || h.created) }}</span>
+          <span class="hname">{{ h.name }}</span>
+          <span v-if="h.vehicle?.mileage" class="muted">{{ Number(h.vehicle.mileage).toLocaleString('sk-SK') }} km</span>
+          <span class="tag" :data-tone="jobStatusOf(h).tone"><span class="tag-text">{{ jobStatusOf(h).label }}</span></span>
+        </li>
+      </ul>
+    </section>
 
     <JobEntries kind="work" :form="form" :errors="errors" :readonly="!canWrite" :people="people" :hours="s?.hours ?? ''" />
     <JobEntries kind="material" :form="form" :errors="errors" :readonly="!canWrite" :items="items" :total="s?.materialCost ?? ''" />
@@ -327,6 +360,36 @@ const newDoc = (path) => {
 }
 .kinds :deep(.p-togglebutton i) {
   margin-right: 5px;
+}
+.history h2 {
+  margin: 0;
+  font-size: var(--fs-md);
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: 2px;
+}
+.history ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.history li {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--rule);
+  font-size: var(--fs-sm);
+  font-variant-numeric: tabular-nums;
+}
+.history a {
+  font-weight: 600;
+  color: var(--blue);
+  text-decoration: none;
+}
+.history .hname {
+  flex: 1;
+  min-width: 140px;
 }
 .new-docs {
   display: flex;

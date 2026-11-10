@@ -232,6 +232,7 @@ func (s *Server) Handler() http.Handler {
 	need("POST /api/companies/{cid}/activities/{id}/done", auth.PermInvoicesWrite, s.doneActivity)
 	need("GET /api/companies/{cid}/jobs", auth.PermInvoicesRead, s.listCrmJobs)
 	need("GET /api/companies/{cid}/jobs-stats", auth.PermInvoicesRead, s.crmJobStats)
+	need("GET /api/companies/{cid}/jobs-vehicles", auth.PermInvoicesRead, s.crmVehicles)
 	need("POST /api/companies/{cid}/jobs", auth.PermInvoicesWrite, s.saveCrmJob)
 	need("GET /api/companies/{cid}/jobs/{id}", auth.PermInvoicesRead, s.getCrmJob)
 	need("PUT /api/companies/{cid}/jobs/{id}", auth.PermInvoicesWrite, s.saveCrmJob)

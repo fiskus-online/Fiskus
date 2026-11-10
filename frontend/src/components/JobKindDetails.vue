@@ -14,6 +14,7 @@ const props = defineProps({
   errors: { type: Object, default: () => ({}) },
   readonly: { type: Boolean, default: false },
 })
+const emit = defineEmits(['plate'])
 const fuels = ['rezerva', '1/4', '1/2', '3/4', 'plná']
 const e = (k) => props.errors[k]
 </script>
@@ -23,7 +24,8 @@ const e = (k) => props.errors[k]
     <h2>Vozidlo</h2>
     <div class="form-grid fields">
       <FormField label="EČV" :error="e('vehicle.plate')">
-        <InputText v-model="form.vehicle.plate" size="small" class="plate" :disabled="readonly" placeholder="BB123AB" autocapitalize="characters" />
+        <InputText v-model="form.vehicle.plate" size="small" class="plate" :disabled="readonly" placeholder="BB123AB" autocapitalize="characters"
+          @blur="emit('plate')" />
       </FormField>
       <FormField label="VIN" :error="e('vehicle.vin')">
         <InputText v-model="form.vehicle.vin" size="small" class="mono" maxlength="20" :disabled="readonly" autocapitalize="characters" />
@@ -49,6 +51,14 @@ const e = (k) => props.errors[k]
       </FormField>
       <FormField label="Poškodenia zistené pri príjme" :span="2">
         <Textarea v-model="form.vehicle.damage" rows="2" auto-resize :disabled="readonly" placeholder="Napr. škrabanec na zadnom nárazníku vpravo" />
+      </FormField>
+      <FormField label="STK/EK platí do" hint="pripomenie sa v kalendári">
+        <DatePicker :model-value="fromISODate(form.vehicle.inspection)" date-format="d. m. yy" size="small" fluid show-button-bar :disabled="readonly"
+          @update:model-value="form.vehicle.inspection = toISODate($event) ?? ''" />
+      </FormField>
+      <FormField label="Ďalší servis" hint="pripomenie sa v kalendári">
+        <DatePicker :model-value="fromISODate(form.vehicle.nextService)" date-format="d. m. yy" size="small" fluid show-button-bar :disabled="readonly"
+          @update:model-value="form.vehicle.nextService = toISODate($event) ?? ''" />
       </FormField>
     </div>
   </section>

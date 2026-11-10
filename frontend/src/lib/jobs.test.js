@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { boardColumns, movePayload, pct, blankJob, blankMaterial, blankWork, jobForm, jobKindLabel, jobPayload, kindSearchText, pickItem, jobStatusOf, marginText, matchesJobView, setKind } from './jobs.js'
+import { boardColumns, movePayload, pct, blankJob, blankMaterial, blankWork, jobForm, jobKindLabel, jobPayload, kindSearchText, pickItem, jobStatusOf, marginText, matchesJobView, setKind, normalizePlate, vehicleKey, fillFromVehicle, vehicleHistory, dueState } from './jobs.js'
 
 describe('zákazky', () => {
   it.each([
@@ -97,4 +97,41 @@ describe('druhy zákaziek', () => {
     expect(jobKindLabel('service')).toBe('Servis zariadenia')
     expect(jobKindLabel(undefined)).toBe('Všeobecná')
   })
+})
+
+describe('vozidlá', () => {
+  const cards = [{ key: 'BB482KE', vin: 'TMB1', make: 'Škoda', model: 'Octavia', year: 2019, contactId: 7, inspection: '2027-05-01', nextService: '' }]
+  it('EČV a kľúč ako na serveri', () => {
+    expect(normalizePlate(' bb-482 ke ')).toBe('BB482KE')
+    expect(vehicleKey({ plate: '', vin: 'wvw 1' })).toBe('WVW1')
+  })
+  it('doplnenie známeho vozidla nepremaže vyplnené', () => {
+    const f = { contactId: 0, vehicle: { plate: 'bb 482ke', vin: '', make: 'Skoda', model: '', year: '', inspection: '' } }
+    const g = fillFromVehicle(f, cards)
+    expect(g.vehicle).toMatchObject({ vin: 'TMB1', make: 'Skoda', model: 'Octavia', year: 2019, inspection: '2027-05-01' })
+    expect(g.contactId).toBe(7)
+    expect(fillFromVehicle({ ...f, contactId: 3 }, cards).contactId).toBe(3)
+    expect(fillFromVehicle({ vehicle: { plate: 'ZV1' } }, cards)).toBeNull()
+  })
+  it('história vozidla bez aktuálnej zákazky', () => {
+    const rows = [
+      { id: 1, start: '2025-04-10', vehicle: { plate: 'BB482KE' } },
+      { id: 2, start: '2026-11-10', vehicle: { plate: 'BB482KE' } },
+      { id: 3, created: '2026-01-01', vehicle: { plate: 'ZV1' } },
+      { id: 4, created: '2026-02-01' },
+    ]
+    expect(vehicleHistory(rows, { plate: 'bb482ke' }, 2).map((r) => r.id)).toEqual([1])
+    expect(vehicleHistory(rows, { plate: 'BB482KE' }).map((r) => r.id)).toEqual([2, 1])
+    expect(vehicleHistory(rows, { plate: '' })).toEqual([])
+  })
+})
+
+describe('termín STK', () => {
+  it.each([
+    ['', ''],
+    ['2026-11-01', 'late'],
+    ['2026-11-10', 'soon'],
+    ['2026-12-10', 'soon'],
+    ['2026-12-11', ''],
+  ])('%s', (d, want) => expect(dueState(d, '2026-11-10')).toBe(want))
 })

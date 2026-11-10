@@ -99,3 +99,14 @@ func (s *Server) crmJobStats(w http.ResponseWriter, r *http.Request) {
 	}
 	writeJSON(w, http.StatusOK, out)
 }
+
+// crmVehicles: GET /jobs-vehicles — vozidlá zo zákaziek autoservisu.
+func (s *Server) crmVehicles(w http.ResponseWriter, r *http.Request) {
+	cid, _ := pathID(w, r, "cid")
+	out, err := s.App.CrmVehicles(r.Context(), cid)
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, out)
+}

@@ -5,6 +5,7 @@ export const kinds = [
   { id: 'tax', label: 'Dane', short: 'Daň' },
   { id: 'own', label: 'Vlastné', short: 'Vlastný' },
   { id: 'task', label: 'Úlohy', short: 'Úloha' },
+  { id: 'vehicle', label: 'Vozidlá', short: 'Vozidlo' },
   { id: 'pay', label: 'Na úhradu', short: 'Úhrada' },
   { id: 'receive', label: 'Pohľadávky', short: 'Splatnosť' },
   { id: 'recurring', label: 'Pravidelné faktúry', short: 'Pravidelná' },
@@ -13,9 +14,10 @@ export const kinds = [
 
 export const kindLabel = (k) => kinds.find((x) => x.id === k)?.label ?? k
 
-/** Druhy termínov podľa firmy: domácnosť má iba vlastné a splátky (na úhradu, má vrátiť). */
-export function kindsFor(company) {
-  if (company?.bookkeeping !== 'household') return kinds
+/** Druhy termínov podľa firmy: domácnosť má iba vlastné a splátky (na úhradu, má vrátiť).
+ * Vozidlá (STK, servis z autoservisu) sa ukážu, iba keď také termíny sú. */
+export function kindsFor(company, events = []) {
+  if (company?.bookkeeping !== 'household') return kinds.filter((k) => k.id !== 'vehicle' || events.some((e) => e.kind === 'vehicle'))
   return kinds
     .filter((k) => ['own', 'pay', 'receive'].includes(k.id))
     .map((k) => (k.id === 'pay' ? { ...k, label: 'Splátky' } : k.id === 'receive' ? { ...k, label: 'Majú vrátiť' } : k))
@@ -104,7 +106,7 @@ export function relative(today, date) {
 }
 
 /** Termín je povinnosť používateľa (dane, úhrady, vlastné termíny a úlohy CRM — nie pohľadávka, ponuka ani pravidelná faktúra). */
-export const mine = (e) => e.kind === 'tax' || e.kind === 'own' || e.kind === 'pay' || e.kind === 'task'
+export const mine = (e) => e.kind === 'tax' || e.kind === 'own' || e.kind === 'pay' || e.kind === 'task' || e.kind === 'vehicle'
 
 /**
  * Odznak v menu: vlastné povinnosti (dane, úhrady, vlastné termíny) do 7 dní
