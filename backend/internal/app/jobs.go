@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
+	"sort"
+	"strings"
 
 	"github.com/fiskus-online/fiskus/backend/internal/audit"
 	"github.com/fiskus-online/fiskus/backend/internal/auth"
@@ -147,15 +149,7 @@ func (a *App) jobSummary(ctx context.Context, companyID int64, j *job.Job, vatPa
 	s.Costs = s.Costs.Add(s.WorkCost).Add(s.MaterialCost).Add(s.GoodsCost)
 	s.Unpaid = s.Gross.Sub(s.Paid)
 	s.Profit = s.Invoiced.Sub(s.Costs)
-	if s.Invoiced.Sign() > 0 {
-		r := new(big.Rat).Quo(s.Profit.Rat(), s.Invoiced.Rat())
-		f, _ := r.Mul(r, big.NewRat(100, 1)).Float64()
-		m := int(f + 0.5)
-		if f < 0 {
-			m = int(f - 0.5)
-		}
-		s.Margin = &m
-	}
+	s.Margin = percent(s.Profit, s.Invoiced)
 	return s, nil
 }
 
@@ -373,4 +367,124 @@ func (a *App) DeleteCrmJob(ctx context.Context, companyID, id int64) error {
 	}
 	a.record(ctx, companyID, audit.CatInvoices, "delete", "job", id, "Zmazaná zákazka "+j.Number+" "+j.Name, j, nil)
 	return nil
+}
+
+// JobStatsRow je súhrn zákaziek jedného zákazníka.
+type JobStatsRow struct {
+	ContactID int64     `json:"contactId,omitempty"`
+	Customer  string    `json:"customer"`
+	Jobs      int       `json:"jobs"`
+	Open      int       `json:"open"`
+	Done      int       `json:"done"`
+	Lost      int       `json:"lost"`
+	Budget    money.Dec `json:"budget"`
+	Invoiced  money.Dec `json:"invoiced"`
+	Costs     money.Dec `json:"costs"`
+	Profit    money.Dec `json:"profit"`
+	Unbilled  money.Dec `json:"unbilled"`
+	Margin    *int      `json:"margin,omitempty"`
+}
+
+// JobStats je ziskovosť zákaziek podľa zákazníka za rok (0 = všetky).
+type JobStats struct {
+	Year  int           `json:"year"`
+	Net   bool          `json:"net"`
+	Rows  []JobStatsRow `json:"rows"`
+	Total JobStatsRow   `json:"total"`
+	// WinRate: podiel dokončených zo zákaziek, ktoré sa uzavreli (dokončené + stratené).
+	WinRate *int  `json:"winRate,omitempty"`
+	Years   []int `json:"years"`
+}
+
+// jobYear: rok zákazky — uzavretej podľa uzavretia, otvorenej podľa vzniku.
+func jobYear(j job.Job) int {
+	if !j.Closed.IsZero() {
+		return j.Closed.Year()
+	}
+	if !j.Start.IsZero() {
+		return j.Start.Year()
+	}
+	return j.Created.Year()
+}
+
+// percent vráti zaokrúhlené percento a z b (nil pri b = 0).
+func percent(a, b money.Dec) *int {
+	if b.Sign() == 0 {
+		return nil
+	}
+	r := new(big.Rat).Quo(a.Rat(), b.Rat())
+	f, _ := r.Mul(r, big.NewRat(100, 1)).Float64()
+	m := int(f + 0.5)
+	if f < 0 {
+		m = int(f - 0.5)
+	}
+	return &m
+}
+
+// CrmJobStats spočíta ziskovosť zákaziek podľa zákazníka.
+func (a *App) CrmJobStats(ctx context.Context, companyID int64, year int) (JobStats, error) {
+	views, err := a.CrmJobs(ctx, companyID)
+	if err != nil {
+		return JobStats{}, err
+	}
+	st := JobStats{Year: year, Rows: []JobStatsRow{}, Years: []int{}}
+	seenYear := map[int]bool{}
+	idx := map[string]int{}
+	for _, v := range views {
+		st.Net = v.Summary.Net
+		y := jobYear(v.Job)
+		if !seenYear[y] {
+			seenYear[y] = true
+			st.Years = append(st.Years, y)
+		}
+		if year != 0 && y != year {
+			continue
+		}
+		key := fmt.Sprintf("c%d", v.ContactID)
+		name := v.Customer
+		if v.ContactID == 0 {
+			key = "n" + strings.ToLower(strings.TrimSpace(v.Customer))
+			if name == "" {
+				name = "Bez zákazníka"
+			}
+		}
+		i, ok := idx[key]
+		if !ok {
+			i = len(st.Rows)
+			idx[key] = i
+			st.Rows = append(st.Rows, JobStatsRow{ContactID: v.ContactID, Customer: name})
+		}
+		for _, r := range []*JobStatsRow{&st.Rows[i], &st.Total} {
+			r.Jobs++
+			switch {
+			case v.Status.Open():
+				r.Open++
+			case v.Status == job.Done:
+				r.Done++
+			case v.Status == job.Lost:
+				r.Lost++
+			}
+			r.Budget = r.Budget.Add(v.Budget)
+			r.Invoiced = r.Invoiced.Add(v.Summary.Invoiced)
+			r.Costs = r.Costs.Add(v.Summary.Costs)
+			r.Profit = r.Profit.Add(v.Summary.Profit)
+			r.Unbilled = r.Unbilled.Add(v.Summary.Unbilled)
+		}
+	}
+	for i := range st.Rows {
+		st.Rows[i].Margin = percent(st.Rows[i].Profit, st.Rows[i].Invoiced)
+	}
+	st.Total.Customer = "Spolu"
+	st.Total.Margin = percent(st.Total.Profit, st.Total.Invoiced)
+	if closed := st.Total.Done + st.Total.Lost; closed > 0 {
+		st.WinRate = percent(money.FromInt(int64(st.Total.Done)), money.FromInt(int64(closed)))
+	}
+	sort.Slice(st.Rows, func(i, k int) bool {
+		if c := st.Rows[i].Profit.Cmp(st.Rows[k].Profit); c != 0 {
+			return c > 0
+		}
+		return st.Rows[i].Customer < st.Rows[k].Customer
+	})
+	sort.Sort(sort.Reverse(sort.IntSlice(st.Years)))
+	return st, nil
 }

@@ -951,6 +951,18 @@ func seedStock(ctx context.Context, a *app.App, c store.Company, contactIDs []in
 			return err
 		}
 	}
+	// ďalšie zákazky na nástenku a prehľad podľa zákazníka
+	for i, x := range []job.Job{
+		{Name: "Servisná zmluva 2027", Status: job.Lead, Start: day(3), Budget: m.MustParse("2400")},
+		{Name: "Osvetlenie skladu LED", Status: job.Offer, Start: day(20), Due: day(4), Budget: m.MustParse("4200")},
+		{Name: "Fotovoltika – strecha haly", Status: job.Done, Start: day(90), Due: day(40), Budget: m.MustParse("18000")},
+		{Name: "Rekonštrukcia osvetlenia kancelárií", Status: job.Lost, Start: day(60), Budget: m.MustParse("3100")},
+	} {
+		x.ContactID = contactIDs[(i+1)%len(contactIDs)]
+		if _, err := a.SaveCrmJob(ctx, c.ID, x); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 

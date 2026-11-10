@@ -187,3 +187,57 @@ func TestJobGoodsCost(t *testing.T) {
 		t.Fatalf("tovar zo skladu %+v", v.Summary)
 	}
 }
+
+func TestCrmJobStats(t *testing.T) {
+	a, c := newApp(t, edition.Desktop)
+	m := money.MustParse
+	d := invoice.MustDate
+	agro, _ := a.SaveContact(ctx, c.ID, store.Contact{Name: "Agro Liptov družstvo"})
+	mlyn, _ := a.SaveContact(ctx, c.ID, store.Contact{Name: "Mlyn Brezno s.r.o."})
+	w := func(h, rate, cost string) []job.WorkEntry {
+		return []job.WorkEntry{{Date: d("2026-10-05"), Description: "Práca", Hours: m(h), Rate: m(rate), CostRate: m(cost)}}
+	}
+	mk := func(j job.Job, invoiceIt bool) {
+		v, err := a.SaveCrmJob(ctx, c.ID, j)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if invoiceIt {
+			inv, err := a.InvoiceCrmJob(ctx, c.ID, v.ID)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if _, err := a.Issue(ctx, c.ID, inv.ID); err != nil {
+				t.Fatal(err)
+			}
+		}
+	}
+	// Agro: dokončená 10 h × 40 (náklad 10 h × 15) a stratená; Mlyn: bežiaca 4 h × 50 bez nákladu; minulý rok mimo
+	mk(job.Job{Name: "Rozvádzač", ContactID: agro.ID, Status: job.Done, Start: d("2026-09-01"), Budget: m("500"), Work: w("10", "40", "15")}, true)
+	mk(job.Job{Name: "Osvetlenie", ContactID: agro.ID, Status: job.Lost, Start: d("2026-08-01"), Budget: m("900")}, false)
+	mk(job.Job{Name: "Servis", ContactID: mlyn.ID, Status: job.Active, Start: d("2026-10-01"), Work: w("4", "50", "0")}, true)
+	mk(job.Job{Name: "Stará", ContactID: mlyn.ID, Status: job.Active, Start: d("2025-03-01")}, false)
+
+	st, err := a.CrmJobStats(ctx, c.ID, 2026)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(st.Rows) != 2 || len(st.Years) != 2 || st.Years[0] != 2026 || !st.Net {
+		t.Fatalf("štatistika %+v", st)
+	}
+	agroRow, mlynRow := st.Rows[0], st.Rows[1] // podľa zisku: Agro 250, Mlyn 200
+	if agroRow.Customer != agro.Name || agroRow.Jobs != 2 || agroRow.Done != 1 || agroRow.Lost != 1 || agroRow.Invoiced.String() != "400.00" ||
+		agroRow.Costs.String() != "150.00" || agroRow.Profit.String() != "250.00" || *agroRow.Margin != 63 || agroRow.Budget.String() != "1400.00" {
+		t.Fatalf("Agro %+v", agroRow)
+	}
+	if mlynRow.Jobs != 1 || mlynRow.Open != 1 || mlynRow.Profit.String() != "200.00" || *mlynRow.Margin != 100 {
+		t.Fatalf("Mlyn %+v", mlynRow)
+	}
+	if st.Total.Jobs != 3 || st.Total.Profit.String() != "450.00" || *st.Total.Margin != 75 || *st.WinRate != 50 {
+		t.Fatalf("spolu %+v, úspešnosť %v", st.Total, st.WinRate)
+	}
+	all, _ := a.CrmJobStats(ctx, c.ID, 0)
+	if all.Total.Jobs != 4 {
+		t.Fatalf("všetky roky %+v", all.Total)
+	}
+}

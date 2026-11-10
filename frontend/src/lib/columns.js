@@ -806,3 +806,18 @@ export const deliveryColumns = [
   money('Spolu', (r) => r.summary?.total),
   t('Prevzal', (r) => r.receiver, 18),
 ]
+
+// Ziskovosť zákaziek podľa zákazníka
+export const jobStatsColumns = [
+  t('Zákazník', (r) => r.customer, 32),
+  { header: 'Zákaziek', value: (r) => r.jobs, type: 'number', width: 9 },
+  { header: 'Bežiace', value: (r) => r.open, type: 'number', width: 9 },
+  { header: 'Dokončené', value: (r) => r.done, type: 'number', width: 10 },
+  { header: 'Stratené', value: (r) => r.lost, type: 'number', width: 9 },
+  money('Plánovaná cena', (r) => r.budget),
+  money('Vyfakturované', (r) => r.invoiced),
+  money('Nevyfakturované', (r) => r.unbilled),
+  money('Náklady', (r) => r.costs),
+  money('Zisk', (r) => r.profit),
+  t('Marža', (r) => (r.margin == null ? '' : `${r.margin} %`), 8),
+]

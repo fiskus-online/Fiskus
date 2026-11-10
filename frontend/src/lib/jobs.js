@@ -105,3 +105,16 @@ export function jobPayload(f) {
 export function marginText(s) {
   return s?.margin == null ? '—' : `${s.margin} %`
 }
+
+/** Stĺpce nástenky v poradí priebehu so zákazkami (stratené na konci). */
+export function boardColumns(rows) {
+  return jobStatuses.map((s) => ({ ...s, jobs: rows.filter((r) => r.status === s.value) }))
+}
+
+/** Telo na zmenu stavu zákazky z nástenky (ostatné údaje ostanú). */
+export function movePayload(row, status) {
+  return jobPayload({ ...jobForm(row), status })
+}
+
+/** Marža zo súhrnu ziskovosti na zobrazenie. */
+export const pct = (v) => (v == null ? '—' : `${v} %`)
