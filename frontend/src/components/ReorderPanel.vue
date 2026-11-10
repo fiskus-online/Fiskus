@@ -80,13 +80,14 @@ async function create() {
             <th class="hide-m">Dodávateľ</th>
             <th class="num hide-m">Minimum</th>
             <th class="num">Na sklade</th>
+            <th class="num hide-m">Rezervované</th>
             <th class="num hide-m">Objednané</th>
             <th class="num">Objednať</th>
           </tr>
         </thead>
         <tbody>
           <tr v-if="rows && !visible.length">
-            <td colspan="7" class="empty">
+            <td colspan="8" class="empty">
               {{ rows.length ? 'Nič sa nenašlo.' : 'Všetko je nad minimálnou zásobou. Minimum nastavíte pri skladovej položke v záložke Nastavenie.' }}
             </td>
           </tr>
@@ -99,6 +100,7 @@ async function create() {
             <td class="hide-m">{{ r.supplier || '—' }}</td>
             <td class="num hide-m">{{ n(r.min) }} {{ r.unit }}</td>
             <td class="num neg">{{ n(r.stock) }} {{ r.unit }}</td>
+            <td class="num hide-m">{{ Number(r.reserved) ? `${n(r.reserved)} ${r.unit}` : '' }}</td>
             <td class="num hide-m">{{ Number(r.onOrder) ? `${n(r.onOrder)} ${r.unit}` : '' }}</td>
             <td class="num qty">
               <InputText v-model="picked[r.itemId].qty" size="small" inputmode="decimal" :disabled="!picked[r.itemId].on" :aria-label="`Množstvo ${r.name}`" />
@@ -107,7 +109,7 @@ async function create() {
         </tbody>
       </table>
     </section>
-    <p class="hint">Návrh dopĺňa zásobu na minimum (aj s tým, čo už je objednané). Objednávky vzniknú rozpracované, jedna na dodávateľa z karty produktu.</p>
+    <p class="hint">Návrh dopĺňa zásobu na minimum: počíta s tým, čo už je objednané od dodávateľov, a s tovarom rezervovaným pre prijaté objednávky zákazníkov. Objednávky vzniknú rozpracované, jedna na dodávateľa z karty produktu.</p>
   </div>
 </template>
 

@@ -120,8 +120,12 @@ type StockCard struct {
 	AvgCost  money.Dec      `json:"avgCost"`
 	Min      money.Dec      `json:"min"`
 	Low      bool           `json:"low"` // pod minimálnou zásobou
-	Price    money.Dec      `json:"price"`
-	Archived bool           `json:"archived,omitempty"`
+	// Reserved: rezervované prijatými objednávkami (iba na hlavnom sklade,
+	// odkiaľ sa vydáva dodacím listom a faktúrou).
+	Reserved money.Dec `json:"reserved"`
+	Free     money.Dec `json:"free"` // voľné = množstvo − rezervované
+	Price    money.Dec `json:"price"`
+	Archived bool      `json:"archived,omitempty"`
 }
 
 // StockView je prehľad skladu.
@@ -163,6 +167,10 @@ func (a *App) Stock(ctx context.Context, companyID int64) (StockView, error) {
 	for _, it := range items {
 		byID[it.ID] = it
 	}
+	reserved, err := a.reservedStock(ctx, companyID, 0)
+	if err != nil {
+		return StockView{}, err
+	}
 	cards, costed, probs := stock.Valuate(docs, cfg.Method)
 	v := StockView{Warehouses: cfg.Warehouses, Items: cfg.Items, Docs: costed, Problems: probs, Kinds: stock.Kinds,
 		ItemKinds: stock.ItemKinds, Catalog: items, Cards: []StockCard{}, Method: cfg.Method, Methods: stock.Methods,
@@ -180,6 +188,10 @@ func (a *App) Stock(ctx context.Context, companyID int64) (StockView, error) {
 			sc.Quantity, sc.Value, sc.AvgCost = c.Quantity, c.Value, c.AvgCost
 		}
 		sc.Low = si.Min.Sign() > 0 && sc.Quantity.Cmp(si.Min) < 0
+		if len(cfg.Warehouses) > 0 && k.Warehouse == cfg.Warehouses[0].Code {
+			sc.Reserved = reserved[k.ItemID]
+		}
+		sc.Free = sc.Quantity.Sub(sc.Reserved)
 		v.Value = v.Value.Add(sc.Value)
 		v.Cards = append(v.Cards, sc)
 	}

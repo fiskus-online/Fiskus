@@ -31,6 +31,7 @@ import (
 	"github.com/fiskus-online/fiskus/backend/internal/quote"
 	"github.com/fiskus-online/fiskus/backend/internal/recurring"
 	"github.com/fiskus-online/fiskus/backend/internal/reminder"
+	"github.com/fiskus-online/fiskus/backend/internal/sorder"
 	"github.com/fiskus-online/fiskus/backend/internal/stock"
 	"github.com/fiskus-online/fiskus/backend/internal/store"
 	"github.com/fiskus-online/fiskus/backend/internal/vat"
@@ -940,6 +941,22 @@ func seedStock(ctx context.Context, a *app.App, c store.Company, contactIDs []in
 				return err
 			}
 		}
+	}
+	// prijatá objednávka: kábel rezervovaný, časť už dodaná dodacím listom
+	so, err := a.SaveSalesOrder(ctx, c.ID, sorder.Order{ContactID: ct.ID, Date: day(6), Due: day(-5), CustomerRef: "OBJ-2026-118",
+		Place: "Prevádzka – dopravník č. 3", PriceMode: vat.PriceNet, Lines: []sorder.Line{
+			{Line: invoice.Line{Description: cable.Name, Quantity: m.MustParse("40"), Unit: cable.Unit, UnitPrice: cable.Price, Rate: vat.Rate23, ItemID: cable.ID}},
+			{Line: invoice.Line{Description: "Montáž rozvodov", Quantity: m.MustParse("6"), Unit: "hod", UnitPrice: m.MustParse("35"), Rate: vat.Rate23}},
+		}})
+	if err != nil {
+		return err
+	}
+	sd, err := a.FulfilSalesOrder(ctx, c.ID, so.ID, app.SalesOrderFulfil{To: sorder.ByDelivery, Qty: map[int]m.Dec{so.Lines[0].Key: m.MustParse("15")}})
+	if err != nil {
+		return err
+	}
+	if _, err := a.IssueDelivery(ctx, c.ID, sd.ID); err != nil {
+		return err
 	}
 	// CRM: telefonát a úlohy k zákazke
 	for _, x := range []activity.Activity{

@@ -328,6 +328,7 @@ async function revokeFeed() {
                   <span v-if="c.code" class="code">{{ c.code }}</span> {{ c.name }}
                   <span class="kind">{{ itemKindLabels[c.kind] }}</span>
                   <span v-if="c.low" class="tag low">pod minimom {{ formatAmount(c.min).replace(/,00$/, '') }}</span>
+                  <span v-if="Number(c.reserved) > 0" class="reserved" title="Rezervované prijatými objednávkami">rezervované {{ formatAmount(c.reserved).replace(/,00$/, '') }}, voľné {{ formatAmount(c.free).replace(/,00$/, '') }}</span>
                 </td>
                 <td v-if="multi">{{ c.warehouse }}</td>
                 <td class="num" :class="{ neg: Number(c.quantity) < 0 }">{{ qty(c) }}</td>
@@ -680,6 +681,11 @@ button.cell:disabled {
   font-size: var(--fs-xs);
   color: var(--ink-faint);
   margin-left: 4px;
+}
+.reserved {
+  display: block;
+  font-size: var(--fs-xs);
+  color: var(--ink-soft);
 }
 .tag {
   font-size: var(--fs-xs);

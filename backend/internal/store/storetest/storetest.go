@@ -15,6 +15,7 @@ import (
 	"github.com/fiskus-online/fiskus/backend/internal/journal"
 	"github.com/fiskus-online/fiskus/backend/internal/link"
 	"github.com/fiskus-online/fiskus/backend/internal/porder"
+	"github.com/fiskus-online/fiskus/backend/internal/sorder"
 	"reflect"
 	"sync"
 	"testing"
@@ -880,6 +881,57 @@ func Run(t *testing.T, newStore Factory) {
 		}
 		if list, _ := s.ListDeliveries(ctx, a.ID); len(list) != 0 {
 			t.Fatal("dodacie listy po zmazaní firmy")
+		}
+	})
+
+	t.Run("prijaté objednávky", func(t *testing.T) {
+		s := newStore(t)
+		a, _ := s.CreateCompany(ctx, store.Company{Name: "Alfa"})
+		b, _ := s.CreateCompany(ctx, store.Company{Name: "Beta"})
+		o1 := sorder.Order{Number: "OP20260001", Status: sorder.Partial, Customer: invoice.Party{Name: "Agro", Country: "SK"}, ContactID: 4,
+			Date: invoice.MustDate("2026-11-10"), Due: invoice.MustDate("2026-11-20"), CustomerRef: "OBJ-77", Place: "Sušička", Note: "Volať vopred",
+			PriceMode: vat.PriceNet, Lines: []sorder.Line{{Key: 1, Line: invoice.Line{Description: "Kábel", Quantity: m.MustParse("40"), Unit: "m",
+				UnitPrice: m.MustParse("2.19"), Rate: vat.Rate23, Amount: m.MustParse("87.60"), ItemID: 13}, Delivered: m.MustParse("10"), Rest: m.MustParse("30")}},
+			Fulfils: []sorder.Fulfil{{Kind: sorder.ByDelivery, ID: 9, Number: "DL20260001", Qty: map[int]m.Dec{1: m.MustParse("10")}}}}
+		o2 := sorder.Order{Number: "OP20260002", Status: sorder.Open}
+		for _, o := range []*sorder.Order{&o1, &o2} {
+			if err := s.SaveSalesOrder(ctx, a.ID, o); err != nil || o.ID == 0 {
+				t.Fatalf("objednávka: %v", err)
+			}
+		}
+		dup := sorder.Order{Number: "OP20260001"}
+		if err := s.SaveSalesOrder(ctx, a.ID, &dup); !errors.Is(err, store.ErrDuplicate) {
+			t.Fatalf("rovnaké číslo: %v", err)
+		}
+		got, err := s.GetSalesOrder(ctx, a.ID, o1.ID)
+		if err != nil || !reflect.DeepEqual(got, o1) {
+			t.Fatalf("načítanie:\n got %+v\nwant %+v", got, o1)
+		}
+		got.Lines[0].Description = "Iné"
+		got.Fulfils[0].Qty[1] = m.MustParse("99")
+		if again, _ := s.GetSalesOrder(ctx, a.ID, o1.ID); again.Lines[0].Description != "Kábel" || !again.Fulfils[0].Qty[1].Equal(m.MustParse("10")) {
+			t.Fatal("zmena načítanej objednávky zmenila uloženú")
+		}
+		if list, _ := s.ListSalesOrders(ctx, a.ID); len(list) != 2 || list[0].ID != o2.ID {
+			t.Fatalf("zoznam (najnovšie prvé): %+v", list)
+		}
+		if _, err := s.GetSalesOrder(ctx, b.ID, o1.ID); !errors.Is(err, store.ErrNotFound) {
+			t.Fatal("objednávka inej firmy")
+		}
+		if err := s.SaveSalesOrder(ctx, b.ID, &o1); !errors.Is(err, store.ErrNotFound) {
+			t.Fatal("úprava objednávky inej firmy")
+		}
+		if err := s.DeleteSalesOrder(ctx, b.ID, o2.ID); !errors.Is(err, store.ErrNotFound) {
+			t.Fatal("zmazanie objednávky inej firmy")
+		}
+		if err := s.DeleteSalesOrder(ctx, a.ID, o2.ID); err != nil {
+			t.Fatal(err)
+		}
+		if err := s.DeleteCompany(ctx, a.ID); err != nil {
+			t.Fatal(err)
+		}
+		if list, _ := s.ListSalesOrders(ctx, a.ID); len(list) != 0 {
+			t.Fatal("objednávky po zmazaní firmy")
 		}
 	})
 

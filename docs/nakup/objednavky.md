@@ -56,8 +56,11 @@ množstvo. Ak zvyšok nepríde, objednávku **zrušte**.
 
 V **Sklad → Na objednanie** (alebo tlačidlom v zozname objednávok) sú
 skladové položky, ktorých stav na všetkých skladoch spolu s tým, čo už
-je objednané, klesol pod **minimálnu zásobu**. Fiškus navrhne množstvo
-na doplnenie do minima (zaokrúhlené nahor na celé jednotky).
+je objednané, a po odpočítaní tovaru rezervovaného pre
+[prijaté objednávky](../predaj/prijate-objednavky.md) klesol pod
+**minimálnu zásobu**. Fiškus navrhne množstvo na doplnenie do minima
+(zaokrúhlené nahor na celé jednotky). Položka bez minima sa ukáže, keď
+rezervácie prevyšujú stav.
 
 Označte položky, upravte množstvá a kliknite na **Vytvoriť objednávky**.
 Vznikne rozpracovaná objednávka pre každého dodávateľa z karty produktu;

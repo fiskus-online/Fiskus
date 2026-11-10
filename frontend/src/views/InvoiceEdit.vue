@@ -794,6 +794,7 @@ const quoteMore = computed(() => {
   return [
     qa.value.copy && { label: 'Kópia (nová verzia)', icon: 'pi pi-copy', command: copyQuote },
     qa.value.renumber && { label: 'Zmeniť číslo', icon: 'pi pi-hashtag', command: openRenumber },
+    ['issued', 'accepted'].includes(q.status) && { label: 'Prijatá objednávka', icon: 'pi pi-inbox', command: salesOrderFromQuote },
     ['issued', 'accepted', 'invoiced'].includes(q.status) && { label: 'Dodací list', icon: 'pi pi-truck', command: deliveryFromQuote },
     qa.value.invoice && { label: 'Už vyfakturovaná…', icon: 'pi pi-link', command: () => (invoicedOpen.value = true) },
     qa.value.reject && { label: 'Odmietnutá', icon: 'pi pi-thumbs-down', command: () => quoteStep('reject', 'Ponuka označená ako odmietnutá') },
@@ -919,6 +920,20 @@ async function deliveryFromQuote() {
     const n = await api.deliveryFromQuote(session.companyId, inv.value.id)
     toast.add({ severity: 'success', summary: 'Koncept dodacieho listu vytvorený', life: 3000 })
     router.push(`/dodacie-listy/${n.id}`)
+  } catch (e) {
+    applyError(e)
+  } finally {
+    busy.value = false
+  }
+}
+
+// prijatá objednávka z ponuky (zákazník objednal; rezervuje tovar na sklade)
+async function salesOrderFromQuote() {
+  busy.value = true
+  try {
+    const o = await api.salesOrderFromQuote(session.companyId, inv.value.id)
+    toast.add({ severity: 'success', summary: `Objednávka ${o.number} zapísaná`, life: 3000 })
+    router.push(`/prijate-objednavky/${o.id}`)
   } catch (e) {
     applyError(e)
   } finally {

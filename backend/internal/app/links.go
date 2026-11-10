@@ -136,6 +136,13 @@ func (a *App) docInfo(ctx context.Context, companyID int64, r link.Ref) (LinkedD
 		}
 		d.Type, d.Number, d.Partner, d.Date = "Dodací list", firstNonBlank(n.Number, "koncept"), n.Customer.Name, n.Date
 		d.Total, d.Currency, d.Status = n.Summary.Total, "EUR", string(n.Status)
+	case link.SOrder:
+		o, err := a.Store.GetSalesOrder(ctx, companyID, r.ID)
+		if err != nil {
+			return d, err
+		}
+		d.Type, d.Number, d.Partner, d.Date = "Prijatá objednávka", o.Number, o.Customer.Name, o.Date
+		d.Total, d.Currency, d.Status = o.Summary.Total, "EUR", string(o.Status)
 	case link.POrder:
 		o, err := a.Store.GetPurchaseOrder(ctx, companyID, r.ID)
 		if err != nil {

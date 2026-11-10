@@ -332,13 +332,15 @@ type ReorderRow struct {
 	SupplierCode  string    `json:"supplierCode"`
 	PurchasePrice money.Dec `json:"purchasePrice"`
 	Min           money.Dec `json:"min"`
-	Stock         money.Dec `json:"stock"`   // stav na všetkých skladoch
-	OnOrder       money.Dec `json:"onOrder"` // objednané, ešte neprijaté
+	Stock         money.Dec `json:"stock"`    // stav na všetkých skladoch
+	OnOrder       money.Dec `json:"onOrder"`  // objednané, ešte neprijaté
+	Reserved      money.Dec `json:"reserved"` // rezervované prijatými objednávkami
 	Suggested     money.Dec `json:"suggested"`
 }
 
-// Reorder vráti skladové položky, ktorých stav aj s objednaným je pod
-// minimálnou zásobou, s navrhovaným množstvom (doplnenie na minimum).
+// Reorder vráti skladové položky, ktorých stav aj s objednaným a po
+// odpočítaní rezervácií prijatých objednávok je pod minimálnou zásobou,
+// s navrhovaným množstvom (doplnenie na minimum).
 func (a *App) Reorder(ctx context.Context, companyID int64) ([]ReorderRow, error) {
 	if err := a.Require(ctx, companyID, auth.PermPurchasesRead); err != nil {
 		return nil, err
@@ -371,12 +373,16 @@ func (a *App) Reorder(ctx context.Context, companyID int64) ([]ReorderRow, error
 			}
 		}
 	}
+	reserved, err := a.reservedStock(ctx, companyID, 0)
+	if err != nil {
+		return nil, err
+	}
 	out := []ReorderRow{}
 	for _, si := range cfg.Items {
-		if si.Min.Sign() <= 0 {
+		if si.Min.Sign() <= 0 && reserved[si.ItemID].Sign() <= 0 {
 			continue
 		}
-		missing := si.Min.Sub(have[si.ItemID]).Sub(onOrder[si.ItemID])
+		missing := si.Min.Sub(have[si.ItemID]).Sub(onOrder[si.ItemID]).Add(reserved[si.ItemID])
 		if missing.Sign() <= 0 {
 			continue
 		}
@@ -385,7 +391,7 @@ func (a *App) Reorder(ctx context.Context, companyID int64) ([]ReorderRow, error
 			continue
 		}
 		out = append(out, ReorderRow{ItemID: it.ID, Code: it.Code, Name: it.Name, Unit: it.Unit, Supplier: it.Supplier, SupplierCode: it.SupplierCode,
-			PurchasePrice: it.PurchasePrice, Min: si.Min, Stock: have[si.ItemID], OnOrder: onOrder[si.ItemID], Suggested: ceilWhole(missing)})
+			PurchasePrice: it.PurchasePrice, Min: si.Min, Stock: have[si.ItemID], OnOrder: onOrder[si.ItemID], Reserved: reserved[si.ItemID], Suggested: ceilWhole(missing)})
 	}
 	sort.Slice(out, func(i, k int) bool {
 		if out[i].Supplier != out[k].Supplier {

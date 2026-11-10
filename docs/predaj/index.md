@@ -24,6 +24,10 @@ tags: [predaj]
   href: ./ponuky.md
   icon: edit
   text: Ponuka s prijatím cez odkaz, faktúry, ktoré sa vystavia samy.
+- title: Prijaté objednávky
+  href: ./prijate-objednavky.md
+  icon: inbox
+  text: Objednávka od zákazníka, rezervácia tovaru, dodanie po častiach.
 - title: Dodacie listy
   href: ./dodacie-listy.md
   icon: package
