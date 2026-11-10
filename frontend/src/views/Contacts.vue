@@ -28,6 +28,7 @@ import ContactHistory from '../components/ContactHistory.vue'
 import Dialog from 'primevue/dialog'
 import { contactAccept, contactsLabel } from '../lib/migrate.js'
 import { filterContacts, personsText } from '../lib/contacts.js'
+import { usePanelWidth } from '../lib/panelWidth.js'
 
 const props = defineProps({ id: String })
 const router = useRouter()
@@ -40,6 +41,7 @@ const search = ref('')
 const form = ref(null)
 const errors = ref({})
 const busy = ref(false)
+const panel = usePanelWidth('fiskus.contactPanelWidth')
 
 const blank = () => ({
   name: '', street: '', city: '', zip: '', country: 'SK', ico: '', dic: '', icdph: '',
@@ -138,6 +140,7 @@ const rowId = (p) => String(p.data.id)
 const selectedId = computed(() => form.value?.id ?? null)
 const rowClassRules = { 'row-selected': (p) => p.data.id === selectedId.value }
 watch(selectedId, () => gridApi.value?.redrawRows())
+watch(() => panel.width.value, () => requestAnimationFrame(() => gridApi.value?.sizeColumnsToFit()))
 
 const fields = [
   { key: 'name', label: 'Názov / meno', span: 4, autocomplete: 'organization' },
@@ -215,7 +218,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="contacts" :class="{ 'has-panel': !!form }">
+  <div class="contacts" :class="{ 'has-panel': !!form }" :style="{ '--panel-w': panel.width.value + 'px' }">
     <section class="list">
       <header class="head">
         <h1>Adresár</h1>
@@ -253,6 +256,9 @@ onBeforeUnmount(() => {
     </section>
 
     <aside v-if="form" class="panel" aria-label="Detail kontaktu">
+      <div class="resizer" role="separator" aria-orientation="vertical" aria-label="Šírka panela (ťahajte, šípky, dvojklik vráti pôvodnú)" tabindex="0"
+        :aria-valuenow="panel.width.value" title="Ťahaním zmeníte šírku, dvojklikom vrátite pôvodnú"
+        @pointerdown="panel.drag" @keydown="panel.onKey" @dblclick="panel.reset" />
       <header class="panel-head">
         <button class="close" aria-label="Zavrieť" @click="router.push('/adresar')"><i class="pi pi-times" /></button>
         <h2>{{ form.id ? form.name || 'Kontakt' : 'Nový kontakt' }}</h2>
@@ -355,7 +361,7 @@ onBeforeUnmount(() => {
   height: 100%;
 }
 .contacts.has-panel {
-  grid-template-columns: minmax(0, 1fr) 460px;
+  grid-template-columns: minmax(0, 1fr) var(--panel-w, 460px);
 }
 
 .list {
@@ -417,11 +423,25 @@ onBeforeUnmount(() => {
 }
 
 .panel {
+  position: relative;
   display: flex;
   flex-direction: column;
   min-height: 0;
   background: var(--sheet);
   border-left: 1px solid var(--rule);
+}
+.resizer {
+  position: absolute;
+  inset: 0 auto 0 -4px;
+  width: 8px;
+  cursor: col-resize;
+  z-index: 2;
+  touch-action: none;
+}
+.resizer:hover,
+.resizer:focus-visible {
+  background: linear-gradient(90deg, transparent 3px, var(--blue) 3px, var(--blue) 5px, transparent 5px);
+  outline: none;
 }
 .panel-head {
   display: flex;
@@ -468,7 +488,7 @@ onBeforeUnmount(() => {
   .panel {
     position: fixed;
     inset: var(--topbar-h) 0 0 auto;
-    width: min(460px, 100%);
+    width: min(var(--panel-w, 460px), 100%);
     z-index: 15;
     box-shadow: -8px 0 24px rgba(18, 24, 32, 0.12);
   }
@@ -488,6 +508,12 @@ onBeforeUnmount(() => {
   }
   .panel-body .form-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .resizer {
+    display: none;
+  }
+  .panel {
+    width: 100%;
   }
 }
 </style>

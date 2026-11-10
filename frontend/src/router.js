@@ -79,7 +79,10 @@ export const modules = [
   },
   {
     group: 'Prehľad',
-    items: [{ path: '/kalendar', label: 'Kalendár', icon: 'pi-calendar', ready: true, home: true }],
+    items: [
+      { path: '/kalendar', label: 'Kalendár', icon: 'pi-calendar', ready: true, home: true },
+      { path: '/adresar', label: 'Adresár', icon: 'pi-address-book', ready: true, perm: 'contacts.read' },
+    ],
   },
   {
     group: 'Predaj',
@@ -142,7 +145,6 @@ export const modules = [
     items: [
       { path: '/kalkulacky', label: 'Kalkulačky', icon: 'pi-calculator', ready: true, home: true },
       { path: '/tlaciva', label: 'Tlačivá', icon: 'pi-file-edit', ready: true, home: true },
-      { path: '/adresar', label: 'Adresár', icon: 'pi-address-book', ready: true, perm: 'contacts.read' },
       { path: '/audit', label: 'Audit', icon: 'pi-shield', ready: true, perm: 'audit.read', home: true },
       { path: '/nastavenia', label: 'Nastavenia', icon: 'pi-cog', ready: true, settingsHub: true, home: true },
     ],
