@@ -618,6 +618,16 @@ export const itemMoveColumns = [
   money('Hodnota zásoby', (r) => r.value),
 ]
 
+/** Nákupné ceny produktu: všetky nákupy z príjemiek. */
+export const itemPurchaseColumns = [
+  date('Dátum', (r) => r.date),
+  t('Dodávateľ', (r) => r.supplier, 28),
+  num('Množstvo', (r) => r.quantity),
+  money('Cena za MJ bez DPH', (r) => r.unitCost),
+  t('Príjemka', (r) => r.docNumber, 14),
+  t('Doklad', (r) => r.linkNumber, 14),
+]
+
 // domácnosť: pohyby (accounts sa doplnia pri exporte) a účty
 export const householdEntryColumns = (accounts) => [
   date('Dátum', (r) => r.date),

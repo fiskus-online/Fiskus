@@ -22,7 +22,8 @@ import { session, can } from "../lib/session.js";
 import { codes, ratesOn } from "../lib/codes.js";
 import { formatAmount, formatDate, formatQuantity } from "../lib/format.js";
 import { itemKindLabels } from "../lib/stock.js";
-import { itemMoveColumns } from "../lib/columns.js";
+import { itemMoveColumns, itemPurchaseColumns } from "../lib/columns.js";
+import { matches, searchTerms } from "../lib/search.js";
 import {
   blankParam,
   cleanParams,
@@ -280,6 +281,25 @@ function removeImage(im) {
     },
   });
 }
+
+// ---- nákupné ceny podľa dodávateľa (počíta server z príjemiek) ----
+const priceSearch = ref("");
+const suppliers = computed(() => {
+  const terms = searchTerms(priceSearch.value);
+  return (card.value?.suppliers ?? []).filter((s) => matches(terms, [s.supplier]));
+});
+const purchases = computed(() => {
+  const terms = searchTerms(priceSearch.value);
+  return (card.value?.purchases ?? []).filter((p) =>
+    matches(terms, [p.supplier, p.docNumber, p.linkNumber]),
+  );
+});
+const purchaseLink = (p) =>
+  p.linkKind === "porder"
+    ? `/objednavky/${p.linkId}`
+    : p.linkKind === "purchase"
+      ? `/prijate/${p.linkId}`
+      : "";
 
 // ---- pohyby ----
 const search = ref("");
@@ -896,6 +916,86 @@ onBeforeUnmount(() => window.removeEventListener("keydown", onKey));
         </div>
       </div>
 
+      <!-- nákupné ceny -->
+      <section
+        v-if="canStock && card.tracked && card.purchases?.length"
+        class="sheet moves"
+        aria-label="Nákupné ceny"
+      >
+        <header class="moves-head">
+          <h2>Nákupné ceny</h2>
+          <span class="count">{{ card.purchases.length }} nákupov</span>
+          <IconField class="search">
+            <InputIcon class="pi pi-search" />
+            <InputText
+              v-model="priceSearch"
+              placeholder="Hľadať dodávateľa, doklad"
+              size="small"
+              aria-label="Hľadať v nákupoch"
+            />
+          </IconField>
+          <div class="spacer" />
+          <ExportButton
+            :name="`Nákupy ${card.item.code || card.item.name}`"
+            :columns="itemPurchaseColumns"
+            :rows="purchases"
+          />
+        </header>
+        <div class="scroll">
+          <table class="list">
+            <thead>
+              <tr>
+                <th>Dodávateľ</th>
+                <th class="num">Posledná cena</th>
+                <th class="num hide-m">Najnižšia</th>
+                <th class="num hide-m">Najvyššia</th>
+                <th class="num hide-m">Priemer</th>
+                <th class="num">Nakúpené</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-if="!suppliers.length">
+                <td colspan="6" class="empty">Nič sa nenašlo.</td>
+              </tr>
+              <tr v-for="(s, i) in suppliers" :key="s.supplier || i">
+                <td>
+                  <b>{{ s.supplier || "bez dodávateľa" }}</b>
+                  <span v-if="i === 0 && suppliers.length > 1" class="sub">najlacnejší naposledy</span>
+                </td>
+                <td class="num">
+                  <b>{{ formatAmount(s.last) }}</b>
+                  <span class="sub">{{ formatDate(s.lastDate) }}</span>
+                </td>
+                <td class="num hide-m">{{ formatAmount(s.min) }}</td>
+                <td class="num hide-m">{{ formatAmount(s.max) }}</td>
+                <td class="num hide-m">{{ formatAmount(s.average) }}</td>
+                <td class="num">
+                  {{ qty(s.quantity) }}
+                  <span class="sub">{{ s.count }} {{ s.count === 1 ? "nákup" : s.count < 5 ? "nákupy" : "nákupov" }}</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <details class="buys">
+            <summary>Všetky nákupy ({{ purchases.length }})</summary>
+            <table class="list">
+              <tbody>
+                <tr v-for="(p, i) in purchases" :key="i">
+                  <td class="date">{{ formatDate(p.date) }}</td>
+                  <td class="text">{{ p.supplier }}</td>
+                  <td class="num">{{ qty(p.quantity) }}</td>
+                  <td class="num">{{ formatAmount(p.unitCost) }}</td>
+                  <td class="hide-m">
+                    <RouterLink v-if="purchaseLink(p)" :to="purchaseLink(p)">{{ p.linkNumber || p.docNumber }}</RouterLink>
+                    <template v-else>{{ p.docNumber }}</template>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </details>
+        </div>
+      </section>
+
       <!-- pohyby -->
       <section
         v-if="canStock && card.tracked"
@@ -1259,6 +1359,23 @@ onBeforeUnmount(() => window.removeEventListener("keydown", onKey));
 
 .moves {
   margin-top: 14px;
+}
+.list .sub {
+  display: block;
+  font-size: var(--fs-xs);
+  font-weight: 400;
+  color: var(--ink-faint);
+}
+.buys summary {
+  padding: 8px 12px;
+  cursor: pointer;
+  color: var(--blue);
+  font-size: var(--fs-sm);
+}
+.buys a {
+  color: var(--blue);
+  text-decoration: none;
+  font-weight: 600;
 }
 .moves-head {
   display: flex;

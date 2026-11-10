@@ -51,6 +51,9 @@ type ItemCard struct {
 	Warehouses []WarehouseStock  `json:"warehouses"`
 	Moves      []CardMove        `json:"moves"`
 	Method     stock.Method      `json:"method"`
+	// Purchases sú nákupy z príjemiek s cenou, Suppliers ich súhrn podľa dodávateľa.
+	Purchases []stock.PriceEntry    `json:"purchases"`
+	Suppliers []stock.SupplierPrice `json:"suppliers"`
 }
 
 // ItemCard vráti skladovú kartu produktu.
@@ -68,6 +71,7 @@ func (a *App) ItemCard(ctx context.Context, companyID, id int64) (ItemCard, erro
 		return out, err
 	}
 	out.Warehouses, out.Moves = []WarehouseStock{}, []CardMove{}
+	out.Purchases, out.Suppliers = []stock.PriceEntry{}, []stock.SupplierPrice{}
 	cfg, err := a.loadStock(ctx, companyID)
 	if err != nil {
 		return out, err
@@ -97,6 +101,7 @@ func (a *App) ItemCard(ctx context.Context, companyID, id int64) (ItemCard, erro
 	}
 	// pohyby všetkých skladov podľa dátumu (najnovšie hore)
 	sortMoves(out.Moves)
+	out.Purchases, out.Suppliers = stock.PurchaseHistory(docs, id)
 	out.Below = !out.Min.IsZero() && out.Quantity.Cmp(out.Min) < 0
 	return out, nil
 }

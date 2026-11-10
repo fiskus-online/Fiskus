@@ -50,6 +50,22 @@ Prepínač **Vediem na sklade**, druh zásoby a minimálna zásoba. Pod tým
 tabuľka skladov s množstvom, priemernou cenou a hodnotou; klik na sklad
 vyfiltruje pohyby. Zmena skladu sa uloží spolu s kartou.
 
+## Nákupné ceny
+
+Pri skladovej položke karta ukáže, za koľko ste ju kupovali a od koho.
+Údaje sú z príjemiek s cenou (aj z príjmu z [objednávky](../nakup/objednavky.md)
+a z prijatej faktúry), bez vrátení z dobropisov.
+
+- Pre každého **dodávateľa**: posledná cena s dátumom, najnižšia,
+  najvyššia a priemerná cena (vážená množstvom) a koľko ste nakúpili.
+  Dodávateľ s najnižšou poslednou cenou je prvý.
+- **Všetky nákupy** s dátumom, množstvom, cenou a odkazom na objednávku
+  alebo prijatú faktúru.
+- Hľadanie podľa dodávateľa a dokladu, export nákupov do Excelu a CSV.
+
+![Nákupné ceny podľa dodávateľa](../obrazky/nakupne-ceny.webp)
+*Nákupné ceny podľa dodávateľa*
+
 ## Pohyby
 
 Všetky príjemky, výdajky, presuny a inventúrne rozdiely, najnovšie hore.
