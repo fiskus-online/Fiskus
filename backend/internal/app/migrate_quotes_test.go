@@ -1,6 +1,7 @@
 package app
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/fiskus-online/fiskus/backend/internal/edition"
@@ -113,5 +114,46 @@ func TestQuoteStatusFrom(t *testing.T) {
 		if got := quoteStatusFrom(in); got != want {
 			t.Errorf("%q → %s", in, got)
 		}
+	}
+}
+
+func TestRenumberQuote(t *testing.T) {
+	a, c := newApp(t, edition.Desktop)
+	party := invoice.Party{Name: "Kováč", ICO: "36123455", Street: "Hlavná 1", City: "Nitra", Zip: "94901", Country: "SK"}
+	lines := []invoice.Line{{Description: "Servis", Quantity: money.FromInt(1), Unit: "ks", UnitPrice: money.FromInt(100), Rate: 23}}
+	mk := func() quote.Quote {
+		d, err := a.SaveQuote(ctx, c.ID, quote.Quote{Customer: party, IssueDate: invoice.MustDate("2026-10-01"), ValidUntil: invoice.MustDate("2026-10-31"), Currency: "EUR", Lines: lines})
+		if err != nil {
+			t.Fatal(err)
+		}
+		return d
+	}
+	draft := mk()
+	if _, err := a.RenumberQuote(ctx, c.ID, draft.ID, "CP1"); !fieldErr(err, "number") {
+		t.Fatalf("koncept: %v", err)
+	}
+	q1, _ := a.IssueQuote(ctx, c.ID, draft.ID)
+	q2d := mk()
+	q2, _ := a.IssueQuote(ctx, c.ID, q2d.ID)
+	for _, tc := range []struct{ name, number, err string }{
+		{"prázdne", " ", "number"},
+		{"obsadené", q2.Number, "number"},
+		{"dlhé", strings.Repeat("9", 41), "number"},
+	} {
+		if _, err := a.RenumberQuote(ctx, c.ID, q1.ID, tc.number); !fieldErr(err, tc.err) {
+			t.Fatalf("%s: %v", tc.name, err)
+		}
+	}
+	// výmena čísel cez dočasné
+	steps := [][2]any{{q1.ID, "TMP-1"}, {q2.ID, q1.Number}, {q1.ID, q2.Number}}
+	for _, s := range steps {
+		if _, err := a.RenumberQuote(ctx, c.ID, s[0].(int64), s[1].(string)); err != nil {
+			t.Fatal(err)
+		}
+	}
+	g1, _ := a.Store.GetQuote(ctx, c.ID, q1.ID)
+	g2, _ := a.Store.GetQuote(ctx, c.ID, q2.ID)
+	if g1.Number != q2.Number || g2.Number != q1.Number || g1.Status != quote.StatusIssued {
+		t.Fatalf("%s %s", g1.Number, g2.Number)
 	}
 }

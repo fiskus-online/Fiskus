@@ -144,6 +144,27 @@ func (s *Server) copyQuote(r *http.Request, cid, id int64) (quote.Quote, error) 
 	return s.App.CopyQuote(r.Context(), cid, id)
 }
 
+// renumberQuote: PUT /quotes/{id}/number {"number": "…"}.
+func (s *Server) renumberQuote(w http.ResponseWriter, r *http.Request) {
+	cid, _ := pathID(w, r, "cid")
+	id, ok := pathID(w, r, "id")
+	if !ok {
+		return
+	}
+	var in struct {
+		Number string `json:"number"`
+	}
+	if !decode(w, r, &in) {
+		return
+	}
+	q, err := s.App.RenumberQuote(r.Context(), cid, id, in.Number)
+	if err != nil {
+		failQuote(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, s.quoteRow(q))
+}
+
 // invoiceQuote: POST /quotes/{id}/invoice → koncept faktúry.
 func (s *Server) invoiceQuote(w http.ResponseWriter, r *http.Request) {
 	cid, _ := pathID(w, r, "cid")

@@ -19,10 +19,10 @@ describe('quoteActions', () => {
   it.each([
     [{}, ['edit', 'issue']],
     [{ id: 1, status: 'draft' }, ['copy', 'edit', 'issue']],
-    [{ id: 1, status: 'issued' }, ['accept', 'copy', 'invoice', 'reject']],
-    [{ id: 1, status: 'accepted' }, ['copy', 'invoice', 'reject']],
-    [{ id: 1, status: 'rejected' }, ['accept', 'copy']],
-    [{ id: 1, status: 'invoiced' }, ['copy']],
+    [{ id: 1, status: 'issued' }, ['accept', 'copy', 'invoice', 'reject', 'renumber']],
+    [{ id: 1, status: 'accepted' }, ['copy', 'invoice', 'reject', 'renumber']],
+    [{ id: 1, status: 'rejected' }, ['accept', 'copy', 'renumber']],
+    [{ id: 1, status: 'invoiced' }, ['copy', 'renumber']],
   ])('%o', (q, want) => {
     expect(on(q)).toEqual(want)
   })

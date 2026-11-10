@@ -55,3 +55,8 @@ Druh tabuľky sa rozpozná podľa stĺpcov *Číslo cenovej ponuky* a
 - Odberatelia, ktorí v adresári ešte nie sú, sa doň pridajú.
 - Nové ponuky vo Fiškuse preskočia čísla, ktoré už majú prenesené ponuky.
 
+Číslo vystavenej ponuky sa dá zmeniť aj ručne: na ponuke **Zmeniť číslo**
+(napríklad na pôvodné číslo z iného programu). Číslo musí byť jedinečné a
+zmena sa zapíše do auditu. Faktúry takto prečíslovať nejde, sú to daňové
+doklady.
+

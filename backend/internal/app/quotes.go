@@ -279,3 +279,43 @@ func (a *App) InvoiceQuote(ctx context.Context, companyID, id int64) (invoice.In
 		state{Status: before}, state{q.Status, inv.ID})
 	return inv, nil
 }
+
+// RenumberQuote zmení číslo vystavenej ponuky (napríklad po prenose
+// z iného programu). Ponuka nie je daňový doklad; číslo musí byť
+// jedinečné a zmena sa zapíše do auditu.
+func (a *App) RenumberQuote(ctx context.Context, companyID, id int64, number string) (quote.Quote, error) {
+	if err := a.Require(ctx, companyID, auth.PermInvoicesWrite); err != nil {
+		return quote.Quote{}, err
+	}
+	q, err := a.Store.GetQuote(ctx, companyID, id)
+	if err != nil {
+		return q, err
+	}
+	number = strings.TrimSpace(number)
+	if q.Status == quote.StatusDraft {
+		return q, vErr("number", "Koncept nemá číslo — číslo dostane pri vystavení")
+	}
+	if number == "" || len([]rune(number)) > 40 {
+		return q, vErr("number", "Zadajte číslo ponuky (najviac 40 znakov)")
+	}
+	if number == q.Number {
+		return q, nil
+	}
+	all, err := a.Store.ListQuotes(ctx, companyID, 0)
+	if err != nil {
+		return q, err
+	}
+	for _, x := range all {
+		if x.ID != q.ID && x.Number == number {
+			return q, vErr("number", "Číslo "+number+" už má iná ponuka")
+		}
+	}
+	before := q
+	q.Number = number
+	if err := a.Store.SaveQuote(ctx, companyID, &q); err != nil {
+		return q, err
+	}
+	a.record(ctx, companyID, audit.CatQuotes, "renumber", "quote", q.ID,
+		"Zmena čísla ponuky "+before.Number+" → "+q.Number+" ("+q.Customer.Name+")", before, q)
+	return q, nil
+}
