@@ -269,6 +269,10 @@ func (a *App) InvoiceCrmJob(ctx context.Context, companyID, id int64) (invoice.I
 func jobInvoiceDraft(j job.Job, rate vat.Rate, today invoice.Date) invoice.Invoice {
 	inv := invoice.Invoice{Kind: invoice.KindInvoice, Status: invoice.StatusDraft, IssueDate: today, DeliveryDate: today,
 		PriceMode: vat.PriceNet, Subject: j.Name, Note: "Zákazka " + j.Number + "."}
+	// pri vozidle a zariadení patrí na faktúru aj predmet (EČV, výrobné číslo)
+	if sub := j.Subject(); sub != "" && j.Site == nil {
+		inv.Subject = j.Name + " – " + sub
+	}
 	var last invoice.Date
 	for _, w := range j.Work {
 		if w.Billed() {

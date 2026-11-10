@@ -167,3 +167,54 @@ func TestKeepBilled(t *testing.T) {
 		t.Error("nič na uvoľnenie")
 	}
 }
+
+func TestKinds(t *testing.T) {
+	base := func() Job { return Job{Name: "Oprava", Status: Lead} }
+	tests := []struct {
+		name    string
+		edit    func(*Job)
+		field   string
+		subject string
+	}{
+		{"všeobecná bez údajov", func(j *Job) { j.Vehicle = &Vehicle{Plate: "X"} }, "", ""},
+		{"neznámy druh", func(j *Job) { j.Kind = "lod" }, "kind", ""},
+		{"auto bez EČV aj VIN", func(j *Job) { j.Kind = Auto }, "vehicle.plate", ""},
+		{"auto s EČV", func(j *Job) {
+			j.Kind, j.Vehicle = Auto, &Vehicle{Plate: " bb-123 ab ", Make: "Škoda", Model: "Octavia"}
+		}, "", "BB123AB Škoda Octavia"},
+		{"zlé VIN", func(j *Job) { j.Kind, j.Vehicle = Auto, &Vehicle{VIN: "WVWZZZ1KZAW00000I"} }, "vehicle.vin", ""},
+		{"dobré VIN s medzerou", func(j *Job) { j.Kind, j.Vehicle = Auto, &Vehicle{VIN: "wvwzzz1kzaw 000001"} }, "", ""},
+		{"zlý rok", func(j *Job) { j.Kind, j.Vehicle = Auto, &Vehicle{Plate: "BB1", Year: 19} }, "vehicle.year", ""},
+		{"servis bez zariadenia", func(j *Job) { j.Kind = Service }, "device.type", ""},
+		{"servis", func(j *Job) {
+			j.Kind, j.Device = Service, &Device{Type: "Menič", Make: "Siemens", Model: "G120", Serial: "XAJ123", Purchased: invoice.MustDate("2026-01-01")}
+		}, "", "Menič Siemens G120 v. č. XAJ123"},
+		{"montáž", func(j *Job) { j.Kind, j.Site = Install, &Site{Address: " Hala 2, Zvolen "} }, "", "Hala 2, Zvolen"},
+		{"montáž bez miesta", func(j *Job) { j.Kind = Install }, "", ""},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			j := base()
+			tt.edit(&j)
+			j.Normalize()
+			errs := j.Validate()
+			if tt.field == "" {
+				if len(errs) != 0 {
+					t.Fatalf("chyby: %+v", errs)
+				}
+			} else if len(errs) == 0 || errs[0].Field != tt.field {
+				t.Fatalf("čakal som %s, mám %+v", tt.field, errs)
+			}
+			if tt.subject != "" && j.Subject() != tt.subject {
+				t.Fatalf("predmet %q", j.Subject())
+			}
+		})
+	}
+	// údaje iného druhu sa zahodia, záruka bez dátumu kúpy
+	j := base()
+	j.Kind, j.Vehicle, j.Device = Service, &Vehicle{Plate: "BB1"}, &Device{Type: "Práčka", Purchased: invoice.MustDate("2026-01-01")}
+	j.Normalize()
+	if j.Vehicle != nil || j.Site != nil || !j.Device.Purchased.IsZero() {
+		t.Fatalf("normalizácia %+v %+v", j.Vehicle, j.Device)
+	}
+}

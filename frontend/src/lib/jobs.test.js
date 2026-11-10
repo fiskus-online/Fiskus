@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { boardColumns, movePayload, pct, blankJob, blankMaterial, blankWork, jobForm, jobPayload, pickItem, jobStatusOf, marginText, matchesJobView } from './jobs.js'
+import { boardColumns, movePayload, pct, blankJob, blankMaterial, blankWork, jobForm, jobKindLabel, jobPayload, kindSearchText, pickItem, jobStatusOf, marginText, matchesJobView, setKind } from './jobs.js'
 
 describe('zákazky', () => {
   it.each([
@@ -21,7 +21,7 @@ describe('zákazky', () => {
   it('formulár', () => {
     expect(blankJob({ id: 3, name: 'Farmol' })).toMatchObject({ contactId: 3, customer: 'Farmol', status: 'lead' })
     expect(jobPayload({ name: ' RS ', budget: '8 690,50', contactId: 0, due: '2026-10-31' })).toEqual({
-      name: 'RS', contactId: 0, status: 'lead', start: '', due: '2026-10-31', budget: '8690.50', note: '', rate: '0', work: [], material: [] })
+      name: 'RS', contactId: 0, status: 'lead', start: '', due: '2026-10-31', budget: '8690.50', note: '', rate: '0', work: [], material: [], kind: '' })
     expect(jobPayload({ name: 'x', budget: '' }).budget).toBe('0')
     expect(marginText({ margin: 73 })).toBe('73 %')
     expect(marginText({})).toBe('—')
@@ -57,5 +57,44 @@ describe('zákazky', () => {
     expect(p.work[0]).toMatchObject({ id: 4, hours: '2.00' })
     expect(pct(57)).toBe('57 %')
     expect(pct(null)).toBe('—')
+  })
+})
+
+describe('druhy zákaziek', () => {
+  const ct = { id: 3, name: 'Hron', street: 'Lesná 2', zip: '97401', city: 'Banská Bystrica' }
+  it('nová montáž s adresou zákazníka', () => {
+    const j = blankJob(ct, 'install')
+    expect(j.kind).toBe('install')
+    expect(j.site.address).toBe('Lesná 2, 97401 Banská Bystrica')
+    expect(j.vehicle).toBeUndefined()
+  })
+  it('zmena druhu zachová údaje druhu, ku ktorému sa vrátim', () => {
+    let f = blankJob(null, 'auto')
+    f.vehicle.plate = 'BB123AB'
+    f = setKind(f, 'service', ct)
+    expect(f.vehicle).toBeUndefined()
+    expect(f.device.type).toBe('')
+    f = setKind({ ...f, vehicle: { plate: 'BB123AB' } }, 'auto')
+    expect(f.vehicle.plate).toBe('BB123AB')
+    expect(setKind(f, 'install', ct).site.address).toContain('Lesná 2')
+  })
+  it('telo na uloženie iba s údajmi druhu', () => {
+    const f = jobForm({ id: 1, name: 'Brzdy', status: 'active', kind: 'auto', vehicle: { plate: 'BB123AB', year: 2019, mileage: 0 } })
+    expect(f.vehicle.mileage).toBe('')
+    f.vehicle.mileage = '154 300'
+    f.vehicle.make = ' Škoda '
+    const p = jobPayload(f)
+    expect(p.kind).toBe('auto')
+    expect(p.vehicle).toMatchObject({ plate: 'BB123AB', make: 'Škoda', year: 2019, mileage: 154300 })
+    expect(p.site).toBeUndefined()
+    const d = jobPayload({ ...blankJob(null, 'service'), name: 'X' })
+    expect(d.device).toMatchObject({ warranty: false, purchased: '' })
+    expect(jobPayload(blankJob()).vehicle).toBeUndefined()
+  })
+  it('hľadanie podľa EČV a výrobného čísla, názov druhu', () => {
+    expect(kindSearchText({ subject: 'BB123AB Škoda', vehicle: { vin: 'WVW1' } })).toBe('BB123AB Škoda WVW1')
+    expect(kindSearchText({ device: { serial: 'X9' } })).toBe('X9')
+    expect(jobKindLabel('service')).toBe('Servis zariadenia')
+    expect(jobKindLabel(undefined)).toBe('Všeobecná')
   })
 })

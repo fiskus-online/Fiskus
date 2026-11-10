@@ -9,6 +9,44 @@ export const jobStatuses = [
   { value: 'lost', label: 'Stratená', tone: 'cancelled' },
 ]
 
+/** Druhy zákaziek podľa odboru (pridajú vlastné údaje). */
+export const jobKinds = [
+  { value: '', label: 'Všeobecná', icon: 'pi pi-briefcase' },
+  { value: 'auto', label: 'Autoservis', icon: 'pi pi-car' },
+  { value: 'install', label: 'Montáž', icon: 'pi pi-wrench' },
+  { value: 'service', label: 'Servis zariadenia', icon: 'pi pi-cog' },
+]
+
+/** Názov druhu. */
+export const jobKindLabel = (k) => jobKinds.find((x) => x.value === (k ?? ''))?.label ?? 'Všeobecná'
+
+/** Prázdne údaje druhu. */
+export function kindDetails(kind) {
+  switch (kind) {
+    case 'auto':
+      return { vehicle: { plate: '', vin: '', make: '', model: '', year: '', mileage: '', fuel: '', fault: '', damage: '' } }
+    case 'install':
+      return { site: { address: '', workers: '', contact: '', scope: '' } }
+    case 'service':
+      return { device: { type: '', make: '', model: '', serial: '', warranty: false, purchased: '', fault: '', accessories: '' } }
+  }
+  return {}
+}
+
+/** Adresa kontaktu do miesta montáže. */
+export function contactAddress(c) {
+  if (!c) return ''
+  return [c.street, [c.zip, c.city].filter(Boolean).join(' ')].filter(Boolean).join(', ')
+}
+
+/** Text na hľadanie podľa údajov druhu (EČV, VIN, výrobné číslo…). */
+export function kindSearchText(j) {
+  const v = j?.vehicle ?? {}
+  const d = j?.device ?? {}
+  const s = j?.site ?? {}
+  return [j?.subject, v.plate, v.vin, v.make, v.model, d.serial, d.type, d.make, d.model, s.address, s.workers].filter(Boolean).join(' ')
+}
+
 /** Filtre zoznamu. */
 export const jobViews = [
   { label: 'Bežiace', value: 'open' },
@@ -42,10 +80,21 @@ export function matchesJobView(j, view) {
   return true
 }
 
-/** Nová zákazka. */
-export function blankJob(contact = null) {
-  return { id: 0, name: '', contactId: contact?.id ?? 0, customer: contact?.name ?? '', status: 'lead', start: '', due: '', budget: '', note: '',
-    rate: '', work: [], material: [] }
+/** Nová zákazka (druh napr. podľa poslednej založenej). */
+export function blankJob(contact = null, kind = '') {
+  const j = { id: 0, name: '', contactId: contact?.id ?? 0, customer: contact?.name ?? '', status: 'lead', start: '', due: '', budget: '', note: '',
+    rate: '', work: [], material: [], kind, ...kindDetails(kind) }
+  if (kind === 'install') j.site.address = contactAddress(contact)
+  return j
+}
+
+/** Zmena druhu vo formulári: údaje nového druhu, pri montáži adresa zákazníka. */
+export function setKind(f, kind, contact = null) {
+  const { vehicle, site, device, ...rest } = f
+  const keep = { auto: vehicle && { vehicle }, install: site && { site }, service: device && { device } }[kind]
+  const out = { ...rest, kind, ...(keep || kindDetails(kind)) }
+  if (kind === 'install' && !out.site.address) out.site = { ...out.site, address: contactAddress(contact) }
+  return out
 }
 
 const zero = (v) => (v && Number(v) !== 0 ? v : '')
@@ -57,6 +106,11 @@ export function jobForm(j) {
     budget: zero(j.budget), note: j.note, rate: zero(j.rate),
     work: (j.work ?? []).map((w) => ({ ...w, costRate: zero(w.costRate) })),
     material: (j.material ?? []).map((m) => ({ ...m, unitCost: zero(m.unitCost) })),
+    kind: j.kind ?? '',
+    ...kindDetails(j.kind ?? ''),
+    ...(j.vehicle && { vehicle: { ...j.vehicle, year: j.vehicle.year || '', mileage: j.vehicle.mileage || '' } }),
+    ...(j.site && { site: { ...j.site } }),
+    ...(j.device && { device: { ...j.device, purchased: j.device.purchased || '' } }),
   }
 }
 
@@ -98,7 +152,28 @@ export function jobPayload(f) {
       hours: num(w.hours), rate: num(w.rate), costRate: num(w.costRate) })),
     material: (f.material ?? []).map((m) => ({ id: m.id || 0, date: m.date || '', itemId: m.itemId || 0, name: (m.name ?? '').trim(), unit: m.unit || 'ks',
       quantity: num(m.quantity), unitPrice: num(m.unitPrice), unitCost: num(m.unitCost) })),
+    kind: f.kind ?? '',
+    ...kindPayload(f),
   }
+}
+
+const int = (v) => {
+  const n = parseInt(String(v ?? '').replace(/\s/g, ''), 10)
+  return Number.isFinite(n) ? n : 0
+}
+const str = (o) => Object.fromEntries(Object.entries(o).map(([k, v]) => [k, typeof v === 'string' ? v.trim() : v]))
+
+/** Údaje druhu na uloženie (iba údaje zvoleného druhu). */
+function kindPayload(f) {
+  switch (f.kind) {
+    case 'auto':
+      return { vehicle: { ...str(f.vehicle ?? {}), year: int(f.vehicle?.year), mileage: int(f.vehicle?.mileage) } }
+    case 'install':
+      return { site: str(f.site ?? {}) }
+    case 'service':
+      return { device: { ...str(f.device ?? {}), warranty: !!f.device?.warranty, purchased: f.device?.warranty ? f.device?.purchased || '' : '' } }
+  }
+  return {}
 }
 
 /** Marža na zobrazenie: „73 %“ alebo „—“. */

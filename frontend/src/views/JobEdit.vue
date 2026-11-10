@@ -16,10 +16,11 @@ import FormField from '../components/FormField.vue'
 import RelatedDocs from '../components/RelatedDocs.vue'
 import JobEntries from '../components/JobEntries.vue'
 import ActivityPanel from '../components/ActivityPanel.vue'
+import JobKindDetails from '../components/JobKindDetails.vue'
 import { api } from '../lib/api.js'
 import { can, session } from '../lib/session.js'
 import { formatAmount, formatDate, formatMoney, fromISODate, toISODate } from '../lib/format.js'
-import { blankJob, jobForm, jobPayload, jobStatusOf, jobStatuses, marginText } from '../lib/jobs.js'
+import { blankJob, contactAddress, jobForm, jobKinds, jobPayload, jobStatusOf, jobStatuses, marginText, setKind } from '../lib/jobs.js'
 
 const props = defineProps({ id: { type: String, default: '' } })
 const route = useRoute()
@@ -53,7 +54,7 @@ async function load() {
   } else {
     const ct = route.query.kontakt ? contacts.value.find((c) => String(c.id) === String(route.query.kontakt)) : null
     job.value = null
-    form.value = blankJob(ct)
+    form.value = blankJob(ct, jobKinds.some((k) => k.value === route.query.druh) ? route.query.druh : lastKind())
   }
   dirty.value = false
 }
@@ -63,6 +64,34 @@ function setJob(j) {
 }
 onMounted(load)
 watch(() => props.id, load)
+
+// druh zákazky: nová zákazka dostane naposledy použitý (pamätá sa v prehliadači)
+function lastKind() {
+  try {
+    const k = localStorage.getItem('fiskus.jobKind') ?? ''
+    return jobKinds.some((x) => x.value === k) ? k : ''
+  } catch {
+    return ''
+  }
+}
+function rememberKind(k) {
+  try {
+    localStorage.setItem('fiskus.jobKind', k)
+  } catch {
+    /* prehliadač bez úložiska */
+  }
+}
+const contactOf = (id) => contacts.value.find((c) => c.id === id) ?? null
+const changeKind = (k) => (form.value = setKind(form.value, k ?? '', contactOf(form.value.contactId)))
+// montáž: miesto sa predvyplní adresou zákazníka, kým je prázdne
+watch(() => form.value.contactId, (id) => {
+  if (form.value.kind === 'install' && form.value.site && !form.value.site.address) form.value.site.address = contactAddress(contactOf(id))
+})
+const namePlaceholder = computed(() => ({
+  auto: 'Napr. Výmena bŕzd a servisná prehliadka',
+  install: 'Napr. Montáž tepelného čerpadla',
+  service: 'Napr. Oprava frekvenčného meniča – nejde štart',
+})[form.value.kind] ?? 'Napr. Rekonštrukcia riadiaceho systému etiketovačky')
 
 const date = (k) => ({
   get: () => fromISODate(form.value[k]),
@@ -75,6 +104,7 @@ async function save() {
   try {
     const saved = await api.saveJob(session.companyId, jobPayload(form.value), job.value?.id)
     const wasNew = !job.value
+    if (wasNew) rememberKind(saved.kind ?? '')
     setJob(saved)
     dirty.value = false
     toast.add({ severity: 'success', summary: wasNew ? `Zákazka ${saved.number} založená` : 'Zákazka uložená', life: 2500 })
@@ -170,8 +200,14 @@ const newDoc = (path) => {
     <p v-if="s?.net" class="muted small">Ponuky, fakturácia a náklady sú bez DPH, úhrady s DPH. Zálohové faktúry sa do fakturácie neratajú (rátajú sa až vyúčtovacie).</p>
 
     <form class="form-grid fields" @submit.prevent="save">
+      <FormField label="Druh" :span="2" :error="errors.kind">
+        <SelectButton :model-value="form.kind" :options="jobKinds" option-label="label" option-value="value" :allow-empty="false" size="small" class="kinds"
+          :disabled="!canWrite" aria-label="Druh zákazky" @update:model-value="changeKind">
+          <template #option="{ option }"><i :class="option.icon" /><span>{{ option.label }}</span></template>
+        </SelectButton>
+      </FormField>
       <FormField label="Názov zákazky" :span="2" :error="errors.name">
-        <InputText v-model="form.name" size="small" :disabled="!canWrite" placeholder="Napr. Rekonštrukcia riadiaceho systému etiketovačky" />
+        <InputText v-model="form.name" size="small" :disabled="!canWrite" :placeholder="namePlaceholder" />
       </FormField>
       <FormField label="Zákazník" :span="2" :error="errors.contactId">
         <Select v-model="form.contactId" :options="contactOptions" option-label="label" option-value="value" filter show-clear size="small" fluid
@@ -196,6 +232,8 @@ const newDoc = (path) => {
         <Textarea v-model="form.note" rows="3" auto-resize :disabled="!canWrite" />
       </FormField>
     </form>
+
+    <JobKindDetails :form="form" :errors="errors" :readonly="!canWrite" />
 
     <JobEntries kind="work" :form="form" :errors="errors" :readonly="!canWrite" :people="people" :hours="s?.hours ?? ''" />
     <JobEntries kind="material" :form="form" :errors="errors" :readonly="!canWrite" :items="items" :total="s?.materialCost ?? ''" />
@@ -278,6 +316,9 @@ const newDoc = (path) => {
 }
 .fields :deep(.p-selectbutton) {
   flex-wrap: wrap;
+}
+.kinds :deep(.p-togglebutton i) {
+  margin-right: 5px;
 }
 .new-docs {
   display: flex;

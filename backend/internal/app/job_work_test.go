@@ -144,6 +144,19 @@ func TestJobInvoiceDraftNonPayer(t *testing.T) {
 		inv.Subject != "Servis" || inv.Note != "Zákazka Z2026003." || inv.DeliveryDate.String() != "2026-11-03" {
 		t.Fatalf("koncept %+v", inv)
 	}
+	// autoservis: EČV a vozidlo v predmete faktúry, miesto montáže nie
+	for _, tc := range []struct {
+		j    job.Job
+		want string
+	}{
+		{job.Job{Name: "Výmena bŕzd", Vehicle: &job.Vehicle{Plate: "BB123AB", Make: "Škoda"}}, "Výmena bŕzd – BB123AB Škoda"},
+		{job.Job{Name: "Oprava", Device: &job.Device{Type: "Menič", Serial: "X1"}}, "Oprava – Menič v. č. X1"},
+		{job.Job{Name: "Montáž", Site: &job.Site{Address: "Hala 2"}}, "Montáž"},
+	} {
+		if got := jobInvoiceDraft(tc.j, vat.Rate23, invoice.MustDate("2026-11-10")).Subject; got != tc.want {
+			t.Fatalf("predmet %q, chcel som %q", got, tc.want)
+		}
+	}
 }
 
 func TestJobGoodsCost(t *testing.T) {

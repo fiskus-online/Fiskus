@@ -59,6 +59,11 @@ type Job struct {
 	// Work je výkaz práce, Material materiál spotrebovaný na zákazke.
 	Work     []WorkEntry     `json:"work"`
 	Material []MaterialEntry `json:"material"`
+	// Kind je druh zákazky; podľa neho je vyplnené Vehicle, Site alebo Device.
+	Kind    Kind     `json:"kind"`
+	Vehicle *Vehicle `json:"vehicle,omitempty"`
+	Site    *Site    `json:"site,omitempty"`
+	Device  *Device  `json:"device,omitempty"`
 }
 
 // WorkEntry je záznam vo výkaze práce.
@@ -124,6 +129,7 @@ func (j *Job) Normalize() {
 	if j.Status == "" {
 		j.Status = Lead
 	}
+	j.normalizeKind()
 	for i := range j.Work {
 		w := &j.Work[i]
 		w.Person, w.Description = strings.TrimSpace(w.Person), strings.TrimSpace(w.Description)
@@ -151,6 +157,7 @@ func (j *Job) Validate() []FieldError {
 	if !j.Start.IsZero() && !j.Due.IsZero() && j.Due.Before(j.Start) {
 		out = append(out, FieldError{"due", "Termín nemôže byť pred začiatkom"})
 	}
+	out = append(out, j.validateKind()...)
 	if j.Budget.Sign() < 0 {
 		out = append(out, FieldError{"budget", "Plánovaná cena nemôže byť záporná"})
 	}

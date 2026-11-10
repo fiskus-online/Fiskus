@@ -9,13 +9,14 @@ import InputText from 'primevue/inputtext'
 import IconField from 'primevue/iconfield'
 import InputIcon from 'primevue/inputicon'
 import SelectButton from 'primevue/selectbutton'
+import Select from 'primevue/select'
 import { api } from '../lib/api.js'
 import { session, can } from '../lib/session.js'
 import { formatAmount, formatDate, formatMoney } from '../lib/format.js'
 import { fiskusGridTheme, skGridLocale, gridRows } from '../lib/grid.js'
 import { matches, searchTerms } from '../lib/search.js'
 import { crmJobColumns } from '../lib/columns.js'
-import { jobStatusOf, jobViews, marginText, matchesJobView } from '../lib/jobs.js'
+import { jobKindLabel, jobKinds, jobStatusOf, jobViews, kindSearchText, marginText, matchesJobView } from '../lib/jobs.js'
 import ExportButton from '../components/ExportButton.vue'
 import JobBoard from '../components/JobBoard.vue'
 import JobStats from '../components/JobStats.vue'
@@ -62,13 +63,19 @@ async function load() {
 }
 onMounted(load)
 
+// druh zákazky: filter sa ukáže, keď firma používa iné ako všeobecné zákazky
+const kind = ref(null)
+const usedKinds = computed(() => jobKinds.filter((k) => rows.value.some((r) => (r.kind ?? '') === k.value)))
+const showKinds = computed(() => usedKinds.value.some((k) => k.value !== ''))
+const fits = (r, terms) => (kind.value === null || (r.kind ?? '') === kind.value) &&
+  matches(terms, [r.number, r.name, r.customer, r.note, jobStatusOf(r).label, r.budget, kindSearchText(r), jobKindLabel(r.kind)])
 const boardRows = computed(() => {
   const terms = searchTerms(search.value)
-  return rows.value.filter((r) => matches(terms, [r.number, r.name, r.customer, r.note, jobStatusOf(r).label, r.budget]))
+  return rows.value.filter((r) => fits(r, terms))
 })
 const visibleRows = computed(() => {
   const terms = searchTerms(search.value)
-  return rows.value.filter((r) => matchesJobView(r, view.value) && matches(terms, [r.number, r.name, r.customer, r.note, jobStatusOf(r).label, r.budget]))
+  return rows.value.filter((r) => matchesJobView(r, view.value) && fits(r, terms))
 })
 
 const add = (list, k) => list.reduce((a, r) => a + Number(r.summary?.[k] ?? 0), 0)
@@ -112,7 +119,8 @@ const columnDefs = [
       if (p.data._totals) return narrow.matches ? p.data.number : ''
       const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c])
       const no = narrow.matches && p.data.number ? `<span class="job-no">${esc(p.data.number)}</span> ` : ''
-      return `<span class="job-name">${no}${esc(p.data.name)}</span>${p.data.customer ? `<span class="job-cust">${esc(p.data.customer)}</span>` : ''}`
+      const sub = [p.data.subject, p.data.customer].filter(Boolean).map(esc).join(' · ')
+      return `<span class="job-name">${no}${esc(p.data.name)}</span>${sub ? `<span class="job-cust">${sub}</span>` : ''}`
     },
     flex: 1,
     minWidth: 160,
@@ -215,8 +223,10 @@ onBeforeUnmount(() => {
       <SelectButton v-if="mode === 'list'" v-model="view" :options="jobViews" option-label="label" option-value="value" :allow-empty="false" size="small" aria-label="Zobraziť" />
       <IconField class="search">
         <InputIcon class="pi pi-search" />
-        <InputText ref="searchEl" v-model="search" placeholder="Hľadať číslo, názov, zákazníka" size="small" aria-label="Hľadať" />
+        <InputText ref="searchEl" v-model="search" :placeholder="showKinds ? 'Hľadať číslo, názov, zákazníka, EČV' : 'Hľadať číslo, názov, zákazníka'" size="small" aria-label="Hľadať" />
       </IconField>
+      <Select v-if="showKinds" v-model="kind" :options="usedKinds" option-label="label" option-value="value" show-clear placeholder="Všetky druhy" size="small"
+        class="kindsel" aria-label="Druh zákazky" />
       <ExportButton name="Zákazky" :columns="crmJobColumns" :rows="() => (mode === 'board' ? boardRows : gridRows(gridApi, visibleRows))" />
     </div>
 
@@ -325,6 +335,9 @@ onBeforeUnmount(() => {
   margin-left: auto;
   width: 280px;
 }
+.kindsel {
+  width: 180px;
+}
 .search :deep(input) {
   width: 100%;
 }
@@ -373,6 +386,10 @@ onBeforeUnmount(() => {
   margin: 0;
 }
 @media (max-width: 760px) {
+  .kindsel {
+    width: 128px;
+    flex: none;
+  }
   .page {
     padding: 10px 10px 8px;
   }
