@@ -11,6 +11,25 @@ tags: [prehľad]
 Verzie sú značky v repozitári (`v0.2.0`). Podrobný zoznam funkcií po
 etapách je v [pláne vývoja](./ROADMAP.md).
 
+## 0.10.0
+
+- **Súvisiace doklady**: faktúra, ponuka, dodací list, objednávka, zákazka
+  a prijatá faktúra sa dajú navzájom prepojiť a pri každom doklade je
+  zoznam súvisiacich dokladov s preklikom.
+- **Zákazky**: jednoduché CRM so stavmi, zákazníkom, termínom a
+  ekonomikou z prepojených dokladov (tržby, náklady, tovar zo skladu,
+  marža). Výkaz práce a materiál zo skladu, faktúra z výkazu jedným
+  tlačidlom, nástenka podľa stavu a ziskovosť podľa zákazníka.
+- **Objednávky dodávateľom**: tlač, odoslanie, príjem na sklad s nákupnou
+  cenou a návrh na objednanie podľa minimálnych zásob.
+- **Dodacie listy**: výdaj zo skladu pri vystavení, dodací list z ponuky
+  a jedna zberná faktúra z viacerých dodacích listov.
+- **Čiastková fakturácia ponuky**: záloha alebo časť v percentách či
+  sume, posledná faktúra vyfakturuje zvyšok.
+- **Záznamy a úlohy** pri kontakte, zákazke a ponuke (poznámka,
+  telefonát, e-mail, stretnutie, úloha s termínom); úlohy sú aj
+  v kalendári.
+
 ## 0.9.0
 
 - **Automatická aktualizácia**: nainštalovaný Fiškus si po spustení sám
