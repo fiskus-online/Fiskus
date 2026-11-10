@@ -34,7 +34,13 @@ func TestQuotesAPI(t *testing.T) {
 	if q.Number != "CP20260001" || q.Summary.Total != "184.50" || !q.Expired {
 		t.Fatalf("vystavená: %+v", q) // platnosť do 15. 10., dnes je 29. 10.
 	}
-	e.do("PUT", fmt.Sprintf("%s/%d", base, q.ID), `{"customer":{"name":"x"}}`, 409, nil)
+	e.do("PUT", fmt.Sprintf("%s/%d", base, q.ID), `{"customer":{"name":"x"}}`, 422, nil) // vystavená musí byť úplná
+	var amended row
+	e.do("PUT", fmt.Sprintf("%s/%d", base, q.ID), `{"customer":{"name":"Zákazník s.r.o.","country":"SK"},"issueDate":"2026-10-01",`+
+		`"validUntil":"2026-11-15","lines":[{"description":"Práca","quantity":"3","unit":"hod","unitPrice":"50","vatRate":23}]}`, 200, &amended)
+	if amended.Number != "CP20260001" || amended.Expired {
+		t.Fatalf("úprava vystavenej: %+v", amended)
+	}
 	e.do("POST", fmt.Sprintf("%s/%d/accept", base, q.ID), nil, 200, &q)
 	var inv struct {
 		ID     int64
@@ -43,6 +49,8 @@ func TestQuotesAPI(t *testing.T) {
 	e.do("POST", fmt.Sprintf("%s/%d/invoice", base, q.ID), nil, 201, &inv)
 	e.do("POST", fmt.Sprintf("%s/%d/invoice", base, q.ID), nil, 409, nil)
 	e.do("POST", fmt.Sprintf("/api/companies/%d/invoices/%d/issue", e.cid, inv.ID), nil, 200, nil)
+	e.do("PUT", fmt.Sprintf("%s/%d", base, q.ID), `{"customer":{"name":"Zákazník s.r.o.","country":"SK"},"issueDate":"2026-10-01",`+
+		`"validUntil":"2026-11-15","lines":[{"description":"Práca","quantity":"9","unit":"hod","unitPrice":"50","vatRate":23}]}`, 409, nil) // vyfakturovaná
 	e.do("GET", fmt.Sprintf("%s/%d", base, q.ID), nil, 200, &q)
 	if q.Status != "invoiced" || q.InvoiceID != inv.ID || q.InvoiceNumber != "FA20260001" || q.Expired {
 		t.Fatalf("po fakturácii: %+v", q)

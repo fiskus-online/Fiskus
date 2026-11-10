@@ -16,6 +16,12 @@ adresou ju zákazník prijme alebo odmietne cez tajný odkaz a môže pripísať
 číslo svojej objednávky. Prijatá ponuka sa jedným klikom zmení na koncept
 faktúry.
 
+Vystavenú ponuku (aj prijatú či odmietnutú) môžete upravovať, kým nie je
+vyfakturovaná: zmeny uložíte tlačidlom *Uložiť zmeny*, číslo a stav ostanú
+a úprava sa zapíše do auditu. Ak ste ponuku už poslali, pošlite zákazníkovi
+upravenú. Novú verziu s novým číslom vytvorí *Kópia*. Samotné číslo
+zmeníte tlačidlom *Zmeniť číslo*.
+
 ![Cenové ponuky so stavmi a úspešnosťou](../obrazky/ponuky.webp)
 *Cenové ponuky so stavmi a úspešnosťou*
 

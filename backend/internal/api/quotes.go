@@ -21,11 +21,12 @@ func failQuote(w http.ResponseWriter, err error) {
 // quoteRow je ponuka so stavom platnosti k dnešku.
 type quoteRow struct {
 	quote.Quote
-	Expired bool `json:"expired"`
+	Expired   bool `json:"expired"`
+	Amendable bool `json:"amendable"` // vystavená, ešte nevyfakturovaná — dá sa upraviť
 }
 
 func (s *Server) quoteRow(q quote.Quote) quoteRow {
-	return quoteRow{Quote: q, Expired: q.Expired(s.App.Today())}
+	return quoteRow{Quote: q, Expired: q.Expired(s.App.Today()), Amendable: q.Amendable()}
 }
 
 // listQuotes: GET /api/companies/{cid}/quotes?year=2026 (bez roku = všetky)

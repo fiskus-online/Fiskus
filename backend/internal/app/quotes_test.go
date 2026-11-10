@@ -49,9 +49,20 @@ func TestQuoteFlow(t *testing.T) {
 	if err != nil || q.Number != "CP20260001" || q.Status != quote.StatusIssued {
 		t.Fatalf("vystavenie: %+v %v", q, err)
 	}
-	if _, err := a.SaveQuote(ctx, c.ID, q); !errors.Is(err, quote.ErrLocked) {
-		t.Fatalf("úprava vystavenej: %v", err)
+	// vystavenú ponuku možno upraviť: číslo a stav ostanú, klient ich nepodstrčí
+	amend := q
+	amend.Number, amend.Status, amend.InvoiceID = "X2", quote.StatusInvoiced, 99
+	amend.Intro = "Upravená cena dopravy."
+	if got, err := a.SaveQuote(ctx, c.ID, amend); err != nil || got.Number != "CP20260001" || got.Status != quote.StatusIssued ||
+		got.InvoiceID != 0 || got.Intro != "Upravená cena dopravy." {
+		t.Fatalf("úprava vystavenej: %+v %v", got, err)
 	}
+	incomplete := q
+	incomplete.Lines = nil
+	if _, err := a.SaveQuote(ctx, c.ID, incomplete); err == nil {
+		t.Fatal("vystavená ponuka bez položiek")
+	}
+	q, _ = a.Store.GetQuote(ctx, c.ID, q.ID)
 	if _, err := a.IssueQuote(ctx, c.ID, q.ID); !errors.Is(err, quote.ErrBadTransition) {
 		t.Fatalf("druhé vystavenie: %v", err)
 	}
@@ -109,8 +120,8 @@ func TestQuoteFlow(t *testing.T) {
 	}
 
 	list, _, _ := a.Store.ListAudit(ctx, audit.Filter{Category: audit.CatQuotes})
-	// 3 koncepty (prázdny, ponuka, kópia), úprava, 2 vystavenia, odmietnutie, prijatie, fakturácia
-	if len(list) != 9 {
+	// 3 koncepty (prázdny, ponuka, kópia), úprava, úprava vystavenej, 2 vystavenia, odmietnutie, prijatie, fakturácia
+	if len(list) != 10 {
 		t.Fatalf("audit ponúk: %d", len(list))
 	}
 }

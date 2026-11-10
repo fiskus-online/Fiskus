@@ -90,7 +90,10 @@ func (a *App) SaveQuote(ctx context.Context, companyID int64, q quote.Quote) (qu
 			return q, err
 		}
 		if !old.Editable() {
-			return q, quote.ErrLocked
+			if !old.Amendable() {
+				return q, quote.ErrLocked
+			}
+			return a.amendQuote(ctx, companyID, old, q)
 		}
 		before = &old
 	}
@@ -317,5 +320,26 @@ func (a *App) RenumberQuote(ctx context.Context, companyID, id int64, number str
 	}
 	a.record(ctx, companyID, audit.CatQuotes, "renumber", "quote", q.ID,
 		"Zmena čísla ponuky "+before.Number+" → "+q.Number+" ("+q.Customer.Name+")", before, q)
+	return q, nil
+}
+
+// amendQuote uloží úpravu vystavenej ponuky: číslo, stav, faktúra a odkaz
+// pre zákazníka ostanú; ponuka musí byť úplná ako pri vystavení.
+func (a *App) amendQuote(ctx context.Context, companyID int64, old, q quote.Quote) (quote.Quote, error) {
+	q.ID, q.Status, q.Number, q.InvoiceID, q.InvoiceNumber, q.Share = old.ID, old.Status, old.Number, old.InvoiceID, old.InvoiceNumber, old.Share
+	if q.IssueDate.IsZero() {
+		q.IssueDate = old.IssueDate
+	}
+	if err := a.prepareQuote(ctx, companyID, &q); err != nil {
+		return q, err
+	}
+	if err := q.Validate(); err != nil {
+		return q, err
+	}
+	if err := a.Store.SaveQuote(ctx, companyID, &q); err != nil {
+		return q, err
+	}
+	a.record(ctx, companyID, audit.CatQuotes, "amend", "quote", q.ID,
+		"Úprava vystavenej ponuky "+q.Number+" pre "+q.Customer.Name+", "+q.Summary.Total.Display()+" €", old, q)
 	return q, nil
 }

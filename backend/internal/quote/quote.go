@@ -54,8 +54,8 @@ type Quote struct {
 }
 
 var (
-	// ErrLocked: vystavená ponuka sa nemení — vytvorí sa kópia.
-	ErrLocked = errors.New("ponuka je vystavená a nedá sa meniť — vytvorte kópiu")
+	// ErrLocked: vyfakturovaná ponuka sa nemení — vytvorí sa kópia.
+	ErrLocked = errors.New("ponuka je vyfakturovaná a nedá sa meniť — vytvorte kópiu")
 	// ErrBadTransition je nepovolená zmena stavu.
 	ErrBadTransition = errors.New("nepovolená zmena stavu ponuky")
 )
@@ -118,6 +118,12 @@ func (q *Quote) Validate() error {
 
 // Editable vráti true, ak sa ponuka dá upravovať.
 func (q *Quote) Editable() bool { return q.Status == "" || q.Status == StatusDraft }
+
+// Amendable: vystavenú ponuku (aj prijatú či odmietnutú) možno upraviť,
+// kým nie je vyfakturovaná — číslo a stav ostanú. Ponuka nie je daňový doklad.
+func (q *Quote) Amendable() bool {
+	return q.Status == StatusIssued || q.Status == StatusAccepted || q.Status == StatusRejected
+}
 
 // Issue vystaví koncept: pridelí číslo a uzamkne ho.
 func (q *Quote) Issue(number string) error {
