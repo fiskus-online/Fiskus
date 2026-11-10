@@ -11,7 +11,7 @@ import { tripTime } from './logbook.js'
 import { accountKindLabel, accountName, entryCategory, typeLabel, entryType, frequencyLabel, obligationKindLabel, obligationTone, monthsLabel } from './household.js'
 import { moveLabel } from './itemcard.js'
 import { plain } from './richtext.js'
-import { jobStatusOf, marginText } from './jobs.js'
+import { jobKindLabel, jobStatusOf, marginText } from './jobs.js'
 import { porderStatusOf } from './porders.js'
 import { deliveryStatusOf } from './deliveries.js'
 import { kindLabel as calendarKind, repeatLabel, stateOf } from './calendar.js'
@@ -750,6 +750,8 @@ export const crmJobColumns = [
   t('Číslo', (r) => r.number, 12),
   t('Názov', (r) => r.name, 32),
   t('Zákazník', (r) => r.customer, 28),
+  t('Druh', (r) => jobKindLabel(r.kind), 16),
+  t('Predmet', (r) => r.subject, 28),
   t('Stav', (r) => jobStatusOf(r).label, 18),
   date('Začiatok', (r) => r.start),
   date('Termín', (r) => r.due),

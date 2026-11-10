@@ -49,6 +49,7 @@ const sum = (jobs) => jobs.reduce((a, j) => a + Number(j.budget || 0), 0)
         @dragstart="dragging = j.id" @dragend="dragging = 0; over = ''" @click="router.push(`/zakazky/${j.id}`)" @keydown.enter="router.push(`/zakazky/${j.id}`)">
         <span class="no">{{ j.number }}</span>
         <strong class="name">{{ j.name }}</strong>
+        <span v-if="j.subject" class="subj">{{ j.subject }}</span>
         <span v-if="j.customer" class="cust">{{ j.customer }}</span>
         <span class="meta">
           <span v-if="j.due" :class="{ lateText: j.late }">termín {{ formatDate(j.due) }}</span>
@@ -130,6 +131,11 @@ const sum = (jobs) => jobs.reduce((a, j) => a + Number(j.budget || 0), 0)
 .cust {
   font-size: var(--fs-sm);
   color: var(--ink-soft);
+}
+.subj {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--blue-deep);
 }
 .meta {
   display: flex;

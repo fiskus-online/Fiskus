@@ -12,6 +12,18 @@ import (
 func cloneJob(j job.Job) job.Job {
 	j.Work = append([]job.WorkEntry(nil), j.Work...)
 	j.Material = append([]job.MaterialEntry(nil), j.Material...)
+	if j.Vehicle != nil {
+		v := *j.Vehicle
+		j.Vehicle = &v
+	}
+	if j.Site != nil {
+		s := *j.Site
+		j.Site = &s
+	}
+	if j.Device != nil {
+		d := *j.Device
+		j.Device = &d
+	}
 	return j
 }
 

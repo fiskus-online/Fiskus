@@ -20,6 +20,8 @@ Zákazky nájdete v menu **Predaj → Zákazky**.
 
 Tlačidlo *Nová zákazka* (alebo kláves <kbd>N</kbd>) otvorí formulár:
 
+- **Druh** – *Všeobecná*, *Autoservis*, *Montáž* alebo *Servis zariadenia*
+  (pozri [Druhy zákaziek](#druhy-zakaziek)).
 - **Názov zákazky** – napríklad „Rekonštrukcia rozvádzača – sušička obilia“.
 - **Zákazník** – vyberiete z adresára.
 - **Plánovaná cena** – čo za zákazku očakávate (u platiteľa DPH bez DPH).
@@ -29,6 +31,31 @@ Tlačidlo *Nová zákazka* (alebo kláves <kbd>N</kbd>) otvorí formulár:
 
 Po uložení dostane zákazka číslo z vlastného radu (Z2026001, Z2026002…).
 Zákazku založíte aj priamo z kontaktu v adresári tlačidlom *Nová zákazka*.
+
+## Druhy zákaziek
+
+Druh zákazky pridá údaje, ktoré sú pre daný odbor potrebné. Ekonomika,
+výkaz práce, materiál, doklady aj fakturácia sú pre všetky druhy rovnaké.
+Nová zákazka dostane druh, ktorý ste použili naposledy.
+
+| Druh | Údaje navyše |
+|---|---|
+| Všeobecná | žiadne |
+| Autoservis | **vozidlo**: EČV, VIN, značka, model, rok výroby, stav tachometra a paliva pri príjme, závada či požiadavka zákazníka, poškodenia zistené pri príjme |
+| Montáž | **miesto montáže** (predvyplní sa adresa zákazníka), montážnici, kontakt na mieste, rozsah prác |
+| Servis zariadenia | **zariadenie**: druh, výrobca, typ, výrobné číslo, záručná oprava s dátumom kúpy, popis závady, prevzaté príslušenstvo |
+
+![Zákazka autoservisu s údajmi vozidla](../obrazky/zakazka-autoservis.webp)
+*Zákazka autoservisu s údajmi vozidla*
+
+- EČV sa uloží veľkými písmenami bez medzier a pomlčiek (BB-482 KE →
+  BB482KE). Pri autoservise treba zadať EČV alebo VIN; VIN má 17 znakov.
+- V zozname a na nástenke je pod názvom predmet zákazky: EČV s vozidlom,
+  zariadenie s výrobným číslom alebo miesto montáže. Hľadať môžete aj podľa
+  EČV, VIN či výrobného čísla.
+- Pri vozidle a zariadení sa predmet dostane aj do predmetu faktúry
+  z výkazu práce (napr. „Výmena bŕzd – BB482KE Škoda Octavia“).
+- Keď zmeníte druh, údaje predchádzajúceho druhu sa pri uložení zahodia.
 
 ## Doklady k zákazke
 
@@ -134,7 +161,8 @@ Zoznam má záložky *Bežiace*, *Všetky*, *Po termíne*, *Dokončené* a
 *Stratené*. Bežiaca zákazka, ktorej termín dokončenia už prešiel, je
 označená červeno. Hore je súčet plánovanej ceny bežiacich zákaziek, suma
 na úhradu od zákazníkov a zisk. Ako každý zoznam vo Fiškuse má aj tento
-hľadanie a export do Excelu a CSV.
+hľadanie a export do Excelu a CSV. Keď používate aj iné ako všeobecné
+zákazky, pribudne výber **druhu** (napr. iba autoservis).
 
 ![Zoznam zákaziek](../obrazky/zakazky.webp)
 *Zoznam zákaziek*

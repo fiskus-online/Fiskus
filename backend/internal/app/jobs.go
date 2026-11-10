@@ -54,6 +54,7 @@ type JobSummary struct {
 type JobView struct {
 	job.Job
 	Late    bool        `json:"late"`
+	Subject string      `json:"subject"` // predmet podľa druhu (EČV, zariadenie, miesto)
 	Summary JobSummary  `json:"summary"`
 	Docs    []LinkedDoc `json:"docs,omitempty"`
 }
@@ -216,7 +217,7 @@ func (a *App) jobView(ctx context.Context, companyID int64, j job.Job, vatPayer 
 	}
 	a.jobMaterialCosts(ctx, companyID, &j)
 	s, err := a.jobSummary(ctx, companyID, &j, vatPayer)
-	return JobView{Job: j, Late: j.Late(a.Today()), Summary: s}, err
+	return JobView{Job: j, Late: j.Late(a.Today()), Subject: j.Subject(), Summary: s}, err
 }
 
 // CrmJobs vráti zákazky s ekonomikou.

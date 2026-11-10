@@ -954,7 +954,12 @@ func seedStock(ctx context.Context, a *app.App, c store.Company, contactIDs []in
 	// ďalšie zákazky na nástenku a prehľad podľa zákazníka
 	for i, x := range []job.Job{
 		{Name: "Servisná zmluva 2027", Status: job.Lead, Start: day(3), Budget: m.MustParse("2400")},
-		{Name: "Osvetlenie skladu LED", Status: job.Offer, Start: day(20), Due: day(4), Budget: m.MustParse("4200")},
+		{Name: "Osvetlenie skladu LED", Status: job.Offer, Start: day(20), Due: day(4), Budget: m.MustParse("4200"), Kind: job.Install,
+			Site: &job.Site{Address: "Sklad – Partizánska cesta 98, Banská Bystrica", Workers: "Ján Novák, Peter Kráľ", Contact: "p. Hudec, 0905 123 456",
+				Scope: "Demontáž 40 žiariviek, montáž 32 LED svietidiel na lištu, revízia"}},
+		{Name: "Oprava frekvenčného meniča – chyba F0001", Status: job.Active, Start: day(2), Due: day(-3), Budget: m.MustParse("380"), Kind: job.Service,
+			Device: &job.Device{Type: "Frekvenčný menič", Make: "Siemens", Model: "SINAMICS G120C 7,5 kW", Serial: "XAJ-Q60218", Warranty: true,
+				Purchased: day(300), Fault: "Pri rozbehu hlási F0001 (nadprúd), motor sa netočí", Accessories: "Ovládací panel BOP-2"}},
 		{Name: "Fotovoltika – strecha haly", Status: job.Done, Start: day(90), Due: day(40), Budget: m.MustParse("18000")},
 		{Name: "Rekonštrukcia osvetlenia kancelárií", Status: job.Lost, Start: day(60), Budget: m.MustParse("3100")},
 	} {

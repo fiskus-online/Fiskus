@@ -938,7 +938,8 @@ func Run(t *testing.T, newStore Factory) {
 				Rate: m.MustParse("35"), CostRate: m.MustParse("0"), Billing: job.Billing{InvoiceID: 9, InvoiceNumber: "FA20260045"}}},
 			Material: []job.MaterialEntry{{ID: 2, Date: invoice.MustDate("2026-10-02"), ItemID: 4, Name: "Kábel", Unit: "m", Quantity: m.MustParse("25"),
 				UnitPrice: m.MustParse("1.60"), UnitCost: m.MustParse("0"), Cost: m.MustParse("20"), Stock: true}}}
-		j2 := job.Job{Number: "Z2026002", Name: "Servis", Status: job.Lead}
+		j2 := job.Job{Number: "Z2026002", Name: "Servis", Status: job.Lead, Kind: job.Auto,
+			Vehicle: &job.Vehicle{Plate: "BB123AB", VIN: "WVWZZZ1KZAW000001", Make: "Škoda", Model: "Octavia", Year: 2019, Mileage: 154300, Fuel: "1/2", Fault: "Brzdy"}}
 		for _, j := range []*job.Job{&j1, &j2} {
 			if err := s.SaveJob(ctx, a.ID, j); err != nil || j.ID == 0 {
 				t.Fatalf("zákazka: %v", err)
@@ -967,6 +968,14 @@ func Run(t *testing.T, newStore Factory) {
 		}
 		if list, _ := s.ListJobs(ctx, a.ID); len(list) != 2 || list[0].ID != j2.ID {
 			t.Fatalf("zoznam (najnovšie prvé): %+v", list)
+		}
+		if got, _ := s.GetJob(ctx, a.ID, j2.ID); !reflect.DeepEqual(got, j2) {
+			t.Fatalf("vozidlo:\n got %+v\nwant %+v", got.Vehicle, j2.Vehicle)
+		} else {
+			got.Vehicle.Mileage = 1
+			if again, _ := s.GetJob(ctx, a.ID, j2.ID); again.Vehicle.Mileage != 154300 {
+				t.Fatal("zmena načítaného vozidla zmenila uložené")
+			}
 		}
 		if _, err := s.GetJob(ctx, b.ID, j1.ID); !errors.Is(err, store.ErrNotFound) {
 			t.Fatal("zákazka inej firmy")
