@@ -15,13 +15,17 @@ import (
 	"github.com/fiskus-online/fiskus/backend/internal/cash"
 	"github.com/fiskus-online/fiskus/backend/internal/catalog"
 	"github.com/fiskus-online/fiskus/backend/internal/chart"
+	"github.com/fiskus-online/fiskus/backend/internal/delivery"
 	"github.com/fiskus-online/fiskus/backend/internal/ekasa"
 	"github.com/fiskus-online/fiskus/backend/internal/fx"
 	"github.com/fiskus-online/fiskus/backend/internal/household"
 	"github.com/fiskus-online/fiskus/backend/internal/invoice"
+	"github.com/fiskus-online/fiskus/backend/internal/job"
 	"github.com/fiskus-online/fiskus/backend/internal/ledger"
+	"github.com/fiskus-online/fiskus/backend/internal/link"
 	"github.com/fiskus-online/fiskus/backend/internal/logbook"
 	m "github.com/fiskus-online/fiskus/backend/internal/money"
+	"github.com/fiskus-online/fiskus/backend/internal/porder"
 	"github.com/fiskus-online/fiskus/backend/internal/purchase"
 	"github.com/fiskus-online/fiskus/backend/internal/quote"
 	"github.com/fiskus-online/fiskus/backend/internal/recurring"
@@ -839,7 +843,7 @@ func seedStock(ctx context.Context, a *app.App, c store.Company, contactIDs []in
 	}
 	if _, err := a.SaveStockConfig(ctx, c.ID, app.StockConfig{
 		Warehouses: []app.Warehouse{{Code: "HL", Name: "Hlavný sklad – Banská Bystrica"}, {Code: "ZV", Name: "Príručný sklad Zvolen"}},
-		Items:      []app.StockItem{{ItemID: cable.ID, Kind: stock.Goods, Min: m.MustParse("100")}, {ItemID: drive.ID, Kind: stock.Goods, Min: m.MustParse("2")}},
+		Items:      []app.StockItem{{ItemID: cable.ID, Kind: stock.Goods, Min: m.MustParse("100")}, {ItemID: drive.ID, Kind: stock.Goods, Min: m.MustParse("5")}},
 	}); err != nil {
 		return err
 	}
@@ -875,8 +879,68 @@ func seedStock(ctx context.Context, a *app.App, c store.Company, contactIDs []in
 	if err != nil {
 		return err
 	}
-	_, err = a.Issue(ctx, c.ID, inv.ID)
-	return err
+	if _, err = a.Issue(ctx, c.ID, inv.ID); err != nil {
+		return err
+	}
+	// objednávka kábla: odoslaná, časť prišla, zvyšok mešká
+	sup, err := a.Store.ListContacts(ctx, c.ID, "Elektro veľkoobchod")
+	if err != nil {
+		return err
+	}
+	o := porder.Order{Supplier: cable.Supplier, Date: day(12), Expected: day(5), Note: "Dodať na prevádzku v Banskej Bystrici.",
+		Lines: []porder.Line{{ItemID: cable.ID, Quantity: m.MustParse("200"), UnitPrice: m.MustParse("1.38")}}}
+	if len(sup) > 0 {
+		o.ContactID = sup[0].ID
+	}
+	if o, err = a.SavePurchaseOrder(ctx, c.ID, o); err != nil {
+		return err
+	}
+	if _, err = a.SendPurchaseOrder(ctx, c.ID, o.ID); err != nil {
+		return err
+	}
+	if _, err = a.ReceivePurchaseOrder(ctx, c.ID, o.ID, app.POrderReceipt{Date: day(6), Warehouse: "HL", Quantity: []m.Dec{m.MustParse("120")}}); err != nil {
+		return err
+	}
+	// zákazka: meniče z faktúry, výkaz práce a kábel zo skladu
+	j, err := a.SaveCrmJob(ctx, c.ID, job.Job{Name: "Výmena pohonov dopravníka", ContactID: ct.ID, Status: job.Active, Start: day(10), Due: day(-14),
+		Budget: m.MustParse("4800"), Rate: m.MustParse("35"),
+		Work: []job.WorkEntry{
+			{Date: day(4), Person: "Ján Novák", Description: "Demontáž pôvodných pohonov", Hours: m.MustParse("5"), Rate: m.MustParse("35")},
+			{Date: day(3), Person: "Ján Novák", Description: "Montáž a parametrizácia meničov", Hours: m.MustParse("7.5"), Rate: m.MustParse("35")},
+			{Date: day(3), Person: "Peter Kráľ", Description: "Kabeláž k motorom", Hours: m.MustParse("6"), Rate: m.MustParse("28"), CostRate: m.MustParse("14")},
+		},
+		Material: []job.MaterialEntry{
+			{Date: day(3), ItemID: cable.ID, Quantity: m.MustParse("45"), UnitPrice: cable.Price},
+			{Date: day(3), Name: "Káblové oká a priechodky", Unit: "súb", Quantity: m.MustParse("1"), UnitPrice: m.MustParse("24"), UnitCost: m.MustParse("13.80")},
+		}})
+	if err != nil {
+		return err
+	}
+	if _, err = a.LinkDocs(ctx, c.ID, link.Ref{Kind: link.Job, ID: j.ID}, link.Ref{Kind: link.Invoice, ID: inv.ID}); err != nil {
+		return err
+	}
+	// dodacie listy k zákazke: dva vydané na zbernú faktúru
+	for i, dl := range []delivery.Note{
+		{ContactID: ct.ID, Date: day(4), Place: "Prevádzka – dopravník č. 2", Receiver: "Ing. Hrnčiar", PriceMode: vat.PriceNet, Lines: []invoice.Line{
+			{Description: cable.Name, Quantity: m.MustParse("30"), Unit: cable.Unit, UnitPrice: cable.Price, Rate: vat.Rate23, ItemID: cable.ID}}},
+		{ContactID: ct.ID, Date: day(2), Place: "Prevádzka – dopravník č. 2", PriceMode: vat.PriceNet, Lines: []invoice.Line{
+			{Description: "Káblové žľaby 60×60", Quantity: m.MustParse("12"), Unit: "m", UnitPrice: m.MustParse("8.40"), Rate: vat.Rate23},
+			{Description: "Montážny materiál", Quantity: m.MustParse("1"), Unit: "súb", UnitPrice: m.MustParse("35"), Rate: vat.Rate23}}},
+	} {
+		n, err := a.SaveDelivery(ctx, c.ID, dl)
+		if err != nil {
+			return err
+		}
+		if n, err = a.IssueDelivery(ctx, c.ID, n.ID); err != nil {
+			return err
+		}
+		if i == 0 {
+			if _, err := a.LinkDocs(ctx, c.ID, link.Ref{Kind: link.Job, ID: j.ID}, link.Ref{Kind: link.Delivery, ID: n.ID}); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }
 
 // seedHousehold založí ukážkovú domácnosť: účty, rozpočet a pohyby za

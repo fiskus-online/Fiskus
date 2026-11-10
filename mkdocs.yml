@@ -48,9 +48,13 @@ nav:
       - predaj/faktury.md
       - predaj/zalohy.md
       - predaj/ponuky.md
+      - predaj/zakazky.md
+      - predaj/dodacie-listy.md
       - predaj/upomienky.md
       - predaj/cennik.md
-  - Nákup: nakup/index.md
+  - Nákup:
+      - nakup/index.md
+      - nakup/objednavky.md
   - Sklad:
       - sklad/index.md
       - sklad/karta-produktu.md

@@ -24,6 +24,7 @@ import ExportButton from '../components/ExportButton.vue'
 import ImportWarnings from '../components/ImportWarnings.vue'
 import ContactPersons from '../components/ContactPersons.vue'
 import ContactAddresses from '../components/ContactAddresses.vue'
+import ContactHistory from '../components/ContactHistory.vue'
 import Dialog from 'primevue/dialog'
 import { contactAccept, contactsLabel } from '../lib/migrate.js'
 import { filterContacts, personsText } from '../lib/contacts.js'
@@ -125,7 +126,9 @@ const columnDefs = [
 
 const gridApi = shallowRef(null)
 const narrow = window.matchMedia('(max-width: 760px)')
+const isNarrow = ref(narrow.matches) // kratšie popisy tlačidiel v päte panela
 function applyResponsive() {
+  isNarrow.value = narrow.matches
   gridApi.value?.setColumnsVisible(['icdph', 'email', 'persons', 'dueDays'], !narrow.matches)
   gridApi.value?.sizeColumnsToFit()
 }
@@ -288,12 +291,14 @@ onBeforeUnmount(() => {
         <div class="subs">
           <ContactPersons v-model="form.persons" :errors="errors" :readonly="!can('contacts.write')" />
           <ContactAddresses v-model="form.addresses" :errors="errors" :readonly="!can('contacts.write')" />
+          <ContactHistory v-if="form.id" :contact-id="Number(form.id)" />
         </div>
       </div>
       <footer class="panel-foot">
         <Button v-if="form.id && can('contacts.write')" label="Zmazať" severity="danger" text size="small" @click="remove" />
         <div class="spacer" />
-        <Button v-if="form.id && can('invoices.write')" label="Nová faktúra" icon="pi pi-file-plus" severity="secondary" outlined size="small" @click="router.push(`/faktury/nova?kontakt=${form.id}`)" />
+        <Button v-if="form.id && can('invoices.write')" :label="isNarrow ? 'Zákazka' : 'Nová zákazka'" icon="pi pi-folder-open" severity="secondary" text size="small" @click="router.push(`/zakazky/nova?kontakt=${form.id}`)" />
+        <Button v-if="form.id && can('invoices.write')" :label="isNarrow ? 'Faktúra' : 'Nová faktúra'" icon="pi pi-file-plus" severity="secondary" outlined size="small" @click="router.push(`/faktury/nova?kontakt=${form.id}`)" />
         <Button v-if="can('contacts.write')" label="Uložiť" icon="pi pi-check" size="small" :loading="busy" @click="save" />
       </footer>
     </aside>

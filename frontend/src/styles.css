@@ -105,6 +105,7 @@ a {
 .tag[data-tone='paid'] { --tone-c: var(--tone-paid); }
 .tag[data-tone='overdue'] { --tone-c: var(--tone-overdue); }
 .tag[data-tone='cancelled'] { --tone-c: var(--tone-cancelled); }
+.tag[data-tone='muted'] { --tone-c: var(--tone-cancelled); }
 .tag[data-tone='cancelled'] .tag-text { text-decoration: line-through; }
 
 kbd {

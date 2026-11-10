@@ -30,6 +30,14 @@ import BrowserBackups from './views/BrowserBackups.vue'
 import { inBrowser } from './lib/install.js'
 import CashPrint from './views/CashPrint.vue'
 import QuoteList from './views/QuoteList.vue'
+import Jobs from './views/Jobs.vue'
+import JobEdit from './views/JobEdit.vue'
+import PurchaseOrders from './views/PurchaseOrders.vue'
+import Deliveries from './views/Deliveries.vue'
+import DeliveryEdit from './views/DeliveryEdit.vue'
+import DeliveryPrint from './views/DeliveryPrint.vue'
+import PurchaseOrderEdit from './views/PurchaseOrderEdit.vue'
+import PurchaseOrderPrint from './views/PurchaseOrderPrint.vue'
 import RecurringList from './views/RecurringList.vue'
 import PublicQuote from './views/PublicQuote.vue'
 import Reminders from './views/Reminders.vue'
@@ -77,6 +85,8 @@ export const modules = [
     group: 'Predaj',
     items: [
       { path: '/faktury', label: 'Vydané faktúry', icon: 'pi-file-export', ready: true, perm: 'invoices.read' },
+      { path: '/zakazky', label: 'Zákazky', icon: 'pi-folder-open', ready: true, perm: 'invoices.read', biz: true },
+      { path: '/dodacie-listy', label: 'Dodacie listy', icon: 'pi-truck', ready: true, perm: 'invoices.read', biz: true },
       { path: '/ponuky', label: 'Cenové ponuky', icon: 'pi-file-edit', ready: true, perm: 'invoices.read' },
       { path: '/pravidelne', label: 'Pravidelná fakturácia', icon: 'pi-replay', ready: true, perm: 'invoices.read' },
       { path: '/upomienky', label: 'Upomienky', icon: 'pi-bell', ready: true, perm: 'invoices.read' },
@@ -86,7 +96,10 @@ export const modules = [
   },
   {
     group: 'Nákup',
-    items: [{ path: '/prijate', label: 'Prijaté faktúry', icon: 'pi-file-import', ready: true, perm: 'purchases.read' }],
+    items: [
+      { path: '/prijate', label: 'Prijaté faktúry', icon: 'pi-file-import', ready: true, perm: 'purchases.read' },
+      { path: '/objednavky', label: 'Objednávky', icon: 'pi-shopping-cart', ready: true, perm: 'purchases.read', biz: true },
+    ],
   },
   {
     group: 'Peniaze',
@@ -157,6 +170,13 @@ export const router = createRouter({
     { path: '/faktury/:id(\\d+)', component: InvoiceEdit, props: true, meta: { title: 'Faktúra', perm: 'invoices.read' } },
     { path: '/faktury/:id(\\d+)/tlac', component: InvoicePrint, props: true, meta: { title: 'Faktúra', bare: true, perm: 'invoices.read' } },
     { path: '/ponuky', component: QuoteList, meta: { title: 'Cenové ponuky', perm: 'invoices.read' } },
+    { path: '/dodacie-listy', component: Deliveries, meta: { title: 'Dodacie listy', perm: 'invoices.read' } },
+    { path: '/dodacie-listy/novy', component: DeliveryEdit, meta: { title: 'Nový dodací list', perm: 'invoices.write' } },
+    { path: '/dodacie-listy/:id(\\d+)', component: DeliveryEdit, props: true, meta: { title: 'Dodací list', perm: 'invoices.read' } },
+    { path: '/dodacie-listy/:id(\\d+)/tlac', component: DeliveryPrint, props: true, meta: { title: 'Dodací list', bare: true, perm: 'invoices.read' } },
+    { path: '/zakazky', component: Jobs, meta: { title: 'Zákazky', perm: 'invoices.read' } },
+    { path: '/zakazky/nova', component: JobEdit, meta: { title: 'Nová zákazka', perm: 'invoices.write' } },
+    { path: '/zakazky/:id(\\d+)', component: JobEdit, props: true, meta: { title: 'Zákazka', perm: 'invoices.read' } },
     { path: '/ponuky/nova', component: InvoiceEdit, props: { quote: true }, meta: { title: 'Nová ponuka', perm: 'invoices.write' } },
     { path: '/ponuky/:id(\\d+)', component: InvoiceEdit, props: (r) => ({ id: r.params.id, quote: true }), meta: { title: 'Cenová ponuka', perm: 'invoices.read' } },
     { path: '/ponuky/:id(\\d+)/tlac', component: InvoicePrint, props: (r) => ({ id: r.params.id, quote: true }), meta: { title: 'Cenová ponuka', bare: true, perm: 'invoices.read' } },
@@ -181,6 +201,10 @@ export const router = createRouter({
     { path: '/upomienky/:id(\\d+)/tlac', component: ReminderPrint, props: true, meta: { title: 'Upomienka', bare: true, perm: 'invoices.read' } },
     { path: '/parovanie', component: Pairing, meta: { title: 'Spárovať telefón', public: true } },
     { path: '/m', component: Mobile, meta: { title: 'Bločky', perm: 'purchases.read', mobile: true } },
+    { path: '/objednavky', component: PurchaseOrders, meta: { title: 'Objednávky', perm: 'purchases.read' } },
+    { path: '/objednavky/nova', component: PurchaseOrderEdit, meta: { title: 'Nová objednávka', perm: 'purchases.write' } },
+    { path: '/objednavky/:id(\\d+)', component: PurchaseOrderEdit, props: true, meta: { title: 'Objednávka', perm: 'purchases.read' } },
+    { path: '/objednavky/:id(\\d+)/tlac', component: PurchaseOrderPrint, props: true, meta: { title: 'Objednávka', bare: true, perm: 'purchases.read' } },
     { path: '/prijate', component: PurchaseList, meta: { title: 'Prijaté faktúry', perm: 'purchases.read' } },
     { path: '/vykazy-ju', component: Statements, meta: { title: 'Výkazy jednoduchého účtovníctva', perm: 'ledger.read' } },
     { path: '/pohladavky-zavazky', component: OpenItems, meta: { title: 'Pohľadávky a záväzky', perm: 'ledger.read' } },

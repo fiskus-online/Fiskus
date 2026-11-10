@@ -8,9 +8,12 @@ import (
 	"errors"
 	"fmt"
 	"github.com/fiskus-online/fiskus/backend/internal/catalog"
+	"github.com/fiskus-online/fiskus/backend/internal/delivery"
 	"github.com/fiskus-online/fiskus/backend/internal/forms"
+	"github.com/fiskus-online/fiskus/backend/internal/job"
 	"github.com/fiskus-online/fiskus/backend/internal/journal"
 	"github.com/fiskus-online/fiskus/backend/internal/link"
+	"github.com/fiskus-online/fiskus/backend/internal/porder"
 	"reflect"
 	"sync"
 	"testing"
@@ -765,6 +768,180 @@ func Run(t *testing.T, newStore Factory) {
 		}
 		if list, _ := s.ListHHEntries(ctx, b.ID, 0); len(list) != 1 {
 			t.Fatal("zmazanie domácnosti zmazalo pohyby inej")
+		}
+	})
+
+	t.Run("objednávky dodávateľom", func(t *testing.T) {
+		s := newStore(t)
+		a, _ := s.CreateCompany(ctx, store.Company{Name: "Alfa"})
+		b, _ := s.CreateCompany(ctx, store.Company{Name: "Beta"})
+		o1 := porder.Order{Number: "OB20260001", Status: porder.Partial, Date: invoice.MustDate("2026-11-10"), Expected: invoice.MustDate("2026-11-14"),
+			ContactID: 5, Supplier: "Elektro BB", Note: "dodať do dielne", Total: m.MustParse("168.60"), Sent: invoice.MustDate("2026-11-10"),
+			Lines: []porder.Line{{ItemID: 13, Name: "Kábel", SupplierCode: "CYKY5", Unit: "m", Quantity: m.MustParse("100"), UnitPrice: m.MustParse("1.35"),
+				Total: m.MustParse("135.00"), Received: m.MustParse("60")}}}
+		o2 := porder.Order{Number: "OB20260002", Status: porder.Draft, Supplier: "Iný"}
+		for _, o := range []*porder.Order{&o1, &o2} {
+			if err := s.SavePurchaseOrder(ctx, a.ID, o); err != nil || o.ID == 0 {
+				t.Fatalf("objednávka: %v", err)
+			}
+		}
+		dup := porder.Order{Number: "OB20260001"}
+		if err := s.SavePurchaseOrder(ctx, a.ID, &dup); !errors.Is(err, store.ErrDuplicate) {
+			t.Fatalf("rovnaké číslo: %v", err)
+		}
+		other := porder.Order{Number: "OB20260001"}
+		if err := s.SavePurchaseOrder(ctx, b.ID, &other); err != nil {
+			t.Fatalf("rovnaké číslo v inej firme: %v", err)
+		}
+		o1.Status = porder.Received
+		if err := s.SavePurchaseOrder(ctx, a.ID, &o1); err != nil {
+			t.Fatal(err)
+		}
+		got, err := s.GetPurchaseOrder(ctx, a.ID, o1.ID)
+		if err != nil || !reflect.DeepEqual(got, o1) {
+			t.Fatalf("načítanie:\n got %+v\nwant %+v", got, o1)
+		}
+		got.Lines[0].Received = m.MustParse("1")
+		if again, _ := s.GetPurchaseOrder(ctx, a.ID, o1.ID); again.Lines[0].Received.String() != "60.00" {
+			t.Fatal("zmena načítanej objednávky zmenila uloženú")
+		}
+		if list, _ := s.ListPurchaseOrders(ctx, a.ID); len(list) != 2 || list[0].ID != o2.ID {
+			t.Fatalf("zoznam (najnovšie prvé): %+v", list)
+		}
+		if _, err := s.GetPurchaseOrder(ctx, b.ID, o1.ID); !errors.Is(err, store.ErrNotFound) {
+			t.Fatal("objednávka inej firmy")
+		}
+		if err := s.SavePurchaseOrder(ctx, b.ID, &o1); !errors.Is(err, store.ErrNotFound) {
+			t.Fatal("úprava objednávky inej firmy")
+		}
+		if err := s.DeletePurchaseOrder(ctx, b.ID, o2.ID); !errors.Is(err, store.ErrNotFound) {
+			t.Fatal("zmazanie objednávky inej firmy")
+		}
+		if err := s.DeletePurchaseOrder(ctx, a.ID, o2.ID); err != nil {
+			t.Fatal(err)
+		}
+		if err := s.DeleteCompany(ctx, a.ID); err != nil {
+			t.Fatal(err)
+		}
+		if list, _ := s.ListPurchaseOrders(ctx, a.ID); len(list) != 0 {
+			t.Fatal("objednávky po zmazaní firmy")
+		}
+		if list, _ := s.ListPurchaseOrders(ctx, b.ID); len(list) != 1 {
+			t.Fatal("zmazanie firmy zmazalo objednávky inej")
+		}
+	})
+
+	t.Run("dodacie listy", func(t *testing.T) {
+		s := newStore(t)
+		a, _ := s.CreateCompany(ctx, store.Company{Name: "Alfa"})
+		b, _ := s.CreateCompany(ctx, store.Company{Name: "Beta"})
+		n1 := delivery.Note{Number: "DL20260001", Status: delivery.Invoiced, Customer: invoice.Party{Name: "Agro", Country: "SK"}, ContactID: 4,
+			Date: invoice.MustDate("2026-11-10"), Place: "Sušička", Order: "OBJ-77", Note: "Prevzaté bez výhrad", Receiver: "J. Kováč",
+			PriceMode: vat.PriceNet, Lines: []invoice.Line{{Description: "Kábel", Quantity: m.MustParse("40"), Unit: "m", UnitPrice: m.MustParse("2.19"),
+				Rate: vat.Rate23, Amount: m.MustParse("87.60"), ItemID: 13}},
+			Summary: vat.Summary{Base: m.MustParse("87.60"), VAT: m.MustParse("20.15"), Total: m.MustParse("107.75")}, InvoiceID: 9}
+		n2 := delivery.Note{Status: delivery.Draft}
+		n3 := delivery.Note{Status: delivery.Draft} // dva koncepty bez čísla
+		for _, n := range []*delivery.Note{&n1, &n2, &n3} {
+			if err := s.SaveDelivery(ctx, a.ID, n); err != nil || n.ID == 0 {
+				t.Fatalf("dodací list: %v", err)
+			}
+		}
+		dup := delivery.Note{Number: "DL20260001"}
+		if err := s.SaveDelivery(ctx, a.ID, &dup); !errors.Is(err, store.ErrDuplicate) {
+			t.Fatalf("rovnaké číslo: %v", err)
+		}
+		got, err := s.GetDelivery(ctx, a.ID, n1.ID)
+		if err != nil || !reflect.DeepEqual(got, n1) {
+			t.Fatalf("načítanie:\n got %+v\nwant %+v", got, n1)
+		}
+		got.Lines[0].Description = "zmenené"
+		if again, _ := s.GetDelivery(ctx, a.ID, n1.ID); again.Lines[0].Description != "Kábel" {
+			t.Fatal("zmena načítaného dodacieho listu zmenila uložený")
+		}
+		if list, _ := s.ListDeliveries(ctx, a.ID); len(list) != 3 || list[0].ID != n3.ID {
+			t.Fatalf("zoznam (najnovšie prvé): %+v", list)
+		}
+		if _, err := s.GetDelivery(ctx, b.ID, n1.ID); !errors.Is(err, store.ErrNotFound) {
+			t.Fatal("dodací list inej firmy")
+		}
+		if err := s.SaveDelivery(ctx, b.ID, &n1); !errors.Is(err, store.ErrNotFound) {
+			t.Fatal("úprava dodacieho listu inej firmy")
+		}
+		if err := s.DeleteDelivery(ctx, b.ID, n2.ID); !errors.Is(err, store.ErrNotFound) {
+			t.Fatal("zmazanie dodacieho listu inej firmy")
+		}
+		if err := s.DeleteDelivery(ctx, a.ID, n2.ID); err != nil {
+			t.Fatal(err)
+		}
+		if err := s.DeleteCompany(ctx, a.ID); err != nil {
+			t.Fatal(err)
+		}
+		if list, _ := s.ListDeliveries(ctx, a.ID); len(list) != 0 {
+			t.Fatal("dodacie listy po zmazaní firmy")
+		}
+	})
+
+	t.Run("zákazky", func(t *testing.T) {
+		s := newStore(t)
+		a, _ := s.CreateCompany(ctx, store.Company{Name: "Alfa"})
+		b, _ := s.CreateCompany(ctx, store.Company{Name: "Beta"})
+		j1 := job.Job{Number: "Z2026001", Name: "Rekonštrukcia RS", ContactID: 3, Customer: "Farmol", Status: job.Active,
+			Start: invoice.MustDate("2026-10-01"), Due: invoice.MustDate("2026-10-31"), Budget: m.MustParse("8690"), Note: "etiketovačka", Created: invoice.MustDate("2026-10-01"), Rate: m.MustParse("35"),
+			Work: []job.WorkEntry{{ID: 1, Date: invoice.MustDate("2026-10-02"), Person: "Palo", Description: "Montáž", Hours: m.MustParse("6.5"),
+				Rate: m.MustParse("35"), CostRate: m.MustParse("0"), Billing: job.Billing{InvoiceID: 9, InvoiceNumber: "FA20260045"}}},
+			Material: []job.MaterialEntry{{ID: 2, Date: invoice.MustDate("2026-10-02"), ItemID: 4, Name: "Kábel", Unit: "m", Quantity: m.MustParse("25"),
+				UnitPrice: m.MustParse("1.60"), UnitCost: m.MustParse("0"), Cost: m.MustParse("20"), Stock: true}}}
+		j2 := job.Job{Number: "Z2026002", Name: "Servis", Status: job.Lead}
+		for _, j := range []*job.Job{&j1, &j2} {
+			if err := s.SaveJob(ctx, a.ID, j); err != nil || j.ID == 0 {
+				t.Fatalf("zákazka: %v", err)
+			}
+		}
+		dup := job.Job{Number: "Z2026001", Name: "x", Status: job.Lead}
+		if err := s.SaveJob(ctx, a.ID, &dup); !errors.Is(err, store.ErrDuplicate) {
+			t.Fatalf("rovnaké číslo: %v", err)
+		}
+		other := job.Job{Number: "Z2026001", Name: "y", Status: job.Lead}
+		if err := s.SaveJob(ctx, b.ID, &other); err != nil {
+			t.Fatalf("rovnaké číslo v inej firme: %v", err)
+		}
+		j1.Status, j1.Closed = job.Done, invoice.MustDate("2026-11-05")
+		if err := s.SaveJob(ctx, a.ID, &j1); err != nil {
+			t.Fatal(err)
+		}
+		if got, err := s.GetJob(ctx, a.ID, j1.ID); err != nil || !reflect.DeepEqual(got, j1) {
+			t.Fatalf("načítanie:\n got %+v\nwant %+v", got, j1)
+		}
+		if got, _ := s.GetJob(ctx, a.ID, j1.ID); len(got.Work) == 1 { // načítaná kópia nezmení uloženú
+			got.Work[0].Hours = m.MustParse("99")
+			if again, _ := s.GetJob(ctx, a.ID, j1.ID); again.Work[0].Hours.String() != "6.50" {
+				t.Fatal("zmena načítanej zákazky zmenila uloženú")
+			}
+		}
+		if list, _ := s.ListJobs(ctx, a.ID); len(list) != 2 || list[0].ID != j2.ID {
+			t.Fatalf("zoznam (najnovšie prvé): %+v", list)
+		}
+		if _, err := s.GetJob(ctx, b.ID, j1.ID); !errors.Is(err, store.ErrNotFound) {
+			t.Fatal("zákazka inej firmy")
+		}
+		if err := s.SaveJob(ctx, b.ID, &j1); !errors.Is(err, store.ErrNotFound) {
+			t.Fatal("úprava zákazky inej firmy")
+		}
+		if err := s.DeleteJob(ctx, b.ID, j2.ID); !errors.Is(err, store.ErrNotFound) {
+			t.Fatal("zmazanie zákazky inej firmy")
+		}
+		if err := s.DeleteJob(ctx, a.ID, j2.ID); err != nil {
+			t.Fatal(err)
+		}
+		if err := s.DeleteCompany(ctx, a.ID); err != nil {
+			t.Fatal(err)
+		}
+		if list, _ := s.ListJobs(ctx, a.ID); len(list) != 0 {
+			t.Fatal("zákazky po zmazaní firmy")
+		}
+		if list, _ := s.ListJobs(ctx, b.ID); len(list) != 1 {
+			t.Fatal("zmazanie firmy zmazalo zákazky inej")
 		}
 	})
 

@@ -11,6 +11,9 @@ import { tripTime } from './logbook.js'
 import { accountKindLabel, accountName, entryCategory, typeLabel, entryType, frequencyLabel, obligationKindLabel, obligationTone, monthsLabel } from './household.js'
 import { moveLabel } from './itemcard.js'
 import { plain } from './richtext.js'
+import { jobStatusOf, marginText } from './jobs.js'
+import { porderStatusOf } from './porders.js'
+import { deliveryStatusOf } from './deliveries.js'
 import { kindLabel as calendarKind, repeatLabel, stateOf } from './calendar.js'
 import { docKindLabel, emailStatus } from './emails.js'
 import { addressText, personsText } from './contacts.js'
@@ -740,4 +743,66 @@ export const closingColumns = [
   t('PPD', (r) => r.inNumber, 14),
   t('VPD', (r) => r.outNumber, 14),
   t('Stav', (r) => (r.cancelled ? 'stornovaná' : ''), 10),
+]
+
+/** Zákazky (CRM). */
+export const crmJobColumns = [
+  t('Číslo', (r) => r.number, 12),
+  t('Názov', (r) => r.name, 32),
+  t('Zákazník', (r) => r.customer, 28),
+  t('Stav', (r) => jobStatusOf(r).label, 18),
+  date('Začiatok', (r) => r.start),
+  date('Termín', (r) => r.due),
+  date('Dokončená', (r) => r.closed),
+  money('Plánovaná cena', (r) => r.budget),
+  money('Ponúknuté', (r) => r.summary?.offered),
+  money('Vyfakturované', (r) => r.summary?.invoiced),
+  money('Uhradené', (r) => r.summary?.paid),
+  money('Na úhradu', (r) => r.summary?.unpaid),
+  money('Náklady', (r) => r.summary?.costs),
+  money('Zisk', (r) => r.summary?.profit),
+  t('Marža', (r) => marginText(r.summary), 8),
+  { header: 'Dokladov', value: (r) => r.summary?.docs ?? 0, type: 'number', width: 9 },
+  t('Poznámka', (r) => r.note, 30),
+]
+
+// Objednávky dodávateľom
+export const porderColumns = [
+  t('Číslo', (r) => r.number, 12),
+  t('Dodávateľ', (r) => r.supplier, 30),
+  date('Dátum', (r) => r.date),
+  date('Dodanie', (r) => r.expected),
+  t('Stav', (r) => porderStatusOf(r).label, 18),
+  { header: 'Položiek', value: (r) => r.lines?.length ?? 0, type: 'number', width: 9 },
+  money('Suma bez DPH', (r) => r.total),
+  t('Poznámka', (r) => r.note, 30),
+]
+
+// Na objednanie (sklad)
+export const reorderColumns = [
+  t('Kód', (r) => r.code, 10),
+  t('Položka', (r) => r.name, 32),
+  t('Dodávateľ', (r) => r.supplier, 24),
+  t('Kód dodávateľa', (r) => r.supplierCode, 14),
+  { header: 'Minimum', value: (r) => Number(r.min), type: 'number', width: 10 },
+  { header: 'Na sklade', value: (r) => Number(r.stock), type: 'number', width: 10 },
+  { header: 'Objednané', value: (r) => Number(r.onOrder), type: 'number', width: 10 },
+  { header: 'Objednať', value: (r) => Number(r.suggested), type: 'number', width: 10 },
+  t('MJ', (r) => r.unit, 6),
+  money('Nákupná cena', (r) => r.purchasePrice),
+]
+
+// Dodacie listy
+export const deliveryColumns = [
+  t('Číslo', (r) => r.number || 'koncept', 12),
+  t('Odberateľ', (r) => r.customer?.name, 30),
+  t('IČO', (r) => r.customer?.ico, 10),
+  date('Dátum', (r) => r.date),
+  t('Miesto dodania', (r) => r.place, 24),
+  t('Objednávka', (r) => r.order, 14),
+  t('Stav', (r) => deliveryStatusOf(r).label, 14),
+  t('Faktúra', (r) => r.invoiceNumber, 12),
+  money('Základ', (r) => r.summary?.base),
+  money('Spolu', (r) => r.summary?.total),
+  t('Prevzal', (r) => r.receiver, 18),
 ]

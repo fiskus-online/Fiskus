@@ -6,9 +6,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/fiskus-online/fiskus/backend/internal/catalog"
+	"github.com/fiskus-online/fiskus/backend/internal/delivery"
 	"github.com/fiskus-online/fiskus/backend/internal/forms"
 	"github.com/fiskus-online/fiskus/backend/internal/fx"
+	"github.com/fiskus-online/fiskus/backend/internal/job"
 	"github.com/fiskus-online/fiskus/backend/internal/link"
+	"github.com/fiskus-online/fiskus/backend/internal/porder"
 	"sort"
 	"sync"
 
@@ -56,6 +59,9 @@ type Store struct {
 	formDocs      map[int64]forms.Doc
 	cashClosings  map[int64]cash.Closing
 	docLinks      map[int64]link.Link
+	jobs          map[int64]job.Job
+	porders       map[int64]porder.Order
+	deliveries    map[int64]delivery.Note
 	hhPhotos      map[int64]store.HHPhoto
 	recurring     map[int64]recurring.Template
 	reminders     map[int64]reminder.Reminder

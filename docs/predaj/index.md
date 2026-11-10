@@ -24,6 +24,14 @@ tags: [predaj]
   href: ./ponuky.md
   icon: edit
   text: Ponuka s prijatím cez odkaz, faktúry, ktoré sa vystavia samy.
+- title: Dodacie listy
+  href: ./dodacie-listy.md
+  icon: package
+  text: Dodací list z ponuky či zákazky, výdaj zo skladu, zberná faktúra.
+- title: Zákazky
+  href: ./zakazky.md
+  icon: briefcase
+  text: Ponuky, faktúry a náklady jednej práce pokope, zisk a marža.
 - title: Upomienky
   href: ./upomienky.md
   icon: bell

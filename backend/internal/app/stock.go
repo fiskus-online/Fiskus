@@ -346,8 +346,17 @@ func (a *App) checkStockDoc(ctx context.Context, companyID int64, cfg StockConfi
 			if d.Partner == "" {
 				d.Partner = p.Supplier.Name
 			}
+		case porderStockLink:
+			o, err := a.Store.GetPurchaseOrder(ctx, companyID, d.LinkID)
+			if err != nil {
+				return mfaFieldErr("linkId", "Objednávka neexistuje")
+			}
+			d.LinkNumber = o.Number
+			if d.Partner == "" {
+				d.Partner = o.Supplier
+			}
 		default:
-			return mfaFieldErr("linkKind", "Skladový doklad sa ručne viaže iba na prijatú faktúru")
+			return mfaFieldErr("linkKind", "Skladový doklad sa ručne viaže iba na prijatú faktúru alebo objednávku")
 		}
 	}
 	for i := range d.Lines {
@@ -430,6 +439,12 @@ func (a *App) DeleteStockDoc(ctx context.Context, companyID, id int64) error {
 	d, err := a.Store.GetStockDoc(ctx, companyID, id)
 	if err != nil {
 		return err
+	}
+	if d.Auto && d.LinkKind == jobStockLink {
+		return mfaFieldErr("kind", autoSource(d)+" — materiál upravte v zákazke")
+	}
+	if d.Auto && d.LinkKind == deliveryStockLink {
+		return mfaFieldErr("kind", autoSource(d)+" — zmení sa s ním alebo jeho stornom")
 	}
 	if d.Auto {
 		return mfaFieldErr("kind", autoSource(d)+" — zmaže sa stornom faktúry alebo zrušením objednávky")
@@ -768,6 +783,12 @@ func (a *App) ShopOrderIssue(ctx context.Context, companyID int64, token string,
 func autoSource(d stock.Doc) string {
 	if d.LinkKind == "order" {
 		return "Doklad vznikol z objednávky e-shopu " + d.LinkNumber
+	}
+	if d.LinkKind == jobStockLink {
+		return "Doklad vznikol zo zákazky " + d.LinkNumber
+	}
+	if d.LinkKind == deliveryStockLink {
+		return "Doklad vznikol z dodacieho listu " + d.LinkNumber
 	}
 	return "Doklad vznikol z faktúry " + d.LinkNumber
 }

@@ -9,8 +9,11 @@ package store
 import (
 	"context"
 	"errors"
+	"github.com/fiskus-online/fiskus/backend/internal/delivery"
 	"github.com/fiskus-online/fiskus/backend/internal/forms"
+	"github.com/fiskus-online/fiskus/backend/internal/job"
 	"github.com/fiskus-online/fiskus/backend/internal/link"
+	"github.com/fiskus-online/fiskus/backend/internal/porder"
 	"time"
 
 	"github.com/fiskus-online/fiskus/backend/internal/asset"
@@ -428,6 +431,25 @@ type Store interface {
 	ListDocLinks(ctx context.Context, companyID int64, r link.Ref) ([]link.Link, error)
 	SaveDocLink(ctx context.Context, companyID int64, l *link.Link) error
 	DeleteDocLink(ctx context.Context, companyID, id int64) error
+
+	// Zákazky (job). Číslo zákazky je vo firme jedinečné (ErrDuplicate).
+	ListJobs(ctx context.Context, companyID int64) ([]job.Job, error)
+	GetJob(ctx context.Context, companyID, id int64) (job.Job, error)
+	SaveJob(ctx context.Context, companyID int64, j *job.Job) error
+	DeleteJob(ctx context.Context, companyID, id int64) error
+
+	// Objednávky dodávateľom (porder). Číslo je vo firme jedinečné (ErrDuplicate).
+	ListPurchaseOrders(ctx context.Context, companyID int64) ([]porder.Order, error)
+	GetPurchaseOrder(ctx context.Context, companyID, id int64) (porder.Order, error)
+	SavePurchaseOrder(ctx context.Context, companyID int64, o *porder.Order) error
+	DeletePurchaseOrder(ctx context.Context, companyID, id int64) error
+
+	// Dodacie listy (delivery). Číslo je vo firme jedinečné (ErrDuplicate),
+	// koncept nemá číslo.
+	ListDeliveries(ctx context.Context, companyID int64) ([]delivery.Note, error)
+	GetDelivery(ctx context.Context, companyID, id int64) (delivery.Note, error)
+	SaveDelivery(ctx context.Context, companyID int64, n *delivery.Note) error
+	DeleteDelivery(ctx context.Context, companyID, id int64) error
 
 	// ListRecurring vráti šablóny pravidelnej fakturácie firmy zoradené podľa ID.
 	ListRecurring(ctx context.Context, companyID int64) ([]recurring.Template, error)
