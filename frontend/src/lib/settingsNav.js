@@ -30,6 +30,7 @@ export const settingsGroups = [
       { path: '/prenos', biz: true, label: 'Prenos dát', icon: 'pi-file-import', perm: 'invoices.write' },
       { path: '/nastavenia/e-shopy', biz: true, label: 'E-shopy', icon: 'pi-shopping-cart', perm: 'settings.write' },
       { path: '/zalohy', label: 'Zálohy', icon: 'pi-history', superAdmin: true },
+      { path: '/nastavenia/aktualizacie', label: 'Aktualizácie', icon: 'pi-sync', superAdmin: true, updateOnly: true },
     ],
   },
   {

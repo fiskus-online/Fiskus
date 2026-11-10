@@ -19,6 +19,7 @@ import (
 	"github.com/fiskus-online/fiskus/backend/internal/money"
 	"github.com/fiskus-online/fiskus/backend/internal/registry"
 	"github.com/fiskus-online/fiskus/backend/internal/store"
+	"github.com/fiskus-online/fiskus/backend/internal/update"
 )
 
 // Server obsluhuje API a statický frontend.
@@ -43,6 +44,9 @@ type Server struct {
 	// Desktop je spúšťač desktopovej verzie z inštalátora (okno sa ozýva,
 	// tlačidlo Ukončiť); nil pri spustení z príkazového riadka a na serveri.
 	Desktop Launcher
+
+	// Update je automatická aktualizácia (aplikácia z inštalátora); nil = vypnutá.
+	Update *update.Manager
 
 	limit limiter // pokusy o prihlásenie
 	// shareLimit: neplatné odkazy na ponuky z jednej IP (hádanie tokenov)
@@ -82,6 +86,14 @@ func (s *Server) Handler() http.Handler {
 			w.WriteHeader(http.StatusNoContent)
 			s.Desktop.Quit()
 		})
+	}
+	if s.Update != nil {
+		// stav je verejný: obrazovka aktualizácie sa ukáže aj pred zadaním PIN
+		public("GET /api/update", s.updateStatus)
+		public("POST /api/update/postpone", s.updatePostpone)
+		open("POST /api/update/check", s.updateCheck)
+		open("POST /api/update/start", s.updateStart)
+		open("PUT /api/update/auto", s.updateAuto)
 	}
 	if s.MCP != nil {
 		mux.HandleFunc("/mcp", s.mcpHandler)
@@ -554,8 +566,9 @@ func (s *Server) capabilities(w http.ResponseWriter, r *http.Request) {
 		edition.Capabilities
 		Launcher bool   `json:"launcher"` // desktop z inštalátora: okno sa ozýva, dá sa ukončiť
 		Version  string `json:"version"`
-		PIN      bool   `json:"pin"` // desktop je chránený PIN-om
-	}{c, s.Desktop != nil, s.Version, s.App.PINEnabled(r.Context())})
+		PIN      bool   `json:"pin"`    // desktop je chránený PIN-om
+		Update   bool   `json:"update"` // aplikácia sa vie sama aktualizovať
+	}{c, s.Desktop != nil, s.Version, s.App.PINEnabled(r.Context()), s.Update != nil})
 }
 
 func (s *Server) listCompanies(w http.ResponseWriter, r *http.Request) {

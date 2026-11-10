@@ -11,6 +11,12 @@ tags: [prehľad]
 Verzie sú značky v repozitári (`v0.2.0`). Podrobný zoznam funkcií po
 etapách je v [pláne vývoja](./ROADMAP.md).
 
+## Pripravuje sa
+
+- **Automatická aktualizácia**: nainštalovaný Fiškus si po spustení sám
+  stiahne novú verziu, zavrie sa, nainštaluje ju a znova sa otvorí.
+  Funguje od tejto verzie ďalej; na ňu treba ešte raz aktualizovať ručne.
+
 ## 0.7.0
 
 - **Fio banka priamo**: pohyby z účtu vo Fio sa stiahnu tlačidlom cez API
