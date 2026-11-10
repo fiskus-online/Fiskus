@@ -2,12 +2,18 @@ package app
 
 import (
 	"context"
+	"errors"
+	"fmt"
+	"log"
 	"strings"
 
 	"github.com/fiskus-online/fiskus/backend/internal/audit"
 	"github.com/fiskus-online/fiskus/backend/internal/auth"
 	"github.com/fiskus-online/fiskus/backend/internal/invoice"
+	"github.com/fiskus-online/fiskus/backend/internal/link"
+	"github.com/fiskus-online/fiskus/backend/internal/money"
 	"github.com/fiskus-online/fiskus/backend/internal/quote"
+	"github.com/fiskus-online/fiskus/backend/internal/store"
 )
 
 // quoteSeries je kľúč číselného radu ponúk (nezávislý od formátu).
@@ -34,11 +40,42 @@ func (a *App) linkInvoice(ctx context.Context, companyID int64, q *quote.Quote) 
 	if q.Share != nil {
 		q.Share.URL = a.QuoteURL(*q)
 	}
+	a.refreshParts(ctx, companyID, q)
 	if q.InvoiceID == 0 {
 		return
 	}
 	if inv, err := a.Store.GetInvoice(ctx, companyID, q.InvoiceID); err == nil {
 		q.InvoiceNumber = inv.Number
+	}
+}
+
+// refreshParts vyradí neplatné čiastkové faktúry (zmazaný koncept, storno),
+// doplní ich čísla a zostatok riadkov.
+func (a *App) refreshParts(ctx context.Context, companyID int64, q *quote.Quote) {
+	if len(q.Billed) == 0 {
+		return
+	}
+	numbers := map[int64]string{}
+	if q.ReleaseParts(func(id int64) bool {
+		inv, err := a.Store.GetInvoice(ctx, companyID, id)
+		if errors.Is(err, store.ErrNotFound) || (err == nil && inv.Status == invoice.StatusCancelled) {
+			return false
+		}
+		numbers[id] = "koncept"
+		if err == nil && inv.Number != "" {
+			numbers[id] = inv.Number
+		}
+		return true
+	}) {
+		if err := a.Store.SaveQuote(ctx, companyID, q); err != nil {
+			log.Printf("ponuka %s: uvoľnenie čiastkových faktúr: %v", q.Number, err)
+		}
+	}
+	for i := range q.Billed {
+		q.Billed[i].InvoiceNumber = numbers[q.Billed[i].InvoiceID]
+	}
+	if len(q.Billed) > 0 {
+		q.Remaining = q.Left()
 	}
 }
 
@@ -256,6 +293,10 @@ func (a *App) InvoiceQuote(ctx context.Context, companyID, id int64) (invoice.In
 	if err != nil {
 		return invoice.Invoice{}, err
 	}
+	a.refreshParts(ctx, companyID, &q)
+	if len(q.Billed) > 0 { // po čiastkových faktúrach sa fakturuje zostatok
+		return a.InvoiceQuotePart(ctx, companyID, id, q.Left())
+	}
 	if !q.Invoiceable() {
 		return invoice.Invoice{}, quote.ErrBadTransition
 	}
@@ -280,6 +321,76 @@ func (a *App) InvoiceQuote(ctx context.Context, companyID, id int64) (invoice.In
 	}
 	a.record(ctx, companyID, audit.CatQuotes, "invoice", "quote", q.ID, "Vyfakturovaná ponuka "+q.Number,
 		state{Status: before}, state{q.Status, inv.ID})
+	return inv, nil
+}
+
+// InvoiceQuotePart vytvorí čiastkovú faktúru k vystavenej alebo prijatej
+// ponuke: množstvá po riadkoch ponuky (0 = riadok nefakturovať). Ponuka si
+// zapamätá vyfakturované množstvá; po poslednej časti je vyfakturovaná.
+func (a *App) InvoiceQuotePart(ctx context.Context, companyID, id int64, qty []money.Dec) (invoice.Invoice, error) {
+	if err := a.Require(ctx, companyID, auth.PermInvoicesWrite); err != nil {
+		return invoice.Invoice{}, err
+	}
+	q, err := a.Store.GetQuote(ctx, companyID, id)
+	if err != nil {
+		return invoice.Invoice{}, err
+	}
+	a.refreshParts(ctx, companyID, &q)
+	check := q
+	check.Billed = append([]quote.Billing(nil), q.Billed...)
+	if err := check.BillPart(-1, qty); err != nil {
+		var pe quote.ErrPart
+		if errors.As(err, &pe) {
+			return invoice.Invoice{}, &invoice.ValidationError{Fields: []invoice.FieldError{{Field: "quantity", Message: pe.Error()}}}
+		}
+		return invoice.Invoice{}, err
+	}
+	final := check.Status == quote.StatusInvoiced
+	draft := q.ToInvoice(a.Today(), 0)
+	draft.DueDate = invoice.Date{}
+	lines := draft.Lines[:0]
+	for i, l := range draft.Lines {
+		if i < len(qty) && !qty[i].IsZero() {
+			l.Quantity = qty[i]
+			lines = append(lines, l)
+		}
+	}
+	draft.Lines = lines
+	part := len(q.Billed) + 1
+	// „Podľa cenovej ponuky CP… (a objednávky …).“ → „Čiastková faktúra č. 2 podľa cenovej ponuky CP…“
+	label := fmt.Sprintf("Čiastková faktúra č. %d podľa cenovej ponuky %s", part, q.Number)
+	if final {
+		label = fmt.Sprintf("Záverečná faktúra (časť %d) podľa cenovej ponuky %s", part, q.Number)
+	}
+	if ref := "Podľa cenovej ponuky " + q.Number; strings.Contains(draft.Note, ref) {
+		draft.Note = strings.Replace(draft.Note, ref, label, 1)
+	} else {
+		draft.Note = strings.TrimSpace(label + ".\n" + draft.Note)
+	}
+	inv, err := a.saveDraft(ctx, companyID, a.withDocExtras(ctx, companyID, draft))
+	if err != nil {
+		return inv, err
+	}
+	a.record(ctx, companyID, audit.CatInvoices, "create", "invoice", inv.ID, fmt.Sprintf("Koncept čiastkovej faktúry č. %d z ponuky %s pre %s", part, q.Number, inv.Customer.Name), nil, inv)
+	before := q.Status
+	if err := q.BillPart(inv.ID, qty); err != nil {
+		return inv, err
+	}
+	q.Remaining = nil
+	if err := a.Store.SaveQuote(ctx, companyID, &q); err != nil {
+		return inv, err
+	}
+	type state struct {
+		Status quote.Status `json:"status"`
+		Parts  int          `json:"parts"`
+	}
+	a.record(ctx, companyID, audit.CatQuotes, "invoice", "quote", q.ID, fmt.Sprintf("Čiastková faktúra č. %d k ponuke %s", part, q.Number),
+		state{before, part - 1}, state{q.Status, part})
+	if l, err := link.New(link.Ref{Kind: link.Quote, ID: q.ID}, link.Ref{Kind: link.Invoice, ID: inv.ID}); err == nil {
+		if err := a.Store.SaveDocLink(ctx, companyID, &l); err != nil && !errors.Is(err, store.ErrDuplicate) {
+			return inv, err
+		}
+	}
 	return inv, nil
 }
 

@@ -230,6 +230,7 @@ func (s *Server) Handler() http.Handler {
 	need("POST /api/companies/{cid}/quotes/{id}/reject", auth.PermInvoicesWrite, s.quoteAction((*Server).rejectQuote))
 	need("POST /api/companies/{cid}/quotes/{id}/copy", auth.PermInvoicesWrite, s.quoteAction((*Server).copyQuote))
 	need("POST /api/companies/{cid}/quotes/{id}/invoice", auth.PermInvoicesWrite, s.invoiceQuote)
+	need("POST /api/companies/{cid}/quotes/{id}/invoice-part", auth.PermInvoicesWrite, s.invoiceQuotePart)
 	need("POST /api/companies/{cid}/quotes/{id}/share", auth.PermInvoicesWrite, s.quoteAction((*Server).shareQuote))
 	need("DELETE /api/companies/{cid}/quotes/{id}/share", auth.PermInvoicesWrite, s.quoteAction((*Server).unshareQuote))
 	// ponuka pre zákazníka cez tajný odkaz (bez prihlásenia)

@@ -400,6 +400,7 @@ export const api = {
   deleteDelivery: (cid, id) => request('DELETE', `/api/companies/${cid}/deliveries/${id}`),
   deliveryAction: (cid, id, action) => request('POST', `/api/companies/${cid}/deliveries/${id}/${action}`),
   invoiceDeliveries: (cid, ids) => request('POST', `/api/companies/${cid}/deliveries/invoice`, { ids }),
+  invoiceQuotePart: (cid, id, body) => request('POST', `/api/companies/${cid}/quotes/${id}/invoice-part`, body),
   deliveryFromQuote: (cid, quoteId) => request('POST', `/api/companies/${cid}/quotes/${quoteId}/delivery`),
   porders: (cid) => request('GET', `/api/companies/${cid}/purchase-orders`),
   porder: (cid, id) => request('GET', `/api/companies/${cid}/purchase-orders/${id}`),

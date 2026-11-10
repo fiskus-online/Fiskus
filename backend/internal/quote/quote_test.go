@@ -209,3 +209,77 @@ func TestJSONRoundTrip(t *testing.T) {
 		}
 	}
 }
+
+func TestBillPart(t *testing.T) {
+	p := m.MustParse
+	q0 := func() Quote {
+		return Quote{Status: StatusAccepted, Number: "CP20260009", Lines: []invoice.Line{
+			{Description: "Rozvádzač RM1", Quantity: p("1"), Unit: "ks", UnitPrice: p("4200")},
+			{Description: "Montáž", Quantity: p("40"), Unit: "hod", UnitPrice: p("35")},
+			{Description: "Zľava", Quantity: p("-1"), Unit: "ks", UnitPrice: p("100")},
+		}}
+	}
+	type step struct {
+		qty    []string
+		err    bool
+		status Status
+	}
+	for _, tc := range []struct {
+		name  string
+		steps []step
+		left  []string
+	}{
+		{"polovica a zvyšok", []step{
+			{[]string{"0.5", "20", "-0.5"}, false, StatusAccepted},
+			{[]string{"0.5", "20", "-0.5"}, false, StatusInvoiced},
+		}, []string{"0.00", "0.00", "0.00"}},
+		{"po položkách", []step{
+			{[]string{"1", "0", "0"}, false, StatusAccepted},
+			{[]string{"0", "12", "0"}, false, StatusAccepted},
+		}, []string{"0.00", "28.00", "-1.00"}},
+		{"viac ako zostáva", []step{{[]string{"0", "41", "0"}, true, StatusAccepted}}, []string{"1.00", "40.00", "-1.00"}},
+		{"zlé znamienko pri zľave", []step{{[]string{"0", "0", "1"}, true, StatusAccepted}}, []string{"1.00", "40.00", "-1.00"}},
+		{"nič", []step{{[]string{"0", "0", "0"}, true, StatusAccepted}}, []string{"1.00", "40.00", "-1.00"}},
+		{"zlý počet", []step{{[]string{"1"}, true, StatusAccepted}}, []string{"1.00", "40.00", "-1.00"}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			q := q0()
+			for i, s := range tc.steps {
+				qty := make([]m.Dec, len(s.qty))
+				for k, x := range s.qty {
+					qty[k] = p(x)
+				}
+				err := q.BillPart(int64(i+1), qty)
+				if (err != nil) != s.err || q.Status != s.status {
+					t.Fatalf("krok %d: chyba %v, stav %s", i, err, q.Status)
+				}
+			}
+			for i, x := range q.Left() {
+				if x.String() != tc.left[i] {
+					t.Fatalf("zostatok %v", q.Left())
+				}
+			}
+		})
+	}
+	q := q0()
+	_ = q.BillPart(7, []m.Dec{p("1"), p("40"), p("-1")})
+	if q.Status != StatusInvoiced || q.InvoiceID != 7 || q.Amendable() {
+		t.Fatalf("celá %+v", q)
+	}
+	if !q.ReleaseParts(func(id int64) bool { return id != 7 }) || q.Status != StatusAccepted || q.Billed != nil || !q.Amendable() {
+		t.Fatalf("uvoľnenie %+v", q)
+	}
+	if q.ReleaseParts(func(int64) bool { return false }) {
+		t.Error("nič na uvoľnenie")
+	}
+	part := q0()
+	_ = part.BillPart(3, []m.Dec{p("1"), p("0"), p("0")})
+	if err := part.Reject(); err != ErrBadTransition {
+		t.Errorf("čiastočne vyfakturovaná sa neodmieta: %v", err)
+	}
+	draft := q0()
+	draft.Status = StatusDraft
+	if err := draft.BillPart(1, []m.Dec{p("1"), p("0"), p("0")}); err != ErrBadTransition {
+		t.Errorf("koncept: %v", err)
+	}
+}

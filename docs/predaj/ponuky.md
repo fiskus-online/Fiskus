@@ -27,6 +27,31 @@ mimo ponuky alebo ste ponuky preniesli z iného programu), použite *Už
 vyfakturovaná…* a vyberte faktúru. Ponuka dostane stav *vyfakturovaná* a
 faktúra sa ukáže v jej súvisiacich dokladoch.
 
+### Čiastková fakturácia
+
+Väčšiu zákazku často fakturujete po častiach – napríklad 50 % po dodaní
+rozvádzača a zvyšok po revízii. Na vystavenej alebo prijatej ponuke
+kliknite na **Čiastková faktúra…**:
+
+- zadajte **percento** ponuky (Fiškus navrhne množstvá všetkých položiek),
+- alebo vyplňte **množstvá po položkách** (napríklad iba materiál).
+
+Vznikne koncept faktúry s týmito množstvami a textom „Čiastková faktúra
+č. 1 podľa cenovej ponuky …“. Ponuka si pamätá, čo už je vyfakturované,
+a ukazuje stav *čiastočne vyfakturovaná*; viac, ako ostáva, sa
+vyfakturovať nedá. Tlačidlo **Faktúra za zvyšok** vystaví záverečnú
+faktúru so všetkým, čo ostalo, a ponuka bude *vyfakturovaná*.
+
+Ak koncept čiastkovej faktúry zmažete alebo faktúru stornujete, jej
+množstvá sa do ponuky vrátia. Po prvej čiastkovej faktúre sa ponuka už
+nedá upraviť ani označiť ako odmietnutá.
+
+![Čiastková faktúra k ponuke](../obrazky/ciastkova-faktura.webp)
+*Čiastková faktúra k ponuke*
+
+Menej časté akcie ponuky (kópia, zmena čísla, dodací list, „už
+vyfakturovaná“, odmietnutá) sú v ponuke **Viac**.
+
 Keď tovar alebo prácu z ponuky odovzdávate po častiach, tlačidlo
 *Dodací list* pripraví koncept [dodacieho listu](dodacie-listy.md)
 s odberateľom a položkami ponuky; faktúru potom urobíte z dodacích listov.

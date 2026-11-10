@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { matchesQuoteView, quoteActions, quoteStatusOf, validDays } from './quotes.js'
+import { matchesQuoteView, partDraft, partPayload, partPercent, quoteActions, quoteStatusOf, validDays } from './quotes.js'
 
 describe('quoteStatusOf', () => {
   it.each([
@@ -53,4 +53,21 @@ it('validDays', () => {
   expect(validDays('2026-10-29', '2026-11-28')).toBe(30)
   expect(validDays('2026-03-01', '2026-03-31')).toBe(30) // zmena času
   expect(validDays('', '2026-01-01')).toBeNull()
+})
+
+describe('čiastková fakturácia ponuky', () => {
+  const q = { status: 'accepted', lines: [{ quantity: '1.00' }, { quantity: '40.00' }, { quantity: '-1.00' }], billed: [{ invoiceId: 3 }], remaining: ['0.50', '20.00', '-0.50'] }
+  it('stav a akcie', () => {
+    expect(quoteStatusOf(q)).toEqual({ label: 'Čiastočne vyfakturovaná (1)', tone: 'issued' })
+    expect(quoteStatusOf({ ...q, status: 'invoiced' }).label).toBe('Vyfakturovaná')
+    expect(quoteActions(q)).toMatchObject({ invoice: true, reject: false })
+  })
+  it('návrh množstiev', () => {
+    expect(partDraft(q)).toEqual(['0.5', '20', '-0.5'])
+    expect(partDraft({ lines: [{ quantity: '2.00' }] })).toEqual(['2'])
+    expect(partPercent(q, '30')).toEqual(['0.3', '12', '-0.3'])
+    expect(partPercent(q, '80')).toEqual(['0.5', '20', '-0.5']) // nie viac ako zostatok
+    expect(partPercent(q, '')).toEqual(['', '', ''])
+    expect(partPayload(['0,5', '', ' 12 '])).toEqual({ quantity: ['0.5', '0', '12'] })
+  })
 })

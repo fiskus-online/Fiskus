@@ -175,3 +175,23 @@ func TestDeliveriesAPI(t *testing.T) {
 	}
 	e.do("POST", fmt.Sprintf("/api/companies/%d/quotes/999/delivery", e.cid), nil, 404, nil)
 }
+
+func TestQuotePartAPI(t *testing.T) {
+	e := setup(t, edition.Desktop)
+	base := fmt.Sprintf("/api/companies/%d/quotes", e.cid)
+	var q struct {
+		ID        int64
+		Status    string
+		Remaining []string
+	}
+	e.do("POST", base, `{"customer":{"name":"Zákazník s.r.o.","country":"SK"},"issueDate":"2026-10-01","validUntil":"2026-10-31","currency":"EUR",`+
+		`"lines":[{"description":"Montáž","quantity":"10","unit":"hod","unitPrice":"35","vatRate":23}]}`, 201, &q)
+	e.do("POST", fmt.Sprintf("%s/%d/issue", base, q.ID), nil, 200, &q)
+	e.do("POST", fmt.Sprintf("%s/%d/invoice-part", base, q.ID), `{"quantity":["11"]}`, 422, nil)
+	var inv struct{ Status string }
+	e.do("POST", fmt.Sprintf("%s/%d/invoice-part", base, q.ID), `{"quantity":["4"]}`, 201, &inv)
+	e.do("GET", fmt.Sprintf("%s/%d", base, q.ID), nil, 200, &q)
+	if inv.Status != "draft" || len(q.Remaining) != 1 || q.Remaining[0] != "6.00" {
+		t.Fatalf("čiastková %+v %+v", inv, q)
+	}
+}

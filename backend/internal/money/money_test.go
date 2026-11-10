@@ -155,3 +155,11 @@ func TestFloorCents(t *testing.T) {
 		}
 	}
 }
+
+func TestAbs(t *testing.T) {
+	for in, want := range map[string]string{"-12.50": "12.50", "3": "3.00", "0": "0.00"} {
+		if got := MustParse(in).Abs().String(); got != want {
+			t.Errorf("Abs(%s) = %s, chcel som %s", in, got, want)
+		}
+	}
+}

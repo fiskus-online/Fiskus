@@ -92,6 +92,14 @@ func (d Dec) Add(o Dec) Dec { return Dec{d.v + o.v} }
 func (d Dec) Sub(o Dec) Dec { return Dec{d.v - o.v} }
 func (d Dec) Neg() Dec      { return Dec{-d.v} }
 
+// Abs vráti absolútnu hodnotu.
+func (d Dec) Abs() Dec {
+	if d.v < 0 {
+		return Dec{-d.v}
+	}
+	return d
+}
+
 // Mul vynásobí dve čísla, výsledok zaokrúhli na 4 miesta.
 func (d Dec) Mul(o Dec) Dec {
 	num := new(big.Int).Mul(big.NewInt(d.v), big.NewInt(o.v))
