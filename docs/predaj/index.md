@@ -24,6 +24,10 @@ tags: [predaj]
   href: ./ponuky.md
   icon: edit
   text: Ponuka s prijatím cez odkaz, faktúry, ktoré sa vystavia samy.
+- title: Zákazky
+  href: ./zakazky.md
+  icon: briefcase
+  text: Ponuky, faktúry a náklady jednej práce pokope, zisk a marža.
 - title: Upomienky
   href: ./upomienky.md
   icon: bell

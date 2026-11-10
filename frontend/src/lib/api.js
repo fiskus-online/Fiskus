@@ -391,6 +391,10 @@ export const api = {
       ? request('PUT', `/api/companies/${cid}/quotes/${q.id}`, q)
       : request('POST', `/api/companies/${cid}/quotes`, q),
   previewQuote: (cid, q) => request('POST', `/api/companies/${cid}/quotes/preview`, q),
+  jobs: (cid) => request('GET', `/api/companies/${cid}/jobs`),
+  job: (cid, id) => request('GET', `/api/companies/${cid}/jobs/${id}`),
+  saveJob: (cid, j, id) => (id ? request('PUT', `/api/companies/${cid}/jobs/${id}`, j) : request('POST', `/api/companies/${cid}/jobs`, j)),
+  deleteJob: (cid, id) => request('DELETE', `/api/companies/${cid}/jobs/${id}`),
   docLinks: (cid, kind, id) => request('GET', `/api/companies/${cid}/links/${kind}/${id}`),
   linkDoc: (cid, kind, id, to) => request('POST', `/api/companies/${cid}/links/${kind}/${id}`, to),
   unlinkDoc: (cid, kind, id, linkId) => request('DELETE', `/api/companies/${cid}/links/${kind}/${id}/${linkId}`),

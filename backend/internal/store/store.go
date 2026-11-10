@@ -10,6 +10,7 @@ import (
 	"context"
 	"errors"
 	"github.com/fiskus-online/fiskus/backend/internal/forms"
+	"github.com/fiskus-online/fiskus/backend/internal/job"
 	"github.com/fiskus-online/fiskus/backend/internal/link"
 	"time"
 
@@ -428,6 +429,12 @@ type Store interface {
 	ListDocLinks(ctx context.Context, companyID int64, r link.Ref) ([]link.Link, error)
 	SaveDocLink(ctx context.Context, companyID int64, l *link.Link) error
 	DeleteDocLink(ctx context.Context, companyID, id int64) error
+
+	// Zákazky (job). Číslo zákazky je vo firme jedinečné (ErrDuplicate).
+	ListJobs(ctx context.Context, companyID int64) ([]job.Job, error)
+	GetJob(ctx context.Context, companyID, id int64) (job.Job, error)
+	SaveJob(ctx context.Context, companyID int64, j *job.Job) error
+	DeleteJob(ctx context.Context, companyID, id int64) error
 
 	// ListRecurring vráti šablóny pravidelnej fakturácie firmy zoradené podľa ID.
 	ListRecurring(ctx context.Context, companyID int64) ([]recurring.Template, error)

@@ -555,6 +555,10 @@ async function save({ quiet = false } = {}) {
     dirty.value = false
     errors.value = {}
     if (!quiet) toast.add({ severity: 'success', summary: isRecurring.value ? 'Pravidelná faktúra uložená' : wasAmend ? `${isQuote.value ? 'Ponuka' : 'Faktúra'} ${saved.number} upravená` : 'Koncept uložený', life: 2500 })
+    // nový doklad zo zákazky (?zakazka=12): priradí sa k nej
+    if (wasNew && route.query.zakazka && !isRecurring.value) {
+      await api.linkDoc(session.companyId, isQuote.value ? 'quote' : 'invoice', saved.id, { kind: 'job', id: Number(route.query.zakazka) }).catch(() => {})
+    }
     if (wasNew) router.replace(`${base.value}/${saved.id}`)
     return saved
   } catch (e) {
