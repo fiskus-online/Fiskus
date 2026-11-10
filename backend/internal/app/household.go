@@ -272,9 +272,11 @@ func (a *App) SaveHouseholdEntry(ctx context.Context, companyID int64, e househo
 		before = &old
 		e.Source = old.Source   // pôvod importu sa nemení
 		e.Receipt = old.Receipt // údaje bločku sú záznam z eKasy/fotky, neupravujú sa
+		e.Paired = old.Paired
 	} else if !strings.HasPrefix(e.Source, "ekasa:") && !strings.HasPrefix(e.Source, "photo:") {
 		e.Source = "" // nový pohyb: pôvod iba z návrhu bločku (proti dvojitému zápisu)
 		e.Receipt = nil
+		e.Paired = ""
 	} else if e.Receipt != nil && len(e.Receipt.Items) > 1000 {
 		return e, vErr("receipt", "Bloček má priveľa položiek")
 	}
@@ -285,10 +287,28 @@ func (a *App) SaveHouseholdEntry(ctx context.Context, companyID int64, e househo
 	if err := a.checkEntry(ctx, companyID, e, s.Categories); err != nil {
 		return e, err
 	}
+	// nový bloček: ak už je v banke platba kartou s rovnakou sumou, bloček
+	// ju nahradí (na bankovom účte, s položkami a kategóriami z bločku)
+	var bankEntry *household.Entry
+	if before == nil && e.Receipt != nil {
+		if bankEntry, err = a.bankPaymentFor(ctx, companyID, e); err != nil {
+			return e, err
+		}
+		if bankEntry != nil {
+			e.AccountID, e.Paired = bankEntry.AccountID, bankEntry.Source
+		}
+	}
 	if err := a.Store.SaveHHEntry(ctx, companyID, &e); errors.Is(err, store.ErrDuplicate) {
 		return e, vErr("source", "Tento bloček už je v domácnosti zapísaný")
 	} else if err != nil {
 		return e, err
+	}
+	if bankEntry != nil {
+		if err := a.Store.DeleteHHEntry(ctx, companyID, bankEntry.ID); err != nil {
+			return e, err
+		}
+		a.record(ctx, companyID, audit.CatLedger, "pair", "household_entry", e.ID,
+			"Domácnosť: bloček spárovaný s platbou kartou z banky "+entrySummary(*bankEntry), bankEntry, e)
 	}
 	a.record(ctx, companyID, audit.CatLedger, "save", "household_entry", e.ID, "Domácnosť: "+entrySummary(e), before, e)
 	return e, nil
@@ -403,6 +423,7 @@ func fallbackCategory(cats []household.Category, income bool) string {
 type HouseholdImport struct {
 	Added   int               `json:"added"`
 	Skipped int               `json:"skipped"` // už importované skôr
+	Paired  int               `json:"paired"`  // spárované s bločkami (platba kartou)
 	Foreign int               `json:"foreign"` // v cudzej mene (neimportované)
 	Entries []household.Entry `json:"entries"`
 }
@@ -468,6 +489,18 @@ func (a *App) ImportHouseholdBank(ctx context.Context, companyID, accountID int6
 	if err != nil {
 		return res, vErr("file", "Výpis sa nedá načítať: "+err.Error())
 	}
+	if err := a.importHouseholdTxs(ctx, companyID, *acc, txs, &res, "file"); err != nil {
+		return res, err
+	}
+	a.record(ctx, companyID, audit.CatLedger, "import", "household_entry", 0,
+		fmt.Sprintf("Domácnosť: import výpisu na účet %s — %d nových, %d spárovaných s bločkami, %d už bolo", acc.Name, res.Added, res.Paired, res.Skipped), nil, nil)
+	return res, nil
+}
+
+// importHouseholdTxs zapíše pohyby z banky na účet domácnosti: už
+// načítané preskočí, platby kartou spáruje s bločkami, ostatné pridá
+// s navrhnutou kategóriou. field je pole pre chybu „iný účet“.
+func (a *App) importHouseholdTxs(ctx context.Context, companyID int64, acc household.Account, txs []bank.Transaction, res *HouseholdImport, field string) error {
 	es := make([]household.Entry, 0, len(txs))
 	for _, t := range txs {
 		if t.Currency != "" && !strings.EqualFold(t.Currency, "EUR") {
@@ -475,17 +508,16 @@ func (a *App) ImportHouseholdBank(ctx context.Context, companyID, accountID int6
 			continue
 		}
 		if acc.IBAN != "" && t.Account != "" && normIBAN(t.Account) != acc.IBAN {
-			return res, vErr("file", "Výpis je z účtu "+t.Account+", nie z účtu "+acc.Name)
+			return vErr(field, "Pohyby sú z účtu "+t.Account+", nie z účtu "+acc.Name)
 		}
 		es = append(es, household.Entry{Date: t.Date, AccountID: acc.ID, Amount: t.Signed(), Payee: t.CounterName,
 			Note: t.Message, Source: "bank:" + t.Fingerprint})
 	}
-	if err := a.addImported(ctx, companyID, es, &res); err != nil {
-		return res, err
+	rest, err := a.pairReceipts(ctx, companyID, es, res)
+	if err != nil {
+		return err
 	}
-	a.record(ctx, companyID, audit.CatLedger, "import", "household_entry", 0,
-		fmt.Sprintf("Domácnosť: import výpisu na účet %s — %d nových, %d už bolo", acc.Name, res.Added, res.Skipped), nil, nil)
-	return res, nil
+	return a.addImported(ctx, companyID, rest, res)
 }
 
 // BusinessDraw je výber (alebo vklad) podnikateľa v peňažnom denníku živnosti

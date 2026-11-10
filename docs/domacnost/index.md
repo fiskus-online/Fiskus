@@ -46,6 +46,29 @@ Slovnaft → Auto a doprava, ZSE → Energie…).
 výpis*. Kategórie sa navrhnú rovnako; opakované nahratie toho istého výpisu
 nič nezdvojí. Platby v cudzej mene sa vynechajú.
 
+**Fio banka** sa dá napojiť priamo, bez výpisu: v Pohyboch *Napojiť Fio*,
+vyberte účet domácnosti a vložte token z internetbankingu Fio (Nastavenia →
+API, oprávnenie *iba sledovať účet*). Tlačidlo **Stiahnuť z Fio** potom
+načíta nové pohyby. Podrobnosti o tokene a limitoch banky sú v časti
+[Banka](../peniaze/index.md#fio-banka-priamo-bez-vypisu).
+
+![Napojenie domácnosti na Fio banku](../obrazky/domacnost-fio.webp)
+*Napojenie domácnosti na Fio banku*
+
+### Bločky a platby kartou
+
+Nákup zaplatený kartou je raz bloček a raz platba v banke. Fiškus ich spojí
+do jedného výdavku: bloček (s položkami a kategóriami) sa presunie na
+bankový účet a platba z banky sa už zvlášť nezapíše.
+
+- Spoja sa, keď sedí suma a platba prišla v deň nákupu alebo do 4 dní
+  po ňom. Ak sú dva rovnaké bločky, rozhodne názov obchodu v texte platby;
+  keď sa nedá rozhodnúť, nespoja sa.
+- Funguje to v oboch smeroch: pri sťahovaní z Fio alebo nahratí výpisu
+  (bloček už je zapísaný) aj pri zapísaní bločku (platba už prišla).
+- Spojený bloček má v detaile poznámku *Spárovaný s platbou kartou
+  z banky*. Ten istý výpis ani stiahnutie z Fio ho už nezdvojí.
+
 ## Bločky
 
 Tlačidlo **Bloček** (v prehľade aj v pohyboch) otvorí fotoaparát alebo výber

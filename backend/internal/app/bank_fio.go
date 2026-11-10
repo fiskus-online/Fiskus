@@ -15,6 +15,7 @@ import (
 	"github.com/fiskus-online/fiskus/backend/internal/audit"
 	"github.com/fiskus-online/fiskus/backend/internal/auth"
 	"github.com/fiskus-online/fiskus/backend/internal/bank"
+	"github.com/fiskus-online/fiskus/backend/internal/household"
 	"github.com/fiskus-online/fiskus/backend/internal/invoice"
 	"github.com/fiskus-online/fiskus/backend/internal/store"
 )
@@ -37,6 +38,8 @@ type fioAccount struct {
 	Account  string    `json:"account"`  // IBAN z posledného stiahnutia
 	LastSync string    `json:"lastSync"` // posledný stiahnutý deň
 	LastCall time.Time `json:"lastCall"`
+	// HHAccount je účet domácnosti, na ktorý pohyby idú (iba domácnosť).
+	HHAccount int64 `json:"householdAccountId,omitempty"`
 }
 
 // FioAccount je napojenie na účet vo Fio banke (bez tokenu).
@@ -46,13 +49,16 @@ type FioAccount struct {
 	Account  string `json:"account"`
 	LastSync string `json:"lastSync"`
 	TokenSet bool   `json:"tokenSet"`
+	// HHAccount: účet domácnosti (iba domácnosť)
+	HHAccount int64 `json:"householdAccountId,omitempty"`
 }
 
 // FioAccountInput je zadanie napojenia; prázdny token ponechá uložený.
 type FioAccountInput struct {
-	ID    int64  `json:"id"`
-	Label string `json:"label"`
-	Token string `json:"token"`
+	ID        int64  `json:"id"`
+	Label     string `json:"label"`
+	Token     string `json:"token"`
+	HHAccount int64  `json:"householdAccountId"` // domácnosť: účet, na ktorý pohyby idú
 }
 
 var reFioToken = regexp.MustCompile(`^[A-Za-z0-9]{20,128}$`)
@@ -79,7 +85,7 @@ func (a *App) saveFio(ctx context.Context, companyID int64, list []fioAccount) e
 func fioView(list []fioAccount) []FioAccount {
 	out := make([]FioAccount, 0, len(list))
 	for _, f := range list {
-		out = append(out, FioAccount{ID: f.ID, Label: f.Label, Account: f.Account, LastSync: f.LastSync, TokenSet: f.Token != ""})
+		out = append(out, FioAccount{ID: f.ID, Label: f.Label, Account: f.Account, LastSync: f.LastSync, TokenSet: f.Token != "", HHAccount: f.HHAccount})
 	}
 	return out
 }
@@ -130,13 +136,18 @@ func (a *App) SaveFioAccount(ctx context.Context, companyID int64, in FioAccount
 	if in.Token != "" && !reFioToken.MatchString(in.Token) {
 		return nil, vErr("token", "Token Fio API sú písmená a číslice (64 znakov) — skopírujte ho celý z internetbankingu")
 	}
+	// domácnosť: pohyby idú na vybraný účet domácnosti
+	if _, err := a.householdFioAccount(ctx, companyID, in.HHAccount); err != nil {
+		return nil, err
+	}
 	if idx < 0 {
 		if in.Token == "" {
 			return nil, vErr("token", "Zadajte token Fio API")
 		}
-		list = append(list, fioAccount{ID: maxID + 1, Label: in.Label, Token: in.Token})
+		list = append(list, fioAccount{ID: maxID + 1, Label: in.Label, Token: in.Token, HHAccount: in.HHAccount})
 	} else {
 		list[idx].Label = in.Label
+		list[idx].HHAccount = in.HHAccount
 		if in.Token != "" {
 			list[idx].Token = in.Token
 		}
@@ -147,6 +158,28 @@ func (a *App) SaveFioAccount(ctx context.Context, companyID int64, in FioAccount
 	a.record(ctx, companyID, audit.CatBank, "update", "fio", 0, "Napojenie na Fio banku: "+in.Label, nil,
 		map[string]any{"label": in.Label, "tokenChanged": in.Token != ""})
 	return fioView(list), nil
+}
+
+// householdFioAccount: v domácnosti musí napojenie mieriť na jej účet
+// (pri firme nil).
+func (a *App) householdFioAccount(ctx context.Context, companyID, accountID int64) (*household.Account, error) {
+	company, err := a.Store.GetCompany(ctx, companyID)
+	if err != nil {
+		return nil, err
+	}
+	if company.Bookkeeping != store.BookkeepingHousehold {
+		return nil, nil
+	}
+	accs, err := a.Store.ListHHAccounts(ctx, companyID)
+	if err != nil {
+		return nil, err
+	}
+	for i := range accs {
+		if accs[i].ID == accountID && accountID != 0 {
+			return &accs[i], nil
+		}
+	}
+	return nil, vErr("householdAccountId", "Vyberte účet domácnosti, na ktorý sa pohyby z Fio stiahnu")
 }
 
 // DeleteFioAccount zruší napojenie (token sa zmaže).
@@ -227,10 +260,27 @@ func (a *App) SyncFio(ctx context.Context, companyID, id int64) (ImportResult, e
 	if err != nil {
 		return res, err
 	}
-	own := strings.ToUpper(strings.ReplaceAll(company.IBAN, " ", ""))
-	res, err = a.importTransactions(ctx, companyID, own, "z Fio banky ("+f.Label+")", txs, res)
-	if err != nil {
-		return res, err
+	if company.Bookkeeping == store.BookkeepingHousehold {
+		acc, err := a.householdFioAccount(ctx, companyID, f.HHAccount)
+		if err != nil {
+			return res, err
+		}
+		var hh HouseholdImport
+		if err := a.importHouseholdTxs(ctx, companyID, *acc, txs, &hh, "fio"); err != nil {
+			return res, err
+		}
+		res.Imported, res.AutoMatched, res.Duplicates = hh.Added+hh.Paired, hh.Paired, hh.Skipped
+		if hh.Foreign > 0 {
+			res.Warnings = append(res.Warnings, fmt.Sprintf("%d pohybov v cudzej mene sa nenačítalo", hh.Foreign))
+		}
+		a.record(ctx, companyID, audit.CatLedger, "import", "household_entry", 0,
+			fmt.Sprintf("Domácnosť: z Fio banky (%s) na účet %s — %d nových, %d spárovaných s bločkami, %d už bolo", f.Label, acc.Name, hh.Added, hh.Paired, hh.Skipped), nil, nil)
+	} else {
+		own := strings.ToUpper(strings.ReplaceAll(company.IBAN, " ", ""))
+		res, err = a.importTransactions(ctx, companyID, own, "z Fio banky ("+f.Label+")", txs, res)
+		if err != nil {
+			return res, err
+		}
 	}
 	if len(txs) > 0 {
 		f.Account = txs[0].Account
@@ -267,10 +317,14 @@ func (a *App) fetchFio(ctx context.Context, token string, from, to invoice.Date)
 	switch {
 	case res.StatusCode == http.StatusConflict:
 		return nil, vErr("fio", "Fio banka dovolí sťahovať pohyby raz za 30 sekúnd — skúste o chvíľu")
-	case res.StatusCode == http.StatusUnauthorized || res.StatusCode == http.StatusForbidden || res.StatusCode == http.StatusNotFound:
-		return nil, vErr("token", "Fio banka token neprijala — skontrolujte ho v internetbankingu (Nastavenia → API) a zadajte znova")
-	case res.StatusCode == http.StatusRequestEntityTooLarge || res.StatusCode == http.StatusInternalServerError:
-		return nil, vErr("fio", "Fio banka odmietla požiadavku (neplatný token alebo pohyby staršie ako 90 dní bez dodatočnej autorizácie)")
+	// Fio vracia pri neplatnom alebo nepotvrdenom tokene chybu 500
+	case res.StatusCode == http.StatusUnauthorized || res.StatusCode == http.StatusForbidden ||
+		res.StatusCode == http.StatusNotFound || res.StatusCode == http.StatusInternalServerError:
+		return nil, vErr("fio", "Fio banka token neprijala. V internetbankingu (Nastavenia → API) skontrolujte, že je token potvrdený (autorizovaný) a patrí k tomuto účtu, a vložte ho celý znova (64 znakov).")
+	case res.StatusCode == http.StatusUnprocessableEntity:
+		return nil, vErr("fio", "Fio banka nevydá pohyby staršie ako 90 dní bez dodatočného potvrdenia v internetbankingu. Staršie pohyby načítajte výpisom.")
+	case res.StatusCode == http.StatusRequestEntityTooLarge:
+		return nil, vErr("fio", "Pohybov je naraz priveľa — staršie načítajte výpisom a potom sťahujte z Fio")
 	case res.StatusCode != http.StatusOK:
 		return nil, fmt.Errorf("Fio banka vrátila chybu %d", res.StatusCode)
 	}
