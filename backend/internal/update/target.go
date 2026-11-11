@@ -107,7 +107,7 @@ func Pick(t Target, goos, goarch string, assets []Asset) (Asset, bool) {
 			if goos == "windows" {
 				suffix += ".exe"
 			}
-			return strings.HasPrefix(n, "fiskus-v") && strings.HasSuffix(n, suffix)
+			return (strings.HasPrefix(n, "fiskus-v") || strings.HasPrefix(n, "fiskus-V")) && strings.HasSuffix(n, suffix)
 		}
 	}
 	for _, a := range assets {

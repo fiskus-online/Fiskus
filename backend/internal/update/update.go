@@ -81,16 +81,25 @@ func Check(ctx context.Context, client *http.Client, url string) (Release, error
 	if raw.Draft || raw.Pre || parse(raw.Tag) == nil {
 		return Release{}, errors.New("posledné vydanie nemá platnú verziu")
 	}
-	r := Release{Version: strings.TrimPrefix(raw.Tag, "v"), Notes: raw.Body, Page: raw.Page}
+	r := Release{Version: trimV(raw.Tag), Notes: raw.Body, Page: raw.Page}
 	for _, a := range raw.Assets {
 		r.Assets = append(r.Assets, Asset{Name: a.Name, URL: a.URL, Size: a.Size, Digest: a.Digest})
 	}
 	return r, nil
 }
 
-// parse rozloží „v1.2.3“ na čísla; nil pri inom tvare (aj „dev“, „1.2.3-rc1“).
+// trimV odstráni predponu „v“ alebo „V“ (značka V0.10.0 je tá istá verzia ako v0.10.0).
+func trimV(v string) string {
+	v = strings.TrimSpace(v)
+	if strings.HasPrefix(v, "v") || strings.HasPrefix(v, "V") {
+		return v[1:]
+	}
+	return v
+}
+
+// parse rozloží „v1.2.3“ (aj „V1.2.3“) na čísla; nil pri inom tvare (aj „dev“, „1.2.3-rc1“).
 func parse(v string) []int {
-	parts := strings.Split(strings.TrimPrefix(strings.TrimSpace(v), "v"), ".")
+	parts := strings.Split(trimV(v), ".")
 	if len(parts) != 3 {
 		return nil
 	}

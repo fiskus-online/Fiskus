@@ -30,6 +30,10 @@ func TestNewer(t *testing.T) {
 		{"0.8.0", "dev", false},
 		{"0.8.0-rc1", "0.7.0", false},
 		{"0.8", "0.7.0", false},
+		// značka s veľkým V (vydanie V0.10.0) je platná verzia
+		{"V0.10.0", "0.9.0", true},
+		{"0.10.1", "V0.10.0", true},
+		{"V0.10.0", "v0.10.0", false},
 	} {
 		if got := Newer(tc.latest, tc.current); got != tc.want {
 			t.Errorf("Newer(%q, %q) = %v", tc.latest, tc.current, got)
@@ -45,6 +49,16 @@ var assets07 = []Asset{
 	{Name: "fiskus-v0.7.0-darwin-arm64"}, {Name: "fiskus-v0.7.0-linux-amd64"}, {Name: "fiskus-v0.7.0-linux-arm64"},
 	{Name: "fiskus-v0.7.0-windows-amd64.exe"}, {Name: "fiskus-v0.7.0-windows-bez-instalacie.exe"},
 	{Name: "fiskus_0.7.0_amd64.deb"}, {Name: "fiskus_0.7.0_arm64.deb"},
+}
+
+func TestPickUpperV(t *testing.T) {
+	assets := []Asset{{Name: "fiskus-V0.10.0-linux-amd64"}, {Name: "fiskus-mcp-V0.10.0-linux-amd64"}, {Name: "fiskus-V0.10.0-windows-setup.exe"}}
+	if a, ok := Pick(Target{Kind: Binary}, "linux", "amd64", assets); !ok || a.Name != "fiskus-V0.10.0-linux-amd64" {
+		t.Fatalf("binárka: %+v %v", a, ok)
+	}
+	if a, ok := Pick(Target{Kind: WindowsSetup}, "windows", "amd64", assets); !ok || a.Name != "fiskus-V0.10.0-windows-setup.exe" {
+		t.Fatalf("inštalátor: %+v %v", a, ok)
+	}
 }
 
 func TestDetectPick(t *testing.T) {
@@ -333,5 +347,20 @@ func TestSwap(t *testing.T) {
 	}
 	if IsGUI(file) {
 		t.Fatal("IsGUI na inom ako .exe")
+	}
+}
+
+// vydanie so značkou V0.8.0 (veľké V) sa nainštaluje rovnako ako v0.8.0
+func TestManagerUpperV(t *testing.T) {
+	payload := []byte("#!/bin/sh\necho nový Fiškus\n")
+	srv, downloads := fakeGitHub(t, "V0.8.0", payload, sum(payload))
+	m, restarted := newManager(t, srv.URL+"/latest")
+	if err := os.WriteFile(m.Target.Exe, []byte("starý"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	m.Startup(context.Background(), 0)
+	<-restarted
+	if st := m.Status(); st.State != Restarting || st.Latest != "0.8.0" || downloads.Load() != 1 {
+		t.Fatalf("stav: %+v, stiahnutí %d", st, downloads.Load())
 	}
 }
