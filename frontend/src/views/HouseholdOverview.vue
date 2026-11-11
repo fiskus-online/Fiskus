@@ -14,6 +14,8 @@ import {
 import HouseholdEntryDialog from '../components/HouseholdEntryDialog.vue'
 import ObligationPayDialog from '../components/ObligationPayDialog.vue'
 import HouseholdReceiptDialog from '../components/HouseholdReceiptDialog.vue'
+import UpcomingEvents from '../components/UpcomingEvents.vue'
+import { toISODate } from '../lib/format.js'
 
 const router = useRouter()
 const canWrite = computed(() => can('ledger.write'))
@@ -49,6 +51,17 @@ async function load() {
 }
 watch([year, month], load)
 onMounted(load)
+
+// termíny z kalendára (vlastné, dane…) na 14 dní; splátky sú v Najbližších platbách
+const cal = ref(null)
+onMounted(async () => {
+  const from = toISODate(new Date())
+  const to = toISODate(new Date(Date.now() + 14 * 86400000))
+  cal.value = await api.calendar(session.companyId, from, to).catch(() => null)
+})
+const notPay = (e) => e.kind !== 'pay' && e.kind !== 'receive' && e.kind !== 'holiday' && !e.done
+const calEvents = computed(() => (cal.value?.events ?? []).filter(notPay))
+const calOverdue = computed(() => (cal.value?.overdue ?? []).filter(notPay))
 
 const accounts = computed(() => ov.value?.accounts ?? [])
 const openAccounts = computed(() => accounts.value.filter((a) => !a.closed))
@@ -116,13 +129,15 @@ function pay(d) {
         </div>
       </section>
 
+      <div class="cols">
       <!-- najbližšie platby -->
-      <section v-if="upcoming.length" class="panel upcoming" aria-label="Najbližšie platby">
+      <section class="panel upcoming" aria-label="Najbližšie platby">
         <header>
           <h2>Najbližšie platby</h2>
           <router-link to="/domacnost/zavazky" class="link">Záväzky a platby</router-link>
         </header>
-        <table class="moves">
+        <p v-if="!upcoming.length" class="empty">Na najbližší mesiac nič na zaplatenie.</p>
+        <table v-else class="moves">
           <tbody>
             <tr v-for="d in upcoming" :key="d.obligationId + '-' + d.n" :class="{ late: d.status === 'overdue' }" @click="router.push(`/domacnost/zavazky/${d.obligationId}`)">
               <td class="d">{{ formatDate(d.date) }}</td>
@@ -135,6 +150,8 @@ function pay(d) {
           </tbody>
         </table>
       </section>
+      <UpcomingEvents :events="calEvents" :overdue="calOverdue" :today="cal?.today ?? ''" />
+      </div>
 
       <div class="cols">
         <!-- rozpočet mesiaca -->

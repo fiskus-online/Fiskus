@@ -11,6 +11,10 @@ Domáce účtovníctvo vediete v samostatnej **domácnosti** — vo Fiškuse je 
 zvláštny druh „firmy“ bez IČO, DPH a dokladov. Založíte ju v časti
 **Nastavenia → Firmy a domácnosti → Založiť domácnosť**. Medzi firmou a domácnosťou sa prepínate hore v hlavičke.
 
+Úvodná stránka domácnosti je **Prehľad**: zostatky účtov, najbližšie
+platby, termíny z kalendára na 14 dní, rozpočet mesiaca, graf príjmov
+a výdavkov za rok a posledné pohyby.
+
 ![Prehľad domácnosti: účty, najbližšie platby, rozpočet a rok](../obrazky/domacnost.webp)
 *Prehľad domácnosti: účty, najbližšie platby, rozpočet a rok*
 

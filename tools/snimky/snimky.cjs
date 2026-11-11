@@ -46,6 +46,8 @@ async function main() {
     // úvod webu: program v širokom okne
     ['uvod', '/faktury', firm, null, { site: true, siteOnly: true, wide: true }],
     ['uvod-mobil', '/faktury', firm, null, { site: true, siteOnly: true, mobile: true }],
+    // prehľad firmy
+    ['prehlad', '/prehlad', firm, null, { full: true }],
     // predaj
     ['faktury', '/faktury', firm, null, { site: true }],
     ['faktura', `/faktury/${pdp}`, firm, null, { site: true }],
