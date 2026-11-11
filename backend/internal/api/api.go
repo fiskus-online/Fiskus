@@ -399,6 +399,7 @@ func (s *Server) Handler() http.Handler {
 	need("DELETE /api/companies/{cid}/fuel/{id}", auth.PermLedgerWrite, s.deleteFuel)
 	need("GET /api/companies/{cid}/fuel-docs", auth.PermLedgerRead, s.fuelDocs)
 	open("GET /api/companies/{cid}/calendar", s.calendarView)
+	open("GET /api/companies/{cid}/dashboard", s.dashboard)
 	open("GET /api/companies/{cid}/calendar.ics", s.calendarICS)
 	open("GET /api/companies/{cid}/calendar/own", s.ownEvents)
 	need("POST /api/companies/{cid}/calendar/own", auth.PermLedgerWrite, s.saveOwnEvent)

@@ -175,7 +175,7 @@ function sendManual() {
         </label>
         <span v-else>{{ session.company?.name }}</span>
       </div>
-      <RouterLink :to="hh ? '/domacnost' : '/faktury'" class="full">Celý program</RouterLink>
+      <RouterLink :to="hh ? '/domacnost' : '/prehlad'" class="full">Celý program</RouterLink>
     </header>
 
     <main class="m-body">

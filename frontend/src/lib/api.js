@@ -135,6 +135,7 @@ export const api = {
   },
   backupURL: (name) => `/api/backups/${encodeURIComponent(name)}`,
   calendar: (cid, from, to) => request('GET', `/api/companies/${cid}/calendar${query({ from, to })}`),
+  dashboard: (cid, year) => request('GET', `/api/companies/${cid}/dashboard${query({ year })}`),
   calendarICSURL: (cid) => `/api/companies/${cid}/calendar.ics`,
   ownEvents: (cid) => request('GET', `/api/companies/${cid}/calendar/own`),
   saveOwnEvent: (cid, o) =>

@@ -31,6 +31,7 @@ import { inBrowser } from './lib/install.js'
 import CashPrint from './views/CashPrint.vue'
 import QuoteList from './views/QuoteList.vue'
 import Jobs from './views/Jobs.vue'
+import Dashboard from './views/Dashboard.vue'
 import JobEdit from './views/JobEdit.vue'
 import JobPrint from './views/JobPrint.vue'
 import PurchaseOrders from './views/PurchaseOrders.vue'
@@ -83,6 +84,7 @@ export const modules = [
   {
     group: 'Prehľad',
     items: [
+      { path: '/prehlad', label: 'Prehľad', icon: 'pi-th-large', ready: true },
       { path: '/kalendar', label: 'Kalendár', icon: 'pi-calendar', ready: true, home: true },
       { path: '/adresar', label: 'Adresár', icon: 'pi-address-book', ready: true, perm: 'contacts.read' },
     ],
@@ -168,7 +170,8 @@ const placeholderRoutes = modules
 export const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
-    { path: '/', redirect: '/faktury' },
+    { path: '/', redirect: '/prehlad' },
+    { path: '/prehlad', component: Dashboard, meta: { title: 'Prehľad' } },
     { path: '/oauth/povolit', component: OAuthConsent, meta: { title: 'Pripojenie aplikácie', consent: true } },
     { path: '/ponuka/:token', component: PublicQuote, props: true, meta: { title: 'Cenová ponuka', public: true } },
     { path: '/faktury', component: InvoiceList, meta: { title: 'Vydané faktúry', perm: 'invoices.read' } },
@@ -255,7 +258,7 @@ export const router = createRouter({
     { path: '/firmy', component: Companies, meta: { settings: true, title: 'Firmy a domácnosti', superAdmin: true, noCompany: true } },
     { path: '/audit', component: AuditLog, meta: { title: 'Audit', perm: 'audit.read' } },
     ...placeholderRoutes,
-    { path: '/:pathMatch(.*)*', redirect: '/faktury' },
+    { path: '/:pathMatch(.*)*', redirect: '/prehlad' },
   ],
 })
 

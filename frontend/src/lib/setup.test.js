@@ -30,9 +30,9 @@ describe('úvodné nastavenie', () => {
     expect(bookkeepingLabel('double')).toBe('Podvojné účtovníctvo')
     expect(bookkeepingLabel('')).toContain('Nezvolené')
     expect(afterSetup('migrate')).toBe('/prenos')
-    expect(afterSetup('new')).toBe('/faktury')
+    expect(afterSetup('new')).toBe('/prehlad')
     expect(homePath({ bookkeeping: 'household' })).toBe('/domacnost')
-    expect(homePath({ bookkeeping: 'simple' })).toBe('/faktury')
+    expect(homePath({ bookkeeping: 'simple' })).toBe('/prehlad')
   })
 
   it.each([

@@ -29,7 +29,7 @@ export function bookAllows(item, bookkeeping) {
 }
 
 /** Úvodná stránka podľa druhu firmy. */
-export const homePath = (company) => (company?.bookkeeping === 'household' ? '/domacnost' : '/faktury')
+export const homePath = (company) => (company?.bookkeeping === 'household' ? '/domacnost' : '/prehlad')
 
 /** Položky DPH (vat: true) iba pre platiteľa DPH. */
 export function vatAllows(item, company) {
@@ -49,7 +49,7 @@ export function stepErrors(step, f) {
 
 /** Kam ísť po dokončení sprievodcu. */
 export function afterSetup(start) {
-  return start === 'migrate' ? '/prenos' : '/faktury'
+  return start === 'migrate' ? '/prenos' : '/prehlad'
 }
 
 /** Text o prenose dokladov z iného programu (null = ešte nebol). */

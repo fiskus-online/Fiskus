@@ -19,7 +19,7 @@ async function load() {
     await loadSession()
     selectCompany(c.id)
     toast.add({ severity: 'success', summary: 'Ukážková firma načítaná', detail: c.name, life: 3000 })
-    router.push('/faktury')
+    router.push('/prehlad')
   } catch (e) {
     toast.add({ severity: 'error', summary: 'Ukážku sa nepodarilo načítať', detail: e.message, life: 6000 })
   } finally {
