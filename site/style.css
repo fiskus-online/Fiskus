@@ -124,7 +124,7 @@ a:hover { color: var(--blue-deep); }
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 440px);
   gap: 48px;
-  align-items: end;
+  align-items: stretch;
 }
 .hero-text { padding-bottom: 64px; }
 .hero h1 {
@@ -168,7 +168,7 @@ a:hover { color: var(--blue-deep); }
 .hero-shot {
   margin: 0;
   overflow: hidden;
-  aspect-ratio: 4 / 3;
+  min-height: 320px; /* od vrchu nadpisu po spodok úvodu */
   background: var(--sheet);
   box-shadow: 0 24px 64px rgba(6, 14, 26, 0.45);
 }
@@ -291,6 +291,7 @@ footer.bottom nav { display: flex; flex-wrap: wrap; gap: 6px 20px; margin-left: 
 
 @media (max-width: 860px) {
   .hero .wrap { grid-template-columns: 1fr; gap: 32px; }
+  .hero-shot { aspect-ratio: 4 / 3; min-height: 0; }
   .hero-text { padding-bottom: 0; }
     .top nav { gap: 14px; }
 }
