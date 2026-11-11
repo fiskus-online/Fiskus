@@ -310,3 +310,4 @@ footer.bottom nav { display: flex; flex-wrap: wrap; gap: 6px 20px; margin-left: 
 }
 
 .doc .sign { margin-top: 32px; font-weight: 600; }
+.nw { white-space: nowrap; }
