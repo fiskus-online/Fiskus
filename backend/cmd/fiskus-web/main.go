@@ -53,6 +53,12 @@ func main() {
 	a.Browser = browserDB{st: st, bridge: bridge}
 	a.BackupsOff = "Fiškus v prehliadači sa zálohuje stiahnutím súboru zálohy."
 	a.DemoSeed = demo.Seed // ukážková firma na vyskúšanie
+	// Fio API: banka nedovolí volanie zo stránky, preto cez funkciu na adrese
+	// aplikácie (functions/fio v projekte Cloudflare Pages)
+	if origin := js.Global().Get("location").Get("origin"); origin.Type() == js.TypeString && strings.HasPrefix(origin.String(), "https://") {
+		a.FioProxy = origin.String() + "/fio"
+		a.Caps.FioProxy = true
+	}
 	if err := a.LoadLegal(context.Background()); err != nil {
 		fatal(fmt.Errorf("legislatíva: %w", err))
 		return

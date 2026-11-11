@@ -141,8 +141,8 @@ async function importFile(ev) {
   }
 }
 
-// ---- Fio API (nie v prehliadači: banka nedovolí volanie z webovej stránky) ----
-const fioOn = computed(() => canWrite.value && !session.caps?.browser)
+// ---- Fio API (v prehliadači cez funkciu na adrese aplikácie, caps.fioProxy) ----
+const fioOn = computed(() => canWrite.value && (!session.caps?.browser || !!session.caps?.fioProxy))
 const fioAccounts = ref([])
 const fioOpen = ref(false)
 const fioBusy = ref(false)

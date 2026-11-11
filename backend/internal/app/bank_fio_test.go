@@ -103,10 +103,42 @@ func TestFio(t *testing.T) {
 		t.Fatalf("zmazanie: %+v %v", list, err)
 	}
 
-	// v prehliadači nie
+	// v prehliadači iba cez funkciu na adrese aplikácie
 	b, bc := newApp(t, edition.Desktop)
 	b.Caps.Browser = true
 	if _, err := b.SaveFioAccount(ctx, bc.ID, FioAccountInput{Token: fioToken}); !fieldErr(err, "fio") {
 		t.Fatalf("prehliadač: %v", err)
+	}
+}
+
+func TestFioProxy(t *testing.T) {
+	data, err := os.ReadFile("../bank/testdata/fio.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var path, header atomic.Value
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		path.Store(r.URL.Path)
+		header.Store(r.Header.Get("X-Fio-Token"))
+		_, _ = w.Write(data)
+	}))
+	defer srv.Close()
+	a, c := newApp(t, edition.Desktop)
+	a.Caps.Browser = true
+	a.FioProxy = srv.URL + "/fio/"
+	a.Now = func() time.Time { return time.Date(2026, 11, 7, 10, 0, 0, 0, time.UTC) }
+	list, err := a.SaveFioAccount(ctx, c.ID, FioAccountInput{Label: "Fio", Token: fioToken})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if res, err := a.SyncFio(ctx, c.ID, list[0].ID); err != nil || res.Imported != 3 {
+		t.Fatalf("stiahnutie cez funkciu: %+v %v", res, err)
+	}
+	// token v hlavičke, nie v adrese (adresy sa môžu zapisovať do záznamov)
+	if p := path.Load().(string); p != "/fio/periods/2026-08-01/2026-10-29/transactions.json" || strings.Contains(p, fioToken) {
+		t.Fatalf("adresa %s", p)
+	}
+	if header.Load().(string) != fioToken {
+		t.Fatal("token nie je v hlavičke")
 	}
 }

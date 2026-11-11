@@ -52,8 +52,10 @@ a spárujú s faktúrami rovnako ako z výpisu.
   tlačidlom koša; stiahnuté pohyby zostanú.
 - Viac účtov vo Fio (napr. eurový a dolárový) = viac tokenov, každý ako
   samostatné napojenie.
-- Vo verzii v prehliadači napojenie nie je, banka nedovolí volanie
-  z webovej stránky. Použite výpis.
+- Vo verzii v prehliadači (app.fiskus.online) banka nedovolí volať
+  Fio API priamo zo stránky, preto požiadavku na pohyby prepošle funkcia
+  na adrese app.fiskus.online. Token sa tam neukladá ani nezapisuje,
+  pohyby idú hneď späť do vášho prehliadača.
 
 ![Napojenie na Fio banku tokenom](../obrazky/banka-fio.webp)
 *Napojenie na Fio banku tokenom*

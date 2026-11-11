@@ -24,6 +24,9 @@ type Capabilities struct {
 	// Browser: Fiškus beží v prehliadači (údaje v úložisku prehliadača).
 	// Je to desktopová verzia bez funkcií, ktoré potrebujú inštaláciu.
 	Browser bool `json:"browser,omitempty"`
+	// FioProxy: v prehliadači je dostupné sťahovanie z Fio cez funkciu na
+	// adrese aplikácie (desktop a server sa pripájajú priamo).
+	FioProxy bool `json:"fioProxy,omitempty"`
 	// Demo: prázdna inštalácia ponúkne ukážkovú firmu na vyskúšanie.
 	Demo bool `json:"demo,omitempty"`
 }

@@ -51,6 +51,10 @@ type App struct {
 	ECBURL string
 	// FioURL je adresa Fio API ("" = bank.FioURL); v testoch sa nahradí.
 	FioURL string
+	// FioProxy: Fiškus v prehliadači sťahuje z Fio cez funkciu na vlastnej
+	// adrese (banka nedovolí volanie z webovej stránky). Token ide v hlavičke
+	// X-Fio-Token, nie v adrese; prázdne = priamo na Fio API.
+	FioProxy string
 	// CalSync sú prihlasovacie údaje aplikácie pre Google Kalendár
 	// a Outlook zadané pri spustení (inak z nastavení); CalSyncEndpoints
 	// a HTTP nahradia testy.
