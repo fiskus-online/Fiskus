@@ -11,6 +11,7 @@ import SelectButton from 'primevue/selectbutton'
 import ToggleSwitch from 'primevue/toggleswitch'
 import FormField from '../components/FormField.vue'
 import ExportButton from '../components/ExportButton.vue'
+import FioPanel from '../components/FioPanel.vue'
 import { api, ApiError } from '../lib/api.js'
 import { can, session } from '../lib/session.js'
 import { formatMoney } from '../lib/format.js'
@@ -41,6 +42,17 @@ async function load() {
   }
 }
 onMounted(load)
+
+// napojenie bežného účtu na Fio banku (sťahuje sa v Pohyboch; nie v prehliadači)
+const fioOn = computed(() => canWrite.value && !session.caps?.browser)
+const fioAccounts = ref([])
+const fioOpen = ref(false)
+async function loadFio() {
+  if (!fioOn.value) return
+  fioAccounts.value = await api.fioAccounts(session.companyId).catch(() => [])
+}
+onMounted(loadFio)
+const fioOf = (a) => fioAccounts.value.some((f) => f.householdAccountId === a.id)
 
 const form = ref(null)
 const errors = ref({})
@@ -90,6 +102,8 @@ function remove(a) {
       <span class="count">{{ list.length }}</span>
       <div class="spacer" />
       <ExportButton v-if="list.length" name="Účty domácnosti" :columns="householdAccountColumns" :rows="visible" />
+      <Button v-if="fioOn && list.some((a) => a.kind === 'bank' && !a.closed)" :label="fioAccounts.length ? 'Fio banka' : 'Napojiť Fio'"
+        :icon="fioAccounts.length ? 'pi pi-cog' : 'pi pi-link'" size="small" severity="secondary" outlined @click="fioOpen = true" />
       <Button v-if="canWrite" label="Pridať účet" icon="pi pi-plus" size="small" @click="edit(null)" />
     </header>
     <p class="help">
@@ -104,7 +118,8 @@ function remove(a) {
       </thead>
       <tbody>
         <tr v-for="a in visible" :key="a.id" :class="{ closed: a.closed }" @click="canWrite ? edit(a) : router.push({ path: '/domacnost/pohyby', query: { ucet: a.id } })">
-          <td data-label="Účet"><i class="pi" :class="accountIcon(a.kind)" aria-hidden="true" /> {{ a.name }}<small v-if="a.closed"> · zrušený</small></td>
+          <td data-label="Účet"><i class="pi" :class="accountIcon(a.kind)" aria-hidden="true" /> {{ a.name }}<small v-if="a.closed"> · zrušený</small>
+            <span v-if="fioOf(a)" class="fio" title="Pohyby sa sťahujú z Fio banky (Pohyby → Stiahnuť z Fio)">Fio</span></td>
           <td data-label="Druh">{{ accountKindLabel(a.kind) }}</td>
           <td class="iban" data-label="IBAN">{{ a.iban || '—' }}</td>
           <td class="num bal" :class="{ neg: Number(a.balance) < 0 }" data-label="Zostatok">{{ formatMoney(a.balance) }}</td>
@@ -113,6 +128,8 @@ function remove(a) {
     </table>
     <p v-else-if="!loading" class="empty">Zatiaľ žiadny účet. Začnite bežným účtom a peňaženkou.</p>
 
+    <FioPanel v-if="fioOn" v-model:visible="fioOpen" :cid="session.companyId" :can-write="canWrite" :accounts="fioAccounts" :household-accounts="list"
+      @changed="(l) => (fioAccounts = l)" @synced="load" />
     <Dialog :visible="!!form" :header="form?.id ? 'Účet' : 'Nový účet'" modal :style="{ width: '30rem' }" :breakpoints="{ '560px': '96vw' }"
       @update:visible="(v) => !v && (form = null)">
       <form v-if="form" class="form-grid" @submit.prevent="save">
@@ -127,6 +144,11 @@ function remove(a) {
         </FormField>
         <FormField label="Počiatočný stav" :error="errors.opening" :hint="form.kind === 'card' ? 'dlh zadajte so znamienkom −' : ''">
           <InputText v-model="form.opening" size="small" inputmode="decimal" placeholder="0,00" class="num" />
+        </FormField>
+        <FormField v-if="fioOn && form.id && form.kind === 'bank'" label="Fio banka" :span="2"
+          :hint="fioOf(form) ? 'Pohyby sťahujete v Pohyboch tlačidlom Stiahnuť z Fio' : 'Pohyby z účtu vo Fio sa stiahnu bez výpisu'">
+          <Button :label="fioOf(form) ? 'Napojený – nastavenie' : 'Napojiť na Fio'" :icon="fioOf(form) ? 'pi pi-cog' : 'pi pi-link'" size="small"
+            severity="secondary" outlined @click="form = null; fioOpen = true" />
         </FormField>
         <FormField v-if="form.id" label="Zrušený účet" hint="Neponúka sa pri nových pohyboch">
           <ToggleSwitch v-model="form.closed" />
@@ -143,6 +165,15 @@ function remove(a) {
 </template>
 
 <style scoped>
+.fio {
+  margin-left: 6px;
+  padding: 0 5px;
+  border: 1px solid var(--blue);
+  border-radius: 3px;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  color: var(--blue);
+}
 .page {
   padding: 14px 16px 24px;
   max-width: 900px;
