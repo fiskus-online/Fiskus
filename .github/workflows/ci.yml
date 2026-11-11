@@ -99,3 +99,5 @@ jobs:
         with:
           node-version: 22
       - run: node site/check.mjs
+      - name: Kontrola značky vydania
+        run: node --test tools/vydanie/znacka.test.mjs
