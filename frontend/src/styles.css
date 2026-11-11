@@ -2,6 +2,9 @@
    Myšlienka: účtovná kniha. Atramentová modrá na svetlom papieri, červený
    atrament pre omeškanie, hustá sadzba s tabuľkovými číslicami. */
 :root {
+  /* šírka stĺpca formulára a celého formulára (4 stĺpce + medzery) */
+  --field-col: 13.5rem;
+  --form-w: calc(4 * var(--field-col) + 36px);
   --ink: #1d2633;
   --ink-soft: #4e5866;
   --ink-faint: #6b7685;
@@ -142,13 +145,16 @@ kbd {
   }
 }
 
-/* formuláre: mriežka polí, na mobile dva stĺpce */
+/* formuláre: mriežka polí, na mobile dva stĺpce. Stĺpec má hornú hranicu
+   (--field-col), aby sa polia na širokej obrazovke neťahali cez celú stránku:
+   PSČ, dátum alebo suma má šírku jedného stĺpca, názov a adresa dvoch. */
 .form-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, var(--field-col)));
   gap: 8px 12px;
 }
 .form-section {
+  max-width: var(--form-w);
   margin: 0 0 18px;
   padding: 0;
   border: 0;

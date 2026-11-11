@@ -737,6 +737,10 @@ watch(() => !!p.value?.customs, (on) => on && !imports.value.length && loadImpor
   flex-wrap: wrap;
   margin-top: 10px;
 }
+.vehicle :deep(.p-select) {
+  width: 100%;
+  max-width: calc(2 * var(--field-col) + 12px);
+}
 .supply-label {
   font-size: var(--fs-sm);
   color: var(--ink-soft);

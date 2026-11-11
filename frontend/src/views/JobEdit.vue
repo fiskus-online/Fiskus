@@ -229,7 +229,7 @@ const newDoc = (path) => {
     <p v-if="s?.net" class="muted small">Ponuky, fakturácia a náklady sú bez DPH, úhrady s DPH. Zálohové faktúry sa do fakturácie neratajú (rátajú sa až vyúčtovacie).</p>
 
     <form class="form-grid fields" @submit.prevent="save">
-      <FormField label="Druh" :span="2" :error="errors.kind">
+      <FormField label="Druh" :span="4" :error="errors.kind">
         <SelectButton :model-value="form.kind" :options="jobKinds" option-label="label" option-value="value" :allow-empty="false" size="small" class="kinds"
           :disabled="!canWrite" aria-label="Druh zákazky" @update:model-value="changeKind">
           <template #option="{ option }"><i :class="option.icon" /><span>{{ option.label }}</span></template>
@@ -248,7 +248,7 @@ const newDoc = (path) => {
       <FormField label="Hodinová sadzba €" :error="errors.rate" :hint="s?.net ? 'bez DPH, predvolená pre výkaz práce' : 'predvolená pre výkaz práce'">
         <InputText v-model="form.rate" size="small" inputmode="decimal" :disabled="!canWrite" />
       </FormField>
-      <FormField label="Stav" :span="2" :error="errors.status">
+      <FormField label="Stav" :span="4" :error="errors.status">
         <SelectButton v-model="form.status" :options="jobStatuses" option-label="label" option-value="value" :allow-empty="false" size="small" :disabled="!canWrite" />
       </FormField>
       <FormField label="Začiatok">
@@ -257,7 +257,7 @@ const newDoc = (path) => {
       <FormField label="Termín dokončenia" :error="errors.due" :hint="job?.closed ? `uzavretá ${formatDate(job.closed)}` : ''">
         <DatePicker :model-value="date('due').get()" date-format="d. m. yy" size="small" fluid show-button-bar :disabled="!canWrite" @update:model-value="date('due').set($event)" />
       </FormField>
-      <FormField label="Poznámka" :span="2">
+      <FormField label="Poznámka" :span="4">
         <Textarea v-model="form.note" rows="3" auto-resize :disabled="!canWrite" />
       </FormField>
     </form>
@@ -352,9 +352,6 @@ const newDoc = (path) => {
   font-size: var(--fs-xs);
   color: var(--ink-faint);
 }
-.fields {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
 .fields :deep(.p-selectbutton) {
   flex-wrap: wrap;
 }
@@ -407,9 +404,6 @@ const newDoc = (path) => {
 @media (max-width: 640px) {
   .page {
     padding: 10px 10px 20px;
-  }
-  .fields {
-    grid-template-columns: minmax(0, 1fr);
   }
   .figure {
     flex: 1 1 45%;
