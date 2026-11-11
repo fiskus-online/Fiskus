@@ -11,13 +11,20 @@ tags: [prehľad]
 Verzie sú značky v repozitári (`v0.2.0`). Podrobný zoznam funkcií po
 etapách je v [pláne vývoja](./ROADMAP.md).
 
+## 0.10.3
+
+- **Automatická aktualizácia** hľadá vydanie s najvyššou verziou, nie
+  posledné zverejnené. Omylom vydaná nižšia značka (v0.1.2 po 0.10.1) ju
+  už nezastaví.
+- Klik na logo Fiškusa otvorí prehľad práve vybranej firmy alebo domácnosti.
+- **Formuláre**: polia majú šírku podľa obsahu (PSČ, dátum, suma úzke,
+  názov a adresa širšie) a na širokej obrazovke sa už neťahajú cez celú
+  stránku. Mena a spôsob úhrady na faktúre sú v jednom riadku.
+
 ## 0.10.2
 
 - **Prehľad**: úvodná stránka firmy aj domácnosti so zostatkami, grafom
   príjmov a výdavkov, pohľadávkami, záväzkami a termínmi z kalendára.
-- **Automatická aktualizácia** hľadá vydanie s najvyššou verziou, nie
-  posledné zverejnené. Omylom vydaná nižšia značka (v0.1.2 po 0.10.1) ju
-  už nezastaví.
 
 ## 0.10.1
 
