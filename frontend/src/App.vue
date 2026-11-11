@@ -149,7 +149,7 @@ watch(
   </template>
   <div v-else class="shell" :class="{ 'nav-open': navOpen }">
     <aside class="sidebar" aria-label="Moduly">
-      <RouterLink to="/faktury" class="brand" aria-label="Fiškus – úvod">
+      <RouterLink :to="homePath(session.company)" class="brand" aria-label="Fiškus – prehľad firmy">
         <svg viewBox="0 0 32 32" width="26" height="26" aria-hidden="true">
           <rect width="32" height="32" rx="7" fill="#f6f7f9" />
           <path d="M10 8h13v3.4h-9v3.6h8v3.3h-8V24h-4z" fill="#1f3a5c" />
