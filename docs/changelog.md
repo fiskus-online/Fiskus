@@ -29,6 +29,20 @@ etapách je v [pláne vývoja](./ROADMAP.md).
 - **Záznamy a úlohy** pri kontakte, zákazke a ponuke (poznámka,
   telefonát, e-mail, stretnutie, úloha s termínom); úlohy sú aj
   v kalendári.
+- **Druhy zákaziek**: autoservis (vozidlo s EČV, VIN, km, závadou
+  a poškodeniami pri príjme), montáž (miesto, montážnici, rozsah prác)
+  a servis zariadení (výrobné číslo, záruka, príslušenstvo). Na tlač
+  zákazkový list, montážny protokol alebo servisný list s podpismi.
+- **Vozidlá zákazníkov**: známe EČV doplní údaje vozidla aj zákazníka,
+  história opráv vozidla, STK/EK a ďalší servis v kalendári, prehľad
+  vozidiel s blížiacimi sa termínmi.
+- **Prijaté objednávky** od zákazníkov s rezerváciou tovaru na sklade
+  (voľné množstvo, návrh na objednanie) a dodaním po častiach dodacím
+  listom alebo faktúrou.
+- **E-mailom** aj dodací list a objednávka dodávateľovi s PDF.
+- **Nákupné ceny** na karte produktu: posledná, najnižšia a priemerná
+  cena podľa dodávateľa a všetky nákupy.
+- Adresár je v menu pod Kalendárom, okno kontaktu sa dá rozšíriť.
 
 ## 0.9.0
 
