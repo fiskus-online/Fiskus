@@ -11,6 +11,14 @@ tags: [prehľad]
 Verzie sú značky v repozitári (`v0.2.0`). Podrobný zoznam funkcií po
 etapách je v [pláne vývoja](./ROADMAP.md).
 
+## 0.10.1
+
+- **Automatická aktualizácia**: verzia 0.10.0 bola vydaná so značkou
+  „V0.10.0“ (veľké V), ktorú staršie verzie nevedeli prečítať, preto sa
+  samy neaktualizovali. Z verzie 0.9.0 sa na 0.10.1 aktualizujú samy;
+  kto si nainštaloval 0.10.0, stiahne 0.10.1 ešte raz ručne z webu.
+- Domácnosť: napojenie na Fio banku aj v Účtoch.
+
 ## 0.10.0
 
 - **Súvisiace doklady**: faktúra, ponuka, dodací list, objednávka, zákazka
