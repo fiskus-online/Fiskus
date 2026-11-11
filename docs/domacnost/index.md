@@ -46,7 +46,7 @@ Slovnaft → Auto a doprava, ZSE → Energie…).
 výpis*. Kategórie sa navrhnú rovnako; opakované nahratie toho istého výpisu
 nič nezdvojí. Platby v cudzej mene sa vynechajú.
 
-**Fio banka** sa dá napojiť priamo, bez výpisu (aj vo Fiškuse v prehliadači): v Pohyboch alebo v Účtoch *Napojiť Fio*,
+**Fio banka** sa dá napojiť priamo, bez výpisu: v Pohyboch alebo v Účtoch *Napojiť Fio*,
 vyberte účet domácnosti a vložte token z internetbankingu Fio (Nastavenia →
 API, oprávnenie *iba sledovať účet*). Tlačidlo **Stiahnuť z Fio** potom
 načíta nové pohyby. Podrobnosti o tokene a limitoch banky sú v časti

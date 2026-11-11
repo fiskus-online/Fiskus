@@ -115,10 +115,8 @@ jobs:
         working-directory: frontend
       - name: Zostavenie
         run: make browser VERSION="${TAG#v}"
-      # z priečinka frontend: wrangler pribalí aj functions/ (Fio API cez /fio)
       - name: Nasadenie
-        working-directory: frontend
         run: |
           npx --yes wrangler@3 pages project list >/dev/null || { echo '::error::Token nemá právo Account › Cloudflare Pages › Edit alebo CLOUDFLARE_ACCOUNT_ID nie je Account ID (nie Zone ID)'; exit 1; }
           npx --yes wrangler@3 pages project create fiskus-app --production-branch=main || true
-          npx --yes wrangler@3 pages deploy dist-browser --project-name=fiskus-app --branch=main --commit-dirty=true
+          npx --yes wrangler@3 pages deploy frontend/dist-browser --project-name=fiskus-app --branch=main --commit-dirty=true

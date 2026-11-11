@@ -91,7 +91,7 @@ func fioView(list []fioAccount) []FioAccount {
 }
 
 func (a *App) fioAvailable() error {
-	if a.Caps.Browser && a.FioProxy == "" {
+	if a.Caps.Browser {
 		return vErr("fio", "Fiškus v prehliadači sa na Fio API nepripojí (banka to z prehliadača nedovolí) — použite nainštalovaný Fiškus alebo import výpisu")
 	}
 	return nil
@@ -297,16 +297,9 @@ func (a *App) fetchFio(ctx context.Context, token string, from, to invoice.Date)
 	}
 	ctx, cancel := context.WithTimeout(ctx, 60*time.Second)
 	defer cancel()
-	u := bank.FioPeriodURL(base, token, from, to)
-	if a.FioProxy != "" {
-		u = strings.TrimRight(a.FioProxy, "/") + "/periods/" + from.String() + "/" + to.String() + "/transactions.json"
-	}
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u, nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, bank.FioPeriodURL(base, token, from, to), nil)
 	if err != nil {
 		return nil, vErr("token", "Neplatný token Fio API")
-	}
-	if a.FioProxy != "" {
-		req.Header.Set("X-Fio-Token", token)
 	}
 	client := a.HTTP
 	if client == nil {

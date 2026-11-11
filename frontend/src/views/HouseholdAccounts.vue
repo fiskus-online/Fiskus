@@ -43,8 +43,8 @@ async function load() {
 }
 onMounted(load)
 
-// napojenie bežného účtu na Fio banku (sťahuje sa v Pohyboch; v prehliadači cez funkciu aplikácie)
-const fioOn = computed(() => canWrite.value && (!session.caps?.browser || !!session.caps?.fioProxy))
+// napojenie bežného účtu na Fio banku (sťahuje sa v Pohyboch; nie v prehliadači)
+const fioOn = computed(() => canWrite.value && !session.caps?.browser)
 const fioAccounts = ref([])
 const fioOpen = ref(false)
 async function loadFio() {
@@ -144,6 +144,11 @@ function remove(a) {
         </FormField>
         <FormField label="Počiatočný stav" :error="errors.opening" :hint="form.kind === 'card' ? 'dlh zadajte so znamienkom −' : ''">
           <InputText v-model="form.opening" size="small" inputmode="decimal" placeholder="0,00" class="num" />
+        </FormField>
+        <FormField v-if="fioOn && form.id && form.kind === 'bank'" label="Fio banka" :span="2"
+          :hint="fioOf(form) ? 'Pohyby sťahujete v Pohyboch tlačidlom Stiahnuť z Fio' : 'Pohyby z účtu vo Fio sa stiahnu bez výpisu'">
+          <Button :label="fioOf(form) ? 'Napojený – nastavenie' : 'Napojiť na Fio'" :icon="fioOf(form) ? 'pi pi-cog' : 'pi pi-link'" size="small"
+            severity="secondary" outlined @click="form = null; fioOpen = true" />
         </FormField>
         <FormField v-if="form.id" label="Zrušený účet" hint="Neponúka sa pri nových pohyboch">
           <ToggleSwitch v-model="form.closed" />

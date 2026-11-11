@@ -57,7 +57,7 @@ watch(year, load)
 onMounted(load)
 
 // ---- Fio API (nie v prehliadači: banka nedovolí volanie z webovej stránky) ----
-const fioOn = computed(() => canWrite.value && (!session.caps?.browser || !!session.caps?.fioProxy))
+const fioOn = computed(() => canWrite.value && !session.caps?.browser)
 const fioAccounts = ref([])
 const fioOpen = ref(false)
 const fioBusy = ref(false)
