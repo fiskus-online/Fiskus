@@ -122,9 +122,9 @@ a:hover { color: var(--blue-deep); }
 }
 .hero .wrap {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 470px);
-  gap: 56px;
-  align-items: end;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 440px);
+  gap: 48px;
+  align-items: stretch;
 }
 .hero-text { padding-bottom: 64px; }
 .hero h1 {
@@ -164,52 +164,21 @@ a:hover { color: var(--blue-deep); }
 .btn[disabled] { opacity: 0.55; cursor: not-allowed; }
 .hero small { display: block; margin-top: 14px; color: #9fb2c8; font-size: 0.875rem; }
 
-/* papierový výrez faktúry vyrastá zo spodku úvodu */
-.sheet {
+/* snímka programu vyrastá zo spodku úvodu */
+.hero-shot {
+  margin: 0;
+  overflow: hidden;
+  min-height: 320px; /* od vrchu nadpisu po spodok úvodu */
   background: var(--sheet);
-  color: var(--ink);
-  border-radius: 6px 6px 0 0;
-  padding: 26px 28px 30px;
-  box-shadow: 0 -1px 0 rgba(255, 255, 255, 0.08);
-  font-size: 0.9375rem;
+  box-shadow: 0 24px 64px rgba(6, 14, 26, 0.45);
 }
-.sheet-head {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 2px 16px;
-  justify-content: space-between;
-  align-items: baseline;
-  padding-bottom: 12px;
-  border-bottom: 2px solid var(--blue-deep);
-  margin-bottom: 14px;
+.hero-shot img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top left;
 }
-.sheet-head b { font-size: 1.375rem; }
-.sheet-head span { color: var(--ink-faint); font-size: 0.8125rem; }
-.sheet table { width: 100%; border-collapse: collapse; }
-.sheet th {
-  text-align: left;
-  font-weight: 600;
-  font-size: 0.8125rem;
-  color: var(--ink-faint);
-  padding: 0 0 6px;
-}
-.sheet td { padding: 7px 0; border-top: 1px solid var(--rule); }
-.sheet .num { text-align: right; white-space: nowrap; }
-.sheet .rc { color: var(--blue); font-weight: 600; }
-.sheet .payable {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  margin-top: 16px;
-  padding-top: 10px;
-  border-top: 1px solid var(--ink);
-}
-.sheet .payable strong {
-  font-size: 1.75rem;
-  border-bottom: 3px double var(--ink);
-  line-height: 1.15;
-}
-.sheet .note { margin: 14px 0 0; font-size: 0.8125rem; color: var(--ink-faint); }
 
 /* ---- obsah ---- */
 section.block { padding: 72px 0; }
@@ -322,6 +291,7 @@ footer.bottom nav { display: flex; flex-wrap: wrap; gap: 6px 20px; margin-left: 
 
 @media (max-width: 860px) {
   .hero .wrap { grid-template-columns: 1fr; gap: 32px; }
+  .hero-shot { aspect-ratio: 4 / 3; min-height: 0; }
   .hero-text { padding-bottom: 0; }
     .top nav { gap: 14px; }
 }
@@ -329,8 +299,7 @@ footer.bottom nav { display: flex; flex-wrap: wrap; gap: 6px 20px; margin-left: 
   .wrap { padding: 0 16px; }
   .top nav a.secondary { display: none; }
   .hero { padding-top: 36px; }
-  .sheet { padding: 20px 16px 22px; font-size: 0.875rem; }
-  .sheet .hide-sm { display: none; }
+  .hero-shot { aspect-ratio: 390 / 560; margin: 0 24px; }
   section.block { padding: 52px 0; }
   .editions thead { display: none; }
   .editions tr { display: grid; grid-template-columns: 1fr auto; border-top: 1px solid var(--rule); padding: 12px 14px; }
@@ -342,3 +311,4 @@ footer.bottom nav { display: flex; flex-wrap: wrap; gap: 6px 20px; margin-left: 
 }
 
 .doc .sign { margin-top: 32px; font-weight: 600; }
+.nw { white-space: nowrap; }

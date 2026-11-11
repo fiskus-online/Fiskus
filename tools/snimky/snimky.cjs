@@ -43,6 +43,9 @@ async function main() {
 
   // názov, cesta, firma, akcia, voľby (mobil, celá stránka, web)
   const shots = [
+    // úvod webu: program v širokom okne
+    ['uvod', '/faktury', firm, null, { site: true, siteOnly: true, wide: true }],
+    ['uvod-mobil', '/faktury', firm, null, { site: true, siteOnly: true, mobile: true }],
     // predaj
     ['faktury', '/faktury', firm, null, { site: true }],
     ['faktura', `/faktury/${pdp}`, firm, null, { site: true }],
@@ -190,7 +193,7 @@ async function main() {
   const run = async (list) => {
     for (const [name, url, company, action, o = {}] of list) {
       if (only.length && !only.includes(name)) continue
-      const vp = o.mobile ? { width: 390, height: 844 } : { width: 1280, height: 800 }
+      const vp = o.mobile ? { width: 390, height: 844 } : o.wide ? { width: 1440, height: 900 } : { width: 1280, height: 800 }
       const ctx = await browser.newContext({ viewport: vp, deviceScaleFactor: o.mobile ? 2 : 1, locale: 'sk-SK' })
       await ctx.addInitScript((id) => localStorage.setItem('fiskus.companyId', String(id)), company.id)
       const p = await ctx.newPage()
@@ -203,6 +206,7 @@ async function main() {
       const file = path.join(DOCS, `${name}.png`)
       await p.screenshot({ path: file, fullPage: !!o.full })
       if (o.site) fs.copyFileSync(file, path.join(SITE, `${name}.png`))
+      if (o.siteOnly) fs.rmSync(file) // iba na web, nie do návodu
       console.log(`  ${name}`)
       await ctx.close()
     }
