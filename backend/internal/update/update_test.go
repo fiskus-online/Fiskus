@@ -364,3 +364,40 @@ func TestManagerUpperV(t *testing.T) {
 		t.Fatalf("stav: %+v, stiahnutí %d", st, downloads.Load())
 	}
 }
+
+// Zo zoznamu vydaní sa berie najvyššia verzia, nie prvé (posledné vytvorené).
+func TestCheckHighest(t *testing.T) {
+	rel := func(tag string, draft, pre bool) map[string]any {
+		return map[string]any{"tag_name": tag, "draft": draft, "prerelease": pre, "html_url": "https://x/" + tag}
+	}
+	tests := []struct {
+		name string
+		body any
+		want string // "" = chyba
+	}{
+		{"omylom nižšia značka navrchu", []any{rel("v0.1.2", false, false), rel("v0.10.1", false, false), rel("V0.10.0", false, false)}, "0.10.1"},
+		{"bez konceptu a predbežného", []any{rel("v0.12.0", true, false), rel("v0.11.0-rc1", false, true), rel("v0.11.0", false, true), rel("v0.10.2", false, false)}, "0.10.2"},
+		{"veľké V", []any{rel("V0.10.0", false, false), rel("v0.9.0", false, false)}, "0.10.0"},
+		{"jedno vydanie (/releases/latest)", rel("v0.10.2", false, false), "0.10.2"},
+		{"žiadne platné", []any{rel("dev", false, false)}, ""},
+		{"prázdny zoznam", []any{}, ""},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				_ = json.NewEncoder(w).Encode(tt.body)
+			}))
+			defer srv.Close()
+			r, err := Check(context.Background(), srv.Client(), srv.URL)
+			if tt.want == "" {
+				if err == nil {
+					t.Fatalf("čakal som chybu, mám %+v", r)
+				}
+				return
+			}
+			if err != nil || r.Version != tt.want || r.Page != "https://x/v"+tt.want && r.Page != "https://x/V"+tt.want {
+				t.Fatalf("verzia %q stránka %q chyba %v, čakal som %s", r.Version, r.Page, err, tt.want)
+			}
+		})
+	}
+}

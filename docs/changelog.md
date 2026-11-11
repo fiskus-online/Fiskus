@@ -11,6 +11,14 @@ tags: [prehľad]
 Verzie sú značky v repozitári (`v0.2.0`). Podrobný zoznam funkcií po
 etapách je v [pláne vývoja](./ROADMAP.md).
 
+## 0.10.2
+
+- **Prehľad**: úvodná stránka firmy aj domácnosti so zostatkami, grafom
+  príjmov a výdavkov, pohľadávkami, záväzkami a termínmi z kalendára.
+- **Automatická aktualizácia** hľadá vydanie s najvyššou verziou, nie
+  posledné zverejnené. Omylom vydaná nižšia značka (v0.1.2 po 0.10.1) ju
+  už nezastaví.
+
 ## 0.10.1
 
 - **Automatická aktualizácia**: verzia 0.10.0 bola vydaná so značkou
