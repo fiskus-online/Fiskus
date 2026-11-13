@@ -20,6 +20,10 @@ etapách je v [pláne vývoja](./ROADMAP.md).
 - **Formuláre**: polia majú šírku podľa obsahu (PSČ, dátum, suma úzke,
   názov a adresa širšie) a na širokej obrazovke sa už neťahajú cez celú
   stránku. Mena a spôsob úhrady na faktúre sú v jednom riadku.
+- **Kurzy mien vo Fiškuse v prehliadači**: kurzy ECB (všetky meny, aj
+  americký dolár) a základná sadzba ECB sa sťahujú samy po spustení a potom
+  každých 6 hodín, ako v nainštalovanom programe. Fungujú teda prepočty
+  v kalkulačke aj faktúry v cudzej mene.
 
 ## 0.10.2
 

@@ -32,8 +32,6 @@ var installOnly = map[string]string{
 	"POST /api/mobile/pairing":                             "Mobil v sieti",
 	"GET /api/registry/{ico}":                              "Vyhľadanie firmy podľa IČO",
 	"GET /api/vies/{vatid}":                                "Overenie IČ DPH vo VIES",
-	"POST /api/legal/ecb":                                  "Sťahovanie sadzby ECB",
-	"POST /api/rates/update":                               "Sťahovanie kurzov ECB",
 	"PUT /api/ai/settings":                                 "Čítanie dokladov cez AI",
 	"POST /api/companies/{cid}/receipts":                   "Čítanie dokladov cez AI",
 	"POST /api/companies/{cid}/purchases/extract":          "Čítanie dokladov cez AI",

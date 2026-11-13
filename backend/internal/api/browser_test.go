@@ -90,6 +90,12 @@ func TestBrowserInstallOnly(t *testing.T) {
 	if res, _ := call(t, browser, "GET", "/api/companies/1/invoices", "", nil); res.StatusCode != 200 {
 		t.Errorf("faktúry v prehliadači: %d", res.StatusCode)
 	}
+	// kurzy a sadzbu ECB si Fiškus v prehliadači sťahuje z kópie na webe
+	for _, p := range []string{"/api/rates/update", "/api/legal/ecb"} {
+		if res, body := call(t, browser, "POST", p, "application/json", nil); body["install"] != nil {
+			t.Errorf("prehliadač %s: %d %v", p, res.StatusCode, body)
+		}
+	}
 	res, body := call(t, browser, "GET", "/api/capabilities", "", nil)
 	if res.StatusCode != 200 || body["browser"] != true || body["mode"] != "desktop" {
 		t.Errorf("schopnosti: %v", body)

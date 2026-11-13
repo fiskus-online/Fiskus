@@ -16,6 +16,10 @@ import (
 // (MRO, „základná úroková sadzba ECB“) v pracovných dňoch, CSV bez metadát.
 const ECBDataURL = "https://data-api.ecb.europa.eu/service/data/FM/B.U2.EUR.4F.KR.MRR_FR.LEV?format=csvdata&detail=dataonly"
 
+// MirrorECBData: kópia ECBDataURL na webe Fiškusa pre Fiškus v prehliadači
+// (denne ju obnovuje workflow .github/workflows/pages.yml).
+const MirrorECBData = "https://fiskus.online/kurzy/ecb-sadzba.csv"
+
 // ParseECBData prečíta CSV zo série ECB (stĺpce TIME_PERIOD a OBS_VALUE)
 // a vráti iba dni, keď sa sadzba zmenila (od kedy platí nová sadzba).
 // Prvý riadok súboru sa berie ako začiatok platnosti.

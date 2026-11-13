@@ -30,6 +30,8 @@ import (
 	"github.com/fiskus-online/fiskus/backend/internal/app"
 	"github.com/fiskus-online/fiskus/backend/internal/demo"
 	"github.com/fiskus-online/fiskus/backend/internal/edition"
+	"github.com/fiskus-online/fiskus/backend/internal/fx"
+	"github.com/fiskus-online/fiskus/backend/internal/reminder"
 	"github.com/fiskus-online/fiskus/backend/internal/store/sqlite"
 )
 
@@ -53,6 +55,9 @@ func main() {
 	a.Browser = browserDB{st: st, bridge: bridge}
 	a.BackupsOff = "Fiškus v prehliadači sa zálohuje stiahnutím súboru zálohy."
 	a.DemoSeed = demo.Seed // ukážková firma na vyskúšanie
+	// kurzy a sadzba ECB z kópie na webe Fiškusa (ECB nedovolí CORS)
+	a.ECBURL = fx.MirrorECB90
+	a.ECBRateURL = reminder.MirrorECBData
 	if err := a.LoadLegal(context.Background()); err != nil {
 		fatal(fmt.Errorf("legislatíva: %w", err))
 		return
@@ -63,6 +68,7 @@ func main() {
 		return serve(h, jar, args[0])
 	}))
 	go recurringLoop(a)
+	go ratesLoop(a)
 	js.Global().Call("fiskusReady", version)
 	select {} // program beží, kým je otvorená stránka
 }
@@ -239,6 +245,24 @@ func (b browserDB) StageRestore(ctx context.Context, db []byte) error {
 		return err
 	}
 	return nil
+}
+
+// ratesLoop sťahuje kurzy a sadzbu ECB, kým je Fiškus otvorený: krátko po
+// spustení a potom každých 6 hodín (kópiu na webe obnovuje workflow denne).
+func ratesLoop(a *app.App) {
+	ctx := context.Background()
+	t := time.NewTimer(10 * time.Second)
+	for range t.C {
+		if res, err := a.UpdateRates(ctx); err != nil {
+			log.Printf("kurzy ECB: %v", err)
+		} else {
+			log.Printf("kurzy ECB: %d kurzov, posledné k %s", res.Count, res.Latest)
+		}
+		if _, err := a.UpdateECBRates(ctx); err != nil {
+			log.Printf("sadzba ECB: %v", err)
+		}
+		t.Reset(6 * time.Hour)
+	}
 }
 
 // recurringLoop vytvára pravidelné faktúry, kým je Fiškus otvorený.
