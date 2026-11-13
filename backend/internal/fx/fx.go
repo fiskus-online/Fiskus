@@ -21,6 +21,10 @@ import (
 const (
 	ECBDaily = "https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml"
 	ECB90    = "https://www.ecb.europa.eu/stats/eurofxref/eurofxref-hist-90d.xml"
+	// MirrorECB90: kópia ECB90 na webe Fiškusa, ktorú denne obnovuje workflow
+	// .github/workflows/pages.yml. Fiškus v prehliadači sťahuje odtiaľ — server
+	// ECB nedovolí čítanie z inej stránky (CORS).
+	MirrorECB90 = "https://fiskus.online/kurzy/eurofxref-hist-90d.xml"
 )
 
 // Pôvod kurzu.

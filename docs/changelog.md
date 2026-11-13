@@ -11,6 +11,34 @@ tags: [prehľad]
 Verzie sú značky v repozitári (`v0.2.0`). Podrobný zoznam funkcií po
 etapách je v [pláne vývoja](./ROADMAP.md).
 
+## 0.10.4
+
+- **Tlačové zostavy** z každého zoznamu (firma aj domácnosť): výber
+  a poradie stĺpcov, zoskupenie s medzisúčtami, strana na výšku alebo na
+  šírku, výstup do tlače/PDF alebo Excelu. Nastavenie si pamätá každá
+  stránka zvlášť; v päte je logo Fiškusa a číslo strany.
+- **Domácnosť — záväzky a platby**: meno príjemcu, špecifický symbol
+  a správa pre príjemcu; platobné údaje sa dajú jedným klikom kopírovať
+  do internet bankingu alebo zaplatiť QR kódom PAY by square. Zoznam
+  záväzkov má nastaviteľné stĺpce (aj kategória).
+- **Kontakt s viacerými účtami**: pri kontakte v Adresári môže byť viac
+  IBAN s účelom (napr. škola — strava, krúžky, školné).
+- **Párovanie pohybov z banky so záväzkami** podľa IBAN a sumy splátky;
+  súrodencov s rovnakou sumou rozlíši meno alebo správa pre príjemcu.
+  Číslo účtu v tvare číslo/kód banky sa prevedie na IBAN a pohyby bez
+  kategórie idú do „Iné …“, nie do poslednej kategórie.
+- Stránky so zoznamami a prehľadmi využijú celú šírku veľkého monitora.
+- **Mobil v sieti**: prehľadný prepínač povolenia so stavom.
+- **Fiškus v prehliadači na iPhone**: Safari a ostatné prehliadače na
+  iPhone niekedy nedovolia úložisko súborov (chyba „WebKit encountered an
+  internal error“). Fiškus si vtedy databázu ukladá do IndexedDB; ak nejde
+  ani to (napr. súkromné okno), beží iba v pamäti a upozorní, že sa údaje
+  po zatvorení stratia.
+- **Kurzy mien vo Fiškuse v prehliadači**: kurzy ECB (všetky meny, aj
+  americký dolár) a základná sadzba ECB sa sťahujú samy po spustení a potom
+  každých 6 hodín, ako v nainštalovanom programe. Fungujú teda prepočty
+  v kalkulačke aj faktúry v cudzej mene.
+
 ## 0.10.3
 
 - **Automatická aktualizácia** hľadá vydanie s najvyššou verziou, nie
@@ -20,11 +48,13 @@ etapách je v [pláne vývoja](./ROADMAP.md).
 - **Formuláre**: polia majú šírku podľa obsahu (PSČ, dátum, suma úzke,
   názov a adresa širšie) a na širokej obrazovke sa už neťahajú cez celú
   stránku. Mena a spôsob úhrady na faktúre sú v jednom riadku.
-- **Fiškus v prehliadači na iPhone**: Safari a ostatné prehliadače na
-  iPhone niekedy nedovolia úložisko súborov (chyba „WebKit encountered an internal
-  error“). Fiškus si vtedy databázu ukladá do IndexedDB; ak nejde ani to
-  (napr. súkromné okno), beží iba v pamäti a upozorní, že sa údaje po
-  zatvorení stratia.
+- **Domácnosť — Adresár**: kontakty domácnosti (škola, energie, banka…)
+  s prepojením na platby a záväzky; pri pohybe aj záväzku sa partner
+  vyberá z Adresára.
+- **IBAN** v záväzku aj v účte: širšie pole, kontrola správnosti a názov
+  banky sa doplní sám.
+- Druh záväzku sa vyberá z ponuky (prvá je Pravidelná platba). Oprava:
+  upravený záväzok alebo účet sa neuložil („unknown field schedule“).
 
 ## 0.10.2
 

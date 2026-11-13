@@ -4,6 +4,9 @@ name: Web na Cloudflare
 #   fiskus.online       ← site/ (verzia a odkazy na inštalátory z posledného vydania)
 #   docs.fiskus.online  ← docs/ cez MkDocs
 #   app.fiskus.online   ← Fiškus v prehliadači (make browser), iba pri vydaní
+# Každý deň po vyhlásení kurzov ECB sa znova nasadí fiskus.online s čerstvou
+# kópiou kurzov a sadzby ECB (site/kurzy/) — Fiškus v prehliadači si ich
+# sťahuje odtiaľ, server ECB čítanie z inej stránky (CORS) nedovolí.
 # Pri vydaní (tag v* → workflow Release) sa po jeho úspechu nasadia všetky tri.
 # Nasadzuje sa, iba keď je v repozitári premenná CLOUDFLARE_ACCOUNT_ID
 # a tajomstvo CLOUDFLARE_API_TOKEN (práva Cloudflare Pages: Edit).
@@ -22,6 +25,9 @@ on:
     workflows: [Release]
     types: [completed]
   workflow_dispatch:
+  # kurzy ECB: vyhlasuje ich v pracovné dni okolo 16:00 SEČ
+  schedule:
+    - cron: '40 15 * * *'
 
 permissions:
   contents: read
@@ -45,6 +51,22 @@ jobs:
         with:
           node-version: 22
       - run: node site/check.mjs
+      - name: Kurzy a sadzba ECB pre Fiškus v prehliadači
+        run: |
+          mkdir -p site/kurzy
+          get() { # $1 súbor, $2 adresa ECB, $3 text, ktorý musí súbor obsahovať
+            if curl -fsSL --retry 3 --max-time 60 -o "site/kurzy/$1.new" "$2" && grep -q "$3" "site/kurzy/$1.new"; then
+              mv "site/kurzy/$1.new" "site/kurzy/$1"
+            else
+              # ECB neodpovedá: ponechať kópiu, ktorá je práve na webe
+              echo "::warning::$1 sa zo servera ECB nestiahol, ponecháva sa doterajší"
+              rm -f "site/kurzy/$1.new"
+              curl -fsSL --max-time 60 -o "site/kurzy/$1" "https://fiskus.online/kurzy/$1" || echo "::warning::ani doterajší $1 nie je"
+            fi
+          }
+          get eurofxref-hist-90d.xml https://www.ecb.europa.eu/stats/eurofxref/eurofxref-hist-90d.xml '<Cube time='
+          get ecb-sadzba.csv 'https://data-api.ecb.europa.eu/service/data/FM/B.U2.EUR.4F.KR.MRR_FR.LEV?format=csvdata&detail=dataonly' 'OBS_VALUE'
+          ls -l site/kurzy
       - name: Verzia a odkazy z posledného vydania
         env:
           GH_TOKEN: ${{ github.token }}
@@ -63,7 +85,7 @@ jobs:
 
   docs:
     name: docs.fiskus.online
-    if: vars.CLOUDFLARE_ACCOUNT_ID != '' && (github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success')
+    if: vars.CLOUDFLARE_ACCOUNT_ID != '' && github.event_name != 'schedule' && (github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -87,7 +109,7 @@ jobs:
     name: app.fiskus.online (Fiškus v prehliadači)
     # iba vydaná verzia — dáta používateľov sú v prehliadači a prechádzajú
     # migráciami, preto nie každá zmena v main
-    if: vars.CLOUDFLARE_ACCOUNT_ID != '' && github.event_name != 'push' && (github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success')
+    if: vars.CLOUDFLARE_ACCOUNT_ID != '' && github.event_name != 'push' && github.event_name != 'schedule' && (github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

@@ -5,3 +5,7 @@
   Cache-Control: no-cache
 /index.html
   Cache-Control: no-cache
+# kurzy a sadzba ECB pre Fiškus v prehliadači (app.fiskus.online), obnovené denne
+/kurzy/*
+  Access-Control-Allow-Origin: *
+  Cache-Control: public, max-age=3600

@@ -17,3 +17,4 @@ frontend/src/browser/wasm_exec.js
 .snimky-fiskus
 .snimky.pid
 __pycache__/
+site/kurzy/
