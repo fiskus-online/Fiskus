@@ -14,6 +14,7 @@ import (
 
 	"github.com/fiskus-online/fiskus/backend/internal/invoice"
 	"github.com/fiskus-online/fiskus/backend/internal/money"
+	"github.com/fiskus-online/fiskus/backend/internal/party"
 )
 
 // AccountKind je druh účtu domácnosti.
@@ -152,6 +153,9 @@ func (a Account) Validate() error {
 	case Cash, Bank, Card, Savings:
 	default:
 		fe = append(fe, FieldError{Field: "kind", Message: "Neznámy druh účtu"})
+	}
+	if a.IBAN != "" && !party.ValidIBAN(a.IBAN) {
+		fe = append(fe, FieldError{Field: "iban", Message: "IBAN nie je správny — skontrolujte číslice (nesedí kontrolný súčet alebo dĺžka)"})
 	}
 	return verr(fe)
 }

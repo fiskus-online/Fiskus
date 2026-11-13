@@ -141,6 +141,9 @@ upozornenia na lehoty, Fiškus pripomenie splátky e-mailom vopred.
 V **Adresári** si vediete partnerov domácnosti: ľudí, obchody, úrady, školu,
 správcu bytu. Pri kontakte stačí meno, adresa, telefón, e-mail a IBAN.
 
+IBAN (pri kontakte, záväzku aj účte) Fiškus skontroluje hneď pri písaní
+a pri slovenskom a českom účte ukáže banku, napr. *Tatra banka*.
+
 Partnera vyberiete pri pohybe v poli *Obchod / komu* alebo pri záväzku
 v poli *Komu platím*. Návrhy z adresára sú označené ikonou adresára.
 Pri záväzku sa z adresára doplnia aj prázdny IBAN a adresa príjemcu.

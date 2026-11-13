@@ -1074,7 +1074,7 @@ func seedHousehold(ctx context.Context, a *app.App) error {
 	}
 	if _, err := obl(household.Obligation{Kind: household.Fine, Name: "Pokuta za parkovanie", Creditor: "Mestská polícia Banská Bystrica",
 		Principal: m.MustParse("50"), Installment: m.MustParse("50"), Frequency: household.Once, FirstDue: first.AddDays(24), AccountID: bank.ID,
-		IBAN: "SK9809000000005028001234", VS: "1128834", Reference: "BL 112/2026", RemindDays: 7}); err != nil {
+		IBAN: "SK5809000000005028001234", VS: "1128834", Reference: "BL 112/2026", RemindDays: 7}); err != nil {
 		return err
 	}
 	byPayee := map[string]int64{"Home Credit": loanID, "Spoločenstvo vlastníkov": rentID}

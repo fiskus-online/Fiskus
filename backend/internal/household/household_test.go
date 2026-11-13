@@ -127,3 +127,30 @@ func TestSuggest(t *testing.T) {
 		}
 	}
 }
+
+func TestValidateIBAN(t *testing.T) {
+	ok := Obligation{Kind: Regular, Name: "Nájom", Frequency: Monthly, FirstDue: d(2026, 1, 1), Installment: m("300")}
+	cases := []struct {
+		name string
+		iban string
+		bad  bool
+	}{
+		{"bez IBAN", "", false},
+		{"správny", "SK3112000000198742637541", false},
+		{"preklep v číslici", "SK3112000000198742637542", true},
+		{"krátky", "SK311200000019874263", true},
+		{"český", "CZ6508000000192000145399", false},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			o := ok
+			o.IBAN = c.iban
+			a := Account{Name: "Účet", Kind: Bank, IBAN: c.iban}
+			for what, err := range map[string]error{"záväzok": o.Validate(), "účet": a.Validate()} {
+				if (err != nil) != c.bad {
+					t.Fatalf("%s: chyba %v", what, err)
+				}
+			}
+		})
+	}
+}
