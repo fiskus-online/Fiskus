@@ -42,6 +42,9 @@ var ErrNotFound = errors.New("záznam neexistuje")
 // ErrDuplicate — záznam s rovnakým jedinečným kľúčom už existuje (napr. e-mail).
 var ErrDuplicate = errors.New("záznam už existuje")
 
+// ErrNewerSchema: databáza (záloha, kópia) je z novšej verzie programu.
+var ErrNewerSchema = errors.New("databáza je z novšej verzie Fiškusa — najprv aktualizujte program")
+
 // Company je účtovná jednotka (firma alebo živnostník).
 type Company struct {
 	ID       int64  `json:"id"`

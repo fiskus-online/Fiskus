@@ -1,7 +1,7 @@
 ---
 title: Mobil
 sidebar_position: 10
-description: Bločky eKasa odfotením QR kódu a spárovanie telefónu s Fiškusom na počítači.
+description: Bločky eKasa odfotením QR kódu, telefón v domácej sieti a telefón mimo domu s kópiou údajov z počítača.
 tags: [mobil, nákup]
 ---
 
@@ -45,3 +45,50 @@ telefón dostane vlastný dlhý kľúč, ktorého odtlačok si Fiškus pamätá;
 telefón zrušíte jedným klikom. Správa programu (nastavenia, zálohy,
 používatelia) je z telefónu zakázaná.
 :::
+
+## Telefón mimo domu
+
+Telefón má **kópiu údajov z počítača** aj vtedy, keď nie ste doma a počítač
+je vypnutý. Nové veci zapíšete v telefóne a do počítača sa prenesú samy,
+keď bude zapnutý.
+
+![Nastavenia → Telefón mimo domu: QR kód na pripojenie telefónu](../obrazky/telefon-mimo-domu.webp)
+*Nastavenia → Telefón mimo domu: QR kód na pripojenie telefónu*
+
+| Krok | Kde |
+|---|---|
+| 1. Pripojiť telefón | v počítači Nastavenia → Telefón mimo domu → **Pripojiť telefón**, QR kód naskenovať fotoaparátom telefónu |
+| 2. Pridať na plochu | iPhone: Safari → Zdieľať → **Pridať na plochu**; Android: ponuka prehliadača → **Pridať na plochu** |
+| 3. Pracovať | telefón ukazuje firmy a domácnosti z počítača; pruh hore hovorí, z kedy je kópia a čo čaká na prenos |
+
+![Kópia z počítača v telefóne](../obrazky/telefon-kopia.webp){ width="320" }
+*Kópia z počítača v telefóne*
+
+**Čo sa dá v telefóne zapísať:** pohyb v domácnosti, úhrada záväzku, nový
+kontakt, pokladničný doklad, koncept faktúry, prijatá faktúra, cenová ponuka,
+jazda a udalosť v kalendári. Úpravy a mazanie existujúcich záznamov robíte
+v počítači — telefón ich odmietne s vysvetlením. Čísla dokladov prideľuje iba
+počítač, takže sa nikdy nezopakujú.
+
+**Ako to beží:** počítač každých 10 minút skontroluje, či telefón niečo
+poslal. Záznamy zapíše (v audite ako „Telefón mimo domu“) a telefónu pošle
+čerstvú kópiu. Telefón si kópiu stiahne pri otvorení a potom každé 2 minúty;
+keď je nová, ponúkne **Načítať novú kópiu**. Ak počítač niektorý záznam
+neprijme (napr. účet medzitým zmazali), telefón ho ukáže v Nastaveniach
+→ Telefón mimo domu s dôvodom.
+
+:::info[Bezpečnosť]
+Údaje idú cez schránku na internete (sync.fiskus.online), ale **zašifrované**
+kľúčom, ktorý majú iba počítač a telefón — je v QR kóde za znakom `#`, ktorý
+sa na server neposiela. Schránka ich nevie prečítať. Do telefónu nejdú heslá
+ani prístupové kľúče k iným službám (e-mail, banka, e-shopy, AI). QR kód
+nikomu neukazujte. Telefón odpojíte v počítači ikonou koša — jeho schránka sa
+zmaže; nepoužívaná schránka zanikne sama po 60 dňoch.
+:::
+
+:::tip[Vlastná schránka]
+Kto chce mať schránku pod vlastnou správou, nasadí si ju na bezplatný
+Cloudflare podľa návodu v repozitári (`sync-relay/README.md`) a jej adresu
+zadá v Nastaveniach → Telefón mimo domu → Vlastná schránka.
+:::
+

@@ -11,6 +11,7 @@ import { memoryStorage, openIdbFiles } from './memfiles.js'
 const wasmSize = typeof __WASM_SIZE__ === 'number' ? __WASM_SIZE__ : 0
 const DB = '/fiskus.db'
 const RESTORE = '/obnova.db'
+const SYNC = '/synchro.db' // stav telefónu mimo domu (cmd/fiskus-web)
 
 let markReady
 const ready = new Promise((resolve) => (markReady = resolve))
@@ -22,11 +23,6 @@ let storage = null
 // krok spúšťania — pri chybe sa ukáže, kde Fiškus zlyhal (diagnostika)
 let step = 'SQLite (WebAssembly)'
 
-/**
- * Úložisko databázy: OPFS, a keď ho prehliadač nedovolí (Safari a ostatné
- * prehliadače na iPhone: „WebKit encountered an internal error“), databáza
- * v pamäti ukladaná do IndexedDB, v krajnom prípade iba v pamäti.
- */
 const PROBE = '/skuska.db'
 
 /** Skúšobný zápis a čítanie; pri chybe výnimka (úložisko sa nepoužije). */
@@ -45,6 +41,11 @@ function probeStorage(open, cleanup) {
   }
 }
 
+/**
+ * Úložisko databázy: OPFS, a keď ho prehliadač nedovolí (Safari a ostatné
+ * prehliadače na iPhone: „WebKit encountered an internal error“), databáza
+ * v pamäti ukladaná do IndexedDB, v krajnom prípade iba v pamäti.
+ */
 async function openStorage(sqlite3) {
   try {
     const pool = await sqlite3.installOpfsSAHPoolVfs({ name: 'fiskus', initialCapacity: 12 })
@@ -60,7 +61,7 @@ async function openStorage(sqlite3) {
       mode: 'opfs',
       open: (name) => new pool.OpfsSAHPoolDb(name),
       readFile: (name) => pool.exportFile(name),
-      writeFile: (name, bytes) => pool.importDb(name, bytes),
+      writeFile: async (name, bytes) => pool.importDb(name, bytes), // vždy Promise (Go na ňu čaká)
       removeFile(name) {
         if (pool.getFileNames().includes(name)) pool.unlink(name)
       },
@@ -76,7 +77,7 @@ async function openStorage(sqlite3) {
   } catch (err) {
     console.warn('Ani IndexedDB nejde, databáza bude iba v pamäti:', err)
   }
-  return memoryStorage(sqlite3, idb, { db: DB, restore: RESTORE })
+  return memoryStorage(sqlite3, idb, { db: DB, restore: RESTORE, keep: [SYNC] })
 }
 
 async function start() {
@@ -89,6 +90,13 @@ async function start() {
   bridge.readFile = (name) => storage.readFile(name)
   bridge.writeFile = (name, bytes) => storage.writeFile(name, bytes)
   bridge.removeFile = (name) => storage.removeFile(name)
+  // každý zápis (aj zo synchronizácie na pozadí) uložiť pri databáze v IndexedDB
+  const exec = bridge.exec
+  bridge.exec = (...args) => {
+    const r = exec(...args)
+    if (r[0] > 0) storage.changed()
+    return r
+  }
   globalThis.fiskusSQL = bridge
   globalThis.fiskusReady = () => {
     markReady()

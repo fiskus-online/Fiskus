@@ -40,6 +40,7 @@ import (
 	"github.com/fiskus-online/fiskus/backend/internal/fx"
 	"github.com/fiskus-online/fiskus/backend/internal/mcp"
 	"github.com/fiskus-online/fiskus/backend/internal/registry"
+	"github.com/fiskus-online/fiskus/backend/internal/relay"
 	"github.com/fiskus-online/fiskus/backend/internal/reminder"
 	"github.com/fiskus-online/fiskus/backend/internal/store"
 	"github.com/fiskus-online/fiskus/backend/internal/store/memstore"
@@ -84,6 +85,8 @@ func main() {
 	showVersion := flag.Bool("version", false, "vypíše verziu a skončí")
 	openBrowser := flag.Bool("open", true, "aplikácia: otvoriť prehliadač po spustení (most fiskus-mcp spúšťa bez neho)")
 	updateURL := flag.String("update-url", update.DefaultURL, "aplikácia: adresa posledného vydania (automatická aktualizácia); prázdne = vypnutá")
+	syncRelay := flag.String("sync-relay", "", "telefón mimo domu: adresa schránky (prázdne = "+relay.DefaultURL+"; v programe sa dá nastaviť vlastná)")
+	syncApp := flag.String("sync-app", app.SyncAppURL, "telefón mimo domu: adresa Fiškusa v prehliadači, ktorú telefón otvorí z QR kódu")
 	appMode := flag.Bool("app", false, "aplikácia (spustenie z inštalátora): dáta v priečinku používateľa, otvorí prehliadač, skončí po zatvorení okna")
 	flag.Parse()
 	dirFixed := false
@@ -161,6 +164,11 @@ func main() {
 	defer st.Close()
 
 	a := app.New(st, caps)
+	// telefón mimo domu: kópiu pre telefón vie vytvoriť iba SQLite
+	if src, ok := st.(app.SyncSource); ok && caps.Mode == edition.Desktop {
+		a.SyncSource, a.SyncRelayURL, a.SyncApp = src, *syncRelay, *syncApp
+		a.SyncDesktopName, _ = os.Hostname()
+	}
 	a.PublicURL = *publicURL
 	a.ECBURL = *ecbURL
 	a.EKasaURL = *ekasaURL
@@ -296,6 +304,9 @@ func main() {
 	go eshopLoop(runCtx, a)
 	go deadlineLoop(runCtx, a)
 	go einvoiceLoop(runCtx, a)
+	if a.SyncRole() == "desktop" {
+		go a.SyncLoop(runCtx)
+	}
 	if updater != nil {
 		go updater.Startup(runCtx, 3*time.Second)
 	}

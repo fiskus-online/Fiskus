@@ -1,0 +1,46 @@
+name: Schránka synchronizácie
+
+# Schránka pre telefón mimo domu (sync-relay/) na Cloudflare Workers:
+# sync.fiskus.online. Nasadzuje sa pri zmene v sync-relay/ v main alebo ručne.
+# Potrebuje premennú CLOUDFLARE_ACCOUNT_ID a tajomstvo CLOUDFLARE_API_TOKEN
+# s právami Workers Scripts: Edit a Workers Routes: Edit (vlastná doména).
+# Beží na bezplatnom pláne Workers — ten nič nefakturuje, pri prekročení
+# limitov požiadavky iba odmietne.
+
+on:
+  push:
+    branches: [main]
+    paths: ['sync-relay/**', '.github/workflows/sync-relay.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sync-relay
+  cancel-in-progress: false
+
+env:
+  CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+  CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
+jobs:
+  deploy:
+    name: sync.fiskus.online
+    if: vars.CLOUDFLARE_ACCOUNT_ID != ''
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: sync-relay
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm test
+      - name: Nasadenie
+        run: |
+          # vlastná doména iba pre schránku Fiškusa (kto si nasadzuje vlastnú, má workers.dev)
+          printf '\nroutes = [{ pattern = "sync.fiskus.online", custom_domain = true }]\n' >> wrangler.toml
+          npx --yes wrangler@3 deploy || { echo '::error::Nasadenie zlyhalo — token potrebuje práva Workers Scripts: Edit a Workers Routes: Edit (pozri sync-relay/README.md)'; exit 1; }
+          curl -fsS https://sync.fiskus.online/ || echo '::warning::sync.fiskus.online ešte neodpovedá (DNS vlastnej domény môže trvať pár minút)'

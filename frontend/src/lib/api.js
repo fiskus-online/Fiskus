@@ -490,6 +490,15 @@ export const api = {
   allowMobileFirewall: () => request('POST', '/api/mobile/firewall', {}),
   removeDevice: (id) => request('DELETE', `/api/mobile/devices/${id}`),
   pairMobile: (code, name) => request('POST', '/api/mobile/pair', { code, name }),
+  // telefón mimo domu (synchronizácia cez schránku)
+  syncStatus: () => request('GET', '/api/sync'),
+  syncRun: () => request('POST', '/api/sync/run', {}),
+  syncPair: (name) => request('POST', '/api/sync/phones', { name }),
+  syncRemovePhone: (id) => request('DELETE', `/api/sync/phones/${id}`),
+  syncSetRelay: (url) => request('PUT', '/api/sync/relay', { url }),
+  syncJoin: (link) => request('POST', '/api/sync/join', { link }),
+  syncLeave: () => request('POST', '/api/sync/leave', {}),
+  syncDismiss: (id) => request('DELETE', `/api/sync/failed/${id}`),
   scanReceipt: (cid, { qr, payment, photo }) => {
     const f = new FormData()
     f.append('qr', qr)

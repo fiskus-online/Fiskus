@@ -32,7 +32,7 @@ func lanDenied(r *http.Request) bool {
 	case strings.HasPrefix(p, "/api/mobile"), strings.HasPrefix(p, "/api/backups"),
 		strings.HasPrefix(p, "/api/desktop"), strings.HasPrefix(p, "/api/auth"), strings.HasPrefix(p, "/api/security"),
 		strings.HasPrefix(p, "/api/legal"), strings.HasPrefix(p, "/mcp"), strings.HasPrefix(p, "/oauth"),
-		strings.HasPrefix(p, "/api/calendar-sync"), strings.HasPrefix(p, "/api/users"):
+		strings.HasPrefix(p, "/api/calendar-sync"), strings.HasPrefix(p, "/api/users"), strings.HasPrefix(p, "/api/sync"):
 		return true
 	case r.Method != http.MethodGet && (strings.HasPrefix(p, "/api/me/") || strings.HasPrefix(p, "/api/rates") || strings.HasPrefix(p, "/api/ai")):
 		return true // API kľúče, odber kalendára, 2FA, kurzy, kľúč AI — iba na počítači

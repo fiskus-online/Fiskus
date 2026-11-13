@@ -42,6 +42,9 @@ const (
 	dbFile      = "/fiskus.db"
 	snapshot    = "/kopia.db"
 	restoreFile = "/obnova.db" // worker ju pri ďalšom štarte presunie na dbFile
+	// syncFile: stav telefónu mimo domu (spárovanie a fronta záznamov) —
+	// samostatne, lebo dbFile nahrádza kópia z počítača
+	syncFile = "/synchro.db"
 )
 
 func main() {
@@ -62,7 +65,19 @@ func main() {
 		fatal(fmt.Errorf("legislatíva: %w", err))
 		return
 	}
+	if kv, err := sqlite.OpenKV(syncFile); err != nil {
+		log.Printf("telefón mimo domu: %v", err)
+	} else {
+		a.SyncState = kv
+	}
 	h := (&api.Server{App: a, Version: version}).Handler()
+	if a.SyncState != nil {
+		// po načítaní novej kópie z počítača znova zapísať čakajúce záznamy
+		if err := a.SyncPhoneStart(context.Background()); err != nil {
+			log.Printf("telefón mimo domu: %v", err)
+		}
+		go a.SyncLoop(context.Background())
+	}
 	jar := &cookieJar{v: map[string]string{}}
 	js.Global().Set("fiskusServe", js.FuncOf(func(_ js.Value, args []js.Value) any {
 		return serve(h, jar, args[0])
@@ -143,6 +158,11 @@ func newPromise(f func() (js.Value, error)) js.Value {
 
 // await počká na Promise z JavaScriptu.
 func await(p js.Value) (js.Value, error) {
+	// hodnota, ktorá nie je Promise (napr. importDb úložiska OPFS vracia
+	// počet bajtov hneď), je už výsledok
+	if p.Type() != js.TypeObject || p.Get("then").Type() != js.TypeFunction {
+		return p, nil
+	}
 	type result struct {
 		v   js.Value
 		err error
