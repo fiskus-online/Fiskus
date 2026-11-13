@@ -206,7 +206,7 @@ func (s *Store) migrate(ctx context.Context) error {
 		return err
 	}
 	if v > len(migrations) {
-		return fmt.Errorf("databáza je z novšej verzie programu (schéma %d)", v)
+		return fmt.Errorf("%w (schéma %d)", store.ErrNewerSchema, v)
 	}
 	for i := v; i < len(migrations); i++ {
 		tx, err := s.db.BeginTx(ctx, nil)
@@ -814,6 +814,9 @@ func (s *Store) Verify(ctx context.Context, path string) error {
 	}
 	if v == 0 {
 		return errors.New("súbor neobsahuje databázu Fiskus")
+	}
+	if v > len(migrations) {
+		return fmt.Errorf("%w (schéma %d)", store.ErrNewerSchema, v)
 	}
 	return nil
 }

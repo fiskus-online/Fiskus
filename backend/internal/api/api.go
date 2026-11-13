@@ -49,6 +49,9 @@ type Server struct {
 	// Update je automatická aktualizácia (aplikácia z inštalátora); nil = vypnutá.
 	Update *update.Manager
 
+	// sync: smerovač na prehratie záznamov z telefónu (sync.go)
+	sync syncRoutes
+
 	limit limiter // pokusy o prihlásenie
 	// shareLimit: neplatné odkazy na ponuky z jednej IP (hádanie tokenov)
 	shareLimit limiter
@@ -525,10 +528,11 @@ func (s *Server) Handler() http.Handler {
 	})
 	s.routeOAuth(mux, open)
 	s.routeBrowser(open)
+	s.routeSync(open)
 	if s.Web != nil {
 		mux.Handle("/", spa(s.Web))
 	}
-	return mux
+	return s.syncHandler(mux)
 }
 
 // ---- pomocné ----

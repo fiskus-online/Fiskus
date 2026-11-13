@@ -17,6 +17,7 @@ import PurchaseList from './views/PurchaseList.vue'
 import PurchaseEdit from './views/PurchaseEdit.vue'
 import Mobile from './views/Mobile.vue'
 import Pairing from './views/Pairing.vue'
+import SyncJoin from './views/SyncJoin.vue'
 import Users from './views/Users.vue'
 import AuditLog from './views/AuditLog.vue'
 import Companies from './views/Companies.vue'
@@ -213,6 +214,7 @@ export const router = createRouter({
     { path: '/emaily', component: Emails, meta: { title: 'E-maily', perm: 'invoices.read' } },
     { path: '/upomienky/:id(\\d+)/tlac', component: ReminderPrint, props: true, meta: { title: 'Upomienka', bare: true, perm: 'invoices.read' } },
     { path: '/parovanie', component: Pairing, meta: { title: 'Spárovať telefón', public: true } },
+    { path: '/pripojit', component: SyncJoin, meta: { title: 'Pripojiť k počítaču', noCompany: true } },
     { path: '/m', component: Mobile, meta: { title: 'Bločky', perm: 'purchases.read', mobile: true } },
     { path: '/objednavky', component: PurchaseOrders, meta: { title: 'Objednávky', perm: 'purchases.read' } },
     { path: '/objednavky/nova', component: PurchaseOrderEdit, meta: { title: 'Nová objednávka', perm: 'purchases.write' } },

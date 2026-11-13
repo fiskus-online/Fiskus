@@ -111,3 +111,19 @@ describe('úložisko v pamäti s IndexedDB', () => {
     expect(count(b2, b2.open('/x.db', true))).toBe(1)
   })
 })
+
+describe('ďalšie databázy v IndexedDB', () => {
+  it('stav telefónu sa uloží a načíta spolu s hlavnou databázou', async () => {
+    const idb = fakeIdb()
+    const opts = { db: '/f9.db', restore: '/r9.db', keep: ['/s9.db'], delay: 0 }
+    const st = track(await memoryStorage(sqlite3, idb, opts))
+    const bridge = createBridge(sqlite3, st.open)
+    bridge.exec(bridge.open('/s9.db', false), "CREATE TABLE kv(k, v); INSERT INTO kv VALUES ('phone', 'x')")
+    await st.save()
+    expect(idb.m.get('/s9.db')).toBeInstanceOf(Uint8Array)
+    st.close()
+    const next = track(await memoryStorage(sqlite3, idb, opts))
+    const b2 = createBridge(sqlite3, next.open)
+    expect(b2.query(b2.open('/s9.db', true), 'SELECT v FROM kv').cells[1]).toBe('x')
+  })
+})

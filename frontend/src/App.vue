@@ -16,6 +16,8 @@ import UserMenu from './components/UserMenu.vue'
 import MFADialog from './components/MFADialog.vue'
 import { api, setInstallHandler } from './lib/api.js'
 import { inBrowser, requireInstall } from './lib/install.js'
+import SyncBanner from './components/SyncBanner.vue'
+import { syncState } from './lib/sync.js'
 import InstallDialog from './components/InstallDialog.vue'
 import BrowserBackupBanner from './components/BrowserBackupBanner.vue'
 import { startHeartbeat } from './lib/desktop.js'
@@ -213,7 +215,8 @@ watch(
         <UserMenu />
       </header>
       <MFADialog v-if="session.me?.mfaRequired" :visible="true" forced @done="loadSession" />
-      <BrowserBackupBanner v-if="inBrowser && session.ready && session.companyId" />
+      <SyncBanner v-if="inBrowser && session.ready" />
+      <BrowserBackupBanner v-if="inBrowser && session.ready && session.companyId && !syncState.phone" />
 
       <main class="content">
         <div v-if="session.error" class="fatal">

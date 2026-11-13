@@ -11,6 +11,17 @@ tags: [prehľad]
 Verzie sú značky v repozitári (`v0.2.0`). Podrobný zoznam funkcií po
 etapách je v [pláne vývoja](./ROADMAP.md).
 
+## 0.10.5
+
+- **Telefón mimo domu**: telefón má kópiu údajov z počítača aj mimo domu
+  a dá sa v ňom zapisovať — pohyb a úhrada v domácnosti, kontakt,
+  pokladničný doklad, koncept faktúry, prijatá faktúra, ponuka, jazda,
+  udalosť. Keď je počítač zapnutý, záznamy si vyzdvihne a pošle telefónu
+  čerstvú kópiu. Údaje idú cez schránku zašifrované kľúčom z QR kódu;
+  schránka ich nevie prečítať. Pripája sa v Nastaveniach → Telefón mimo domu.
+- Fiškus v prehliadači: obnova zo zálohy už nespadne pri úložisku, ktoré
+  zapisuje hneď (chyba „Go program has already exited“).
+
 ## 0.10.4
 
 - **Tlačové zostavy** z každého zoznamu (firma aj domácnosť): výber

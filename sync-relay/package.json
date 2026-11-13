@@ -1,0 +1,10 @@
+{
+  "name": "fiskus-sync",
+  "private": true,
+  "type": "module",
+  "description": "Schránka synchronizácie telefónu s Fiškusom v počítači (Cloudflare Worker)",
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "deploy": "npx --yes wrangler@3 deploy"
+  }
+}
