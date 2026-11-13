@@ -11,7 +11,7 @@ tags: [prehľad]
 Verzie sú značky v repozitári (`v0.2.0`). Podrobný zoznam funkcií po
 etapách je v [pláne vývoja](./ROADMAP.md).
 
-## 0.10.5
+## 0.10.6
 
 - **Telefón mimo domu**: telefón má kópiu údajov z počítača aj mimo domu
   a dá sa v ňom zapisovať — pohyb a úhrada v domácnosti, kontakt,
