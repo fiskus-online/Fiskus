@@ -169,3 +169,69 @@ func TestHouseholdBankImport(t *testing.T) {
 		t.Fatalf("opakovaný import: %+v %v", res, err)
 	}
 }
+
+func TestFallbackCategory(t *testing.T) {
+	cats := []household.Category{{Name: "Mzda", Income: true}, {Name: "Iné príjmy", Income: true}, {Name: "Bývanie"}, {Name: "Iné výdavky"}, {Name: "Cigarety a iné neduhy"}}
+	tests := []struct {
+		name   string
+		cats   []household.Category
+		income bool
+		want   string
+	}{
+		{"výdavok: Iné výdavky, nie posledná vlastná", cats, false, "Iné výdavky"},
+		{"príjem: Iné príjmy", cats, true, "Iné príjmy"},
+		{"bez „Iné“: prvá kategória druhu", []household.Category{{Name: "Bývanie"}, {Name: "Cigarety"}}, false, "Bývanie"},
+		{"žiadna", nil, false, ""},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := fallbackCategory(tc.cats, tc.income); got != tc.want {
+				t.Fatalf("%q, chcem %q", got, tc.want)
+			}
+		})
+	}
+}
+
+// Platba z banky na účet záväzku (škola) je jeho splátka s jeho kategóriou.
+func TestHouseholdImportPairsObligation(t *testing.T) {
+	a, _ := newApp(t, edition.Desktop)
+	h, _ := a.CreateCompany(ctx, store.Company{Name: "Domácnosť", Bookkeeping: store.BookkeepingHousehold})
+	acc, _ := a.SaveHouseholdAccount(ctx, h.ID, household.Account{Name: "Účet", Kind: household.Bank})
+	first := invoice.MustDate("2026-09-01")
+	for _, name := range []string{"Hudobná - Zuzka", "Hudobná - Hanka"} {
+		if _, err := a.SaveHouseholdObligation(ctx, h.ID, household.Obligation{Kind: household.Regular, Name: name, Creditor: "ZUŠ Brezno",
+			IBAN: "SK6702000000001234567890", Installment: m.MustParse("18"), FirstDue: first, Category: "Deti a škola"}); err != nil {
+			t.Fatal(err)
+		}
+	}
+	csv := "Dátum;Suma;Mena;Protistrana;IBAN protistrany;Správa\n" +
+		"13.11.2026;-18,00;EUR;;SK67 0200 0000 0012 3456 7890;Hana Novakova 9/2026\n" +
+		"13.11.2026;-18,00;EUR;;SK67 0200 0000 0012 3456 7890;platba za september\n" +
+		"13.11.2026;-12,00;EUR;;SK31 1200 0000 1987 4263 7541;neznáme\n" +
+		"13.11.2026;-18,00;EUR;;1234567890/0200;Zuzana Novakova 10/2026\n"
+	res, err := a.ImportHouseholdBank(ctx, h.ID, acc.ID, []byte(csv))
+	if err != nil || res.Added != 4 {
+		t.Fatalf("%+v %v", res, err)
+	}
+	obls, _ := a.HouseholdObligations(ctx, h.ID)
+	ter, alz := obls[0].ID, obls[1].ID
+	tests := []struct {
+		name  string
+		e     household.Entry
+		oblig int64
+		cat   string
+		payee string
+	}{
+		{"meno v správe → záväzok", res.Entries[0], alz, "Deti a škola", "ZUŠ Brezno"},
+		{"bez mena → kategória záväzkov", res.Entries[1], 0, "Deti a škola", "ZUŠ Brezno"},
+		{"neznámy účet → Iné výdavky", res.Entries[2], 0, "Iné výdavky", ""},
+		{"účet v tvare číslo/kód banky (Fio)", res.Entries[3], ter, "Deti a škola", "ZUŠ Brezno"},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			if tc.e.ObligationID != tc.oblig || tc.e.Category != tc.cat || tc.e.Payee != tc.payee {
+				t.Fatalf("%+v", tc.e)
+			}
+		})
+	}
+}

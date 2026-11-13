@@ -15,6 +15,7 @@ import (
 	"github.com/fiskus-online/fiskus/backend/internal/invoice"
 	"github.com/fiskus-online/fiskus/backend/internal/journal"
 	"github.com/fiskus-online/fiskus/backend/internal/money"
+	"github.com/fiskus-online/fiskus/backend/internal/party"
 	"github.com/fiskus-online/fiskus/backend/internal/store"
 )
 
@@ -422,13 +423,21 @@ func (a *App) HouseholdSuggest(ctx context.Context, companyID int64, text string
 
 // fallbackCategory: posledná kategória daného druhu (zvyčajne „Iné …“).
 func fallbackCategory(cats []household.Category, income bool) string {
-	name := ""
+	// „Iné výdavky“ / „Iné príjmy“ (alebo iná „Iné …“); inak prvá kategória
+	// druhu — nikdy posledná, tá býva vlastná (napr. „Cigarety“)
+	first := ""
 	for _, c := range cats {
-		if c.Income == income {
-			name = c.Name
+		if c.Income != income {
+			continue
+		}
+		if first == "" {
+			first = c.Name
+		}
+		if w := household.Words(c.Name); len(w) > 0 && w[0] == "ine" {
+			return c.Name
 		}
 	}
-	return name
+	return first
 }
 
 // HouseholdImport je výsledok importu do domácnosti.
@@ -517,6 +526,14 @@ func (a *App) importHouseholdTxs(ctx context.Context, companyID int64, acc house
 	if err != nil {
 		return err
 	}
+	obls, err := a.Store.ListHHObligations(ctx, companyID)
+	if err != nil {
+		return err
+	}
+	country := "SK" // krajina účtov vo výpise podľa nášho účtu (Fio CZ → CZ)
+	if len(acc.IBAN) >= 2 {
+		country = acc.IBAN[:2]
+	}
 	es := make([]household.Entry, 0, len(txs))
 	for _, t := range txs {
 		if t.Currency != "" && !strings.EqualFold(t.Currency, "EUR") {
@@ -526,8 +543,21 @@ func (a *App) importHouseholdTxs(ctx context.Context, companyID int64, acc house
 		if acc.IBAN != "" && t.Account != "" && normIBAN(t.Account) != acc.IBAN {
 			return vErr(field, "Pohyby sú z účtu "+t.Account+", nie z účtu "+acc.Name)
 		}
-		es = append(es, household.Entry{Date: t.Date, AccountID: acc.ID, Amount: t.Signed(), Payee: t.CounterName,
-			ContactID: household.MatchPartner(partners, t.CounterIBAN, t.CounterName), Note: t.Message, Source: "bank:" + t.Fingerprint})
+		// protiúčet ako IBAN (Fio dáva domáce účty v tvare číslo/kód banky)
+		counter := party.IBANFromAccount(country, t.CounterIBAN)
+		e := household.Entry{Date: t.Date, AccountID: acc.ID, Amount: t.Signed(), Payee: t.CounterName,
+			ContactID: household.MatchPartner(partners, counter, t.CounterName), Note: t.Message, Source: "bank:" + t.Fingerprint}
+		// platba na účet záväzku (škola, nájom, splátka): splátka záväzku s jeho kategóriou
+		if om := household.MatchObligation(obls, counter, e.Amount, t.Message+" "+t.CounterName); om.Category != "" || om.ObligationID != 0 {
+			e.ObligationID, e.Category = om.ObligationID, om.Category
+			if e.ContactID == 0 {
+				e.ContactID = om.ContactID
+			}
+			if e.Payee == "" {
+				e.Payee = om.Payee
+			}
+		}
+		es = append(es, e)
 	}
 	rest, err := a.pairReceipts(ctx, companyID, es, res)
 	if err != nil {
