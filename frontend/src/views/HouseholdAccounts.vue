@@ -16,7 +16,7 @@ import { api, ApiError } from '../lib/api.js'
 import { can, session } from '../lib/session.js'
 import { formatMoney } from '../lib/format.js'
 import { householdAccountColumns } from '../lib/columns.js'
-import { accountIcon, accountKindLabel, accountKinds } from '../lib/household.js'
+import { accountBody, accountIcon, accountKindLabel, accountKinds } from '../lib/household.js'
 import { matches, searchTerms } from '../lib/search.js'
 
 const router = useRouter()
@@ -64,7 +64,7 @@ function edit(a) {
 async function save() {
   busy.value = true
   try {
-    const f = { ...form.value, opening: String(form.value.opening ?? '').replace(/\s/g, '').replace(',', '.') || '0' }
+    const f = accountBody(form.value)
     await api.hhSaveAccount(session.companyId, f)
     toast.add({ severity: 'success', summary: f.id ? 'Účet uložený' : 'Účet pridaný', life: 2000 })
     form.value = null

@@ -21,11 +21,11 @@ import ExportButton from '../components/ExportButton.vue'
 import ObligationPayDialog from '../components/ObligationPayDialog.vue'
 import { api, ApiError } from '../lib/api.js'
 import { can, session } from '../lib/session.js'
-import { formatAmount, formatDate, formatMoney, fromISODate, toISODate } from '../lib/format.js'
+import { formatAmount, formatDate, formatMoney, fromISODate } from '../lib/format.js'
 import { householdObligationColumns, householdPlanColumns } from '../lib/columns.js'
 import {
-  categoriesFor, dueStatus, filterObligations, filterPlan, frequencies, ibanGroups, frequencyLabel, fromAmount, monthOptions, monthsLabel, newObligation, obligationIcon,
-  obligationKindLabel, obligationKinds, obligationTone, paidPercent, planMonthLabel, toAmount,
+  categoriesFor, dueStatus, filterObligations, filterPlan, frequencies, ibanGroups, frequencyLabel, fromAmount, monthOptions, monthsLabel, newObligation, obligationBody, obligationIcon,
+  obligationKindLabel, obligationKinds, obligationTone, paidPercent, planMonthLabel,
 } from '../lib/household.js'
 
 const props = defineProps({ id: { type: [String, Number], default: null } })
@@ -149,12 +149,7 @@ async function save() {
   busy.value = true
   try {
     const f = form.value
-    const body = {
-      ...f, principal: toAmount(f.principal) || '0', paidBefore: toAmount(f.paidBefore) || '0', installment: toAmount(f.installment) || '0',
-      firstDue: toISODate(f.firstDue), count: f.count || 0, accountId: f.accountId || 0, remindDays: f.remindDays || 0,
-      months: f.frequency === 'monthly' ? f.months ?? [] : [],
-    }
-    delete body.state
+    const body = obligationBody(f)
     const saved = await api.hhSaveObligation(session.companyId, body)
     toast.add({ severity: 'success', summary: f.id ? 'Záväzok uložený' : 'Záväzok pridaný', life: 2000 })
     form.value = null
