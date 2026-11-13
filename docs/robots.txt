@@ -1,0 +1,5 @@
+# docs.fiskus.online — návod je verejný
+User-agent: *
+Allow: /
+
+Sitemap: https://docs.fiskus.online/sitemap.xml

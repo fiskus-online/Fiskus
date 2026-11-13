@@ -1,7 +1,7 @@
 ---
 title: Fiškus
 sidebar_position: 1
-description: Slovenský účtovný program na štúdium a výučbu účtovníctva — od faktúry po závierku.
+description: Návod k Fiškusu — slovenský účtovný program pre živnostníkov, firmy aj domácnosť. Faktúry, DPH, daň z príjmov, banka, tlačivá a domáce financie.
 tags: [prehľad]
 ---
 
