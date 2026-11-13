@@ -134,6 +134,10 @@ skopírujete jedným klikom a vložíte do banky. QR kód PAY by square
 načítate v mobilnej banke. Meno príjemcu v banke a správu pre príjemcu
 (napr. meno dieťaťa a trieda) vyplníte pri záväzku.
 
+Zoznam záväzkov má stĺpce (komu, kategória, splátka, zostáva, najbližšia
+splátka). Tlačidlom **Stĺpce** si vyberiete, ktoré chcete vidieť — aj druh,
+mesiace, účet, VS alebo IBAN; výber si Fiškus pamätá v prehliadači.
+
 Tlačidlom **Zaplatiť** zapíšete splátku ako výdavok (pri požičaných peniazoch
 **Prijať** ako príjem). Splátku môžete priradiť aj pri bežnom zápise pohybu
 v poli *Splátka záväzku*. Zaplatené sa započíta do splátok v poradí
