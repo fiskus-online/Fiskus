@@ -216,7 +216,6 @@ const printIt = () => window.print()
   display: flex;
   flex-direction: column;
   gap: 12px;
-  max-width: 980px;
 }
 .head {
   display: flex;

@@ -515,7 +515,6 @@ async function revokeFeed() {
 <style scoped>
 .page {
   padding: 14px 16px 24px;
-  max-width: 1080px;
   display: flex;
   flex-direction: column;
   gap: 10px;

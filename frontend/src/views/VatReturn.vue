@@ -470,7 +470,6 @@ async function downloadXML(which) {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  max-width: 1100px;
 }
 .head {
   display: flex;
