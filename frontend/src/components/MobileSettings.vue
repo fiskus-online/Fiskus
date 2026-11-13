@@ -173,13 +173,17 @@ function remove(d) {
       Telefón v tej istej sieti (Wi-Fi) sa pripojí k Fiškusu na tomto počítači — napríklad na odfotenie bločkov. Dnu sa dostanú iba
       spárované telefóny; kým Fiškus beží, sú pripojené natrvalo.
     </p>
-    <div class="row">
-      <label class="switch">
-        <ToggleSwitch v-model="enabled" />
-        <span><strong>Povoliť telefóny v sieti</strong><small>Windows sa môže opýtať na povolenie v bráne firewall — povoľte ho; ak telefón nenačíta stránku, pozrite nižšie.</small></span>
+    <div class="toggle" :class="{ on: enabled }">
+      <ToggleSwitch v-model="enabled" input-id="mobile-enabled" />
+      <label for="mobile-enabled">
+        <strong>Povoliť telefóny v sieti</strong>
+        <small>Windows sa môže opýtať na povolenie v bráne firewall — povoľte ho. Ak telefón nenačíta stránku, pozrite nižšie.</small>
       </label>
-      <FormField label="Port">
-        <InputNumber v-model="port" :min="1024" :max="65535" :use-grouping="false" size="small" />
+      <span class="state">{{ enabled ? 'zapnuté' : 'vypnuté' }}<template v-if="enabled !== st.enabled"> · neuložené</template></span>
+    </div>
+    <div class="row">
+      <FormField label="Port" hint="predvolený 48081">
+        <InputNumber v-model="port" :min="1024" :max="65535" :use-grouping="false" size="small" class="port" />
       </FormField>
       <Button label="Uložiť" icon="pi pi-check" size="small" :loading="busy === 'save'" @click="save" />
     </div>
@@ -299,22 +303,60 @@ function remove(d) {
   max-width: 70ch;
   margin-bottom: 10px;
 }
-.row {
-  display: flex;
-  align-items: flex-end;
-  gap: 16px;
-  flex-wrap: wrap;
+.toggle {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 4px 12px;
+  align-items: center;
+  max-width: 640px;
+  padding: 10px 12px;
+  border: 1px solid var(--rule);
+  border-left: 3px solid var(--rule);
+  background: var(--sheet);
 }
-.switch {
-  display: flex;
-  gap: 10px;
-  align-items: flex-start;
-  max-width: 420px;
+.toggle.on {
+  border-left-color: var(--tone-paid);
+}
+.toggle .p-toggleswitch {
+  flex: none;
+}
+.toggle label {
   cursor: pointer;
 }
-.switch small {
+.toggle small {
   display: block;
-  color: var(--ink-faint);
+  color: var(--ink-soft);
+  font-size: var(--fs-sm);
+}
+.state {
+  font-size: var(--fs-sm);
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+.toggle.on .state {
+  color: var(--tone-paid);
+  font-weight: 600;
+}
+.row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+.row > .p-button {
+  margin-top: 21px; /* zarovnané s poľom pod nadpisom */
+}
+.port :deep(input) {
+  width: 8rem;
+}
+@media (max-width: 640px) {
+  .toggle {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+  .state {
+    grid-column: 2;
+  }
 }
 .err {
   margin-top: 10px;
