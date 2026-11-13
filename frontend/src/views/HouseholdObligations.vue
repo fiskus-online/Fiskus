@@ -549,7 +549,6 @@ function remove(o) {
 <style scoped>
 .page {
   padding: 14px 16px 24px;
-  max-width: 1100px;
   display: flex;
   flex-direction: column;
   gap: 10px;
