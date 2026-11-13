@@ -5,7 +5,7 @@ import QRCode from 'qrcode'
 import jsQR from 'jsqr'
 import { PNG } from 'pngjs'
 import { readFileSync } from 'node:fs'
-import { payBySquare, payModel } from './payqr.js'
+import { obligationPayBySquare, payBySquare, payModel } from './payqr.js'
 
 const company = {
   name: 'Demo elektroservis', street: 'Námestie SNP 1', zip: '974 01', city: 'Banská Bystrica',
@@ -113,4 +113,24 @@ describe('PAY by square zo servera', () => {
     const read = jsQR(new Uint8ClampedArray(png.data), png.width, png.height)
     expect(read?.data).toBe(g.text)
   })
+})
+
+describe('PAY by square pre splátku', () => {
+  const o = { kind: 'regular', name: 'Obedy', creditor: 'ZŠ Moyzesova', payeeName: 'Základná škola', iban: 'SK64 5600 0000 0012 3456 1004',
+    vs: '20261', ss: '308', message: 'stravné Janko 4.B', address: 'Moyzesova 18, 974 01 Banská Bystrica' }
+  it('poskladá platbu, ktorú banka prečíta', () => {
+    const p = decode(obligationPayBySquare(o, '32.40', '2026-12-10')).payments[0]
+    expect(p.amount).toBe(32.4)
+    expect(p.variableSymbol).toBe('20261')
+    expect(p.specificSymbol).toBe('308')
+    expect(p.paymentDueDate).toBe('20261210')
+    expect(p.paymentNote).toBe('stravne Janko 4.B')
+    expect(p.bankAccounts[0].iban).toBe('SK6456000000001234561004')
+    expect(p.beneficiary).toMatchObject({ name: 'Zakladna skola', street: 'Moyzesova 18', city: '974 01 Banska Bystrica' })
+  })
+  it.each([
+    ['bez IBAN', { ...o, iban: '' }, '32.40'],
+    ['bez sumy', o, '0'],
+    ['požičané', { ...o, kind: 'lent' }, '32.40'],
+  ])('%s → bez QR', (_, ob, amount) => expect(obligationPayBySquare(ob, amount)).toBeNull())
 })

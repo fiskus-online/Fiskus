@@ -127,6 +127,17 @@ zálohy na energie, poistky) aj peniaze, ktoré ste niekomu požičali.
 | Počet splátok | 0 = kým sa dlh nesplatí (pri pravidelnej platbe bez konca) |
 | Kategória a účet | predvyplnia sa pri zaplatení |
 
+V detaile záväzku aj v okne **Zaplatiť** sú **platobné údaje** v poradí,
+ako ich pýta internetbanking: príjemca, IBAN, suma najbližšej splátky,
+variabilný a špecifický symbol, správa pre príjemcu a adresa. Každý údaj
+skopírujete jedným klikom a vložíte do banky. QR kód PAY by square
+načítate v mobilnej banke. Meno príjemcu v banke a správu pre príjemcu
+(napr. meno dieťaťa a trieda) vyplníte pri záväzku.
+
+Zoznam záväzkov má stĺpce (komu, kategória, splátka, zostáva, najbližšia
+splátka). Tlačidlom **Stĺpce** si vyberiete, ktoré chcete vidieť — aj druh,
+mesiace, účet, VS alebo IBAN; výber si Fiškus pamätá v prehliadači.
+
 Tlačidlom **Zaplatiť** zapíšete splátku ako výdavok (pri požičaných peniazoch
 **Prijať** ako príjem). Splátku môžete priradiť aj pri bežnom zápise pohybu
 v poli *Splátka záväzku*. Zaplatené sa započíta do splátok v poradí
@@ -135,6 +146,14 @@ splatnosti; nezaplatená splátka po termíne je červená.
 Splátky sú v **Kalendári** a v prehľade domácnosti (najbližší mesiac
 a všetko po splatnosti). Ak máte v **Nastaveniach → E-mail** zapnuté
 upozornenia na lehoty, Fiškus pripomenie splátky e-mailom vopred.
+
+Platba z banky na účet záväzku (rovnaký IBAN a suma splátky) sa pri
+načítaní výpisu zapíše ako jeho splátka s kategóriou záväzku. Ak platíte
+na jeden účet viac záväzkov (hudobná pre troch súrodencov), rozhodne meno
+v správe platby — stačí rovnaký začiatok mena (Zuzana – Zuzka), alebo
+dajte pri záväzku do *Správy pre príjemcu* text, ktorý v platbe píšete.
+Pohyb, ktorý sa nikam nezaradí, dostane kategóriu *Iné výdavky* (alebo
+*Iné príjmy*).
 
 ## Adresár
 

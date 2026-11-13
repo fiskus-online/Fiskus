@@ -2,7 +2,7 @@
 // Zostatky, súčty po mesiacoch a čerpanie rozpočtu počíta server
 // (internal/household), tu sa iba zobrazujú.
 import { fold, matches, searchTerms } from './search.js'
-import { formatDate, toISODate } from './format.js'
+import { formatDate, formatMoney, toISODate } from './format.js'
 
 export const accountKinds = [
   { value: 'bank', label: 'Bežný účet', icon: 'pi-building-columns' },
@@ -324,7 +324,7 @@ export function receiptFacts(r) {
 // polia záväzku, ktoré prijíma server (household.Obligation); stav, splátkový
 // kalendár a platby z detailu sa neposielajú — server neznáme polia odmietne
 const obligationFields = ['id', 'kind', 'name', 'creditor', 'contactId', 'principal', 'paidBefore', 'installment', 'frequency', 'firstDue', 'count',
-  'category', 'accountId', 'reference', 'vs', 'iban', 'address', 'months', 'remindDays', 'closed', 'note']
+  'category', 'accountId', 'reference', 'vs', 'ss', 'payeeName', 'message', 'iban', 'address', 'months', 'remindDays', 'closed', 'note']
 
 /** Telo na uloženie záväzku z formulára (sumy s čiarkou, dátum ako Date). */
 export function obligationBody(f) {
@@ -404,4 +404,76 @@ export function partnerAccounts(contact) {
     out.push({ iban: a.iban, key, label: a.label || 'účet' })
   }
   return out
+}
+
+/**
+ * Platobné údaje splátky na prepísanie do internetbankingu, v poradí ako
+ * ich pýta banka. Položka { key, label, value, copy } — copy je text do
+ * schránky (IBAN bez medzier, suma s čiarkou bez oddeľovačov). Pri
+ * požičaných peniazoch (vracajú nám) nič.
+ */
+export function paymentRows(o, amount) {
+  if (!o || o.kind === 'lent') return []
+  const iban = String(o.iban ?? '').replace(/\s/g, '').toUpperCase()
+  const payee = o.payeeName || o.creditor || ''
+  const amt = Number(amount) > 0 ? Number(amount).toFixed(2).replace('.', ',') : ''
+  const rows = [
+    { key: 'payee', label: 'Príjemca', value: payee },
+    { key: 'iban', label: 'IBAN', value: ibanGroups(iban), copy: iban },
+    { key: 'amount', label: 'Suma (€)', value: amt },
+    { key: 'vs', label: 'Variabilný symbol', value: o.vs },
+    { key: 'ss', label: 'Špecifický symbol', value: o.ss },
+    { key: 'message', label: 'Správa pre príjemcu', value: o.message },
+    { key: 'address', label: 'Adresa príjemcu', value: o.address },
+  ]
+  return rows.filter((r) => r.value).map((r) => ({ ...r, copy: r.copy ?? String(r.value) }))
+}
+
+// ---- stĺpce zoznamu záväzkov (nastaví si ich používateľ) ----
+
+/** Stĺpce zoznamu záväzkov; názov je vždy, tlačidlo Zaplatiť tiež. */
+export const obligationColumnDefs = [
+  { key: 'kind', label: 'Druh' },
+  { key: 'creditor', label: 'Komu' },
+  { key: 'category', label: 'Kategória' },
+  { key: 'installment', label: 'Splátka' },
+  { key: 'months', label: 'Platí sa' },
+  { key: 'account', label: 'Z účtu' },
+  { key: 'vs', label: 'VS' },
+  { key: 'iban', label: 'IBAN' },
+  { key: 'rest', label: 'Zostáva' },
+  { key: 'next', label: 'Najbližšia splátka' },
+]
+// druh ukazuje ikona, preto predvolene bez stĺpca Druh
+export const defaultObligationColumns = ['creditor', 'category', 'installment', 'rest', 'next']
+
+/** Uložený výber stĺpcov → platné kľúče v poradí definície (zlé alebo prázdne = predvolené). */
+export function pickColumns(saved) {
+  const want = Array.isArray(saved) ? saved : []
+  const keys = obligationColumnDefs.map((c) => c.key).filter((k) => want.includes(k))
+  return keys.length ? keys : [...defaultObligationColumns]
+}
+
+/** Text bunky jednoduchého stĺpca (Zostáva a Najbližšia splátka kreslí zoznam sám). */
+export function obligationCell(o, key, accounts = []) {
+  switch (key) {
+    case 'kind':
+      return obligationKindLabel(o.kind)
+    case 'creditor':
+      return o.creditor || ''
+    case 'category':
+      return o.category || ''
+    case 'installment':
+      return `${formatMoney(o.installment)} ${frequencyLabel(o.frequency).toLowerCase()}`
+    case 'months':
+      return monthsLabel(o.months) || (o.frequency === 'monthly' ? 'každý mesiac' : '')
+    case 'account':
+      return accountName(accounts, o.accountId)
+    case 'vs':
+      return o.vs || ''
+    case 'iban':
+      return ibanGroups(o.iban)
+    default:
+      return ''
+  }
 }

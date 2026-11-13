@@ -2,6 +2,7 @@
 package party
 
 import (
+	"fmt"
 	"strings"
 	"unicode"
 )
@@ -103,4 +104,54 @@ func ValidIBAN(s string) bool {
 		}
 	}
 	return rem == 1
+}
+
+// IBANFromAccount prevedie slovenské alebo české číslo účtu v tvare
+// „[predčíslie-]číslo/kód banky“ (napr. z výpisu Fio) na IBAN krajiny
+// country (SK, CZ). Ak už je to IBAN, vráti ho bez medzier; inak "".
+func IBANFromAccount(country, s string) string {
+	s = strings.TrimSpace(s)
+	if n := NormalizeID(s); ValidIBAN(n) {
+		return n
+	}
+	country = strings.ToUpper(country)
+	if country != "SK" && country != "CZ" {
+		return ""
+	}
+	acc, bank, ok := strings.Cut(s, "/")
+	if !ok || len(bank) != 4 || !digits(bank) {
+		return ""
+	}
+	prefix, number, has := strings.Cut(acc, "-")
+	if !has {
+		prefix, number = "", acc
+	}
+	if !digits(prefix) || !digits(number) || number == "" || len(prefix) > 6 || len(number) > 10 {
+		return ""
+	}
+	bban := bank + strings.Repeat("0", 6-len(prefix)) + prefix + strings.Repeat("0", 10-len(number)) + number
+	// kontrolné číslice: (BBAN + krajina + 00) mod 97, 98 − zvyšok
+	rem := 0
+	for _, r := range bban + country + "00" {
+		if r >= 'A' {
+			v := int(r-'A') + 10
+			rem = (rem*100 + v) % 97
+		} else {
+			rem = (rem*10 + int(r-'0')) % 97
+		}
+	}
+	iban := country + fmt.Sprintf("%02d", 98-rem) + bban
+	if !ValidIBAN(iban) {
+		return ""
+	}
+	return iban
+}
+
+func digits(s string) bool {
+	for _, r := range s {
+		if r < '0' || r > '9' {
+			return false
+		}
+	}
+	return true
 }

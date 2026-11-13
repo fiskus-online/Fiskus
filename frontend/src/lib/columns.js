@@ -685,6 +685,7 @@ export const householdObligationColumns = [
   t('Záväzok', (r) => r.name, 28),
   t('Druh', (r) => obligationKindLabel(r.kind), 16),
   t('Komu / kto', (r) => r.creditor, 24),
+  t('Kategória', (r) => r.category, 20),
   money('Celkom €', (r) => (Number(r.principal) ? r.principal : '')),
   money('Splátka €', (r) => r.installment),
   t('Opakovanie', (r) => frequencyLabel(r.frequency), 12),

@@ -306,7 +306,6 @@ const newDoc = (path) => {
   flex-direction: column;
   gap: 12px;
   padding: 14px 16px 24px;
-  max-width: 1100px;
 }
 .head {
   display: flex;

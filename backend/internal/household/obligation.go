@@ -76,6 +76,11 @@ type Obligation struct {
 	AccountID int64  `json:"accountId"` // predvolený účet
 	Reference string `json:"reference"` // číslo zmluvy, spisová značka
 	VS        string `json:"vs"`
+	SS        string `json:"ss,omitempty"` // špecifický symbol
+	// PayeeName je meno príjemcu, ako sa zadáva v banke (ak sa líši od
+	// veriteľa, napr. „Základná škola, Moyzesova 18“); prázdne = veriteľ.
+	PayeeName string `json:"payeeName,omitempty"`
+	Message   string `json:"message,omitempty"` // správa pre príjemcu (napr. meno dieťaťa a trieda)
 	IBAN      string `json:"iban"`
 	Address   string `json:"address"` // adresa príjemcu (poštová poukážka, šek)
 	// Months sú mesiace (1 – 12), v ktorých sa pri mesačnom opakovaní platí
@@ -127,6 +132,9 @@ func (o *Obligation) Normalize() {
 	o.Creditor = strings.TrimSpace(o.Creditor)
 	o.Reference = strings.TrimSpace(o.Reference)
 	o.VS = strings.TrimSpace(o.VS)
+	o.SS = strings.TrimSpace(o.SS)
+	o.PayeeName = strings.TrimSpace(o.PayeeName)
+	o.Message = strings.TrimSpace(o.Message)
 	o.IBAN = strings.ToUpper(strings.ReplaceAll(strings.TrimSpace(o.IBAN), " ", ""))
 	o.Note = strings.TrimSpace(o.Note)
 	o.Address = strings.TrimSpace(o.Address)
@@ -188,6 +196,17 @@ func (o Obligation) Validate() error {
 	}
 	if o.Kind != Regular && o.Principal.IsZero() && o.Count == 0 {
 		add("principal", "Zadajte dlžnú sumu alebo počet splátok")
+	}
+	for _, x := range []struct{ field, v, name string }{{"vs", o.VS, "Variabilný"}, {"ss", o.SS, "Špecifický"}} {
+		if !symbolOK(x.v) {
+			add(x.field, x.name+" symbol má najviac 10 číslic")
+		}
+	}
+	if len([]rune(o.Message)) > 140 {
+		add("message", "Správa pre príjemcu má najviac 140 znakov")
+	}
+	if len([]rune(o.PayeeName)) > 70 {
+		add("payeeName", "Meno príjemcu má najviac 70 znakov")
 	}
 	if o.IBAN != "" && !party.ValidIBAN(o.IBAN) {
 		add("iban", "IBAN nie je správny — skontrolujte číslice (nesedí kontrolný súčet alebo dĺžka)")
@@ -345,4 +364,17 @@ func State(o Obligation, entries []Entry, today invoice.Date) ObligationState {
 		st.Left = open
 	}
 	return st
+}
+
+// symbolOK: VS a ŠS sú najviac 10 číslic (prázdny je v poriadku).
+func symbolOK(s string) bool {
+	if len(s) > 10 {
+		return false
+	}
+	for _, r := range s {
+		if r < '0' || r > '9' {
+			return false
+		}
+	}
+	return true
 }

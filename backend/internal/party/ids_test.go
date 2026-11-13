@@ -57,3 +57,23 @@ func TestValidIBAN(t *testing.T) {
 		}
 	}
 }
+
+func TestIBANFromAccount(t *testing.T) {
+	tests := []struct {
+		name, country, in, want string
+	}{
+		{"slovenský účet z Fio", "SK", "1234568003/5600", "SK4756000000001234568003"},
+		{"s predčíslím", "SK", "19-1987426375/1200", "SK4312000000191987426375"},
+		{"už IBAN s medzerami", "SK", "SK47 5600 0000 0012 3456 8003", "SK4756000000001234568003"},
+		{"český účet", "CZ", "19-2000145399/0800", "CZ6508000000192000145399"},
+		{"zlý tvar", "SK", "abc/12", ""},
+		{"iná krajina", "DE", "1234568003/5600", ""},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := IBANFromAccount(tc.country, tc.in); got != tc.want {
+				t.Fatalf("%q, chcem %q", got, tc.want)
+			}
+		})
+	}
+}

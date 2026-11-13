@@ -44,6 +44,33 @@ export function payBySquare(invoice, company) {
   return model ? encode(model, { deburr: true, validate: true }) : null
 }
 
+/**
+ * PAY by square pre splátku záväzku domácnosti (suma najbližšej splátky
+ * zo servera), alebo null — bez IBAN, bez sumy alebo pri požičaných.
+ */
+export function obligationPayBySquare(o, amount, dueDate) {
+  const iban = String(o?.iban ?? '').replace(/\s/g, '').toUpperCase()
+  if (!o || o.kind === 'lent' || !iban || !(Number(amount) > 0)) return null
+  const name = (o.payeeName || o.creditor || '').slice(0, 70)
+  const [street, ...rest] = String(o.address ?? '').split(',').map((x) => x.trim())
+  const model = {
+    payments: [
+      {
+        type: PaymentOptions.PaymentOrder,
+        amount: Number(amount),
+        currencyCode: CurrencyCode.EUR,
+        paymentDueDate: dueDate ? String(dueDate).replaceAll('-', '') : undefined,
+        variableSymbol: o.vs || undefined,
+        specificSymbol: o.ss || undefined,
+        paymentNote: (o.message || o.name || '').slice(0, 140) || undefined,
+        bankAccounts: [{ iban }],
+        beneficiary: { name: name || 'Príjemca', street: street ? street.slice(0, 70) : undefined, city: rest.join(', ').slice(0, 70) || undefined },
+      },
+    ],
+  }
+  return encode(model, { deburr: true, validate: true })
+}
+
 /** SVG QR kódu (bez okrajov, úroveň opravy chýb M). */
 export function qrSvg(text) {
   return QRCode.toString(text, { type: 'svg', errorCorrectionLevel: 'M', margin: 0 })

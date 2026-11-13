@@ -87,7 +87,7 @@ const amountClass = (e) => entryType(e)
 const upcoming = computed(() => ov.value?.upcoming ?? [])
 const paying = ref(null)
 function pay(d) {
-  paying.value = { id: d.obligationId, name: d.name, kind: d.kind, creditor: d.creditor, accountId: d.accountId, amount: d.rest }
+  paying.value = { ...d, id: d.obligationId, amount: d.rest }
 }
 </script>
 
@@ -239,7 +239,6 @@ function pay(d) {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  max-width: 1180px;
 }
 .head {
   display: flex;

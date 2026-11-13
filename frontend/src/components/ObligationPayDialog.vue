@@ -9,13 +9,14 @@ import InputText from 'primevue/inputtext'
 import Select from 'primevue/select'
 import DatePicker from 'primevue/datepicker'
 import FormField from './FormField.vue'
+import PaymentDetails from './PaymentDetails.vue'
 import { api, ApiError } from '../lib/api.js'
 import { session } from '../lib/session.js'
 import { formatMoney, toISODate } from '../lib/format.js'
 import { fromAmount, toAmount } from '../lib/household.js'
 
 const props = defineProps({
-  // { id, name, kind, creditor, accountId, vs, iban, amount } — amount = navrhovaná suma
+  // záväzok alebo splátka { id, name, kind, creditor, accountId, iban, vs, ss, payeeName, message, address, amount, date }; amount = navrhovaná suma
   target: { type: Object, default: null },
   accounts: { type: Array, default: () => [] },
 })
@@ -54,15 +55,13 @@ async function pay() {
 </script>
 
 <template>
-  <Dialog v-model:visible="open" :header="income ? 'Prijaté peniaze' : 'Zaplatiť splátku'" modal :style="{ width: '26rem' }" :breakpoints="{ '480px': '96vw' }">
+  <Dialog v-model:visible="open" :header="income ? 'Prijaté peniaze' : 'Zaplatiť splátku'" modal :style="{ width: income ? '26rem' : '40rem' }" :breakpoints="{ '480px': '96vw' }">
     <form v-if="form" class="form-grid pay" @submit.prevent="pay">
       <p class="what">
         <strong>{{ target.name }}</strong>
         <span v-if="target.creditor">{{ target.creditor }}</span>
-        <span v-if="target.vs || target.iban" class="pay-data">
-          <template v-if="target.iban">{{ target.iban }}</template><template v-if="target.vs"> · VS {{ target.vs }}</template>
-        </span>
       </p>
+      <PaymentDetails v-if="!income" class="pay-details" :obligation="target" :amount="target.amount" :due-date="target.date || ''" />
       <FormField label="Suma" :error="errors.amount" :hint="target.amount ? `splátka ${formatMoney(target.amount)}` : ''">
         <InputText v-model="form.amount" size="small" inputmode="decimal" class="amt" autofocus />
       </FormField>
@@ -100,9 +99,6 @@ async function pay() {
   font-size: var(--fs-md);
   color: var(--ink);
 }
-.pay-data {
-  font-variant-numeric: tabular-nums;
-}
 .amt {
   text-align: right;
   font-weight: 600;
@@ -113,5 +109,9 @@ async function pay() {
   display: flex;
   justify-content: flex-end;
   gap: 6px;
+}
+.pay-details {
+  grid-column: 1 / -1;
+  margin: 0;
 }
 </style>
