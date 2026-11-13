@@ -318,6 +318,29 @@ kbd {
 .boot-link {
   color: var(--blue);
 }
+button.boot-link {
+  font: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.boot-details {
+  margin-top: 14px;
+  text-align: left;
+  font-size: var(--fs-sm);
+  color: var(--ink-soft);
+  max-width: 100%;
+}
+.boot-details pre {
+  white-space: pre-wrap;
+  word-break: break-word;
+  background: #eef2f6;
+  padding: 8px 10px;
+  margin: 6px 0;
+  font-size: 12px;
+}
 /* tlač: bez bočného menu a hlavičky, obsah na celú šírku */
 @media print {
   .shell {

@@ -25,3 +25,14 @@ export function progressShare(loaded, total) {
   if (!total) return null
   return Math.min(1, loaded / total)
 }
+
+/** Podrobnosti chyby pri spúšťaní (na skopírovanie a nahlásenie). */
+export function diagnosis(info = {}, ua = globalThis.navigator?.userAgent ?? '') {
+  const storage = { opfs: 'úložisko súborov (OPFS)', indexeddb: 'IndexedDB', memory: 'iba v pamäti' }[info.storage] ?? 'nezistené'
+  return [
+    `Krok: ${info.step || 'nezistený'}`,
+    `Chyba: ${info.detail || info.message || 'neznáma'}`,
+    `Úložisko: ${storage}`,
+    `Prehliadač: ${ua}`,
+  ].join('\n')
+}
