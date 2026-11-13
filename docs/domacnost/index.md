@@ -143,6 +143,14 @@ Splátky sú v **Kalendári** a v prehľade domácnosti (najbližší mesiac
 a všetko po splatnosti). Ak máte v **Nastaveniach → E-mail** zapnuté
 upozornenia na lehoty, Fiškus pripomenie splátky e-mailom vopred.
 
+Platba z banky na účet záväzku (rovnaký IBAN a suma splátky) sa pri
+načítaní výpisu zapíše ako jeho splátka s kategóriou záväzku. Ak platíte
+na jeden účet viac záväzkov (hudobná pre troch súrodencov), rozhodne meno
+v správe platby — stačí rovnaký začiatok mena (Zuzana – Zuzka), alebo
+dajte pri záväzku do *Správy pre príjemcu* text, ktorý v platbe píšete.
+Pohyb, ktorý sa nikam nezaradí, dostane kategóriu *Iné výdavky* (alebo
+*Iné príjmy*).
+
 ## Adresár
 
 V **Adresári** si vediete partnerov domácnosti: ľudí, obchody, úrady, školu,

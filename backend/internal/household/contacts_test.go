@@ -94,3 +94,39 @@ func TestObligationOfPartner(t *testing.T) {
 		}
 	}
 }
+
+func TestMatchObligation(t *testing.T) {
+	const zus, zs = "SK6702000000001234567890", "SK4756000000001234568003"
+	os := []Obligation{
+		{ID: 1, Kind: Regular, Name: "Hudobná - Peťko", Creditor: "ZUŠ", ContactID: 10, IBAN: zus, Installment: m("18"), Category: "Deti a škola", Message: "Peter Novak"},
+		{ID: 2, Kind: Regular, Name: "Hudobná - Zuzka", Creditor: "ZUŠ", ContactID: 10, IBAN: zus, Installment: m("18"), Category: "Deti a škola"},
+		{ID: 3, Kind: Regular, Name: "Hudobná - Hanka", Creditor: "ZUŠ", ContactID: 10, IBAN: zus, Installment: m("18"), Category: "Deti a škola"},
+		{ID: 4, Kind: Regular, Name: "Družina - Zuzka", Creditor: "ZŠ", ContactID: 9, IBAN: zs, Installment: m("10"), Category: "Deti a škola"},
+		{ID: 5, Kind: Lent, Name: "Požičané Mišovi", Creditor: "Michal", IBAN: "SK3112000000198742637541", Installment: m("100"), Category: "Iné príjmy"},
+		{ID: 6, Kind: Regular, Name: "Staré", IBAN: zs, Installment: m("10"), Closed: true, Category: "Bývanie"},
+	}
+	cases := []struct {
+		name, iban, amount, text string
+		id                       int64
+		cat                      string
+		contact                  int64
+	}{
+		{"jediný záväzok na účet a sumu", "SK47 5600 0000 0012 3456 8003", "-10", "Zuzana Novakova 9/2026", 4, "Deti a škola", 9},
+		{"súrodenci: rozhodne meno v správe", zus, "-18", "Zuzana Novakova?9/2026", 2, "Deti a škola", 10},
+		{"súrodenci: Hana – Hanka", zus, "-18", "Hana Novakova?10/2026", 3, "Deti a škola", 10},
+		{"súrodenci: správa pre príjemcu pri záväzku", zus, "-18", "Peter Novak?11/2026", 1, "Deti a škola", 10},
+		{"súrodenci bez mena: aspoň kategória a partner", zus, "-18", "platba 9/2026", 0, "Deti a škola", 10},
+		{"iná suma", zus, "-20", "Zuzana", 0, "", 0},
+		{"príjem pri požičaných", "SK3112000000198742637541", "100", "", 5, "Iné príjmy", 0},
+		{"výdavok na účet požičaných nie", "SK3112000000198742637541", "-100", "", 0, "", 0},
+		{"bez IBAN protiúčtu", "", "-10", "Zuzana", 0, "", 0},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			got := MatchObligation(os, c.iban, m(c.amount), c.text)
+			if got.ObligationID != c.id || got.Category != c.cat || got.ContactID != c.contact {
+				t.Fatalf("%+v, chcem záväzok %d kategóriu %q partnera %d", got, c.id, c.cat, c.contact)
+			}
+		})
+	}
+}
