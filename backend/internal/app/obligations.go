@@ -108,6 +108,23 @@ func (a *App) SaveHouseholdObligation(ctx context.Context, companyID int64, o ho
 		return o, err
 	}
 	o.Normalize()
+	if o.ContactID != 0 {
+		c, err := a.Store.GetContact(ctx, companyID, o.ContactID)
+		if err != nil {
+			return o, vErr("contactId", "Kontakt v adresári neexistuje")
+		}
+		// prázdne údaje príjemcu doplní adresár
+		if o.Creditor == "" {
+			o.Creditor = c.Name
+		}
+		if o.IBAN == "" {
+			o.IBAN = c.IBAN
+		}
+		if o.Address == "" {
+			o.Address = contactAddress(c)
+		}
+		o.Normalize()
+	}
 	if err := o.Validate(); err != nil {
 		return o, err
 	}
@@ -225,7 +242,7 @@ func (a *App) PayObligation(ctx context.Context, companyID, id int64, p PayReque
 		note = "Splátka: " + o.Name
 	}
 	return a.SaveHouseholdEntry(ctx, companyID, household.Entry{Date: p.Date, AccountID: p.AccountID, Amount: amt, Category: o.Category,
-		Payee: o.Creditor, Note: note, ObligationID: o.ID})
+		Payee: o.Creditor, ContactID: o.ContactID, Note: note, ObligationID: o.ID})
 }
 
 // UpcomingDue je splátka záväzku v prehľade a kalendári.

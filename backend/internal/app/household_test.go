@@ -145,6 +145,11 @@ func TestHouseholdBankImport(t *testing.T) {
 	a, _ := newApp(t, edition.Desktop)
 	h, _ := a.CreateCompany(ctx, store.Company{Name: "Domácnosť", Bookkeeping: store.BookkeepingHousehold})
 	acc, _ := a.SaveHouseholdAccount(ctx, h.ID, household.Account{Name: "Účet", IBAN: "SK31 1200 0000 1987 4263 7541"})
+	// partner v adresári: pohyb z banky s rovnakým menom sa k nemu priradí
+	boss, err := a.SaveContact(ctx, h.ID, store.Contact{Name: "Zamestnávateľ s.r.o."})
+	if err != nil {
+		t.Fatal(err)
+	}
 	csv := "Dátum;Suma;Mena;Protistrana;Správa\n" +
 		"02.10.2026;-45,10;EUR;LIDL SR;nakup\n" +
 		"03.10.2026;1800,00;EUR;Zamestnavatel s.r.o.;mzda 09\n" +
@@ -155,6 +160,9 @@ func TestHouseholdBankImport(t *testing.T) {
 	}
 	if res.Added != 2 || res.Foreign != 1 || res.Entries[0].Category != "Potraviny" || res.Entries[1].Category != "Iné príjmy" {
 		t.Fatalf("import: %+v", res)
+	}
+	if res.Entries[0].ContactID != 0 || res.Entries[1].ContactID != boss.ID {
+		t.Fatalf("partneri: %d %d", res.Entries[0].ContactID, res.Entries[1].ContactID)
 	}
 	res, err = a.ImportHouseholdBank(ctx, h.ID, acc.ID, []byte(csv))
 	if err != nil || res.Added != 0 || res.Skipped != 2 {

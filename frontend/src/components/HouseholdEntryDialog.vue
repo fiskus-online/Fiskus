@@ -13,10 +13,9 @@ import DatePicker from 'primevue/datepicker'
 import AutoComplete from 'primevue/autocomplete'
 import FormField from './FormField.vue'
 import { api, ApiError } from '../lib/api.js'
-import { session } from '../lib/session.js'
+import { can, session } from '../lib/session.js'
 import { formatAmount, fromISODate, toISODate } from '../lib/format.js'
-import { categoriesFor, entryTypes, fromForm, receiptFacts, receiptRows, toForm } from '../lib/household.js'
-import { fold } from '../lib/search.js'
+import { categoriesFor, entryTypes, fromForm, payeeOptions, receiptFacts, receiptRows, setPayee, toForm } from '../lib/household.js'
 
 const props = defineProps({
   entry: { type: Object, default: null }, // pohyb z API alebo nový z newEntry()
@@ -76,7 +75,10 @@ function pickObligation(id) {
   const o = props.obligations.find((x) => x.id === id)
   if (!o || !form.value) return
   if (o.category) form.value.category = o.category
-  if (!form.value.payee && o.creditor) form.value.payee = o.creditor
+  if (!form.value.payee && o.creditor) {
+    form.value.payee = o.creditor
+    form.value.contactId = o.contactId || 0
+  }
   if (!form.value.amount && Number(o.state?.nextAmount)) form.value.amount = String(o.state.nextAmount).replace('.', ',')
   suggested.value = false
 }
@@ -90,10 +92,22 @@ watch(
   },
 )
 
+// príjemca: partneri z adresára a obchody z histórie
+const contacts = ref([])
+watch(
+  open,
+  async (v) => {
+    if (!v || contacts.value.length || !can('contacts.read')) return
+    contacts.value = await api.contacts(session.companyId).catch(() => [])
+  },
+  { immediate: true },
+)
 const payeeHits = ref([])
 function searchPayee(q) {
-  const f = fold(q)
-  payeeHits.value = props.payees.filter((p) => fold(p).includes(f)).slice(0, 12)
+  payeeHits.value = payeeOptions(q, contacts.value, props.payees)
+}
+function changePayee(v) {
+  if (form.value) setPayee(form.value, v, contacts.value)
 }
 
 async function suggest() {
@@ -119,7 +133,7 @@ async function save(again = false) {
     emit('saved', saved)
     if (again) {
       // ďalší pohyb: rovnaký dátum, účet a druh
-      form.value = { ...f, id: 0, amount: '', payee: '', note: '', category: '', obligationId: 0 }
+      form.value = { ...f, id: 0, amount: '', payee: '', contactId: 0, note: '', category: '', obligationId: 0 }
       errors.value = {}
       suggested.value = false
     } else emit('close')
@@ -172,10 +186,22 @@ function remove() {
           placeholder="Vyberte účet" />
       </FormField>
       <template v-else>
-        <FormField :label="form.type === 'income' ? 'Od koho' : 'Obchod / komu'" :span="2" :error="errors.payee">
-          <AutoComplete v-model="form.payee" :suggestions="payeeHits" size="small" fluid :disabled="!canWrite"
-            :placeholder="form.type === 'income' ? 'napr. zamestnávateľ' : 'napr. Lidl, ZSE, nájomca'" @complete="(e) => searchPayee(e.query)" @blur="suggest"
-            @option-select="suggest" />
+        <FormField :label="form.type === 'income' ? 'Od koho' : 'Obchod / komu'" :span="2" :error="errors.payee || errors.contactId">
+          <AutoComplete :model-value="form.payee" :suggestions="payeeHits" option-label="label" size="small" fluid :disabled="!canWrite"
+            :placeholder="form.type === 'income' ? 'napr. zamestnávateľ' : 'napr. Lidl, ZSE, nájomca'" @update:model-value="changePayee"
+            @complete="(e) => searchPayee(e.query)" @blur="suggest" @option-select="suggest">
+            <template #option="{ option }">
+              <span class="payee-opt">
+                <i v-if="option.contactId" class="pi pi-address-book" aria-hidden="true" />
+                <span>{{ option.label }}</span>
+                <small v-if="option.city">{{ option.city }}</small>
+              </span>
+            </template>
+          </AutoComplete>
+          <small v-if="form.contactId" class="partner">
+            <i class="pi pi-address-book" aria-hidden="true" /> partner z adresára —
+            <RouterLink :to="`/adresar/${form.contactId}`" @click="emit('close')">platby a údaje</RouterLink>
+          </small>
         </FormField>
         <FormField v-if="obligationOptions.length" label="Splátka záväzku" :span="2" :error="errors.obligationId" hint="nepovinné — započíta sa do splátkového kalendára">
           <Select v-model="form.obligationId" :options="obligationOptions" option-label="name" option-value="id" size="small" fluid show-clear
@@ -374,6 +400,26 @@ function remove() {
 }
 .spacer {
   flex: 1;
+}
+.payee-opt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.payee-opt .pi {
+  color: var(--blue);
+  font-size: 0.85em;
+}
+.payee-opt small {
+  color: var(--ink-soft);
+}
+.partner {
+  color: var(--ink-soft);
+  font-size: var(--fs-sm, 0.85em);
+}
+.partner .pi {
+  color: var(--blue);
+  font-size: 0.85em;
 }
 </style>
 

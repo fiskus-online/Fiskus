@@ -100,6 +100,18 @@ export const contactColumns = [
   t('Poznámka', (r) => plain(r.note), 30),
 ]
 
+/** Adresár domácnosti: partneri bez firemných údajov. */
+export const householdContactColumns = [
+  t('Názov', (r) => r.name, 32),
+  t('Ulica', (r) => r.street, 24),
+  t('PSČ', (r) => r.zip, 8),
+  t('Obec', (r) => r.city, 16),
+  t('E-mail', (r) => r.email, 24),
+  t('Telefón', (r) => r.phone, 16),
+  t('IBAN', (r) => r.iban, 28),
+  t('Poznámka', (r) => r.note, 30),
+]
+
 const roleLabel = (code) => codes.roles?.find((r) => r.code === code)?.label ?? code
 
 export const memberColumns = [

@@ -22,7 +22,7 @@ export function filterContacts(list, query) {
   if (!terms) return list
   return list.filter((c) =>
     matches(terms, [
-      c.name, c.ico, c.dic, c.icdph, c.street, c.city, c.zip, c.email, c.phone, c.note,
+      c.name, c.ico, c.dic, c.icdph, c.street, c.city, c.zip, c.email, c.phone, c.iban, c.note,
       ...(c.persons ?? []).flatMap((p) => [p.name, p.role, p.email, p.phone]),
       ...(c.addresses ?? []).flatMap((a) => [a.name, a.street, a.city]),
     ]),

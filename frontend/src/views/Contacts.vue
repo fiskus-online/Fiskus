@@ -19,12 +19,14 @@ import { fillFromRegistry, fillFromVIES } from '../lib/registry.js'
 import { api, ApiError } from '../lib/api.js'
 import { session, can } from '../lib/session.js'
 import { fiskusGridTheme, skGridLocale, gridRows } from '../lib/grid.js'
-import { contactColumns } from '../lib/columns.js'
+import { contactColumns, householdContactColumns } from '../lib/columns.js'
 import ExportButton from '../components/ExportButton.vue'
 import ImportWarnings from '../components/ImportWarnings.vue'
 import ContactPersons from '../components/ContactPersons.vue'
 import ContactAddresses from '../components/ContactAddresses.vue'
 import ContactHistory from '../components/ContactHistory.vue'
+import HouseholdPartner from '../components/HouseholdPartner.vue'
+import { isHousehold } from '../lib/household.js'
 import Dialog from 'primevue/dialog'
 import { contactAccept, contactsLabel } from '../lib/migrate.js'
 import { filterContacts, personsText } from '../lib/contacts.js'
@@ -113,7 +115,15 @@ watch(() => props.id, openFromRoute)
 
 const rows = computed(() => filterContacts(contacts.value, search.value))
 
-const columnDefs = [
+// domácnosť: telefón a IBAN namiesto IČO, IČ DPH a splatnosti
+const hhColumnDefs = [
+  { field: 'name', headerName: 'Názov / meno', flex: 2, minWidth: 180, cellClass: 'cell-name' },
+  { field: 'city', headerName: 'Obec', flex: 1, minWidth: 120 },
+  { field: 'phone', headerName: 'Telefón', width: 140 },
+  { field: 'email', headerName: 'E-mail', flex: 1, minWidth: 160 },
+  { field: 'iban', headerName: 'IBAN', flex: 1, minWidth: 200 },
+]
+const bizColumnDefs = [
   { field: 'name', headerName: 'Názov / meno', flex: 2, minWidth: 180, cellClass: 'cell-name' },
   { field: 'ico', headerName: 'IČO', width: 100 },
   { field: 'icdph', headerName: 'IČ DPH', width: 130 },
@@ -125,13 +135,14 @@ const columnDefs = [
     valueFormatter: (p) => (p.value ? `${p.value} dní` : '—'),
   },
 ]
+const columnDefs = computed(() => (hh.value ? hhColumnDefs : bizColumnDefs))
 
 const gridApi = shallowRef(null)
 const narrow = window.matchMedia('(max-width: 760px)')
 const isNarrow = ref(narrow.matches) // kratšie popisy tlačidiel v päte panela
 function applyResponsive() {
   isNarrow.value = narrow.matches
-  gridApi.value?.setColumnsVisible(['icdph', 'email', 'persons', 'dueDays'], !narrow.matches)
+  gridApi.value?.setColumnsVisible(['icdph', 'email', 'persons', 'dueDays', 'phone', 'iban'], !narrow.matches)
   gridApi.value?.sizeColumnsToFit()
 }
 narrow.addEventListener('change', applyResponsive)
@@ -142,6 +153,11 @@ const rowClassRules = { 'row-selected': (p) => p.data.id === selectedId.value }
 watch(selectedId, () => gridApi.value?.redrawRows())
 watch(() => panel.width.value, () => requestAnimationFrame(() => gridApi.value?.sizeColumnsToFit()))
 
+// domácnosť: partneri (ľudia, obchody, úrady) bez firemných údajov
+const hh = computed(() => isHousehold(session.company))
+const hhFields = new Set(['name', 'street', 'zip', 'city', 'email', 'phone', 'iban'])
+const formFields = computed(() => (hh.value ? fields.filter((f) => hhFields.has(f.key)) : fields))
+const exportColumns = computed(() => (hh.value ? householdContactColumns : contactColumns))
 const fields = [
   { key: 'name', label: 'Názov / meno', span: 4, autocomplete: 'organization' },
   { key: 'street', label: 'Ulica a číslo', span: 2 },
@@ -227,14 +243,14 @@ onBeforeUnmount(() => {
         <input ref="importInput" type="file" :accept="contactAccept" class="visually-hidden" @change="pickImport" />
         <Button v-if="can('contacts.write')" icon="pi pi-upload" label="Import" severity="secondary" outlined size="small" :loading="importing && !importPreview"
           v-tooltip.bottom="'Načítať kontakty z vizitiek (.vcf), Excelu alebo CSV (aj export z Outlooku a Google Kontaktov)'" @click="importInput.click()" />
-        <ExportButton name="Adresár" :columns="contactColumns" :rows="() => gridRows(gridApi, rows)" />
+        <ExportButton name="Adresár" :columns="exportColumns" :rows="() => gridRows(gridApi, rows)" />
         <Button v-if="can('contacts.write')" size="small" @click="router.push('/adresar/novy')">
           <i class="pi pi-plus" /><span>Nový kontakt</span><kbd class="hint">N</kbd>
         </Button>
       </header>
       <IconField class="search">
         <InputIcon class="pi pi-search" />
-        <InputText v-model="search" placeholder="Hľadať názov, IČO, obec, e-mail" size="small" aria-label="Hľadať v adresári" />
+        <InputText v-model="search" :placeholder="hh ? 'Hľadať meno, obec, telefón, e-mail' : 'Hľadať názov, IČO, obec, e-mail'" size="small" aria-label="Hľadať v adresári" />
       </IconField>
       <div class="grid-wrap">
         <AgGridVue
@@ -265,7 +281,7 @@ onBeforeUnmount(() => {
       </header>
       <div class="panel-body">
         <div class="form-grid">
-          <FormField v-for="f in fields" :key="f.key" :label="f.label" :span="f.span" :hint="f.hint" :error="errors[f.key]">
+          <FormField v-for="f in formFields" :key="f.key" :label="f.label" :span="f.span" :hint="f.hint" :error="errors[f.key]">
             <IcoInput
               v-if="f.key === 'ico'"
               v-model="form.ico"
@@ -287,14 +303,17 @@ onBeforeUnmount(() => {
             <VatIdInput v-else-if="f.key === 'icdph'" v-model="form.icdph" :invalid="!!errors.icdph" @found="(c) => (form = fillFromVIES(form, c))" />
             <InputText v-else v-model="form[f.key]" size="small" :invalid="!!errors[f.key]" :inputmode="f.inputmode" :autocomplete="f.autocomplete" />
           </FormField>
-          <FormField label="Vlastná splatnosť" :span="2" :error="errors.dueDays" :hint="`Prázdne = predvolená (${session.company?.defaultDueDays || 14} dní)`">
+          <FormField v-if="!hh" label="Vlastná splatnosť" :span="2" :error="errors.dueDays" :hint="`Prázdne = predvolená (${session.company?.defaultDueDays || 14} dní)`">
             <InputNumber v-model="form.dueDays" :min="0" :max="365" suffix=" dní" size="small" :invalid="!!errors.dueDays" />
           </FormField>
           <FormField label="Poznámka" :span="4">
             <Textarea v-model="form.note" rows="2" auto-resize />
           </FormField>
         </div>
-        <div class="subs">
+        <div v-if="hh" class="subs">
+          <HouseholdPartner v-if="form.id" :contact-id="Number(form.id)" />
+        </div>
+        <div v-else class="subs">
           <ContactPersons v-model="form.persons" :errors="errors" :readonly="!can('contacts.write')" />
           <ContactAddresses v-model="form.addresses" :errors="errors" :readonly="!can('contacts.write')" />
           <ContactHistory v-if="form.id" :contact-id="Number(form.id)" />
@@ -303,8 +322,8 @@ onBeforeUnmount(() => {
       <footer class="panel-foot">
         <Button v-if="form.id && can('contacts.write')" label="Zmazať" severity="danger" text size="small" @click="remove" />
         <div class="spacer" />
-        <Button v-if="form.id && can('invoices.write')" :label="isNarrow ? 'Zákazka' : 'Nová zákazka'" icon="pi pi-folder-open" severity="secondary" text size="small" @click="router.push(`/zakazky/nova?kontakt=${form.id}`)" />
-        <Button v-if="form.id && can('invoices.write')" :label="isNarrow ? 'Faktúra' : 'Nová faktúra'" icon="pi pi-file-plus" severity="secondary" outlined size="small" @click="router.push(`/faktury/nova?kontakt=${form.id}`)" />
+        <Button v-if="form.id && !hh && can('invoices.write')" :label="isNarrow ? 'Zákazka' : 'Nová zákazka'" icon="pi pi-folder-open" severity="secondary" text size="small" @click="router.push(`/zakazky/nova?kontakt=${form.id}`)" />
+        <Button v-if="form.id && !hh && can('invoices.write')" :label="isNarrow ? 'Faktúra' : 'Nová faktúra'" icon="pi pi-file-plus" severity="secondary" outlined size="small" @click="router.push(`/faktury/nova?kontakt=${form.id}`)" />
         <Button v-if="can('contacts.write')" label="Uložiť" icon="pi pi-check" size="small" :loading="busy" @click="save" />
       </footer>
     </aside>

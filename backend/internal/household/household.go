@@ -50,7 +50,9 @@ type Entry struct {
 	Amount      money.Dec    `json:"amount"`
 	Category    string       `json:"category"`
 	Payee       string       `json:"payee"` // obchod, firma, osoba
-	Note        string       `json:"note"`
+	// ContactID je partner z adresára (0 = iba text v Payee).
+	ContactID int64  `json:"contactId,omitempty"`
+	Note      string `json:"note"`
 	// Split je rozdelenie pohybu na položky s vlastnou kategóriou (bloček
 	// s potravinami aj drogériou); súčet položiek je Amount. Category je
 	// potom kategória najväčšej položky.

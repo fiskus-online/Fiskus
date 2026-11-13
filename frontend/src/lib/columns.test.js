@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { auditColumns, contactColumns, invoiceColumns, purchaseColumns, quoteColumns, recurringColumns, reminderColumns, overdueColumns, ecbColumns, vatPeriodColumns, itemColumns, rateColumns, assetColumns } from './columns.js'
+import { auditColumns, contactColumns, householdContactColumns, invoiceColumns, purchaseColumns, quoteColumns, recurringColumns, reminderColumns, overdueColumns, ecbColumns, vatPeriodColumns, itemColumns, rateColumns, assetColumns } from './columns.js'
 import { toCSV } from './export.js'
 
 const inv = {
@@ -42,7 +42,7 @@ describe('stĺpce exportov', () => {
     expect(col(2, 'Faktúra')).toBe('')
   })
   it('každý stĺpec má hlavičku a nespadne na prázdnom riadku', () => {
-    for (const cols of [rateColumns, invoiceColumns, purchaseColumns, contactColumns, quoteColumns, recurringColumns, reminderColumns, overdueColumns, ecbColumns, vatPeriodColumns, itemColumns, auditColumns(() => '')]) {
+    for (const cols of [rateColumns, invoiceColumns, purchaseColumns, contactColumns, householdContactColumns, quoteColumns, recurringColumns, reminderColumns, overdueColumns, ecbColumns, vatPeriodColumns, itemColumns, auditColumns(() => '')]) {
       for (const c of cols) {
         expect(c.header).toBeTruthy()
         expect(() => c.value({ summary: {}, customer: {}, supplier: {}, user: {}, time: '2026-10-29T10:00:00Z' })).not.toThrow()

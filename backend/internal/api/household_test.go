@@ -76,3 +76,51 @@ func TestHouseholdAPI(t *testing.T) {
 	}
 	e.do("GET", fmt.Sprintf("%s/entries/%d/photo", base, 9999), nil, 404, nil)
 }
+
+// Adresár v domácnosti: pohyb a záväzok s partnerom, platby pri kontakte.
+func TestHouseholdPartnerAPI(t *testing.T) {
+	e := setup(t, edition.Desktop)
+	var h struct{ ID int64 }
+	e.do("POST", "/api/companies", `{"name":"Domácnosť","bookkeeping":"household"}`, 201, &h)
+	base := fmt.Sprintf("/api/companies/%d/household", h.ID)
+	var c struct{ ID int64 }
+	e.do("POST", fmt.Sprintf("/api/companies/%d/contacts", h.ID), `{"name":"Ján Novák","street":"Hlavná 1","zip":"974 01","city":"Banská Bystrica","iban":"SK3112000000198742637541"}`, 201, &c)
+	var acc struct{ ID int64 }
+	e.do("POST", base+"/accounts", `{"name":"Bežný","kind":"bank","opening":"500"}`, 201, &acc)
+	// pohyb s partnerom bez textu príjemcu: doplní sa meno z adresára
+	var en struct {
+		Payee     string
+		ContactID int64
+	}
+	e.do("POST", base+"/entries", fmt.Sprintf(`{"date":"2026-10-02","accountId":%d,"amount":"-40","category":"Bývanie","contactId":%d}`, acc.ID, c.ID), 201, &en)
+	if en.Payee != "Ján Novák" || en.ContactID != c.ID {
+		t.Fatalf("pohyb: %+v", en)
+	}
+	e.do("POST", base+"/entries", fmt.Sprintf(`{"date":"2026-10-02","accountId":%d,"amount":"-1","category":"Bývanie","contactId":99999}`, acc.ID), 422, nil)
+	// záväzok s partnerom: veriteľ, IBAN a adresa z adresára
+	var o struct {
+		ID       int64
+		Creditor string
+		IBAN     string
+		Address  string
+	}
+	e.do("POST", base+"/obligations", fmt.Sprintf(`{"kind":"regular","name":"Nájom","installment":"300","firstDue":"2026-11-10","contactId":%d}`, c.ID), 201, &o)
+	if o.Creditor != "Ján Novák" || o.IBAN != "SK3112000000198742637541" || o.Address != "Hlavná 1, 974 01 Banská Bystrica" {
+		t.Fatalf("záväzok: %+v", o)
+	}
+	e.do("POST", fmt.Sprintf("%s/obligations/%d/pay", base, o.ID), fmt.Sprintf(`{"date":"2026-11-09","accountId":%d}`, acc.ID), 201, &en)
+	if en.ContactID != c.ID {
+		t.Fatalf("splátka bez partnera: %+v", en)
+	}
+	var p struct {
+		Paid        string
+		Count       int
+		Entries     []struct{ Amount string }
+		Obligations []struct{ Name string }
+	}
+	e.do("GET", fmt.Sprintf("%s/partners/%d", base, c.ID), nil, 200, &p)
+	if p.Paid != "340.00" || p.Count != 2 || len(p.Entries) != 2 || len(p.Obligations) != 1 || p.Obligations[0].Name != "Nájom" {
+		t.Fatalf("partner: %+v", p)
+	}
+	e.do("GET", fmt.Sprintf("%s/partners/%d", base, 99999), nil, 404, nil)
+}

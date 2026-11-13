@@ -9,6 +9,7 @@ import Button from 'primevue/button'
 import Dialog from 'primevue/dialog'
 import Drawer from 'primevue/drawer'
 import InputText from 'primevue/inputtext'
+import AutoComplete from 'primevue/autocomplete'
 import InputNumber from 'primevue/inputnumber'
 import Select from 'primevue/select'
 import SelectButton from 'primevue/selectbutton'
@@ -24,7 +25,7 @@ import { can, session } from '../lib/session.js'
 import { formatAmount, formatDate, formatMoney, fromISODate } from '../lib/format.js'
 import { householdObligationColumns, householdPlanColumns } from '../lib/columns.js'
 import {
-  categoriesFor, dueStatus, filterObligations, filterPlan, frequencies, ibanGroups, frequencyLabel, fromAmount, monthOptions, monthsLabel, newObligation, obligationBody, obligationIcon,
+  categoriesFor, dueStatus, filterObligations, filterPlan, frequencies, ibanGroups, frequencyLabel, fromAmount, monthOptions, monthsLabel, newObligation, obligationBody, obligationIcon, payeeOptions, setPayee,
   obligationKindLabel, obligationKinds, obligationTone, paidPercent, planMonthLabel,
 } from '../lib/household.js'
 
@@ -137,6 +138,24 @@ function edit(o) {
     ? { ...o, principal: fromAmount(o.principal), paidBefore: fromAmount(o.paidBefore), installment: fromAmount(o.installment), firstDue: fromISODate(o.firstDue), months: [...(o.months ?? [])] }
     : { ...newObligation(undefined, accounts.value), firstDue: new Date() }
 }
+// veriteľ z adresára: výber doplní IBAN a adresu, ak sú prázdne
+const contacts = ref([])
+const creditorHits = ref([])
+async function loadContacts() {
+  if (contacts.value.length || !can('contacts.read')) return
+  contacts.value = await api.contacts(session.companyId).catch(() => [])
+}
+function changeCreditor(v) {
+  const f = form.value
+  if (!f) return
+  setPayee(f, v, contacts.value, 'creditor')
+  const c = contacts.value.find((x) => x.id === f.contactId)
+  if (c && typeof v === 'object') {
+    if (!f.iban && c.iban) f.iban = c.iban
+    if (!f.address) f.address = [c.street, [c.zip, c.city].filter(Boolean).join(' ')].filter(Boolean).join(', ')
+  }
+}
+watch(form, (f) => f && loadContacts())
 const formCats = computed(() => categoriesFor(categories.value, form.value?.kind === 'lent' ? 'income' : 'expense'))
 const kindHint = computed(() => obligationKinds.find((k) => k.value === form.value?.kind)?.hint ?? '')
 watch(
@@ -308,7 +327,7 @@ function remove(o) {
         </div>
         <dl class="facts">
           <dt>Druh</dt><dd>{{ obligationKindLabel(detail.kind) }}</dd>
-          <template v-if="detail.creditor"><dt>{{ detail.kind === 'lent' ? 'Kto vracia' : 'Komu' }}</dt><dd>{{ detail.creditor }}</dd></template>
+          <template v-if="detail.creditor"><dt>{{ detail.kind === 'lent' ? 'Kto vracia' : 'Komu' }}</dt><dd><RouterLink v-if="detail.contactId" :to="`/adresar/${detail.contactId}`">{{ detail.creditor }}</RouterLink><template v-else>{{ detail.creditor }}</template></dd></template>
           <template v-if="Number(detail.principal)"><dt>Celkom</dt><dd class="num">{{ formatMoney(detail.principal) }}</dd></template>
           <dt>Zaplatené</dt><dd class="num">{{ formatMoney(detail.state.paid) }}</dd>
           <template v-if="Number(detail.principal)"><dt>Zostáva</dt><dd class="num"><span class="ledger">{{ formatMoney(detail.state.remaining) }}</span></dd></template>
@@ -371,7 +390,13 @@ function remove(o) {
           <InputText v-model="form.name" size="small" :placeholder="form.kind === 'execution' ? 'napr. Exekúcia EX 845/2024' : form.kind === 'regular' ? 'napr. Nájom bytu' : form.kind === 'fine' ? 'napr. Pokuta za parkovanie' : 'napr. Hypotéka VÚB'" />
         </FormField>
         <FormField :label="form.kind === 'lent' ? 'Kto vracia' : form.kind === 'execution' ? 'Exekútor' : 'Komu platím'" :span="2" :error="errors.creditor">
-          <InputText v-model="form.creditor" size="small" />
+          <AutoComplete :model-value="form.creditor" :suggestions="creditorHits" option-label="label" size="small" fluid
+            @update:model-value="changeCreditor" @complete="(e) => (creditorHits = payeeOptions(e.query, contacts, []))">
+            <template #option="{ option }">
+              <span class="payee-opt"><i class="pi pi-address-book" aria-hidden="true" /><span>{{ option.label }}</span><small v-if="option.city">{{ option.city }}</small></span>
+            </template>
+          </AutoComplete>
+          <small v-if="form.contactId" class="partner"><i class="pi pi-address-book" aria-hidden="true" /> partner z adresára</small>
         </FormField>
         <FormField v-if="form.kind !== 'regular'" :label="form.kind === 'execution' ? 'Vymáhaná suma vrátane trov' : form.kind === 'lent' ? 'Požičaná suma' : form.kind === 'fine' ? 'Suma spolu' : 'Dlžná suma'" :error="errors.principal">
           <InputText v-model="form.principal" size="small" inputmode="decimal" class="num" placeholder="0,00" />
@@ -805,6 +830,20 @@ h3 {
   .obl-form {
     grid-template-columns: 1fr 1fr;
   }
+}
+.payee-opt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.payee-opt .pi,
+.partner .pi {
+  color: var(--blue);
+  font-size: 0.85em;
+}
+.payee-opt small,
+.partner {
+  color: var(--ink-soft);
 }
 </style>
 
