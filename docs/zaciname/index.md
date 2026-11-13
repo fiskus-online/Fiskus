@@ -45,3 +45,11 @@ vľavo hore.
 
 Každý zoznam má hľadanie (bez diakritiky, viac slov naraz — „nitra 2026“)
 a export do Excelu a CSV. Exportuje sa presne to, čo vidíte po filtri.
+
+Tlačidlo **Tlač / Export** ponúka aj **tlačovú zostavu**: zostavu zo zoznamu
+po filtri a hľadaní vytlačíte, uložíte ako PDF (v dialógu tlače
+„Uložiť ako PDF“) alebo stiahnete ako Excel s nadpisom a súčtami. Nastavíte
+v nej názov, stĺpce a ich poradie, stranu A4 na výšku alebo na šírku,
+zoskupenie (napr. podľa odberateľa alebo kategórie) s medzisúčtami a súčty
+peňažných stĺpcov. Nastavenie si každá stránka pamätá zvlášť, vo firme aj
+v domácnosti.
