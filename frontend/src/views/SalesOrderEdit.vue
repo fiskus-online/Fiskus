@@ -220,13 +220,13 @@ const q = (v) => formatAmount(v).replace(/,00$/, '')
       <FormField label="Číslo u zákazníka" hint="číslo jeho objednávky">
         <InputText v-model="form.ref" size="small" :disabled="!editable" />
       </FormField>
-      <FormField label="Miesto dodania">
+      <FormField label="Miesto dodania" :span="2">
         <InputText v-model="form.place" size="small" :disabled="!editable" placeholder="Napr. prevádzka, stavba" />
       </FormField>
       <FormField v-if="!nonVat" label="Ceny">
         <SelectButton v-model="form.priceMode" :options="priceModes" option-label="label" option-value="value" :allow-empty="false" size="small" :disabled="!editable" />
       </FormField>
-      <FormField label="Poznámka" :span="nonVat ? 2 : 1">
+      <FormField label="Poznámka" :span="4">
         <Textarea v-model="form.note" rows="1" auto-resize :disabled="!editable" />
       </FormField>
     </form>
@@ -344,9 +344,6 @@ const q = (v) => formatAmount(v).replace(/,00$/, '')
 }
 .spacer {
   flex: 1;
-}
-.fields {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 .customer {
   display: flex;
@@ -508,9 +505,6 @@ const q = (v) => formatAmount(v).replace(/,00$/, '')
 @media (max-width: 760px) {
   .page {
     padding: 10px 10px 20px;
-  }
-  .fields {
-    grid-template-columns: minmax(0, 1fr);
   }
   .thead {
     display: none;

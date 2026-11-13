@@ -221,7 +221,7 @@ const fresh = computed(() => note.value && !dirty.value)
       <FormField v-if="!nonVat" label="Ceny">
         <SelectButton v-model="form.priceMode" :options="priceModes" option-label="label" option-value="value" :allow-empty="false" size="small" :disabled="!editable" />
       </FormField>
-      <FormField label="Poznámka" :span="2">
+      <FormField label="Poznámka" :span="4">
         <Textarea v-model="form.note" rows="2" auto-resize :disabled="!editable" />
       </FormField>
     </form>
@@ -300,9 +300,6 @@ const fresh = computed(() => note.value && !dirty.value)
 }
 .spacer {
   flex: 1;
-}
-.fields {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 .customer {
   display: flex;
@@ -409,9 +406,6 @@ const fresh = computed(() => note.value && !dirty.value)
 @media (max-width: 760px) {
   .page {
     padding: 10px 10px 20px;
-  }
-  .fields {
-    grid-template-columns: minmax(0, 1fr);
   }
   .thead {
     display: none;

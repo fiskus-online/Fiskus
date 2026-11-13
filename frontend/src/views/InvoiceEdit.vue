@@ -1432,56 +1432,59 @@ const customerFields = reactive([
               <button v-for="n in [7, 14, 30]" :key="n" type="button" :class="{ on: dueDays === n }" @click="setDueDays(n)">{{ n }} dní</button>
             </div>
           </div>
-          <div v-if="!isRecurring" class="fields pay-row fx-row">
-            <label>
-              <span>Mena</span>
-              <Select
-                :model-value="inv.currency || 'EUR'"
-                :options="currencies"
-                option-label="label"
-                option-value="code"
-                filter
-                :disabled="!editable"
-                size="small"
-                class="currency"
-                @update:model-value="setCurrency"
-              />
-              <small v-if="fieldError('currency')" class="err">{{ fieldError('currency') }}</small>
-            </label>
-            <label v-if="foreign && !isQuote" class="fx">
-              <span>Kurz: 1 EUR = … {{ inv.currency }}</span>
-              <InputNumber
-                :model-value="fxNumber"
-                :min-fraction-digits="0"
-                :max-fraction-digits="4"
-                :use-grouping="false"
-                locale="sk-SK"
-                :disabled="!editable"
-                size="small"
-                :invalid="!!fieldError('fxRate')"
-                @update:model-value="setRate"
-              />
-              <small v-if="fieldError('fxRate')" class="err">{{ fieldError('fxRate') }}</small>
-              <small v-else class="hint">
-                {{ rateHint(inv) }}
-                <button v-if="inv.fxManual && editable" type="button" class="link" @click="resetRate">podľa ECB</button>
-              </small>
-            </label>
-          </div>
-          <div v-if="!isQuote && !isRecurring" class="fields pay-row">
-            <label>
-              <span>Spôsob úhrady</span>
-              <Select
-                :model-value="inv.paymentMethod || 'transfer'"
-                :options="codes.paymentMethods"
-                option-label="label"
-                option-value="code"
-                :disabled="!editable"
-                size="small"
-                class="pay-method"
-                @update:model-value="upd(inv, 'paymentMethod')($event)"
-              />
-            </label>
+          <!-- mena a spôsob úhrady v jednom riadku -->
+          <div class="pay-line">
+            <div v-if="!isRecurring" class="fields pay-row fx-row">
+              <label>
+                <span>Mena</span>
+                <Select
+                  :model-value="inv.currency || 'EUR'"
+                  :options="currencies"
+                  option-label="label"
+                  option-value="code"
+                  filter
+                  :disabled="!editable"
+                  size="small"
+                  class="currency"
+                  @update:model-value="setCurrency"
+                />
+                <small v-if="fieldError('currency')" class="err">{{ fieldError('currency') }}</small>
+              </label>
+              <label v-if="foreign && !isQuote" class="fx">
+                <span>Kurz: 1 EUR = … {{ inv.currency }}</span>
+                <InputNumber
+                  :model-value="fxNumber"
+                  :min-fraction-digits="0"
+                  :max-fraction-digits="4"
+                  :use-grouping="false"
+                  locale="sk-SK"
+                  :disabled="!editable"
+                  size="small"
+                  :invalid="!!fieldError('fxRate')"
+                  @update:model-value="setRate"
+                />
+                <small v-if="fieldError('fxRate')" class="err">{{ fieldError('fxRate') }}</small>
+                <small v-else class="hint">
+                  {{ rateHint(inv) }}
+                  <button v-if="inv.fxManual && editable" type="button" class="link" @click="resetRate">podľa ECB</button>
+                </small>
+              </label>
+            </div>
+            <div v-if="!isQuote && !isRecurring" class="fields pay-row">
+              <label>
+                <span>Spôsob úhrady</span>
+                <Select
+                  :model-value="inv.paymentMethod || 'transfer'"
+                  :options="codes.paymentMethods"
+                  option-label="label"
+                  option-value="code"
+                  :disabled="!editable"
+                  size="small"
+                  class="pay-method"
+                  @update:model-value="upd(inv, 'paymentMethod')($event)"
+                />
+              </label>
+            </div>
           </div>
           <div v-if="!nonVat" class="fields vat-opts">
             <SelectButton
@@ -1949,6 +1952,7 @@ const customerFields = reactive([
 }
 
 .block {
+  max-width: var(--form-w); /* polia a texty nie cez celú obrazovku */
   margin: 0 0 14px;
   padding: 0;
   border: 0;
@@ -1999,7 +2003,11 @@ legend {
   gap: 8px 12px;
 }
 .fields.customer {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, var(--field-col)));
+}
+/* položky dokladu majú celú šírku */
+.block.lines-block {
+  max-width: none;
 }
 .fields.dates {
   grid-template-columns: repeat(3, minmax(0, 170px)) auto;
@@ -2251,12 +2259,17 @@ legend {
   color: var(--blue);
   cursor: pointer;
 }
+.pay-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: start;
+  column-gap: 12px;
+}
 .pay-row {
   margin-top: 10px;
-  grid-template-columns: minmax(0, 240px);
-}
-.pay-row.fx-row {
-  grid-template-columns: repeat(2, minmax(0, 240px));
+  /* stĺpec na každé pole (kurz iba pri cudzej mene) */
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 240px);
 }
 .locked :deep(.p-select.p-disabled) {
   background: transparent;
@@ -2386,7 +2399,7 @@ legend {
   font-variant-numeric: tabular-nums;
 }
 .fields.schedule {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, var(--field-col)));
   align-items: end;
 }
 .fields.schedule .wide {
