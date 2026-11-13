@@ -1,7 +1,7 @@
 // Domácnosť (domáce účtovníctvo): číselníky, filtre a formulár pohybu.
 // Zostatky, súčty po mesiacoch a čerpanie rozpočtu počíta server
 // (internal/household), tu sa iba zobrazujú.
-import { matches, searchTerms } from './search.js'
+import { fold, matches, searchTerms } from './search.js'
 import { formatDate, toISODate } from './format.js'
 
 export const accountKinds = [
@@ -49,7 +49,7 @@ export function toForm(e) {
 /** Formulár → pohyb pre API (výdavok so záporným znamienkom). */
 export function fromForm(f) {
   const amount = String(f.amount ?? '').trim().replace(/\s/g, '').replace(',', '.')
-  const e = { id: f.id || 0, date: f.date, accountId: f.accountId, amount, category: f.category, payee: f.payee, note: f.note, obligationId: f.obligationId || 0 }
+  const e = { id: f.id || 0, date: f.date, accountId: f.accountId, amount, category: f.category, payee: f.payee, contactId: f.contactId || 0, note: f.note, obligationId: f.obligationId || 0 }
   if (f.split?.length && f.type !== 'transfer') {
     e.split = f.split.map((x) => ({ category: x.category, amount: x.amount, note: x.note, quantity: x.quantity }))
     e.source = f.source || ''
@@ -323,7 +323,7 @@ export function receiptFacts(r) {
 
 // polia záväzku, ktoré prijíma server (household.Obligation); stav, splátkový
 // kalendár a platby z detailu sa neposielajú — server neznáme polia odmietne
-const obligationFields = ['id', 'kind', 'name', 'creditor', 'principal', 'paidBefore', 'installment', 'frequency', 'firstDue', 'count',
+const obligationFields = ['id', 'kind', 'name', 'creditor', 'contactId', 'principal', 'paidBefore', 'installment', 'frequency', 'firstDue', 'count',
   'category', 'accountId', 'reference', 'vs', 'iban', 'address', 'months', 'remindDays', 'closed', 'note']
 
 /** Telo na uloženie záväzku z formulára (sumy s čiarkou, dátum ako Date). */
@@ -343,4 +343,51 @@ export function accountBody(f) {
     id: f.id || 0, name: f.name ?? '', kind: f.kind, iban: f.iban ?? '', closed: !!f.closed,
     opening: String(f.opening ?? '').replace(/\s/g, '').replace(',', '.') || '0',
   }
+}
+
+// ---- partneri z adresára ----
+
+/** Kontakt z adresára s presne týmto menom (bez diakritiky); 0 = žiadny alebo viac rovnakých. */
+export function payeeContact(text, contacts) {
+  const f = fold(String(text ?? '').trim())
+  if (!f) return 0
+  const hits = contacts.filter((c) => fold(c.name) === f)
+  return hits.length === 1 ? hits[0].id : 0
+}
+
+/**
+ * Návrhy príjemcu: najprv kontakty z adresára, potom obchody z histórie
+ * pohybov, ktoré nie sú v adresári. Položka { label, contactId }.
+ */
+export function payeeOptions(q, contacts, payees = [], limit = 12) {
+  const f = fold(String(q ?? '').trim())
+  const has = (s) => !f || fold(s).includes(f)
+  const out = contacts.filter((c) => c.name && has(c.name)).map((c) => ({ label: c.name, contactId: c.id, city: c.city || '' }))
+  const known = new Set(contacts.map((c) => fold(c.name)))
+  for (const p of payees) {
+    if (out.length >= limit) break
+    if (p && has(p) && !known.has(fold(p))) {
+      known.add(fold(p))
+      out.push({ label: p, contactId: 0, city: '' })
+    }
+  }
+  return out.slice(0, limit)
+}
+
+/**
+ * Zmena príjemcu vo formulári: vybraný návrh (objekt) nastaví meno aj
+ * kontakt, napísaný text sa spáruje s kontaktom podľa mena. Ak sa text
+ * nezmenil, väzba ostane (napr. pohyb z banky spárovaný podľa IBAN).
+ */
+export function setPayee(form, value, contacts, field = 'payee') {
+  if (value && typeof value === 'object') {
+    form[field] = value.label
+    form.contactId = value.contactId || 0
+    return form
+  }
+  const text = value ?? ''
+  if (text === form[field]) return form
+  form[field] = text
+  form.contactId = payeeContact(text, contacts)
+  return form
 }

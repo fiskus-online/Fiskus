@@ -136,6 +136,21 @@ Splátky sú v **Kalendári** a v prehľade domácnosti (najbližší mesiac
 a všetko po splatnosti). Ak máte v **Nastaveniach → E-mail** zapnuté
 upozornenia na lehoty, Fiškus pripomenie splátky e-mailom vopred.
 
+## Adresár
+
+V **Adresári** si vediete partnerov domácnosti: ľudí, obchody, úrady, školu,
+správcu bytu. Pri kontakte stačí meno, adresa, telefón, e-mail a IBAN.
+
+Partnera vyberiete pri pohybe v poli *Obchod / komu* alebo pri záväzku
+v poli *Komu platím*. Návrhy z adresára sú označené ikonou adresára.
+Pri záväzku sa z adresára doplnia aj prázdny IBAN a adresa príjemcu.
+Pohyby z banky sa k partnerovi priradia samy, podľa IBAN protiúčtu alebo
+rovnakého mena.
+
+V detaile kontaktu sú **Platby**: koľko ste partnerovi zaplatili tento rok
+a spolu, jeho záväzky a pravidelné platby a zoznam pohybov. Rátajú sa aj
+staršie pohyby bez priradeného partnera, ak sa príjemca volá rovnako.
+
 ## Rozpočet
 
 V časti **Kategórie a rozpočet** zadáte pri kategóriách výdavkov sumu na

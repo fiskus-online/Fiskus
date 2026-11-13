@@ -86,7 +86,7 @@ export const modules = [
     items: [
       { path: '/prehlad', label: 'Prehľad', icon: 'pi-th-large', ready: true },
       { path: '/kalendar', label: 'Kalendár', icon: 'pi-calendar', ready: true, home: true },
-      { path: '/adresar', label: 'Adresár', icon: 'pi-address-book', ready: true, perm: 'contacts.read' },
+      { path: '/adresar', label: 'Adresár', icon: 'pi-address-book', ready: true, perm: 'contacts.read', home: true },
     ],
   },
   {

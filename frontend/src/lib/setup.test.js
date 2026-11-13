@@ -38,6 +38,8 @@ describe('úvodné nastavenie', () => {
   it.each([
     ['/domacnost/pohyby', 'household', true],
     ['/audit', 'household', true],
+    ['/adresar', 'household', true],
+    ['/adresar/12', 'household', true],
     ['/nastavenia/firma', 'household', true],
     ['/faktury', 'household', false],
     ['/banka', 'household', false],

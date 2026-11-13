@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
-  budgetTone, budgetWidth, receiptFacts, receiptRows, listTotals, setAllCategory, splitByCategory, filterObligations, fromAmount, newObligation, obligationBody, accountBody, obligationKinds, obligationTone, paidPercent, toAmount, categoriesFor, categoryErrors, chartBars, entryCategory, entryType, filterEntries, fromForm, newEntry, toForm, monthsLabel, planMonthLabel, filterPlan, ibanGroups,
+  budgetTone, budgetWidth, receiptFacts, receiptRows, listTotals, setAllCategory, splitByCategory, filterObligations, fromAmount, newObligation, obligationBody, accountBody, obligationKinds, payeeContact, payeeOptions, setPayee, obligationTone, paidPercent, toAmount, categoriesFor, categoryErrors, chartBars, entryCategory, entryType, filterEntries, fromForm, newEntry, toForm, monthsLabel, planMonthLabel, filterPlan, ibanGroups,
 } from './household.js'
 
 const accounts = [
@@ -245,5 +245,49 @@ describe('detail bločku', () => {
 
   it('formulár ponechá údaje bločku', () => {
     expect(fromForm({ type: 'expense', amount: '12,30', split, receipt }).receipt).toBe(receipt)
+  })
+})
+
+describe('partneri z adresára', () => {
+  const contacts = [
+    { id: 1, name: 'Ján Novák', city: 'Brezno' },
+    { id: 2, name: 'Západoslovenská energetika' },
+    { id: 3, name: 'Mária Malá' },
+    { id: 4, name: 'Maria Mala' },
+  ]
+  it.each([
+    ['presné meno', 'Ján Novák', 1],
+    ['bez diakritiky a veľkých písmen', ' jan novak ', 1],
+    ['dvaja s rovnakým menom', 'Mária Malá', 0],
+    ['neznámy', 'Lidl', 0],
+    ['prázdny', '', 0],
+  ])('kontakt podľa mena: %s', (_, text, want) => {
+    expect(payeeContact(text, contacts)).toBe(want)
+  })
+
+  it.each([
+    ['kontakty pred históriou, bez duplicít', 'n', ['Ján Novák', 'Západoslovenská energetika', 'Lidl Brezno'], [1, 2, 0]],
+    ['hľadanie bez diakritiky', 'zapado', ['Ján Novák', 'Západoslovenská energetika'], [2]],
+    ['história mimo adresára bez duplicít', 'lidl', ['Lidl Brezno', 'Lidl'], [0, 0]],
+  ])('návrhy: %s', (_, q, labels, ids) => {
+    const payees = ['Ján Novák', 'Lidl Brezno', 'Lidl', 'LIDL']
+    const got = payeeOptions(q, contacts, payees)
+    expect(got.map((o) => o.contactId)).toEqual(ids)
+    expect(got.every((o) => labels.includes(o.label))).toBe(true)
+  })
+
+  it.each([
+    ['výber z návrhov', { payee: '', contactId: 0 }, { label: 'Ján Novák', contactId: 1 }, { payee: 'Ján Novák', contactId: 1 }],
+    ['napísané meno z adresára', { payee: '', contactId: 0 }, 'jan novak', { payee: 'jan novak', contactId: 1 }],
+    ['iný text zruší väzbu', { payee: 'Ján Novák', contactId: 1 }, 'Lidl', { payee: 'Lidl', contactId: 0 }],
+    ['nezmenený text nechá väzbu z banky', { payee: 'ZSE ENERGIA', contactId: 2 }, 'ZSE ENERGIA', { payee: 'ZSE ENERGIA', contactId: 2 }],
+  ])('zmena príjemcu: %s', (_, form, value, want) => {
+    expect(setPayee({ ...form }, value, contacts)).toEqual(want)
+  })
+
+  it('pohyb a záväzok posielajú kontakt', () => {
+    expect(fromForm({ type: 'expense', amount: '5', payee: 'Ján Novák', contactId: 1 }).contactId).toBe(1)
+    expect(fromForm({ type: 'expense', amount: '5', payee: 'Lidl' }).contactId).toBe(0)
+    expect(obligationBody({ kind: 'regular', creditor: 'Ján Novák', contactId: 1, firstDue: new Date(2026, 0, 1) }).contactId).toBe(1)
   })
 })

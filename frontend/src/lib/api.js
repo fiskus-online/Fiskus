@@ -260,6 +260,7 @@ export const api = {
   hhPlan: (cid, from, months = 12) => request('GET', `/api/companies/${cid}/household/plan?from=${encodeURIComponent(from)}&months=${months}`),
   hhObligations: (cid) => request('GET', `/api/companies/${cid}/household/obligations`),
   hhObligation: (cid, id) => request('GET', `/api/companies/${cid}/household/obligations/${id}`),
+  hhPartner: (cid, id) => request('GET', `/api/companies/${cid}/household/partners/${id}`),
   hhSaveObligation: (cid, o) => (o.id ? request('PUT', `/api/companies/${cid}/household/obligations/${o.id}`, o) : request('POST', `/api/companies/${cid}/household/obligations`, o)),
   hhDeleteObligation: (cid, id) => request('DELETE', `/api/companies/${cid}/household/obligations/${id}`),
   hhPay: (cid, id, p) => request('POST', `/api/companies/${cid}/household/obligations/${id}/pay`, p),

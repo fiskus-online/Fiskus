@@ -1028,7 +1028,22 @@ func seedHousehold(ctx context.Context, a *app.App) error {
 	today := a.Today()
 	first := invoice.NewDate(today.Year(), time.Month(today.Month()), 1)
 	// záväzky: splátky sú pohyby s odkazom na záväzok
+	// adresár domácnosti: partneri záväzkov (pohyby sa k nim priradia podľa mena)
+	partners := map[string]int64{}
+	for _, c := range []store.Contact{
+		{Name: "Home Credit", Street: "Einsteinova 24", Zip: "851 01", City: "Bratislava", Phone: "+421 2 5960 8000"},
+		{Name: "Spoločenstvo vlastníkov", Street: "Námestie SNP 1", Zip: "974 01", City: "Banská Bystrica", IBAN: "SK8975000000000012345671"},
+		{Name: "ZŠ Moyzesova", Street: "Moyzesova 18", Zip: "974 01", City: "Banská Bystrica"},
+		{Name: "Michal", Phone: "+421 905 123 456", Note: "brat"},
+	} {
+		c, err := a.SaveContact(ctx, h.ID, c)
+		if err != nil {
+			return err
+		}
+		partners[c.Name] = c.ID
+	}
 	obl := func(o household.Obligation) (int64, error) {
+		o.ContactID = partners[o.Creditor]
 		o, err := a.SaveHouseholdObligation(ctx, h.ID, o)
 		return o.ID, err
 	}

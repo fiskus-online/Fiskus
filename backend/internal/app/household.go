@@ -240,6 +240,11 @@ func (a *App) checkEntry(ctx context.Context, companyID int64, e household.Entry
 			return vErr("obligationId", "Záväzok neexistuje")
 		}
 	}
+	if e.ContactID != 0 {
+		if _, err := a.Store.GetContact(ctx, companyID, e.ContactID); err != nil {
+			return vErr("contactId", "Kontakt v adresári neexistuje")
+		}
+	}
 	if !e.Transfer() {
 		have := map[string]bool{}
 		for _, c := range cats {
@@ -286,6 +291,13 @@ func (a *App) SaveHouseholdEntry(ctx context.Context, companyID int64, e househo
 	}
 	if err := a.checkEntry(ctx, companyID, e, s.Categories); err != nil {
 		return e, err
+	}
+	if e.ContactID != 0 && e.Payee == "" {
+		c, err := a.Store.GetContact(ctx, companyID, e.ContactID)
+		if err != nil {
+			return e, err
+		}
+		e.Payee = c.Name // príjemca z adresára, aby bol vidieť aj v zozname
 	}
 	// nový bloček: ak už je v banke platba kartou s rovnakou sumou, bloček
 	// ju nahradí (na bankovom účte, s položkami a kategóriami z bločku)
@@ -501,6 +513,10 @@ func (a *App) ImportHouseholdBank(ctx context.Context, companyID, accountID int6
 // načítané preskočí, platby kartou spáruje s bločkami, ostatné pridá
 // s navrhnutou kategóriou. field je pole pre chybu „iný účet“.
 func (a *App) importHouseholdTxs(ctx context.Context, companyID int64, acc household.Account, txs []bank.Transaction, res *HouseholdImport, field string) error {
+	partners, err := a.hhPartners(ctx, companyID)
+	if err != nil {
+		return err
+	}
 	es := make([]household.Entry, 0, len(txs))
 	for _, t := range txs {
 		if t.Currency != "" && !strings.EqualFold(t.Currency, "EUR") {
@@ -511,7 +527,7 @@ func (a *App) importHouseholdTxs(ctx context.Context, companyID int64, acc house
 			return vErr(field, "Pohyby sú z účtu "+t.Account+", nie z účtu "+acc.Name)
 		}
 		es = append(es, household.Entry{Date: t.Date, AccountID: acc.ID, Amount: t.Signed(), Payee: t.CounterName,
-			Note: t.Message, Source: "bank:" + t.Fingerprint})
+			ContactID: household.MatchPartner(partners, t.CounterIBAN, t.CounterName), Note: t.Message, Source: "bank:" + t.Fingerprint})
 	}
 	rest, err := a.pairReceipts(ctx, companyID, es, res)
 	if err != nil {

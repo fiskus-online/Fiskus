@@ -58,6 +58,8 @@ type Obligation struct {
 	Kind      ObligationKind `json:"kind"`
 	Name      string         `json:"name"`     // napr. Hypotéka VÚB, Exekúcia – JUDr. Novák
 	Creditor  string         `json:"creditor"` // komu sa platí (pri požičaných: kto vracia)
+	// ContactID je partner z adresára (0 = iba text v Creditor).
+	ContactID int64 `json:"contactId,omitempty"`
 	// Principal je celková dlžná suma (pri exekúcii vrátane trov); nula =
 	// bez konečnej sumy (pravidelná platba).
 	Principal money.Dec `json:"principal"`

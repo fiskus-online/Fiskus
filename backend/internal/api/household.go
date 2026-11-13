@@ -365,3 +365,21 @@ func (s *Server) hhPhoto(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Security-Policy", "default-src 'none'")
 	_, _ = w.Write(p.Data)
 }
+
+// hhPartner: GET …/household/partners/{id} — platby a záväzky s kontaktom z adresára
+func (s *Server) hhPartner(w http.ResponseWriter, r *http.Request) {
+	cid, ok := s.company(w, r)
+	if !ok {
+		return
+	}
+	id, ok := pathID(w, r, "id")
+	if !ok {
+		return
+	}
+	out, err := s.App.HouseholdPartnerActivity(r.Context(), cid, id)
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, out)
+}
