@@ -82,6 +82,9 @@ export const purchaseColumns = [
   t('Druh výdavku', (r) => codes.expenseKinds?.find((k) => k.code === (r.expense || 'services'))?.label ?? '', 18),
 ]
 
+/** Ďalšie účty kontaktu do exportu: „stravné: SK64 …; SK97 …“. */
+const accountsText = (r) => (r.accounts ?? []).map((a) => (a.label ? `${a.label}: ${a.iban}` : a.iban)).join('; ')
+
 export const contactColumns = [
   t('Názov', (r) => r.name, 32),
   t('IČO', (r) => r.ico, 11),
@@ -94,6 +97,7 @@ export const contactColumns = [
   t('E-mail', (r) => r.email, 24),
   t('Telefón', (r) => r.phone, 16),
   t('IBAN', (r) => r.iban, 28),
+  t('Ďalšie účty', (r) => accountsText(r), 40),
   { header: 'Splatnosť (dni)', value: (r) => r.dueDays || '', type: 'number', width: 10 },
   t('Kontaktné osoby', (r) => personsText(r), 36),
   t('Dodacie adresy', (r) => (r.addresses ?? []).filter((a) => a.kind === 'delivery').map(addressText).join(' | '), 40),
@@ -109,6 +113,7 @@ export const householdContactColumns = [
   t('E-mail', (r) => r.email, 24),
   t('Telefón', (r) => r.phone, 16),
   t('IBAN', (r) => r.iban, 28),
+  t('Ďalšie účty', (r) => accountsText(r), 40),
   t('Poznámka', (r) => r.note, 30),
 ]
 

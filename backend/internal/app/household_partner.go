@@ -17,9 +17,18 @@ func (a *App) hhPartners(ctx context.Context, companyID int64) ([]household.Part
 	}
 	ps := make([]household.Partner, 0, len(cs))
 	for _, c := range cs {
-		ps = append(ps, household.Partner{ID: c.ID, Name: c.Name, IBAN: c.IBAN})
+		ps = append(ps, partnerOf(c))
 	}
 	return ps, nil
+}
+
+// partnerOf je kontakt adresára ako partner domácnosti (so všetkými účtami).
+func partnerOf(c store.Contact) household.Partner {
+	p := household.Partner{ID: c.ID, Name: c.Name, IBAN: c.IBAN}
+	for _, x := range c.Accounts {
+		p.IBANs = append(p.IBANs, x.IBAN)
+	}
+	return p
 }
 
 // contactAddress je adresa kontaktu v jednom riadku (ulica, PSČ obec).
@@ -46,7 +55,7 @@ func (a *App) HouseholdPartnerActivity(ctx context.Context, companyID, contactID
 	if err != nil {
 		return out, err
 	}
-	p := household.Partner{ID: c.ID, Name: c.Name, IBAN: c.IBAN}
+	p := partnerOf(c)
 	es, err := a.Store.ListHHEntries(ctx, companyID, 0)
 	if err != nil {
 		return out, err

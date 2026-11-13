@@ -26,7 +26,7 @@ import { can, session } from '../lib/session.js'
 import { formatAmount, formatDate, formatMoney, fromISODate } from '../lib/format.js'
 import { householdObligationColumns, householdPlanColumns } from '../lib/columns.js'
 import {
-  categoriesFor, dueStatus, filterObligations, filterPlan, frequencies, ibanGroups, frequencyLabel, fromAmount, monthOptions, monthsLabel, newObligation, obligationBody, obligationIcon, payeeOptions, setPayee,
+  categoriesFor, dueStatus, filterObligations, filterPlan, frequencies, ibanGroups, frequencyLabel, fromAmount, monthOptions, monthsLabel, newObligation, obligationBody, obligationIcon, partnerAccounts, payeeOptions, setPayee,
   obligationKindLabel, obligationKinds, obligationTone, paidPercent, planMonthLabel,
 } from '../lib/household.js'
 
@@ -157,6 +157,9 @@ function changeCreditor(v) {
   }
 }
 watch(form, (f) => f && loadContacts())
+// účty vybraného partnera (škola: stravné, poplatky…) na výber IBAN
+const partnerAccts = computed(() => partnerAccounts(contacts.value.find((c) => c.id === form.value?.contactId)))
+const pickedAcct = computed(() => partnerAccts.value.find((a) => a.key === String(form.value?.iban ?? '').replace(/\s/g, '').toUpperCase())?.key ?? null)
 const formCats = computed(() => categoriesFor(categories.value, form.value?.kind === 'lent' ? 'income' : 'expense'))
 const kindHint = computed(() => obligationKinds.find((k) => k.value === form.value?.kind)?.hint ?? '')
 watch(
@@ -436,6 +439,13 @@ function remove(o) {
           <InputNumber v-model="form.remindDays" :min="0" :max="60" size="small" fluid />
         </FormField>
         <FormField label="IBAN príjemcu" :span="2" :error="errors.iban">
+          <Select v-if="partnerAccts.length > 1" :model-value="pickedAcct" :options="partnerAccts" option-label="label" option-value="key" size="small" fluid
+            placeholder="Účet partnera…" aria-label="Účet partnera" class="acct-pick"
+            @update:model-value="(k) => (form.iban = partnerAccts.find((a) => a.key === k)?.iban ?? form.iban)">
+            <template #option="{ option }">
+              <span class="acct-opt"><span>{{ option.label }}</span><small>{{ option.iban }}</small></span>
+            </template>
+          </Select>
           <IbanInput v-model="form.iban" :invalid="!!errors.iban" />
         </FormField>
         <FormField label="Adresa príjemcu" :span="2" :error="errors.address" hint="pri platbe poštovou poukážkou alebo šekom">
@@ -845,6 +855,17 @@ h3 {
 .payee-opt small,
 .partner {
   color: var(--ink-soft);
+}
+.acct-pick {
+  margin-bottom: 4px;
+}
+.acct-opt {
+  display: flex;
+  flex-direction: column;
+}
+.acct-opt small {
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
 }
 </style>
 

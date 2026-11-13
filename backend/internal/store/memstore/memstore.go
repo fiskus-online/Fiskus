@@ -107,6 +107,7 @@ func clone(in invoice.Invoice) invoice.Invoice {
 func cloneContact(c store.Contact) store.Contact {
 	c.Persons = append([]store.ContactPerson(nil), c.Persons...)
 	c.Addresses = append([]store.ContactAddress(nil), c.Addresses...)
+	c.Accounts = append([]store.ContactAccount(nil), c.Accounts...)
 	return c
 }
 

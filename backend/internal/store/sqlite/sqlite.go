@@ -167,6 +167,9 @@ var schemaV49 string
 //go:embed schema_v50.sql
 var schemaV50 string
 
+//go:embed schema_v51.sql
+var schemaV51 string
+
 //go:embed schema_v26.sql
 var schemaV26 string
 
@@ -175,7 +178,7 @@ var schemaV25 string
 
 // migrations[i] prevedie schému z verzie i na i+1. Existujúce migrácie sa
 // nikdy nemenia — zmena schémy je vždy nová migrácia na konci.
-var migrations = []string{schemaV1, schemaV2, schemaV3, schemaV4, schemaV5, schemaV6, schemaV7, schemaV8, schemaV9, schemaV10, schemaV11, schemaV12, schemaV13, schemaV14, schemaV15, schemaV16, schemaV17, schemaV18, schemaV19, schemaV20, schemaV21, schemaV22, schemaV23, schemaV24, schemaV25, schemaV26, schemaV27, schemaV28, schemaV29, schemaV30, schemaV31, schemaV32, schemaV33, schemaV34, schemaV35, schemaV36, schemaV37, schemaV38, schemaV39, schemaV40, schemaV41, schemaV42, schemaV43, schemaV44, schemaV45, schemaV46, schemaV47, schemaV48, schemaV49, schemaV50}
+var migrations = []string{schemaV1, schemaV2, schemaV3, schemaV4, schemaV5, schemaV6, schemaV7, schemaV8, schemaV9, schemaV10, schemaV11, schemaV12, schemaV13, schemaV14, schemaV15, schemaV16, schemaV17, schemaV18, schemaV19, schemaV20, schemaV21, schemaV22, schemaV23, schemaV24, schemaV25, schemaV26, schemaV27, schemaV28, schemaV29, schemaV30, schemaV31, schemaV32, schemaV33, schemaV34, schemaV35, schemaV36, schemaV37, schemaV38, schemaV39, schemaV40, schemaV41, schemaV42, schemaV43, schemaV44, schemaV45, schemaV46, schemaV47, schemaV48, schemaV49, schemaV50, schemaV51}
 
 // Store je SQLite úložisko.
 type Store struct{ db *sql.DB }
@@ -346,13 +349,13 @@ func (s *Store) UpdateCompany(ctx context.Context, c store.Company) error {
 // ---- adresár ----
 
 const contactCols = `id, company_id, name, street, city, zip, country, ico, dic, icdph,
-	email, phone, iban, due_days, note, persons_json, addresses_json`
+	email, phone, iban, due_days, note, persons_json, addresses_json, accounts_json`
 
 func scanContact(r interface{ Scan(...any) error }) (store.Contact, error) {
 	var c store.Contact
-	var persons, addresses string
+	var persons, addresses, accounts string
 	err := r.Scan(&c.ID, &c.CompanyID, &c.Name, &c.Street, &c.City, &c.Zip, &c.Country, &c.ICO, &c.DIC,
-		&c.ICDPH, &c.Email, &c.Phone, &c.IBAN, &c.DueDays, &c.Note, &persons, &addresses)
+		&c.ICDPH, &c.Email, &c.Phone, &c.IBAN, &c.DueDays, &c.Note, &persons, &addresses, &accounts)
 	if err != nil {
 		return c, err
 	}
@@ -363,6 +366,11 @@ func scanContact(r interface{ Scan(...any) error }) (store.Contact, error) {
 	}
 	if addresses != "" {
 		if err := json.Unmarshal([]byte(addresses), &c.Addresses); err != nil {
+			return c, err
+		}
+	}
+	if accounts != "" {
+		if err := json.Unmarshal([]byte(accounts), &c.Accounts); err != nil {
 			return c, err
 		}
 	}
@@ -423,12 +431,16 @@ func (s *Store) SaveContact(ctx context.Context, companyID int64, c *store.Conta
 	if err != nil {
 		return err
 	}
+	accounts, err := jsonList(c.Accounts)
+	if err != nil {
+		return err
+	}
 	vals := []any{c.Name, c.Street, c.City, c.Zip, c.Country, c.ICO, c.DIC, c.ICDPH,
-		c.Email, c.Phone, c.IBAN, c.DueDays, c.Note, persons, addresses}
+		c.Email, c.Phone, c.IBAN, c.DueDays, c.Note, persons, addresses, accounts}
 	if c.ID == 0 {
 		res, err := s.db.ExecContext(ctx, `INSERT INTO contacts (company_id, name, street, city, zip, country,
-			ico, dic, icdph, email, phone, iban, due_days, note, persons_json, addresses_json)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, append([]any{companyID}, vals...)...)
+			ico, dic, icdph, email, phone, iban, due_days, note, persons_json, addresses_json, accounts_json)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, append([]any{companyID}, vals...)...)
 		if err != nil {
 			return err
 		}
@@ -437,7 +449,7 @@ func (s *Store) SaveContact(ctx context.Context, companyID int64, c *store.Conta
 		}
 	} else {
 		res, err := s.db.ExecContext(ctx, `UPDATE contacts SET name = ?, street = ?, city = ?, zip = ?, country = ?,
-			ico = ?, dic = ?, icdph = ?, email = ?, phone = ?, iban = ?, due_days = ?, note = ?, persons_json = ?, addresses_json = ?
+			ico = ?, dic = ?, icdph = ?, email = ?, phone = ?, iban = ?, due_days = ?, note = ?, persons_json = ?, addresses_json = ?, accounts_json = ?
 			WHERE id = ? AND company_id = ?`, append(vals, c.ID, companyID)...)
 		if err != nil {
 			return err

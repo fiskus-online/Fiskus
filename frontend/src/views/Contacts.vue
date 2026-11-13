@@ -27,6 +27,7 @@ import ContactPersons from '../components/ContactPersons.vue'
 import ContactAddresses from '../components/ContactAddresses.vue'
 import ContactHistory from '../components/ContactHistory.vue'
 import HouseholdPartner from '../components/HouseholdPartner.vue'
+import ContactAccounts from '../components/ContactAccounts.vue'
 import { isHousehold } from '../lib/household.js'
 import Dialog from 'primevue/dialog'
 import { contactAccept, contactsLabel } from '../lib/migrate.js'
@@ -48,7 +49,7 @@ const panel = usePanelWidth('fiskus.contactPanelWidth')
 
 const blank = () => ({
   name: '', street: '', city: '', zip: '', country: 'SK', ico: '', dic: '', icdph: '',
-  email: '', phone: '', iban: '', dueDays: null, note: '', persons: [], addresses: [],
+  email: '', phone: '', iban: '', dueDays: null, note: '', persons: [], addresses: [], accounts: [],
 })
 
 // ---- import z vizitiek vCard alebo tabuľky (CSV, Excel, Outlook, Google) ----
@@ -104,7 +105,7 @@ function openFromRoute() {
   if (props.id === 'novy') form.value = blank()
   else if (props.id) {
     const c = contacts.value.find((x) => String(x.id) === props.id)
-    form.value = c ? { ...structuredClone(c), dueDays: c.dueDays || null, persons: structuredClone(c.persons ?? []), addresses: structuredClone(c.addresses ?? []) } : null
+    form.value = c ? { ...structuredClone(c), dueDays: c.dueDays || null, persons: structuredClone(c.persons ?? []), addresses: structuredClone(c.addresses ?? []), accounts: structuredClone(c.accounts ?? []) } : null
   } else form.value = null
 }
 
@@ -170,7 +171,7 @@ const fields = [
   { key: 'country', label: 'Krajina' },
   { key: 'email', label: 'E-mail', span: 2, autocomplete: 'email' },
   { key: 'phone', label: 'Telefón', span: 2, autocomplete: 'tel' },
-  { key: 'iban', label: 'IBAN', span: 2 },
+  { key: 'iban', label: 'IBAN', span: 4 },
 ]
 
 async function save() {
@@ -180,7 +181,7 @@ async function save() {
     const saved = await api.saveContact(session.companyId, { ...form.value, dueDays: form.value.dueDays || 0 })
     await load()
     errors.value = {}
-    form.value = { ...saved, dueDays: saved.dueDays || null, persons: saved.persons ?? [], addresses: saved.addresses ?? [] }
+    form.value = { ...saved, dueDays: saved.dueDays || null, persons: saved.persons ?? [], addresses: saved.addresses ?? [], accounts: saved.accounts ?? [] }
     toast.add({ severity: 'success', summary: wasNew ? 'Kontakt pridaný' : 'Kontakt uložený', life: 2500 })
     if (wasNew) router.replace(`/adresar/${saved.id}`)
   } catch (e) {
@@ -313,11 +314,13 @@ onBeforeUnmount(() => {
           </FormField>
         </div>
         <div v-if="hh" class="subs">
+          <ContactAccounts v-model="form.accounts" :errors="errors" :readonly="!can('contacts.write')" />
           <HouseholdPartner v-if="form.id" :contact-id="Number(form.id)" />
         </div>
         <div v-else class="subs">
           <ContactPersons v-model="form.persons" :errors="errors" :readonly="!can('contacts.write')" />
           <ContactAddresses v-model="form.addresses" :errors="errors" :readonly="!can('contacts.write')" />
+          <ContactAccounts v-model="form.accounts" :errors="errors" :readonly="!can('contacts.write')" />
           <ContactHistory v-if="form.id" :contact-id="Number(form.id)" />
         </div>
       </div>

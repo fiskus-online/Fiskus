@@ -123,6 +123,29 @@ func normalizeContactLists(c *store.Contact) []invoice.FieldError {
 		persons = append(persons, p)
 	}
 	c.Persons = persons
+	// ďalšie účty: prázdne vynechá, rovnaký IBAN (aj ako hlavný) iba raz
+	accounts := c.Accounts[:0:0]
+	seen := map[string]bool{party.NormalizeID(c.IBAN): true}
+	for _, ac := range c.Accounts {
+		ac.IBAN, ac.Label = formatIBAN(ac.IBAN), strings.TrimSpace(ac.Label)
+		if ac.IBAN == "" {
+			if ac.Label != "" {
+				fe = append(fe, invoice.FieldError{Field: fmt.Sprintf("accounts[%d].iban", len(accounts)), Message: "Zadajte IBAN"})
+				accounts = append(accounts, ac)
+			}
+			continue
+		}
+		key := party.NormalizeID(ac.IBAN)
+		if seen[key] {
+			continue
+		}
+		seen[key] = true
+		if !party.ValidIBAN(ac.IBAN) {
+			fe = append(fe, invoice.FieldError{Field: fmt.Sprintf("accounts[%d].iban", len(accounts)), Message: "Neplatný IBAN"})
+		}
+		accounts = append(accounts, ac)
+	}
+	c.Accounts = accounts
 	addresses := c.Addresses[:0:0]
 	defaults := map[string]bool{}
 	for _, ad := range c.Addresses {

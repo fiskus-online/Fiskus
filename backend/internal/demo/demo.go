@@ -1033,7 +1033,12 @@ func seedHousehold(ctx context.Context, a *app.App) error {
 	for _, c := range []store.Contact{
 		{Name: "Home Credit", Street: "Einsteinova 24", Zip: "851 01", City: "Bratislava", Phone: "+421 2 5960 8000"},
 		{Name: "Spoločenstvo vlastníkov", Street: "Námestie SNP 1", Zip: "974 01", City: "Banská Bystrica", IBAN: "SK8975000000000012345671"},
-		{Name: "ZŠ Moyzesova", Street: "Moyzesova 18", Zip: "974 01", City: "Banská Bystrica"},
+		{Name: "ZŠ Moyzesova", Street: "Moyzesova 18", Zip: "974 01", City: "Banská Bystrica", IBAN: "SK8256000000001234560001",
+			Accounts: []store.ContactAccount{
+				{IBAN: "SK6456000000001234561004", Label: "potravinový (stravné pre ŠJ)"},
+				{IBAN: "SK4756000000001234568003", Label: "príjmový (poplatky za ŠKD)"},
+				{IBAN: "SK9783300000002900123456", Label: "rodičovský"},
+			}},
 		{Name: "Michal", Phone: "+421 905 123 456", Note: "brat"},
 	} {
 		c, err := a.SaveContact(ctx, h.ID, c)
@@ -1069,7 +1074,7 @@ func seedHousehold(ctx context.Context, a *app.App) error {
 	// škola: obedy september – jún a jednorazová pokuta
 	if _, err := obl(household.Obligation{Kind: household.Regular, Name: "Obedy v škole – Janko", Creditor: "ZŠ Moyzesova",
 		Installment: m.MustParse("32.40"), FirstDue: first.AddMonths(1).AddDays(9), Months: []int{1, 2, 3, 4, 5, 6, 9, 10, 11, 12},
-		AccountID: bank.ID, Category: "Deti a škola", IBAN: "SK3112000000198742637541", VS: "20261", Address: "Moyzesova 5, 97401 Banská Bystrica", RemindDays: 5}); err != nil {
+		AccountID: bank.ID, Category: "Deti a škola", IBAN: "SK6456000000001234561004", VS: "20261", Address: "Moyzesova 18, 974 01 Banská Bystrica", RemindDays: 5}); err != nil {
 		return err
 	}
 	if _, err := obl(household.Obligation{Kind: household.Fine, Name: "Pokuta za parkovanie", Creditor: "Mestská polícia Banská Bystrica",

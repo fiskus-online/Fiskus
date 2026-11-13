@@ -6,6 +6,7 @@ func TestMatchPartner(t *testing.T) {
 	ps := []Partner{
 		{ID: 1, Name: "Západoslovenská energetika, a.s.", IBAN: "SK12 0900 0000 0001 2345 6789"},
 		{ID: 2, Name: "Ján Novák"},
+		{ID: 5, Name: "ZŠ Moyzesova", IBAN: "SK3112000000198742637541", IBANs: []string{"SK24 1100 0000 0026 1234 5678"}},
 		{ID: 3, Name: "Mária Malá"},
 		{ID: 4, Name: "Maria Mala"},
 	}
@@ -16,6 +17,7 @@ func TestMatchPartner(t *testing.T) {
 		{"podľa IBAN", "sk1209000000000123456789", "ZSE", 1},
 		{"IBAN má prednosť pred menom", "SK1209000000000123456789", "Ján Novák", 1},
 		{"podľa mena bez diakritiky", "", "JAN NOVAK", 2},
+		{"ďalší účet partnera", "SK2411000000002612345678", "ZS MOYZESOVA STRAVNE", 5},
 		{"neznámy IBAN, meno sedí", "SK9911000000000000000001", "Ján Novák", 2},
 		{"dvaja s rovnakým menom", "", "Mária Malá", 0},
 		{"nikto", "", "Lidl", 0},
