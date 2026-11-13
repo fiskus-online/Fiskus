@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
-  budgetTone, budgetWidth, receiptFacts, receiptRows, listTotals, setAllCategory, splitByCategory, filterObligations, fromAmount, newObligation, obligationKinds, obligationTone, paidPercent, toAmount, categoriesFor, categoryErrors, chartBars, entryCategory, entryType, filterEntries, fromForm, newEntry, toForm, monthsLabel, planMonthLabel, filterPlan, ibanGroups,
+  budgetTone, budgetWidth, receiptFacts, receiptRows, listTotals, setAllCategory, splitByCategory, filterObligations, fromAmount, newObligation, obligationBody, accountBody, obligationKinds, obligationTone, paidPercent, toAmount, categoriesFor, categoryErrors, chartBars, entryCategory, entryType, filterEntries, fromForm, newEntry, toForm, monthsLabel, planMonthLabel, filterPlan, ibanGroups,
 } from './household.js'
 
 const accounts = [
@@ -121,6 +121,29 @@ describe('domácnosť', () => {
     expect(toAmount('1 234,50')).toBe('1234.50')
     expect(fromAmount('1234.50')).toBe('1234,50')
     expect(fromAmount('0.00')).toBe('')
+  })
+
+  it.each([
+    ['upravený záväzok z detailu bez stavu, kalendára a platieb',
+      { id: 7, kind: 'loan', name: 'Úver', principal: '1 200,50', installment: '100', firstDue: new Date(2026, 0, 15), frequency: 'monthly', months: [1, 2],
+        state: { paid: '0' }, schedule: [{ n: 1 }], payments: [{ id: 1 }], companyId: 5 },
+      { id: 7, kind: 'loan', name: 'Úver', principal: '1200.50', paidBefore: '0', installment: '100', firstDue: '2026-01-15', frequency: 'monthly', months: [1, 2],
+        count: 0, accountId: 0, remindDays: 0 }],
+    ['mesiace iba pri mesačnom opakovaní',
+      { id: 0, kind: 'regular', name: 'Poistka', installment: '30,00', firstDue: new Date(2026, 5, 1), frequency: 'yearly', months: [6] },
+      { id: 0, kind: 'regular', name: 'Poistka', principal: '0', paidBefore: '0', installment: '30.00', firstDue: '2026-06-01', frequency: 'yearly', months: [],
+        count: 0, accountId: 0, remindDays: 0 }],
+  ])('telo záväzku: %s', (_, form, want) => {
+    expect(obligationBody(form)).toEqual(want)
+  })
+
+  it.each([
+    ['upravený účet zo zoznamu bez zostatku', { id: 3, companyId: 1, name: 'Bežný', kind: 'bank', iban: 'SK31', opening: '1 240,50', closed: false, balance: '9', entries: 33 },
+      { id: 3, name: 'Bežný', kind: 'bank', iban: 'SK31', opening: '1240.50', closed: false }],
+    ['nový účet bez počiatočného stavu', { id: 0, name: 'Hotovosť', kind: 'cash', iban: '', opening: '', closed: false },
+      { id: 0, name: 'Hotovosť', kind: 'cash', iban: '', opening: '0', closed: false }],
+  ])('telo účtu: %s', (_, form, want) => {
+    expect(accountBody(form)).toEqual(want)
   })
 
   it.each([

@@ -320,3 +320,27 @@ export function receiptFacts(r) {
     ['Paragón', r.paragon ? 'áno — dodatočne zaevidovaný' : ''],
   ].filter(([, v]) => v)
 }
+
+// polia záväzku, ktoré prijíma server (household.Obligation); stav, splátkový
+// kalendár a platby z detailu sa neposielajú — server neznáme polia odmietne
+const obligationFields = ['id', 'kind', 'name', 'creditor', 'principal', 'paidBefore', 'installment', 'frequency', 'firstDue', 'count',
+  'category', 'accountId', 'reference', 'vs', 'iban', 'address', 'months', 'remindDays', 'closed', 'note']
+
+/** Telo na uloženie záväzku z formulára (sumy s čiarkou, dátum ako Date). */
+export function obligationBody(f) {
+  const body = {}
+  for (const k of obligationFields) if (f[k] !== undefined) body[k] = f[k]
+  return {
+    ...body, principal: toAmount(f.principal) || '0', paidBefore: toAmount(f.paidBefore) || '0', installment: toAmount(f.installment) || '0',
+    firstDue: toISODate(f.firstDue), count: f.count || 0, accountId: f.accountId || 0, remindDays: f.remindDays || 0,
+    months: f.frequency === 'monthly' ? [...(f.months ?? [])] : [],
+  }
+}
+
+/** Telo na uloženie účtu z formulára (bez zostatku a počtu pohybov zo zoznamu). */
+export function accountBody(f) {
+  return {
+    id: f.id || 0, name: f.name ?? '', kind: f.kind, iban: f.iban ?? '', closed: !!f.closed,
+    opening: String(f.opening ?? '').replace(/\s/g, '').replace(',', '.') || '0',
+  }
+}
