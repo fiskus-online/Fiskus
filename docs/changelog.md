@@ -20,6 +20,11 @@ etapách je v [pláne vývoja](./ROADMAP.md).
 - **Formuláre**: polia majú šírku podľa obsahu (PSČ, dátum, suma úzke,
   názov a adresa širšie) a na širokej obrazovke sa už neťahajú cez celú
   stránku. Mena a spôsob úhrady na faktúre sú v jednom riadku.
+- **Fiškus v prehliadači na iPhone**: Safari a ostatné prehliadače na
+  iPhone niekedy nedovolia úložisko súborov (chyba „WebKit encountered an internal
+  error“). Fiškus si vtedy databázu ukladá do IndexedDB; ak nejde ani to
+  (napr. súkromné okno), beží iba v pamäti a upozorní, že sa údaje po
+  zatvorení stratia.
 
 ## 0.10.2
 

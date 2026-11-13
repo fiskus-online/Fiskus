@@ -91,7 +91,10 @@ export async function boot(el) {
     worker.onmessage = (e) => {
       const m = e.data
       if (m.type === 'progress') draw(m.loaded, m.total)
-      else if (m.type === 'ready') resolve(true)
+      else if (m.type === 'ready') {
+        globalThis.fiskusStorage = m.storage // opfs | indexeddb | memory (pozri worker.js)
+        resolve(true)
+      }
       else if (m.type === 'failed') {
         problem(el, 'Fiškus sa nespustil', esc(m.message), true)
         resolve(false)

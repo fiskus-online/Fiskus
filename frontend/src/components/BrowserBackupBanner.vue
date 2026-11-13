@@ -3,14 +3,18 @@
 import { ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { api } from '../lib/api.js'
-import { reminderText } from '../lib/browserbackup.js'
+import { reminderText, storageText } from '../lib/browserbackup.js'
 import { isSuperAdmin } from '../lib/session.js'
 
 const route = useRoute()
 const text = ref('')
 const hidden = ref(false)
 async function load() {
-  if (!isSuperAdmin()) return
+  const lost = storageText(globalThis.fiskusStorage)
+  if (lost || !isSuperAdmin()) {
+    text.value = lost // údaje sa neuložia — dôležitejšie než pripomienka zálohy
+    return
+  }
   try {
     text.value = reminderText(await api.browserBackup())
   } catch {
