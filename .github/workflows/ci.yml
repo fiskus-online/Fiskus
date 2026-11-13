@@ -66,6 +66,9 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: npm run build
+      - name: Schránka synchronizácie (sync-relay)
+        working-directory: sync-relay
+        run: npm test
 
   browser:
     name: Prehliadač – WebAssembly

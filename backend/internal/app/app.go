@@ -75,6 +75,22 @@ type App struct {
 	// AIBaseURL je adresa Claude API ("" = api.anthropic.com; v testoch falošný server).
 	AIBaseURL string
 
+	// Telefón mimo domu (sync.go): SyncSource vytvára kópiu pre telefón
+	// (počítač), SyncState drží stav telefónu (Fiškus v prehliadači),
+	// Replay a SyncPattern prehrajú a overia záznam cez API (api.Server).
+	// SyncRelayURL nahradí schránku Fiškusa (testy, -sync-relay), SyncApp
+	// adresu Fiškusa v prehliadači v odkaze, SyncHTTP klienta HTTP.
+	SyncSource   SyncSource
+	SyncState    SyncState
+	Replay       ReplayFunc
+	SyncPattern  func(method, path string) string
+	SyncRelayURL string
+	SyncApp      string
+	// SyncDesktopName je meno počítača, ktoré uvidí telefón ("" = prvá firma).
+	SyncDesktopName string
+	SyncHTTP        *http.Client
+	syncMem         syncMem
+
 	// Postman vytvorí digitálneho poštára z nastavenia firmy (nil = postman.New;
 	// v testoch falošný poštár).
 	Postman func(postman.Settings) (postman.Provider, error)

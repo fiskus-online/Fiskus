@@ -1,3 +1,4 @@
+import './lib/joinCapture.js' // ako prvý — pred smerovačom
 import { createApp } from 'vue'
 import PrimeVue from 'primevue/config'
 import ToastService from 'primevue/toastservice'

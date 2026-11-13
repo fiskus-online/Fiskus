@@ -1,0 +1,35 @@
+import { describe, expect, it } from 'vitest'
+import { itemsText, joinFragment, joinName, phoneLine, phoneProblem } from './sync.js'
+
+describe('telefón mimo domu', () => {
+  it.each([
+    [1, '1 záznam'],
+    [3, '3 záznamy'],
+    [5, '5 záznamov'],
+    [0, '0 záznamov'],
+  ])('%i → %s', (n, want) => expect(itemsText(n)).toBe(want))
+
+  it.each([
+    ['#pripojit&k=abc&n=PC', '#pripojit&k=abc&n=PC'],
+    ['#faktury', ''],
+    ['', ''],
+    [undefined, ''],
+  ])('odkaz %s', (hash, want) => expect(joinFragment(hash)).toBe(want))
+
+  it('pruh na telefóne', () => {
+    expect(phoneLine({ desktop: 'Novákovci', version: '', pending: 0 })).toBe('Kópia z počítača „Novákovci“ · čaká sa na prvú kópiu')
+    expect(phoneLine({ desktop: 'PC', version: '2026-11-13T11:30:00Z', pending: 2 })).toMatch(/^Kópia z počítača „PC“ · stav k 13\. 11\. .* · 2 záznamy čakajú na prenos do počítača$/)
+    expect(phoneLine(null)).toBe('')
+  })
+
+  it.each([
+    [{ lastError: 'schránka nie je dostupná: Get …' }, /Bez internetu/],
+    [{ lastError: 'schránka odmietla prístup — spárujte telefón znova' }, /spárujte/],
+    [{}, /^$/],
+  ])('problém %#', (p, want) => expect(phoneProblem(p)).toMatch(want))
+})
+
+it.each([
+  ['#pripojit&k=abc&n=Domácnosť+Novákovci', 'Domácnosť Novákovci'],
+  ['pripojit&k=abc', 'Počítač'],
+])('meno počítača z odkazu %s', (f, want) => expect(joinName(f)).toBe(want))

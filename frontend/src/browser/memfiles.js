@@ -79,7 +79,7 @@ export async function openIdbFiles(idb = globalThis.indexedDB, dbName = 'fiskus-
  * Úložisko v pamäti s ukladaním do IndexedDB (idb môže byť null — potom
  * iba v pamäti). Rozhranie je rovnaké ako pri OPFS vo workeri.
  */
-export async function memoryStorage(sqlite3, idb, { db, restore, delay = 400 }) {
+export async function memoryStorage(sqlite3, idb, { db, restore, keep = [], delay = 400 }) {
   const files = createMemoryFiles(sqlite3)
   if (idb) {
     const staged = await idb.get(restore)
@@ -89,12 +89,21 @@ export async function memoryStorage(sqlite3, idb, { db, restore, delay = 400 }) 
       await idb.put(db, staged)
       await idb.del(restore)
     }
+    // ďalšie databázy, ktoré sa ukladajú spolu s hlavnou (stav telefónu mimo domu)
+    for (const name of keep) {
+      const b = await idb.get(name)
+      if (b) files.importDb(name, b)
+    }
   }
   let timer = null
   let saving = Promise.resolve()
   const save = () => {
-    if (!idb || !files.has(db)) return saving
-    saving = saving.then(() => idb.put(db, files.exportFile(db))).catch(() => {}) // ďalší pokus pri ďalšej zmene
+    if (!idb) return saving
+    saving = saving
+      .then(async () => {
+        for (const name of [db, ...keep]) if (files.has(name)) await idb.put(name, files.exportFile(name))
+      })
+      .catch(() => {}) // ďalší pokus pri ďalšej zmene
     return saving
   }
   return {
