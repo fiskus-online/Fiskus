@@ -6,6 +6,7 @@ import (
 
 	"github.com/fiskus-online/fiskus/backend/internal/invoice"
 	"github.com/fiskus-online/fiskus/backend/internal/money"
+	"github.com/fiskus-online/fiskus/backend/internal/party"
 )
 
 // Záväzky domácnosti: pôžičky a úvery, dlhy, exekúcie, pravidelné platby
@@ -187,6 +188,9 @@ func (o Obligation) Validate() error {
 	}
 	if o.Kind != Regular && o.Principal.IsZero() && o.Count == 0 {
 		add("principal", "Zadajte dlžnú sumu alebo počet splátok")
+	}
+	if o.IBAN != "" && !party.ValidIBAN(o.IBAN) {
+		add("iban", "IBAN nie je správny — skontrolujte číslice (nesedí kontrolný súčet alebo dĺžka)")
 	}
 	return verr(fe)
 }

@@ -10,6 +10,7 @@ import InputText from 'primevue/inputtext'
 import SelectButton from 'primevue/selectbutton'
 import ToggleSwitch from 'primevue/toggleswitch'
 import FormField from '../components/FormField.vue'
+import IbanInput from '../components/IbanInput.vue'
 import ExportButton from '../components/ExportButton.vue'
 import FioPanel from '../components/FioPanel.vue'
 import { api, ApiError } from '../lib/api.js'
@@ -140,7 +141,7 @@ function remove(a) {
           <InputText v-model="form.name" size="small" placeholder="napr. Účet VÚB, Peňaženka" autofocus />
         </FormField>
         <FormField v-if="form.kind !== 'cash'" label="IBAN" :span="2" :error="errors.iban" hint="Na kontrolu, že nahrávaný výpis patrí k účtu">
-          <InputText v-model="form.iban" size="small" />
+          <IbanInput v-model="form.iban" :invalid="!!errors.iban" />
         </FormField>
         <FormField label="Počiatočný stav" :error="errors.opening" :hint="form.kind === 'card' ? 'dlh zadajte so znamienkom −' : ''">
           <InputText v-model="form.opening" size="small" inputmode="decimal" placeholder="0,00" class="num" />

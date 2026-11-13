@@ -18,6 +18,7 @@ import DatePicker from 'primevue/datepicker'
 import IconField from 'primevue/iconfield'
 import InputIcon from 'primevue/inputicon'
 import FormField from '../components/FormField.vue'
+import IbanInput from '../components/IbanInput.vue'
 import ExportButton from '../components/ExportButton.vue'
 import ObligationPayDialog from '../components/ObligationPayDialog.vue'
 import { api, ApiError } from '../lib/api.js'
@@ -431,14 +432,14 @@ function remove(o) {
         <FormField label="Variabilný symbol" :error="errors.vs">
           <InputText v-model="form.vs" size="small" inputmode="numeric" />
         </FormField>
-        <FormField label="IBAN" :error="errors.iban">
-          <InputText v-model="form.iban" size="small" />
-        </FormField>
-        <FormField label="Adresa príjemcu" :span="3" :error="errors.address" hint="pri platbe poštovou poukážkou alebo šekom">
-          <InputText v-model="form.address" size="small" />
-        </FormField>
         <FormField label="Pripomenúť (dní vopred)" :error="errors.remindDays" hint="0 = podľa nastavenia">
           <InputNumber v-model="form.remindDays" :min="0" :max="60" size="small" fluid />
+        </FormField>
+        <FormField label="IBAN príjemcu" :span="2" :error="errors.iban">
+          <IbanInput v-model="form.iban" :invalid="!!errors.iban" />
+        </FormField>
+        <FormField label="Adresa príjemcu" :span="2" :error="errors.address" hint="pri platbe poštovou poukážkou alebo šekom">
+          <InputText v-model="form.address" size="small" />
         </FormField>
         <FormField label="Poznámka" :span="4" :error="errors.note">
           <InputText v-model="form.note" size="small" />
