@@ -1074,7 +1074,7 @@ func seedHousehold(ctx context.Context, a *app.App) error {
 	// škola: obedy september – jún a jednorazová pokuta
 	if _, err := obl(household.Obligation{Kind: household.Regular, Name: "Obedy v škole – Janko", Creditor: "ZŠ Moyzesova",
 		Installment: m.MustParse("32.40"), FirstDue: first.AddMonths(1).AddDays(9), Months: []int{1, 2, 3, 4, 5, 6, 9, 10, 11, 12},
-		AccountID: bank.ID, Category: "Deti a škola", IBAN: "SK6456000000001234561004", VS: "20261", Address: "Moyzesova 18, 974 01 Banská Bystrica", RemindDays: 5}); err != nil {
+		AccountID: bank.ID, Category: "Deti a škola", IBAN: "SK6456000000001234561004", VS: "20261", PayeeName: "Základná škola, Moyzesova 18", Message: "stravné Janko Novák 4.B", Address: "Moyzesova 18, 974 01 Banská Bystrica", RemindDays: 5}); err != nil {
 		return err
 	}
 	if _, err := obl(household.Obligation{Kind: household.Fine, Name: "Pokuta za parkovanie", Creditor: "Mestská polícia Banská Bystrica",

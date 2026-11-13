@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
-  budgetTone, budgetWidth, receiptFacts, receiptRows, listTotals, setAllCategory, splitByCategory, filterObligations, fromAmount, newObligation, obligationBody, accountBody, obligationKinds, payeeContact, payeeOptions, setPayee, partnerAccounts, obligationTone, paidPercent, toAmount, categoriesFor, categoryErrors, chartBars, entryCategory, entryType, filterEntries, fromForm, newEntry, toForm, monthsLabel, planMonthLabel, filterPlan, ibanGroups,
+  budgetTone, budgetWidth, receiptFacts, receiptRows, listTotals, setAllCategory, splitByCategory, filterObligations, fromAmount, newObligation, obligationBody, accountBody, obligationKinds, payeeContact, payeeOptions, setPayee, partnerAccounts, paymentRows, obligationTone, paidPercent, toAmount, categoriesFor, categoryErrors, chartBars, entryCategory, entryType, filterEntries, fromForm, newEntry, toForm, monthsLabel, planMonthLabel, filterPlan, ibanGroups,
 } from './household.js'
 
 const accounts = [
@@ -302,5 +302,26 @@ describe('účty partnera', () => {
     ['bez hlavného', { iban: '', accounts: [{ iban: 'SK9783300000002900123456', label: 'rodičovský' }] }, ['rodičovský']],
   ])('%s', (_, contact, labels) => {
     expect(partnerAccounts(contact).map((a) => a.label)).toEqual(labels)
+  })
+})
+
+describe('platobné údaje splátky', () => {
+  const o = { kind: 'regular', name: 'Obedy', creditor: 'ZŠ Moyzesova', payeeName: 'Základná škola, Moyzesova 18', iban: 'sk64 5600 0000 0012 3456 1004',
+    vs: '20261', ss: '', message: 'stravné Janko 4.B', address: 'Moyzesova 18, 974 01 Banská Bystrica' }
+  it.each([
+    ['všetko v poradí banky', o, '1032.4', [
+      ['payee', 'Základná škola, Moyzesova 18', 'Základná škola, Moyzesova 18'],
+      ['iban', 'SK64 5600 0000 0012 3456 1004', 'SK6456000000001234561004'],
+      ['amount', '1032,40', '1032,40'],
+      ['vs', '20261', '20261'],
+      ['message', 'stravné Janko 4.B', 'stravné Janko 4.B'],
+      ['address', 'Moyzesova 18, 974 01 Banská Bystrica', 'Moyzesova 18, 974 01 Banská Bystrica'],
+    ]],
+    ['bez mena v banke → veriteľ, bez sumy', { kind: 'loan', creditor: 'Home Credit', vs: '4471023' }, '0', [
+      ['payee', 'Home Credit', 'Home Credit'], ['vs', '4471023', '4471023'],
+    ]],
+    ['požičané (vracajú nám)', { kind: 'lent', creditor: 'Michal', iban: 'SK64...' }, '100', []],
+  ])('%s', (_, ob, amount, want) => {
+    expect(paymentRows(ob, amount).map((r) => [r.key, r.value, r.copy])).toEqual(want)
   })
 })

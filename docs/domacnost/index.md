@@ -127,6 +127,13 @@ zálohy na energie, poistky) aj peniaze, ktoré ste niekomu požičali.
 | Počet splátok | 0 = kým sa dlh nesplatí (pri pravidelnej platbe bez konca) |
 | Kategória a účet | predvyplnia sa pri zaplatení |
 
+V detaile záväzku aj v okne **Zaplatiť** sú **platobné údaje** v poradí,
+ako ich pýta internetbanking: príjemca, IBAN, suma najbližšej splátky,
+variabilný a špecifický symbol, správa pre príjemcu a adresa. Každý údaj
+skopírujete jedným klikom a vložíte do banky. QR kód PAY by square
+načítate v mobilnej banke. Meno príjemcu v banke a správu pre príjemcu
+(napr. meno dieťaťa a trieda) vyplníte pri záväzku.
+
 Tlačidlom **Zaplatiť** zapíšete splátku ako výdavok (pri požičaných peniazoch
 **Prijať** ako príjem). Splátku môžete priradiť aj pri bežnom zápise pohybu
 v poli *Splátka záväzku*. Zaplatené sa započíta do splátok v poradí

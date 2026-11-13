@@ -324,7 +324,7 @@ export function receiptFacts(r) {
 // polia záväzku, ktoré prijíma server (household.Obligation); stav, splátkový
 // kalendár a platby z detailu sa neposielajú — server neznáme polia odmietne
 const obligationFields = ['id', 'kind', 'name', 'creditor', 'contactId', 'principal', 'paidBefore', 'installment', 'frequency', 'firstDue', 'count',
-  'category', 'accountId', 'reference', 'vs', 'iban', 'address', 'months', 'remindDays', 'closed', 'note']
+  'category', 'accountId', 'reference', 'vs', 'ss', 'payeeName', 'message', 'iban', 'address', 'months', 'remindDays', 'closed', 'note']
 
 /** Telo na uloženie záväzku z formulára (sumy s čiarkou, dátum ako Date). */
 export function obligationBody(f) {
@@ -404,4 +404,27 @@ export function partnerAccounts(contact) {
     out.push({ iban: a.iban, key, label: a.label || 'účet' })
   }
   return out
+}
+
+/**
+ * Platobné údaje splátky na prepísanie do internetbankingu, v poradí ako
+ * ich pýta banka. Položka { key, label, value, copy } — copy je text do
+ * schránky (IBAN bez medzier, suma s čiarkou bez oddeľovačov). Pri
+ * požičaných peniazoch (vracajú nám) nič.
+ */
+export function paymentRows(o, amount) {
+  if (!o || o.kind === 'lent') return []
+  const iban = String(o.iban ?? '').replace(/\s/g, '').toUpperCase()
+  const payee = o.payeeName || o.creditor || ''
+  const amt = Number(amount) > 0 ? Number(amount).toFixed(2).replace('.', ',') : ''
+  const rows = [
+    { key: 'payee', label: 'Príjemca', value: payee },
+    { key: 'iban', label: 'IBAN', value: ibanGroups(iban), copy: iban },
+    { key: 'amount', label: 'Suma (€)', value: amt },
+    { key: 'vs', label: 'Variabilný symbol', value: o.vs },
+    { key: 'ss', label: 'Špecifický symbol', value: o.ss },
+    { key: 'message', label: 'Správa pre príjemcu', value: o.message },
+    { key: 'address', label: 'Adresa príjemcu', value: o.address },
+  ]
+  return rows.filter((r) => r.value).map((r) => ({ ...r, copy: r.copy ?? String(r.value) }))
 }

@@ -19,6 +19,7 @@ import IconField from 'primevue/iconfield'
 import InputIcon from 'primevue/inputicon'
 import FormField from '../components/FormField.vue'
 import IbanInput from '../components/IbanInput.vue'
+import PaymentDetails from '../components/PaymentDetails.vue'
 import ExportButton from '../components/ExportButton.vue'
 import ObligationPayDialog from '../components/ObligationPayDialog.vue'
 import { api, ApiError } from '../lib/api.js'
@@ -79,7 +80,7 @@ watch([view, planFrom, planMonths], loadPlan)
 const planView = computed(() => filterPlan(plan.value, search.value))
 function payItem(it) {
   const o = list.value.find((x) => x.id === it.obligationId)
-  if (o) paying.value = { ...o, amount: it.rest }
+  if (o) paying.value = { ...o, amount: it.rest, date: it.date }
 }
 
 const visible = computed(() => filterObligations(list.value, { all: all.value, search: search.value }))
@@ -118,10 +119,13 @@ watch(() => props.id, loadDetail, { immediate: true })
 const detailOpen = computed({ get: () => !!props.id, set: (v) => !v && router.push('/domacnost/zavazky') })
 const accountName = (id) => accounts.value.find((a) => a.id === id)?.name ?? ''
 
+// platobné údaje sa ukážu pri otvorenom záväzku, ktorý platíme my
+const payOpen = (o) => o && o.kind !== 'lent' && !o.closed && !o.state?.paidOff
+
 // ---- zaplatiť ----
 const paying = ref(null)
 function pay(o) {
-  paying.value = { ...o, amount: o.state?.nextAmount }
+  paying.value = { ...o, amount: o.state?.nextAmount, date: o.state?.nextDue }
 }
 async function afterPay() {
   await load()
@@ -152,6 +156,7 @@ function changeCreditor(v) {
   setPayee(f, v, contacts.value, 'creditor')
   const c = contacts.value.find((x) => x.id === f.contactId)
   if (c && typeof v === 'object') {
+    if (!f.payeeName) f.payeeName = c.name
     if (!f.iban && c.iban) f.iban = c.iban
     if (!f.address) f.address = [c.street, [c.zip, c.city].filter(Boolean).join(' ')].filter(Boolean).join(', ')
   }
@@ -340,11 +345,14 @@ function remove(o) {
           <dt>Pripomenúť</dt><dd>{{ detail.remindDays ? `${detail.remindDays} ${detail.remindDays === 1 ? 'deň' : detail.remindDays < 5 ? 'dni' : 'dní'} vopred` : 'podľa nastavenia upozornení' }}</dd>
           <template v-if="detail.accountId"><dt>Z účtu</dt><dd>{{ accountName(detail.accountId) }}</dd></template>
           <template v-if="detail.reference"><dt>Zmluva / spis</dt><dd>{{ detail.reference }}</dd></template>
-          <template v-if="detail.iban"><dt>IBAN</dt><dd class="mono">{{ ibanGroups(detail.iban) }}</dd></template>
-          <template v-if="detail.vs"><dt>VS</dt><dd>{{ detail.vs }}</dd></template>
-          <template v-if="detail.address"><dt>Adresa</dt><dd>{{ detail.address }}</dd></template>
+          <template v-if="!payOpen(detail)">
+            <template v-if="detail.iban"><dt>IBAN</dt><dd class="mono">{{ ibanGroups(detail.iban) }}</dd></template>
+            <template v-if="detail.vs"><dt>VS</dt><dd>{{ detail.vs }}</dd></template>
+            <template v-if="detail.address"><dt>Adresa</dt><dd>{{ detail.address }}</dd></template>
+          </template>
           <template v-if="detail.note"><dt>Poznámka</dt><dd>{{ detail.note }}</dd></template>
         </dl>
+        <PaymentDetails v-if="payOpen(detail)" :obligation="detail" :amount="detail.state.nextAmount" :due-date="detail.state.nextDue || ''" />
 
         <h3>Splátkový kalendár</h3>
         <p v-if="!detail.schedule.length" class="empty">Bez splátok.</p>
@@ -432,11 +440,8 @@ function remove(o) {
         <FormField :label="form.kind === 'execution' ? 'Spisová značka' : 'Číslo zmluvy'" :span="2" :error="errors.reference">
           <InputText v-model="form.reference" size="small" />
         </FormField>
-        <FormField label="Variabilný symbol" :error="errors.vs">
-          <InputText v-model="form.vs" size="small" inputmode="numeric" />
-        </FormField>
-        <FormField label="Pripomenúť (dní vopred)" :error="errors.remindDays" hint="0 = podľa nastavenia">
-          <InputNumber v-model="form.remindDays" :min="0" :max="60" size="small" fluid />
+        <FormField label="Príjemca v banke" :span="2" :error="errors.payeeName" hint="meno, ako ho zadáte v internetbankingu; prázdne = komu platím">
+          <InputText v-model="form.payeeName" size="small" maxlength="70" :placeholder="form.creditor || 'napr. Základná škola, Moyzesova 18'" />
         </FormField>
         <FormField label="IBAN príjemcu" :span="2" :error="errors.iban">
           <Select v-if="partnerAccts.length > 1" :model-value="pickedAcct" :options="partnerAccts" option-label="label" option-value="key" size="small" fluid
@@ -448,8 +453,20 @@ function remove(o) {
           </Select>
           <IbanInput v-model="form.iban" :invalid="!!errors.iban" />
         </FormField>
+        <FormField label="Variabilný symbol" :error="errors.vs">
+          <InputText v-model="form.vs" size="small" inputmode="numeric" maxlength="10" />
+        </FormField>
+        <FormField label="Špecifický symbol" :error="errors.ss">
+          <InputText v-model="form.ss" size="small" inputmode="numeric" maxlength="10" />
+        </FormField>
+        <FormField label="Správa pre príjemcu" :span="2" :error="errors.message" hint="napr. meno dieťaťa a trieda">
+          <InputText v-model="form.message" size="small" maxlength="140" />
+        </FormField>
         <FormField label="Adresa príjemcu" :span="2" :error="errors.address" hint="pri platbe poštovou poukážkou alebo šekom">
           <InputText v-model="form.address" size="small" />
+        </FormField>
+        <FormField label="Pripomenúť (dní vopred)" :error="errors.remindDays" hint="0 = podľa nastavenia">
+          <InputNumber v-model="form.remindDays" :min="0" :max="60" size="small" fluid />
         </FormField>
         <FormField label="Poznámka" :span="4" :error="errors.note">
           <InputText v-model="form.note" size="small" />
