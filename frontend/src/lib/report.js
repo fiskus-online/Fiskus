@@ -176,16 +176,22 @@ export function reportHTML(model, meta = {}) {
 <table class="rp"><thead>${head}</thead><tbody>${body}</tbody>${foot}</table>`
 }
 
-// logo Fiškusa do päty strany (ako favicon, 12 × 12 px)
+// logo Fiškusa s názvom do päty strany — jeden obrázok, aby boli značka
+// a názov vždy na jednej osi (text vedľa obrázka v okraji strany prehliadač
+// zarovná na účiaru a logo by trčalo hore)
 const LOGO =
-  "data:image/svg+xml," +
-  encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="12" height="12"><rect width="32" height="32" rx="7" fill="#1f3a5c"/><path d="M10 8h13v3.4h-9v3.6h8v3.3h-8V24h-4z" fill="#fff"/><rect x="18" y="20.5" width="5" height="3.5" fill="#d9a441"/></svg>')
+  'data:image/svg+xml,' +
+  encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 12" width="50" height="12">' +
+      '<g transform="scale(.375)"><rect width="32" height="32" rx="7" fill="#1f3a5c"/><path d="M10 8h13v3.4h-9v3.6h8v3.3h-8V24h-4z" fill="#fff"/><rect x="18" y="20.5" width="5" height="3.5" fill="#d9a441"/></g>' +
+      '<text x="15.5" y="6" dominant-baseline="central" font-family="&quot;Source Sans 3&quot;, &quot;Segoe UI&quot;, Arial, sans-serif" font-size="10" font-weight="600" fill="#1f3a5c">Fiškus</text></svg>',
+  )
 
 /** Štýly tlače: hustá tabuľka ako v účtovnej knihe, logo a číslovanie strán v päte. */
 export function reportCSS(orientation) {
   return `@page { size: A4 ${orientation === 'landscape' ? 'landscape' : 'portrait'}; margin: 12mm 10mm 14mm;
   @bottom-right { content: "Strana " counter(page) " z " counter(pages); font: 8pt 'Source Sans 3', sans-serif; color: #6b7480; }
-  @bottom-left { content: url("${LOGO}") "  Fiškus"; font: 600 8pt 'Source Sans 3', sans-serif; color: #1f3a5c; vertical-align: middle; } }
+  @bottom-left { content: url("${LOGO}"); } }
 #report-print { font-family: 'Source Sans 3', sans-serif; color: #1c232c; font-size: 8.5pt; font-variant-numeric: tabular-nums; }
 #report-print .rp-head { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid #1f3a5c; padding-bottom: 4px; margin-bottom: 6px; }
 #report-print h1 { font-size: 14pt; margin: 0; color: #1f3a5c; }

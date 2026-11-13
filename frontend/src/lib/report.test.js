@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { cleanSettings, defaultSettings, printText, reportHTML, reportModel, reportSheet } from './report.js'
+import { cleanSettings, defaultSettings, printText, reportCSS, reportHTML, reportModel, reportSheet } from './report.js'
 import { xlsxCell } from './export.js'
 
 const columns = [
@@ -82,5 +82,15 @@ describe('výstup', () => {
     expect(data).toHaveLength(4 + 3 + 1)
     expect(data.at(-1)[3]).toMatchObject({ value: 1200.1, type: Number })
     expect(data.at(-1)[0].value).toBe('Spolu')
+  })
+})
+
+describe('päta strany', () => {
+  it.each([['portrait'], ['landscape']])('%s: logo a názov v jednom obrázku', (o) => {
+    const css = reportCSS(o)
+    expect(css).toContain(`size: A4 ${o}`)
+    const logo = decodeURIComponent(css.match(/@bottom-left \{ content: url\("data:image\/svg\+xml,([^"]+)"\); \}/)[1])
+    expect(logo).toContain('>Fiškus</text>')
+    expect(logo).toContain('dominant-baseline="central"')
   })
 })
