@@ -391,3 +391,17 @@ export function setPayee(form, value, contacts, field = 'payee') {
   form.contactId = payeeContact(text, contacts)
   return form
 }
+
+/** Účty partnera na výber pri záväzku: hlavný IBAN a ďalšie účty s účelom. */
+export function partnerAccounts(contact) {
+  if (!contact) return []
+  const out = []
+  const seen = new Set()
+  for (const a of [{ iban: contact.iban, label: 'hlavný účet' }, ...(contact.accounts ?? [])]) {
+    const key = String(a.iban ?? '').replace(/\s/g, '').toUpperCase()
+    if (!key || seen.has(key)) continue
+    seen.add(key)
+    out.push({ iban: a.iban, key, label: a.label || 'účet' })
+  }
+  return out
+}

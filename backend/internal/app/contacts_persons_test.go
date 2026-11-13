@@ -66,3 +66,40 @@ func TestContactPersonsAddresses(t *testing.T) {
 		t.Error("prázdny kontakt")
 	}
 }
+
+func TestContactAccounts(t *testing.T) {
+	a, c := newApp(t, edition.Desktop)
+	const main, food, fees = "SK3112000000198742637541", "SK2411000000002612345678", "SK8975000000000012345671"
+	tests := []struct {
+		name     string
+		accounts []store.ContactAccount
+		errField string
+		want     []store.ContactAccount
+	}{
+		{"prázdne sa vynechajú, IBAN po štvoriciach", []store.ContactAccount{{}, {IBAN: "sk24 1100000000 2612345678", Label: " stravné "}},
+			"", []store.ContactAccount{{IBAN: "SK24 1100 0000 0026 1234 5678", Label: "stravné"}}},
+		{"rovnaký ako hlavný alebo dvakrát iba raz", []store.ContactAccount{{IBAN: main}, {IBAN: fees, Label: "poplatky"}, {IBAN: fees}},
+			"", []store.ContactAccount{{IBAN: "SK89 7500 0000 0000 1234 5671", Label: "poplatky"}}},
+		{"zlý IBAN", []store.ContactAccount{{IBAN: food}, {IBAN: "SK2411000000002612345679"}}, "accounts[1].iban", nil},
+		{"účel bez IBAN", []store.ContactAccount{{Label: "rodičovský"}}, "accounts[0].iban", nil},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			got, err := a.SaveContact(ctx, c.ID, store.Contact{Name: "Škola " + tc.name, IBAN: main, Accounts: tc.accounts})
+			if tc.errField != "" {
+				if !fieldErr(err, tc.errField) {
+					t.Fatalf("chcem chybu %s, mám %v", tc.errField, err)
+				}
+				return
+			}
+			if err != nil || len(got.Accounts) != len(tc.want) {
+				t.Fatalf("%v %+v", err, got.Accounts)
+			}
+			for i := range tc.want {
+				if got.Accounts[i] != tc.want[i] {
+					t.Fatalf("účet %d: %+v, chcem %+v", i, got.Accounts[i], tc.want[i])
+				}
+			}
+		})
+	}
+}

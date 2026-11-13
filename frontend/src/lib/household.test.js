@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
-  budgetTone, budgetWidth, receiptFacts, receiptRows, listTotals, setAllCategory, splitByCategory, filterObligations, fromAmount, newObligation, obligationBody, accountBody, obligationKinds, payeeContact, payeeOptions, setPayee, obligationTone, paidPercent, toAmount, categoriesFor, categoryErrors, chartBars, entryCategory, entryType, filterEntries, fromForm, newEntry, toForm, monthsLabel, planMonthLabel, filterPlan, ibanGroups,
+  budgetTone, budgetWidth, receiptFacts, receiptRows, listTotals, setAllCategory, splitByCategory, filterObligations, fromAmount, newObligation, obligationBody, accountBody, obligationKinds, payeeContact, payeeOptions, setPayee, partnerAccounts, obligationTone, paidPercent, toAmount, categoriesFor, categoryErrors, chartBars, entryCategory, entryType, filterEntries, fromForm, newEntry, toForm, monthsLabel, planMonthLabel, filterPlan, ibanGroups,
 } from './household.js'
 
 const accounts = [
@@ -289,5 +289,18 @@ describe('partneri z adresára', () => {
     expect(fromForm({ type: 'expense', amount: '5', payee: 'Ján Novák', contactId: 1 }).contactId).toBe(1)
     expect(fromForm({ type: 'expense', amount: '5', payee: 'Lidl' }).contactId).toBe(0)
     expect(obligationBody({ kind: 'regular', creditor: 'Ján Novák', contactId: 1, firstDue: new Date(2026, 0, 1) }).contactId).toBe(1)
+  })
+})
+
+describe('účty partnera', () => {
+  it.each([
+    ['bez kontaktu', null, []],
+    ['iba hlavný', { iban: 'SK31 1200 0000 1987 4263 7541' }, ['hlavný účet']],
+    ['hlavný a ďalšie, bez duplicít a prázdnych', { iban: 'SK8256000000001234560001', accounts: [
+      { iban: 'SK64 5600 0000 0012 3456 1004', label: 'stravné' }, { iban: 'SK8256000000001234560001', label: 'to isté' }, { iban: '' }, { iban: 'SK9783300000002900123456' }] },
+    ['hlavný účet', 'stravné', 'účet']],
+    ['bez hlavného', { iban: '', accounts: [{ iban: 'SK9783300000002900123456', label: 'rodičovský' }] }, ['rodičovský']],
+  ])('%s', (_, contact, labels) => {
+    expect(partnerAccounts(contact).map((a) => a.label)).toEqual(labels)
   })
 })

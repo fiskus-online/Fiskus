@@ -398,6 +398,31 @@ func Run(t *testing.T, newStore Factory) {
 		}
 	})
 
+	t.Run("ďalšie účty kontaktu", func(t *testing.T) {
+		s := newStore(t)
+		a, _ := s.CreateCompany(ctx, store.Company{Name: "Alfa"})
+		c := &store.Contact{Name: "ZŠ Moyzesova", Country: "SK", IBAN: "SK3112000000198742637541",
+			Accounts: []store.ContactAccount{{IBAN: "SK2411000000002612345678", Label: "stravné"}, {IBAN: "SK8975000000000012345671"}}}
+		if err := s.SaveContact(ctx, a.ID, c); err != nil {
+			t.Fatal(err)
+		}
+		got, _ := s.GetContact(ctx, a.ID, c.ID)
+		if len(got.Accounts) != 2 || got.Accounts[0].Label != "stravné" || got.Accounts[1].IBAN != "SK8975000000000012345671" {
+			t.Fatalf("účty: %+v", got.Accounts)
+		}
+		got.Accounts[0].Label = "iné"
+		if again, _ := s.GetContact(ctx, a.ID, c.ID); again.Accounts[0].Label != "stravné" {
+			t.Fatal("úložisko vracia zdieľaný zoznam účtov")
+		}
+		got.Accounts = nil
+		if err := s.SaveContact(ctx, a.ID, &got); err != nil {
+			t.Fatal(err)
+		}
+		if list, _ := s.ListContacts(ctx, a.ID, ""); len(list) != 1 || len(list[0].Accounts) != 0 {
+			t.Fatalf("po odstránení: %+v", list)
+		}
+	})
+
 	t.Run("kontaktné osoby a adresy", func(t *testing.T) {
 		s := newStore(t)
 		a, _ := s.CreateCompany(ctx, store.Company{Name: "Alfa"})

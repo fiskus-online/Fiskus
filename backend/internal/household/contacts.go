@@ -9,9 +9,10 @@ import (
 
 // Partner je kontakt z adresára, s ktorým sa porovnávajú pohyby domácnosti.
 type Partner struct {
-	ID   int64
-	Name string
-	IBAN string
+	ID    int64
+	Name  string
+	IBAN  string
+	IBANs []string // ďalšie účty partnera (škola: stravné, poplatky…)
 }
 
 func normIBAN(s string) string {
@@ -27,6 +28,11 @@ func MatchPartner(ps []Partner, iban, name string) int64 {
 		for _, p := range ps {
 			if normIBAN(p.IBAN) == iban {
 				return p.ID
+			}
+			for _, x := range p.IBANs {
+				if normIBAN(x) == iban {
+					return p.ID
+				}
 			}
 		}
 	}

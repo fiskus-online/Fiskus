@@ -126,6 +126,15 @@ type Contact struct {
 	// korešpondenčná, prevádzka) — hlavná adresa vyššie je fakturačná.
 	Persons   []ContactPerson  `json:"persons"`
 	Addresses []ContactAddress `json:"addresses"`
+	// Accounts sú ďalšie bankové účty (škola: stravné, poplatky, rodičovský
+	// fond); hlavný účet je IBAN vyššie.
+	Accounts []ContactAccount `json:"accounts"`
+}
+
+// ContactAccount je ďalší bankový účet kontaktu s účelom.
+type ContactAccount struct {
+	IBAN  string `json:"iban"`
+	Label string `json:"label,omitempty"` // na čo: stravné, poplatky za ŠKD…
 }
 
 // ContactPerson je kontaktná osoba firmy v adresári.
