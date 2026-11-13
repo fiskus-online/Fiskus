@@ -5,6 +5,7 @@ import sqlite3InitModule from '@sqlite.org/sqlite-wasm'
 import './wasm_exec.js' // z inštalácie Go (make browser), definuje globalThis.Go
 import fiskusWasm from './fiskus.wasm.gz?url'
 import { createBridge } from './sqlbridge.js'
+import { memoryStorage, openIdbFiles } from './memfiles.js'
 
 /* global __WASM_SIZE__ */
 const wasmSize = typeof __WASM_SIZE__ === 'number' ? __WASM_SIZE__ : 0
@@ -14,26 +15,60 @@ const RESTORE = '/obnova.db'
 let markReady
 const ready = new Promise((resolve) => (markReady = resolve))
 
+// databázu má otvorenú iná karta — to nie je chyba úložiska, náhrada nepomôže
+const LOCKED = /Access Handle|NoModificationAllowed/i
+
+let storage = null
+
+/**
+ * Úložisko databázy: OPFS, a keď ho prehliadač nedovolí (Safari a ostatné
+ * prehliadače na iPhone: „WebKit encountered an internal error“), databáza
+ * v pamäti ukladaná do IndexedDB, v krajnom prípade iba v pamäti.
+ */
+async function openStorage(sqlite3) {
+  try {
+    const pool = await sqlite3.installOpfsSAHPoolVfs({ name: 'fiskus', initialCapacity: 12 })
+    // obnova zo zálohy pripravená pred opätovným načítaním (cmd/fiskus-web)
+    if (pool.getFileNames().includes(RESTORE)) {
+      await pool.importDb(DB, pool.exportFile(RESTORE))
+      pool.unlink(RESTORE)
+    }
+    return {
+      mode: 'opfs',
+      open: (name) => new pool.OpfsSAHPoolDb(name),
+      readFile: (name) => pool.exportFile(name),
+      writeFile: (name, bytes) => pool.importDb(name, bytes),
+      removeFile(name) {
+        if (pool.getFileNames().includes(name)) pool.unlink(name)
+      },
+      changed() {},
+    }
+  } catch (err) {
+    if (LOCKED.test(err.message)) throw err
+    console.warn('Úložisko OPFS nejde, databáza bude v IndexedDB:', err)
+  }
+  let idb = null
+  try {
+    idb = await openIdbFiles()
+  } catch (err) {
+    console.warn('Ani IndexedDB nejde, databáza bude iba v pamäti:', err)
+  }
+  return memoryStorage(sqlite3, idb, { db: DB, restore: RESTORE })
+}
+
 async function start() {
   const sqlite3 = await sqlite3InitModule({ print: () => {}, printErr: () => {} })
-  const pool = await sqlite3.installOpfsSAHPoolVfs({ name: 'fiskus', initialCapacity: 12 })
+  storage = await openStorage(sqlite3)
 
-  // obnova zo zálohy pripravená pred opätovným načítaním (cmd/fiskus-web)
-  if (pool.getFileNames().includes(RESTORE)) {
-    await pool.importDb(DB, pool.exportFile(RESTORE))
-    pool.unlink(RESTORE)
-  }
-
-  const bridge = createBridge(sqlite3, (name) => new pool.OpfsSAHPoolDb(name))
-  bridge.readFile = (name) => pool.exportFile(name)
-  bridge.writeFile = (name, bytes) => pool.importDb(name, bytes)
-  bridge.removeFile = (name) => {
-    if (pool.getFileNames().includes(name)) pool.unlink(name)
-  }
+  const bridge = createBridge(sqlite3, (name, readonly) => storage.open(name, readonly))
+  bridge.readFile = (name) => storage.readFile(name)
+  bridge.writeFile = (name, bytes) => storage.writeFile(name, bytes)
+  bridge.removeFile = (name) => storage.removeFile(name)
   globalThis.fiskusSQL = bridge
   globalThis.fiskusReady = () => {
     markReady()
-    postMessage({ type: 'ready' })
+    storage.changed() // nová databáza (po migráciách) sa hneď uloží
+    postMessage({ type: 'ready', storage: storage.mode })
   }
   globalThis.fiskusFailed = (message) => postMessage({ type: 'failed', message })
 
@@ -81,6 +116,7 @@ onmessage = async (e) => {
   await ready
   try {
     const r = await globalThis.fiskusServe(e.data.req)
+    if (e.data.req.method !== 'GET' && e.data.req.method !== 'HEAD') storage.changed()
     port.postMessage(r, [r.body])
   } catch (err) {
     const r = errorResponse(`Fiškus neodpovedá: ${err.message}`)
@@ -89,7 +125,7 @@ onmessage = async (e) => {
 }
 
 start().catch((err) => {
-  const msg = /Access Handle|NoModificationAllowed/i.test(err.message)
+  const msg = LOCKED.test(err.message)
     ? 'Databázu má otvorenú iná karta alebo okno s Fiškusom. Zatvorte ho a skúste znova.'
     : err.message
   postMessage({ type: 'failed', message: msg })

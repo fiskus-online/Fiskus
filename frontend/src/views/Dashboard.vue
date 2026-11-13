@@ -173,7 +173,6 @@ const net = computed(() => (d.value?.net ? ' bez DPH' : ''))
   display: flex;
   flex-direction: column;
   gap: 12px;
-  max-width: 1180px;
 }
 .head {
   display: flex;

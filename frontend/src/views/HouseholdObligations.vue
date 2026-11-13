@@ -10,6 +10,8 @@ import Dialog from 'primevue/dialog'
 import Drawer from 'primevue/drawer'
 import InputText from 'primevue/inputtext'
 import AutoComplete from 'primevue/autocomplete'
+import Popover from 'primevue/popover'
+import Checkbox from 'primevue/checkbox'
 import InputNumber from 'primevue/inputnumber'
 import Select from 'primevue/select'
 import SelectButton from 'primevue/selectbutton'
@@ -19,6 +21,7 @@ import IconField from 'primevue/iconfield'
 import InputIcon from 'primevue/inputicon'
 import FormField from '../components/FormField.vue'
 import IbanInput from '../components/IbanInput.vue'
+import PaymentDetails from '../components/PaymentDetails.vue'
 import ExportButton from '../components/ExportButton.vue'
 import ObligationPayDialog from '../components/ObligationPayDialog.vue'
 import { api, ApiError } from '../lib/api.js'
@@ -26,7 +29,7 @@ import { can, session } from '../lib/session.js'
 import { formatAmount, formatDate, formatMoney, fromISODate } from '../lib/format.js'
 import { householdObligationColumns, householdPlanColumns } from '../lib/columns.js'
 import {
-  categoriesFor, dueStatus, filterObligations, filterPlan, frequencies, ibanGroups, frequencyLabel, fromAmount, monthOptions, monthsLabel, newObligation, obligationBody, obligationIcon, partnerAccounts, payeeOptions, setPayee,
+  categoriesFor, dueStatus, filterObligations, filterPlan, frequencies, ibanGroups, frequencyLabel, fromAmount, monthOptions, monthsLabel, newObligation, obligationBody, obligationIcon, partnerAccounts, payeeOptions, setPayee, obligationColumnDefs, obligationCell, pickColumns,
   obligationKindLabel, obligationKinds, obligationTone, paidPercent, planMonthLabel,
 } from '../lib/household.js'
 
@@ -79,10 +82,46 @@ watch([view, planFrom, planMonths], loadPlan)
 const planView = computed(() => filterPlan(plan.value, search.value))
 function payItem(it) {
   const o = list.value.find((x) => x.id === it.obligationId)
-  if (o) paying.value = { ...o, amount: it.rest }
+  if (o) paying.value = { ...o, amount: it.rest, date: it.date }
 }
 
 const visible = computed(() => filterObligations(list.value, { all: all.value, search: search.value }))
+
+// stĺpce zoznamu: výber si pamätá prehliadač (iba pohodlie)
+const colKey = 'fiskus.obligationColumns'
+function savedCols() {
+  try {
+    return JSON.parse(localStorage.getItem(colKey) ?? 'null')
+  } catch {
+    return null
+  }
+}
+const cols = ref(pickColumns(savedCols()))
+watch(cols, (v) => {
+  try {
+    localStorage.setItem(colKey, JSON.stringify(v))
+  } catch {
+    // prehliadač bez úložiska
+  }
+})
+const colPick = ref(null)
+const shownCols = computed(() => obligationColumnDefs.filter((c) => cols.value.includes(c.key)))
+// šírky stĺpcov; keď sa nezmestia, zoznam sa posúva do strany
+const colWidth = {
+  kind: 'minmax(100px, 0.8fr)', creditor: 'minmax(120px, 1fr)', category: 'minmax(100px, 0.9fr)', installment: '125px', months: '115px',
+  account: '100px', vs: '85px', iban: '215px', rest: '105px', next: '160px',
+}
+// všetky riadky majú rovnakú šírku (súčet najmenších šírok), aby stĺpce lícovali
+const px = (w) => Number(/(\d+)px/.exec(w)?.[1] ?? 0)
+const listGrid = computed(() => {
+  const widths = ['24px', 'minmax(160px, 2fr)', ...shownCols.value.map((c) => colWidth[c.key]), '96px']
+  const min = widths.reduce((s, w) => s + px(w), 0) + 10 * (widths.length - 1) + 24
+  return { '--obl-cols': widths.join(' '), '--obl-min': `${min}px` }
+})
+function toggleCol(key, on) {
+  const next = on ? [...cols.value, key] : cols.value.filter((k) => k !== key)
+  cols.value = pickColumns(next.length ? next : ['next'])
+}
 // súčty zoznamu (už vypočítané zostatky): dlhy, po splatnosti, požičané
 const sums = computed(() => {
   const c = (v) => Math.round(Number(v || 0) * 100)
@@ -118,10 +157,13 @@ watch(() => props.id, loadDetail, { immediate: true })
 const detailOpen = computed({ get: () => !!props.id, set: (v) => !v && router.push('/domacnost/zavazky') })
 const accountName = (id) => accounts.value.find((a) => a.id === id)?.name ?? ''
 
+// platobné údaje sa ukážu pri otvorenom záväzku, ktorý platíme my
+const payOpen = (o) => o && o.kind !== 'lent' && !o.closed && !o.state?.paidOff
+
 // ---- zaplatiť ----
 const paying = ref(null)
 function pay(o) {
-  paying.value = { ...o, amount: o.state?.nextAmount }
+  paying.value = { ...o, amount: o.state?.nextAmount, date: o.state?.nextDue }
 }
 async function afterPay() {
   await load()
@@ -152,6 +194,7 @@ function changeCreditor(v) {
   setPayee(f, v, contacts.value, 'creditor')
   const c = contacts.value.find((x) => x.id === f.contactId)
   if (c && typeof v === 'object') {
+    if (!f.payeeName) f.payeeName = c.name
     if (!f.iban && c.iban) f.iban = c.iban
     if (!f.address) f.address = [c.street, [c.zip, c.city].filter(Boolean).join(' ')].filter(Boolean).join(', ')
   }
@@ -218,7 +261,19 @@ function remove(o) {
         <InputText v-model="search" placeholder="Hľadať záväzok, veriteľa, spis" size="small" aria-label="Hľadať" />
       </IconField>
       <ExportButton v-if="view === 'plan'" name="Plán platieb domácnosti" :columns="householdPlanColumns" :rows="planView.rows" />
-      <ExportButton v-else name="Záväzky domácnosti" :columns="householdObligationColumns" :rows="visible" />
+      <template v-else>
+        <Button icon="pi pi-sliders-h" label="Stĺpce" severity="secondary" outlined size="small" aria-haspopup="true" @click="(e) => colPick.toggle(e)" />
+        <Popover ref="colPick">
+          <fieldset class="colpick">
+            <legend>Stĺpce v zozname</legend>
+            <label v-for="c in obligationColumnDefs" :key="c.key">
+              <Checkbox :model-value="cols.includes(c.key)" binary @update:model-value="(on) => toggleCol(c.key, on)" />
+              <span>{{ c.label }}</span>
+            </label>
+          </fieldset>
+        </Popover>
+        <ExportButton name="Záväzky domácnosti" :columns="householdObligationColumns" :rows="visible" />
+      </template>
       <Button v-if="canWrite" label="Pridať záväzok" icon="pi pi-plus" size="small" @click="edit(null)" />
     </header>
 
@@ -290,27 +345,36 @@ function remove(o) {
       </p>
       <p v-else-if="!loading && !visible.length" class="empty">Žiadny záväzok nevyhovuje. <button class="lnk" type="button" @click="(view = 'all'), (search = '')">Zobraziť všetky</button></p>
 
-      <ul class="obls">
+      <ul class="obls" :style="listGrid">
+        <li class="hdr" aria-hidden="true">
+          <span />
+          <span>Záväzok</span>
+          <span v-for="c in shownCols" :key="c.key" :class="['c-' + c.key, { r: c.key === 'rest' }]">{{ c.label }}</span>
+          <span />
+        </li>
         <li v-for="o in visible" :key="o.id" :class="{ closed: o.closed || o.state.paidOff }" @click="router.push(`/domacnost/zavazky/${o.id}`)">
           <i class="pi kind" :class="obligationIcon(o.kind)" aria-hidden="true" />
           <div class="main">
             <span class="name">{{ o.name }}</span>
-            <small>{{ obligationKindLabel(o.kind) }}<template v-if="o.creditor"> · {{ o.creditor }}</template> · {{ formatMoney(o.installment) }} {{ frequencyLabel(o.frequency).toLowerCase() }}<template v-if="monthsLabel(o.months)"> ({{ monthsLabel(o.months) }})</template></small>
+            <small class="sub">{{ obligationKindLabel(o.kind) }}<template v-if="o.creditor"> · {{ o.creditor }}</template><template v-if="o.category"> · {{ o.category }}</template> · {{ formatMoney(o.installment) }} {{ frequencyLabel(o.frequency).toLowerCase() }}<template v-if="monthsLabel(o.months)"> ({{ monthsLabel(o.months) }})</template></small>
             <span v-if="paidPercent(o) !== null" class="prog" :title="`splatené ${paidPercent(o)} %`"><span :style="{ width: paidPercent(o) + '%' }" /></span>
           </div>
-          <div class="rest">
+          <template v-for="c in shownCols" :key="c.key">
+            <span v-if="c.key !== 'rest' && c.key !== 'next'" class="cell" :class="['c-' + c.key, { mono: c.key === 'iban' || c.key === 'vs' }]">{{ obligationCell(o, c.key, accounts) }}</span>
+          <div v-else-if="c.key === 'rest'" class="rest">
             <template v-if="Number(o.principal)">
               <small>{{ o.kind === 'lent' ? 'má vrátiť' : 'zostáva' }}</small>
               <strong class="num">{{ formatMoney(o.state.remaining) }}</strong>
             </template>
           </div>
-          <div class="next">
+          <div v-else class="next">
             <template v-if="o.state.nextDue && !o.closed">
               <small>{{ o.state.overdue ? 'po splatnosti od' : 'najbližšie' }}</small>
               <span :class="{ late: o.state.overdue }">{{ formatDate(o.state.nextDue) }} · <b class="num">{{ formatAmount(o.state.overdue ? o.state.overdueAmount : o.state.nextAmount) }}</b></span>
             </template>
             <span v-else class="tag" :data-tone="obligationTone(o).tone"><span class="tag-text">{{ obligationTone(o).label }}</span></span>
           </div>
+          </template>
           <div class="act" @click.stop>
             <Button v-if="canWrite && !o.closed && !o.state.paidOff" :label="o.kind === 'lent' ? 'Prijať' : 'Zaplatiť'" size="small"
               :severity="o.state.overdue ? undefined : 'secondary'" :outlined="!o.state.overdue" @click="pay(o)" />
@@ -340,11 +404,14 @@ function remove(o) {
           <dt>Pripomenúť</dt><dd>{{ detail.remindDays ? `${detail.remindDays} ${detail.remindDays === 1 ? 'deň' : detail.remindDays < 5 ? 'dni' : 'dní'} vopred` : 'podľa nastavenia upozornení' }}</dd>
           <template v-if="detail.accountId"><dt>Z účtu</dt><dd>{{ accountName(detail.accountId) }}</dd></template>
           <template v-if="detail.reference"><dt>Zmluva / spis</dt><dd>{{ detail.reference }}</dd></template>
-          <template v-if="detail.iban"><dt>IBAN</dt><dd class="mono">{{ ibanGroups(detail.iban) }}</dd></template>
-          <template v-if="detail.vs"><dt>VS</dt><dd>{{ detail.vs }}</dd></template>
-          <template v-if="detail.address"><dt>Adresa</dt><dd>{{ detail.address }}</dd></template>
+          <template v-if="!payOpen(detail)">
+            <template v-if="detail.iban"><dt>IBAN</dt><dd class="mono">{{ ibanGroups(detail.iban) }}</dd></template>
+            <template v-if="detail.vs"><dt>VS</dt><dd>{{ detail.vs }}</dd></template>
+            <template v-if="detail.address"><dt>Adresa</dt><dd>{{ detail.address }}</dd></template>
+          </template>
           <template v-if="detail.note"><dt>Poznámka</dt><dd>{{ detail.note }}</dd></template>
         </dl>
+        <PaymentDetails v-if="payOpen(detail)" :obligation="detail" :amount="detail.state.nextAmount" :due-date="detail.state.nextDue || ''" />
 
         <h3>Splátkový kalendár</h3>
         <p v-if="!detail.schedule.length" class="empty">Bez splátok.</p>
@@ -432,11 +499,8 @@ function remove(o) {
         <FormField :label="form.kind === 'execution' ? 'Spisová značka' : 'Číslo zmluvy'" :span="2" :error="errors.reference">
           <InputText v-model="form.reference" size="small" />
         </FormField>
-        <FormField label="Variabilný symbol" :error="errors.vs">
-          <InputText v-model="form.vs" size="small" inputmode="numeric" />
-        </FormField>
-        <FormField label="Pripomenúť (dní vopred)" :error="errors.remindDays" hint="0 = podľa nastavenia">
-          <InputNumber v-model="form.remindDays" :min="0" :max="60" size="small" fluid />
+        <FormField label="Príjemca v banke" :span="2" :error="errors.payeeName" hint="meno, ako ho zadáte v internetbankingu; prázdne = komu platím">
+          <InputText v-model="form.payeeName" size="small" maxlength="70" :placeholder="form.creditor || 'napr. Základná škola, Moyzesova 18'" />
         </FormField>
         <FormField label="IBAN príjemcu" :span="2" :error="errors.iban">
           <Select v-if="partnerAccts.length > 1" :model-value="pickedAcct" :options="partnerAccts" option-label="label" option-value="key" size="small" fluid
@@ -448,8 +512,20 @@ function remove(o) {
           </Select>
           <IbanInput v-model="form.iban" :invalid="!!errors.iban" />
         </FormField>
+        <FormField label="Variabilný symbol" :error="errors.vs">
+          <InputText v-model="form.vs" size="small" inputmode="numeric" maxlength="10" />
+        </FormField>
+        <FormField label="Špecifický symbol" :error="errors.ss">
+          <InputText v-model="form.ss" size="small" inputmode="numeric" maxlength="10" />
+        </FormField>
+        <FormField label="Správa pre príjemcu" :span="2" :error="errors.message" hint="napr. meno dieťaťa a trieda">
+          <InputText v-model="form.message" size="small" maxlength="140" />
+        </FormField>
         <FormField label="Adresa príjemcu" :span="2" :error="errors.address" hint="pri platbe poštovou poukážkou alebo šekom">
           <InputText v-model="form.address" size="small" />
+        </FormField>
+        <FormField label="Pripomenúť (dní vopred)" :error="errors.remindDays" hint="0 = podľa nastavenia">
+          <InputNumber v-model="form.remindDays" :min="0" :max="60" size="small" fluid />
         </FormField>
         <FormField label="Poznámka" :span="4" :error="errors.note">
           <InputText v-model="form.note" size="small" />
@@ -473,7 +549,6 @@ function remove(o) {
 <style scoped>
 .page {
   padding: 14px 16px 24px;
-  max-width: 1100px;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -544,10 +619,12 @@ function remove(o) {
   padding: 0;
   border: 1px solid var(--rule);
   background: var(--sheet);
+  overflow-x: auto;
 }
 .obls li {
   display: grid;
-  grid-template-columns: 24px minmax(0, 1fr) 130px 190px 96px;
+  grid-template-columns: var(--obl-cols, 24px minmax(0, 1fr) 130px 190px 96px);
+  min-width: var(--obl-min, 0);
   gap: 10px;
   align-items: center;
   padding: 9px 12px;
@@ -556,6 +633,54 @@ function remove(o) {
 }
 .obls li:last-child {
   border-bottom: 0;
+}
+/* hlavička stĺpcov */
+.obls li.hdr {
+  padding-top: 6px;
+  padding-bottom: 6px;
+  background: var(--paper, #f3f5f8);
+  color: var(--ink-soft);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  cursor: default;
+}
+.obls li.hdr:hover {
+  background: var(--paper, #f3f5f8);
+}
+.hdr .r {
+  text-align: right;
+}
+.cell {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--fs-sm);
+}
+.cell.mono {
+  font-variant-numeric: tabular-nums;
+}
+/* na širokej obrazovke sú údaje v stĺpcoch, podriadok je iba na mobile */
+.main .sub {
+  display: none;
+}
+.colpick {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.colpick legend {
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+.colpick label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
 }
 .obls li:hover {
   background: var(--blue-wash);
@@ -596,6 +721,7 @@ function remove(o) {
 .next {
   display: flex;
   flex-direction: column;
+  min-width: 0;
 }
 .rest {
   text-align: right;
@@ -820,6 +946,16 @@ h3 {
   .obls li {
     grid-template-columns: 22px minmax(0, 1fr) auto;
     grid-template-areas: 'k m r' 'k n a';
+  }
+  .obls li {
+    min-width: 0;
+  }
+  .obls li.hdr,
+  .obls .cell {
+    display: none;
+  }
+  .main .sub {
+    display: block;
   }
   .kind {
     grid-area: k;

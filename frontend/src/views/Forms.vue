@@ -151,6 +151,15 @@ function print() {
   pageStyle = document.createElement('style')
   pageStyle.textContent = `@page { size: ${size}; margin: 0 }`
   document.head.appendChild(pageStyle)
+  // pravidlá tlače platia iba počas tejto tlače (štýl stránky ostáva načítaný
+  // aj na iných obrazovkách a nesmie skryť ich tlač)
+  const root = document.documentElement
+  root.classList.add('printing-form')
+  const done = () => {
+    root.classList.remove('printing-form')
+    window.removeEventListener('afterprint', done)
+  }
+  window.addEventListener('afterprint', done)
   window.print()
 }
 
@@ -785,10 +794,10 @@ h2 {
   display: none;
 }
 @media print {
-  body > *:not(.form-print-root) {
+  html.printing-form body > *:not(.form-print-root) {
     display: none !important;
   }
-  .form-print-root {
+  html.printing-form .form-print-root {
     display: block;
   }
 }

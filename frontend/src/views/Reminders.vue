@@ -385,7 +385,6 @@ function remove(r) {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  max-width: 1100px;
 }
 .head {
   display: flex;

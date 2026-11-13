@@ -30,3 +30,12 @@ export function passwordErrors(password, confirm, min = 8) {
   else if (confirm !== password) e.confirm = 'Heslá sa nezhodujú'
   return e
 }
+
+/**
+ * Pruh o úložisku: keď prehliadač nedovolí uložiť databázu (worker beží
+ * iba v pamäti), údaje sa po zatvorení stránky stratia.
+ */
+export function storageText(mode) {
+  if (mode !== 'memory') return ''
+  return 'Tento prehliadač nedovolí uložiť údaje (napr. súkromné okno) — po zatvorení stránky sa stratia. Na skúšanie to stačí; prácu si uložte stiahnutím zálohy.'
+}

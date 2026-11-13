@@ -298,7 +298,6 @@ const err = (k) => errors.value[k]
 <style scoped>
 .taxret {
   padding: 14px 16px 24px;
-  max-width: 1280px;
 }
 .head {
   display: flex;

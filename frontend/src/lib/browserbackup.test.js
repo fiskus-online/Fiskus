@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { agoText, lastBackupText, passwordErrors, reminderText } from './browserbackup.js'
+import { agoText, lastBackupText, passwordErrors, reminderText, storageText } from './browserbackup.js'
 
 describe('záloha v prehliadači', () => {
   it.each([
@@ -22,4 +22,13 @@ describe('záloha v prehliadači', () => {
     ['dlhe-heslo', 'dlhe-heslo', {}],
     ['žžžžžžžž', 'žžžžžžžž', {}],
   ])('heslo %s', (p, c, want) => expect(passwordErrors(p, c)).toEqual(want))
+})
+
+describe('úložisko prehliadača', () => {
+  it.each([
+    ['opfs', ''],
+    ['indexeddb', ''],
+    [undefined, ''],
+    ['memory', 'stratia'],
+  ])('%s', (mode, want) => (want ? expect(storageText(mode)).toMatch(want) : expect(storageText(mode)).toBe('')))
 })

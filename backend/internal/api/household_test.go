@@ -99,13 +99,14 @@ func TestHouseholdPartnerAPI(t *testing.T) {
 	e.do("POST", base+"/entries", fmt.Sprintf(`{"date":"2026-10-02","accountId":%d,"amount":"-1","category":"Bývanie","contactId":99999}`, acc.ID), 422, nil)
 	// záväzok s partnerom: veriteľ, IBAN a adresa z adresára
 	var o struct {
-		ID       int64
-		Creditor string
-		IBAN     string
-		Address  string
+		ID        int64
+		Creditor  string
+		PayeeName string
+		IBAN      string
+		Address   string
 	}
 	e.do("POST", base+"/obligations", fmt.Sprintf(`{"kind":"regular","name":"Nájom","installment":"300","firstDue":"2026-11-10","contactId":%d}`, c.ID), 201, &o)
-	if o.Creditor != "Ján Novák" || o.IBAN != "SK3112000000198742637541" || o.Address != "Hlavná 1, 974 01 Banská Bystrica" {
+	if o.Creditor != "Ján Novák" || o.PayeeName != "Ján Novák" || o.IBAN != "SK3112000000198742637541" || o.Address != "Hlavná 1, 974 01 Banská Bystrica" {
 		t.Fatalf("záväzok: %+v", o)
 	}
 	e.do("POST", fmt.Sprintf("%s/obligations/%d/pay", base, o.ID), fmt.Sprintf(`{"date":"2026-11-09","accountId":%d}`, acc.ID), 201, &en)

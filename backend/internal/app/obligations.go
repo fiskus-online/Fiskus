@@ -117,6 +117,9 @@ func (a *App) SaveHouseholdObligation(ctx context.Context, companyID int64, o ho
 		if o.Creditor == "" {
 			o.Creditor = c.Name
 		}
+		if o.PayeeName == "" {
+			o.PayeeName = c.Name
+		}
 		if o.IBAN == "" {
 			o.IBAN = c.IBAN
 		}
@@ -254,6 +257,9 @@ type UpcomingDue struct {
 	AccountID    int64                    `json:"accountId"`
 	IBAN         string                   `json:"iban,omitempty"`
 	VS           string                   `json:"vs,omitempty"`
+	SS           string                   `json:"ss,omitempty"`
+	PayeeName    string                   `json:"payeeName,omitempty"`
+	Message      string                   `json:"message,omitempty"`
 	Address      string                   `json:"address,omitempty"`
 	RemindDays   int                      `json:"remindDays,omitempty"`
 	household.Due
@@ -282,7 +288,7 @@ func (a *App) obligationDues(ctx context.Context, companyID int64, to invoice.Da
 				continue
 			}
 			out = append(out, UpcomingDue{ObligationID: o.ID, Name: o.Name, Kind: o.Kind, Creditor: o.Creditor, AccountID: o.AccountID,
-				IBAN: o.IBAN, VS: o.VS, Address: o.Address, RemindDays: o.RemindDays, Due: d, Rest: d.Amount.Sub(d.Paid)})
+				IBAN: o.IBAN, VS: o.VS, SS: o.SS, PayeeName: o.PayeeName, Message: o.Message, Address: o.Address, RemindDays: o.RemindDays, Due: d, Rest: d.Amount.Sub(d.Paid)})
 		}
 	}
 	sort.SliceStable(out, func(i, j int) bool { return out[i].Date.Before(out[j].Date) })

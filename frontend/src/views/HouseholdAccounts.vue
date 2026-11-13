@@ -177,7 +177,6 @@ function remove(a) {
 }
 .page {
   padding: 14px 16px 24px;
-  max-width: 900px;
   display: flex;
   flex-direction: column;
   gap: 10px;

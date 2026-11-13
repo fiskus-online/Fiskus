@@ -1,6 +1,7 @@
 package household
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/fiskus-online/fiskus/backend/internal/invoice"
@@ -150,6 +151,40 @@ func TestValidateIBAN(t *testing.T) {
 				if (err != nil) != c.bad {
 					t.Fatalf("%s: chyba %v", what, err)
 				}
+			}
+		})
+	}
+}
+
+func TestValidatePaymentData(t *testing.T) {
+	ok := Obligation{Kind: Regular, Name: "Obedy", Frequency: Monthly, FirstDue: d(2026, 9, 10), Installment: m("32.40")}
+	long := strings.Repeat("a", 141)
+	cases := []struct {
+		name  string
+		edit  func(*Obligation)
+		field string
+	}{
+		{"v poriadku", func(o *Obligation) {
+			o.VS, o.SS, o.Message, o.PayeeName = "20261", "0308", "Janko Novák 4.B", "Základná škola"
+		}, ""},
+		{"VS s lomkou", func(o *Obligation) { o.VS = "2026/1" }, "vs"},
+		{"ŠS priveľa číslic", func(o *Obligation) { o.SS = "12345678901" }, "ss"},
+		{"dlhá správa", func(o *Obligation) { o.Message = long }, "message"},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			o := ok
+			c.edit(&o)
+			err := o.Validate()
+			if c.field == "" {
+				if err != nil {
+					t.Fatal(err)
+				}
+				return
+			}
+			ve, okv := err.(*invoice.ValidationError)
+			if !okv || ve.Fields[0].Field != c.field {
+				t.Fatalf("chcem chybu %s, mám %v", c.field, err)
 			}
 		})
 	}
