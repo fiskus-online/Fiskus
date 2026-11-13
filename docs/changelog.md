@@ -11,6 +11,13 @@ tags: [prehľad]
 Verzie sú značky v repozitári (`v0.2.0`). Podrobný zoznam funkcií po
 etapách je v [pláne vývoja](./ROADMAP.md).
 
+## 0.10.6
+
+- **Telefón mimo domu na iPhone z plochy**: Fiškus pridaný na plochu má
+  na iPhone vlastné údaje a kópiu z prehliadača nevidel. V prázdnom Fiškuse
+  je teraz **Pripojiť k počítaču** — QR kód z obrazovky počítača sa odfotí
+  priamo v aplikácii (alebo sa vloží odkaz).
+
 ## 0.10.5
 
 - **Fiškus v prehliadači na iPhone** (Safari aj Firefox): stránka sa

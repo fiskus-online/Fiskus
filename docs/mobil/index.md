@@ -58,11 +58,22 @@ keď bude zapnutý.
 | Krok | Kde |
 |---|---|
 | 1. Pripojiť telefón | v počítači Nastavenia → Telefón mimo domu → **Pripojiť telefón**, QR kód naskenovať fotoaparátom telefónu |
-| 2. Pridať na plochu | iPhone: Safari → Zdieľať → **Pridať na plochu**; Android: ponuka prehliadača → **Pridať na plochu** |
+| 2. Pridať na plochu | Android: ponuka prehliadača → **Pridať na plochu** |
 | 3. Pracovať | telefón ukazuje firmy a domácnosti z počítača; pruh hore hovorí, z kedy je kópia a čo čaká na prenos |
 
 ![Kópia z počítača v telefóne](../obrazky/telefon-kopia.webp){ width="320" }
 *Kópia z počítača v telefóne*
+
+:::warning[iPhone: najprv na plochu, potom pripojiť]
+Na iPhone má Fiškus pridaný na plochu **vlastné údaje** — kópiu z karty
+prehliadača nevidí a ukáže sa prázdny. Postup:
+
+1. V telefóne otvorte app.fiskus.online a zvoľte Zdieľať → **Pridať na plochu**.
+2. Spustite Fiškus z plochy a ťuknite na **Pripojiť k počítaču**.
+3. V počítači zvoľte Nastavenia → Telefón mimo domu → Pripojiť telefón
+   a v telefóne **odfoťte QR kód** z obrazovky počítača (alebo vložte odkaz
+   z tlačidla Kopírovať odkaz).
+:::
 
 **Čo sa dá v telefóne zapísať:** pohyb v domácnosti, úhrada záväzku, nový
 kontakt, pokladničný doklad, koncept faktúry, prijatá faktúra, cenová ponuka,

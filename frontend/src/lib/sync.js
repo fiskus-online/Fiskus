@@ -55,3 +55,25 @@ export function joinName(fragment) {
   const q = new URLSearchParams(String(fragment).replace(/^#?pripojit&/, ''))
   return q.get('n') || 'Počítač'
 }
+
+/** Odkaz na pripojenie z textu QR kódu alebo vloženého odkazu; inak ''. */
+export function linkFragment(text) {
+  const t = String(text ?? '').trim()
+  const i = t.indexOf('#pripojit&')
+  if (i >= 0) return t.slice(i)
+  return t.startsWith('pripojit&') ? '#' + t : ''
+}
+
+/** Beží Fiškus ako aplikácia z plochy (nie v karte prehliadača)? */
+export function standalone() {
+  try {
+    return globalThis.navigator?.standalone === true || globalThis.matchMedia?.('(display-mode: standalone)').matches === true
+  } catch {
+    return false
+  }
+}
+
+/** iPhone alebo iPad (aplikácia z plochy má vlastné úložisko). */
+export function appleMobile(ua = globalThis.navigator?.userAgent ?? '') {
+  return /iPhone|iPad|iPod/.test(ua)
+}
