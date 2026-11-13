@@ -1,0 +1,6 @@
+# fiskus.online — všetko je verejné, mapa stránok pre vyhľadávače
+User-agent: *
+Allow: /
+
+Sitemap: https://fiskus.online/sitemap.xml
+Sitemap: https://docs.fiskus.online/sitemap.xml

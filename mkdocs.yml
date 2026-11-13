@@ -3,7 +3,7 @@
 # docs_hooks/sourcebook.py ich pri zostavení preloží do MkDocs Material.
 site_name: Fiškus
 site_url: https://docs.fiskus.online/
-site_description: Slovenský účtovný program na štúdium a výučbu účtovníctva.
+site_description: Návod k Fiškusu, slovenskému účtovnému programu pre živnostníkov, firmy aj domácnosť — faktúry, DPH, daň z príjmov, banka, tlačivá a domáce financie.
 docs_dir: docs
 
 theme:
