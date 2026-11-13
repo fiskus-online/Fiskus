@@ -15,7 +15,7 @@ ktorý prehliadač na server neposiela).
 | `GET /v1/c/{kanál}/state` | stav: kópia (verzia, veľkosť), zoznam záznamov, či telefón chce čerstvú kópiu |
 | `PUT /v1/c/{kanál}/snapshot` | počítač uloží kópiu (hlavička `X-Version`, najviac 32 MB) |
 | `GET /v1/c/{kanál}/snapshot` | telefón stiahne kópiu |
-| `POST /v1/c/{kanál}/inbox` | telefón pridá záznam (najviac 512 kB, najviac 500 čakajúcich) |
+| `POST /v1/c/{kanál}/inbox` | telefón pridá záznam (najviac 1,5 MB — aj bloček s fotkou; najviac 500 čakajúcich) |
 | `GET`/`DELETE /v1/c/{kanál}/inbox/{id}` | počítač si záznam vyzdvihne a zmaže |
 | `POST /v1/c/{kanál}/want` | telefón si pýta čerstvú kópiu |
 | `DELETE /v1/c/{kanál}` | zrušenie spárovania |

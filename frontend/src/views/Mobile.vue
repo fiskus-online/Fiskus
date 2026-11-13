@@ -2,15 +2,16 @@
 // Mobil: odfotenie bločku eKasa. QR kód sa prečíta z fotky priamo v telefóne
 // (ZXing, záložne jsQR — lib/qrscan.js), na server ide iba kód a zmenšená fotka. Funguje aj cez http v sieti
 // (fotoaparát cez <input capture>, bez živého náhľadu kamery).
-import { computed, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
 import SelectButton from 'primevue/selectbutton'
 import { api, ApiError } from '../lib/api.js'
 import { can, selectCompany, session } from '../lib/session.js'
 import { formatMoney, formatDate } from '../lib/format.js'
-import { imageReader, loadImage, payments, receiptId, shrinkImage } from '../lib/receipt.js'
+import { blobBase64, imageReader, loadImage, payments, receiptId, shrinkImage } from '../lib/receipt.js'
 import { decodeQR } from '../lib/qrscan.js'
+import { inBrowser } from '../lib/install.js'
 
 const fileInput = ref(null)
 const busy = ref('')
@@ -23,6 +24,32 @@ const hh = computed(() => session.company?.bookkeeping === 'household')
 const canWrite = computed(() => can(hh.value ? 'ledger.write' : 'purchases.write'))
 const accounts = ref([])
 const account = ref(null)
+// telefón mimo domu (Fiškus v prehliadači s kópiou z počítača): bloček sa
+// iba pošle do fronty, spracuje ho počítač (eKasa, čítanie fotky)
+const phoneCopy = ref(false)
+onMounted(async () => {
+  if (!inBrowser) return
+  try {
+    const st = await api.syncStatus()
+    phoneCopy.value = st.role === 'phone' && !!st.phone
+  } catch {
+    /* bez stavu ako doteraz */
+  }
+})
+
+async function queue(qr, img) {
+  busy.value = 'send'
+  try {
+    const photo = img ? await blobBase64(await shrinkImage(img, 1280)) : undefined
+    await api.phoneReceipt(session.companyId, { qr, payment: payment.value, accountId: hh.value ? account.value : undefined, photo })
+    done.value = [{ id: `q${Date.now()}`, queued: true, name: qr ? 'Bloček z eKasy' : 'Bloček z fotky' }, ...done.value].slice(0, 20)
+    manual.value = ''
+  } catch (err) {
+    error.value = err instanceof ApiError && err.fields.length ? err.fields[0].message : err.message
+  } finally {
+    busy.value = ''
+  }
+}
 // účty domácnosti sa načítajú pri každom prepnutí (aj medzi dvoma domácnosťami)
 watch([hh, () => session.companyId], async ([on]) => {
   accounts.value = []
@@ -110,6 +137,14 @@ async function onPhoto(e) {
     const loaded = await loadImage(file)
     url = loaded.url
     const text = await decodeQR(loaded.img.naturalWidth, loaded.img.naturalHeight, imageReader(loaded.img))
+    if (phoneCopy.value) {
+      if (!hh.value && !text) {
+        error.value = 'Na fotke sa nenašiel QR kód. Odfoťte ho zblízka, ostro a celý (aj s bielym okrajom).'
+        return
+      }
+      await queue(receiptId(text) ? text : '', loaded.img)
+      return
+    }
     if (hh.value) {
       const photo = await shrinkImage(loaded.img)
       await sendHousehold(receiptId(text) ? text : '', photo)
@@ -149,7 +184,8 @@ function sendManual() {
     return
   }
   error.value = ''
-  if (hh.value) sendHousehold(id, null)
+  if (phoneCopy.value) queue(id, null)
+  else if (hh.value) sendHousehold(id, null)
   else send(id, null)
 }
 </script>
@@ -192,13 +228,17 @@ function sendManual() {
 
         <button type="button" class="shoot" :disabled="!!busy" @click="fileInput.click()">
           <i class="pi" :class="busy ? 'pi-spin pi-spinner' : 'pi-camera'" aria-hidden="true" />
-          <span>{{ busy === 'read' ? 'Čítam QR kód…' : busy === 'send' ? (hh ? 'Čítam a zapisujem bloček…' : 'Zapisujem bloček…') : 'Odfotiť bloček' }}</span>
+          <span>{{ busy === 'read' ? 'Čítam QR kód…' : busy === 'send' ? (phoneCopy ? 'Posielam bloček…' : hh ? 'Čítam a zapisujem bloček…' : 'Zapisujem bloček…') : 'Odfotiť bloček' }}</span>
           <small v-if="hh">Celý bloček aj s QR kódom — položky sa zaradia do kategórií</small>
           <small v-else>Odfoťte QR kód na bločku — zvyšok sa doplní z eKasy</small>
         </button>
         <input ref="fileInput" type="file" accept="image/*" capture="environment" class="hidden" @change="onPhoto" />
 
-        <p class="where">
+        <p v-if="phoneCopy" class="where">
+          Bloček sa pošle do počítača a spracuje ho, keď bude zapnutý (údaje z eKasy, položky do kategórií). V telefóne ho uvidíte po ďalšej
+          kópii z počítača.
+        </p>
+        <p v-else class="where">
           <template v-if="hh">V počítači: Domácnosť → Pohyby.</template>
           <template v-else>V počítači: Nákup → Prijaté faktúry (uhradené, s fotkou).</template>
           <template v-if="!session.companies.some((c) => c.bookkeeping === 'household')">
@@ -217,9 +257,13 @@ function sendManual() {
         </details>
 
         <section v-if="done.length" class="list" aria-label="Zapísané bločky">
-          <h2>Zapísané</h2>
+          <h2>{{ phoneCopy ? 'Odoslané' : 'Zapísané' }}</h2>
           <template v-for="p in done" :key="p.id">
-            <RouterLink v-if="p.hh" to="/domacnost/pohyby" class="row">
+            <div v-if="p.queued" class="row">
+              <span class="who">{{ p.name }}<small>odoslaný do počítača, čaká na spracovanie</small></span>
+              <i class="pi pi-cloud-upload sum" aria-hidden="true" />
+            </div>
+            <RouterLink v-else-if="p.hh" to="/domacnost/pohyby" class="row">
               <span class="who">{{ p.name }}<small>{{ formatDate(p.date) }}, {{ p.items }} položiek · {{ p.category }}</small></span>
               <strong class="sum">{{ formatMoney(p.total) }}</strong>
             </RouterLink>

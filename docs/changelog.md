@@ -17,6 +17,10 @@ etapách je v [pláne vývoja](./ROADMAP.md).
   na iPhone vlastné údaje a kópiu z prehliadača nevidel. V prázdnom Fiškuse
   je teraz **Pripojiť k počítaču** — QR kód z obrazovky počítača sa odfotí
   priamo v aplikácii (alebo sa vloží odkaz).
+- **Bločky v telefóne mimo domu**: v pruhu telefónu je tlačidlo Bloček.
+  Odfotený bloček (QR kód eKasa, v domácnosti aj iba fotka) sa pošle do
+  počítača a ten ho spracuje ako bloček z mobilu v sieti — prijatá faktúra
+  vo firme, pohyb rozdelený na položky v domácnosti, s fotkou.
 
 ## 0.10.5
 

@@ -53,3 +53,13 @@ export function imageReader(img) {
     return ctx.getImageData(0, 0, w, h)
   }
 }
+
+/** Blob → base64 (bez „data:…;base64,“), napr. fotka do JSON. */
+export function blobBase64(blob) {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader()
+    r.onload = () => resolve(String(r.result).replace(/^data:[^,]*,/, ''))
+    r.onerror = () => reject(r.error ?? new Error('Fotka sa nedá prečítať'))
+    r.readAsDataURL(blob)
+  })
+}

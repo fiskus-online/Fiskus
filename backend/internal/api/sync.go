@@ -55,9 +55,18 @@ func (s *Server) syncHandler(mux *http.ServeMux) http.Handler {
 				writeErr(w, http.StatusConflict, app.ErrPhoneCopy.Error(), nil)
 				return
 			}
-			body, err := io.ReadAll(http.MaxBytesReader(w, r.Body, 1<<20))
+			body, err := io.ReadAll(http.MaxBytesReader(w, r.Body, 2<<20))
 			if err != nil {
 				writeErr(w, http.StatusRequestEntityTooLarge, "Záznam je priveľký", nil)
+				return
+			}
+			if app.SyncDeferred(pattern) {
+				// v kópii sa nevykoná (napr. bloček potrebuje eKasu) — iba do fronty
+				if err := s.App.SyncCapture(r.Context(), pattern, r.Method, r.URL.RequestURI(), body, nil); err != nil {
+					writeErr(w, http.StatusInternalServerError, "Záznam sa nepodarilo uložiť do fronty: "+err.Error(), nil)
+					return
+				}
+				writeJSON(w, http.StatusAccepted, map[string]bool{"queued": true})
 				return
 			}
 			r.Body = io.NopCloser(bytes.NewReader(body))
