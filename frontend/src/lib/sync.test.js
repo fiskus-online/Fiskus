@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { itemsText, joinFragment, joinName, phoneLine, phoneProblem } from './sync.js'
+import { appleMobile, itemsText, joinFragment, joinName, linkFragment, phoneLine, phoneProblem } from './sync.js'
 
 describe('telefón mimo domu', () => {
   it.each([
@@ -33,3 +33,16 @@ it.each([
   ['#pripojit&k=abc&n=Domácnosť+Novákovci', 'Domácnosť Novákovci'],
   ['pripojit&k=abc', 'Počítač'],
 ])('meno počítača z odkazu %s', (f, want) => expect(joinName(f)).toBe(want))
+
+it.each([
+  ['https://app.fiskus.online/#pripojit&k=abc&n=PC', '#pripojit&k=abc&n=PC'],
+  ['  pripojit&k=abc ', '#pripojit&k=abc'],
+  ['https://fiskus.online/', ''],
+  ['O-1234-5678', ''],
+  [null, ''],
+])('odkaz z QR kódu %s', (t, want) => expect(linkFragment(t)).toBe(want))
+
+it.each([
+  ['Mozilla/5.0 (iPhone; CPU iPhone OS 18_1 like Mac OS X) AppleWebKit/605.1.15', true],
+  ['Mozilla/5.0 (Linux; Android 15) Chrome/140', false],
+])('iPhone %#', (ua, want) => expect(appleMobile(ua)).toBe(want))

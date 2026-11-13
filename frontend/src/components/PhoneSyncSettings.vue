@@ -168,8 +168,9 @@ async function dismiss(r) {
         <div>
           <p><strong>Naskenujte QR kód fotoaparátom telefónu.</strong> Otvorí sa Fiškus v prehliadači a stiahne si kópiu údajov.</p>
           <p class="muted">
-            Na iPhone potom v Safari zvoľte <strong>Zdieľať → Pridať na plochu</strong>, inak Safari po týždni nepoužívania údaje
-            zmaže. V Androide ponuka prehliadača → <strong>Pridať na plochu</strong>.
+            <strong>iPhone a Fiškus na ploche:</strong> aplikácia z plochy má vlastné údaje. Otvorte v telefóne app.fiskus.online, zvoľte
+            Zdieľať → <strong>Pridať na plochu</strong>, spustite Fiškus z plochy, ťuknite na <strong>Pripojiť k počítaču</strong>
+            a odfoťte tento QR kód. V Androide stačí naskenovať a potom ponuka prehliadača → Pridať na plochu.
           </p>
           <p class="muted">QR kód nikomu neukazujte ani neposielajte — kto ho naskenuje, vidí vaše údaje.</p>
           <div class="row">

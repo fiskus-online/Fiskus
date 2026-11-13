@@ -235,6 +235,10 @@ watch(
           <template v-if="isSuperAdmin()">
             <p>Zatiaľ tu nie je žiadna firma.</p>
             <RouterLink to="/firmy">Založiť firmu</RouterLink>
+            <div v-if="inBrowser" class="join-offer">
+              <span><strong>Máte Fiškus v počítači?</strong> Pripojte tento telefón — dostane kópiu firiem a domácnosti.</span>
+              <RouterLink to="/pripojit" class="join-link"><i class="pi pi-link" aria-hidden="true" /> Pripojiť k počítaču</RouterLink>
+            </div>
             <DemoOffer />
           </template>
           <p v-else>Nemáte prístup do žiadnej firmy. Požiadajte správcu, aby vás pridal.</p>
@@ -493,5 +497,24 @@ nav {
   .company .muted {
     display: none;
   }
+}
+.join-offer {
+  display: flex;
+  align-items: center;
+  gap: 12px 16px;
+  flex-wrap: wrap;
+  padding: 12px 14px;
+  background: var(--sheet);
+  border: 1px solid var(--rule);
+  border-top: 3px solid var(--blue);
+  text-align: left;
+  max-width: 640px;
+}
+.join-offer span {
+  flex: 1 1 16rem;
+}
+.join-link {
+  font-weight: 600;
+  white-space: nowrap;
 }
 </style>

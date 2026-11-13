@@ -1,14 +1,57 @@
 <script setup>
 // Fiškus v prehliadači: pripojenie k počítaču odkazom z QR kódu (Nastavenia
 // → Telefón mimo domu v počítači). Údaje v prehliadači nahradí kópia.
+// Odkaz príde z adresy (QR kód naskenovaný fotoaparátom), z fotky QR kódu
+// alebo vložený — aplikácia z plochy na iPhone má vlastné úložisko, takže
+// sa pripája zvnútra, nie cez prehliadač.
 import { computed, onBeforeUnmount, ref } from 'vue'
 import Button from 'primevue/button'
+import InputText from 'primevue/inputtext'
 import { api, ApiError } from '../lib/api.js'
 import { session } from '../lib/session.js'
-import { joinName, takeJoin } from '../lib/sync.js'
+import { decodeQR } from '../lib/qrscan.js'
+import { imageReader, loadImage } from '../lib/receipt.js'
+import { appleMobile, joinName, linkFragment, standalone, takeJoin } from '../lib/sync.js'
 
-const fragment = takeJoin()
-const name = computed(() => joinName(fragment))
+const fragment = ref(takeJoin())
+const name = computed(() => joinName(fragment.value))
+const pasted = ref('')
+const reading = ref(false)
+const fileInput = ref(null)
+// iPhone v karte prehliadača: aplikácia z plochy by kópiu nevidela
+const homeFirst = appleMobile() && !standalone()
+
+function usePasted() {
+  error.value = ''
+  const f = linkFragment(pasted.value)
+  if (!f) {
+    error.value = 'Toto nie je odkaz na pripojenie z Fiškusa v počítači.'
+    return
+  }
+  fragment.value = f
+}
+
+async function onPhoto(e) {
+  const file = e.target.files?.[0]
+  e.target.value = ''
+  if (!file) return
+  error.value = ''
+  reading.value = true
+  let url = ''
+  try {
+    const loaded = await loadImage(file)
+    url = loaded.url
+    const text = await decodeQR(loaded.img.naturalWidth, loaded.img.naturalHeight, imageReader(loaded.img))
+    const f = linkFragment(text)
+    if (!f) throw new Error(text ? 'QR kód nie je odkaz na pripojenie z Fiškusa v počítači.' : 'Na fotke sa nenašiel QR kód — odfoťte ho zblízka a ostro.')
+    fragment.value = f
+  } catch (err) {
+    error.value = err.message
+  } finally {
+    if (url) URL.revokeObjectURL(url)
+    reading.value = false
+  }
+}
 const state = ref('ask') // ask | wait | error
 const error = ref('')
 const note = ref('')
@@ -38,7 +81,7 @@ async function check() {
 async function join() {
   error.value = ''
   try {
-    await api.syncJoin(fragment)
+    await api.syncJoin(fragment.value)
     state.value = 'wait'
     check()
   } catch (e) {
@@ -53,7 +96,26 @@ async function join() {
     <div class="box">
       <h1><i class="pi pi-mobile" aria-hidden="true" /> Pripojiť k počítaču</h1>
       <template v-if="!fragment">
-        <p>Odkaz na pripojenie chýba. V počítači otvorte Nastavenia → Telefón mimo domu a naskenujte QR kód znova.</p>
+        <p>
+          V počítači otvorte <strong>Nastavenia → Telefón mimo domu → Pripojiť telefón</strong>. Potom tu odfoťte QR kód z obrazovky
+          počítača alebo vložte odkaz (tlačidlo Kopírovať odkaz v počítači).
+        </p>
+        <p v-if="homeFirst" class="warn">
+          <i class="pi pi-info-circle" aria-hidden="true" />
+          <span>
+            Na iPhone si Fiškus najprv pridajte na plochu (Zdieľať → <strong>Pridať na plochu</strong>), spustite ho z plochy a pripojte
+            až tam — aplikácia z plochy má vlastné údaje a kópiu z prehliadača by nevidela.
+          </span>
+        </p>
+        <div class="actions">
+          <Button label="Odfotiť QR kód" icon="pi pi-camera" :loading="reading" @click="fileInput.click()" />
+          <input ref="fileInput" type="file" accept="image/*" capture="environment" class="hidden" @change="onPhoto" />
+        </div>
+        <div class="paste">
+          <InputText v-model="pasted" placeholder="https://app.fiskus.online/#pripojit&…" aria-label="Odkaz na pripojenie" fluid />
+          <Button label="Použiť odkaz" severity="secondary" outlined :disabled="!pasted.trim()" @click="usePasted" />
+        </div>
+        <p v-if="error" class="err">{{ error }}</p>
       </template>
       <template v-else-if="state === 'ask'">
         <p>
@@ -80,9 +142,9 @@ async function join() {
         <p class="err">{{ error }}</p>
         <Button label="Skúsiť znova" severity="secondary" outlined @click="join" />
       </template>
-      <p class="muted tip">
-        Tip: na iPhone v Safari zvoľte <strong>Zdieľať → Pridať na plochu</strong> — inak Safari údaje stránky po týždni
-        nepoužívania zmaže. V Androide ponuka prehliadača → <strong>Pridať na plochu</strong>.
+      <p v-if="fragment && homeFirst" class="muted tip">
+        Na iPhone má aplikácia z plochy vlastné údaje: ak chcete Fiškus spúšťať z plochy, pridajte si ho tam najprv (Zdieľať → Pridať na
+        plochu) a pripojte ho až v ňom. V karte prehliadača Safari údaje po týždni nepoužívania zmaže.
       </p>
     </div>
   </div>
@@ -144,5 +206,16 @@ h1 {
 }
 .err {
   color: var(--tone-overdue);
+}
+.hidden {
+  display: none;
+}
+.paste {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.paste > :first-child {
+  flex: 1 1 14rem;
 }
 </style>
