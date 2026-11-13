@@ -13,7 +13,7 @@ Komunikácia a texty v rozhraní sú po slovensky. Kód (identifikátory) je po 
 - SQLite kód je za build tagom `sqlite`: `go test -tags sqlite ./...`.
 - QR platba PAY by square sa skladá z hotových súm z API: v prehliadači `lib/payqr.js` (knižnica bysquare), v PDF zo servera `internal/payqr` (Go). Pravidlá, kedy sa QR zobrazí, musia byť rovnaké. Vzorky zo servera (`internal/payqr/testdata/golden.json`, `go test -update`) dekóduje frontendový test knižnicami bysquare a jsQR.
 - Fiškus nemá licencie, platby, predplatné ani obmedzenie počtu firiem. Slovo „zadarmo“ (ani „bezplatný“) je iba v časti „Vždy zadarmo“ na webe a v titulku, popise a údajoch pre vyhľadávače úvodnej stránky webu (SEO), inde nikde (návod, program, README).
-- Meno autora je iba ako podpis „Palo Krnáč“ na konci zásad ochrany osobných údajov (site/ochrana-osobnych-udajov.html). Inde (pätička webu, program, inštalátory, návod, ukážkové a testovacie dáta) sa neuvádza.
+- Meno autora sa nikde neuvádza (web, program, inštalátory, návod, ukážkové a testovacie dáta). Zásady ochrany osobných údajov (site/ochrana-osobnych-udajov.html) podpisuje „Tím Fiškus“.
 - Kontaktné e-maily sa nikde neuvádzajú (web, program, inštalátory, návod). Ak Fiškus niečo posiela automaticky e-mailom od autora, odosielateľ je `palo@ctrl32.com`.
 
 ## Príkazy
