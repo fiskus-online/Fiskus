@@ -215,7 +215,7 @@ const date = (k) => ({
       <FormField label="Očakávané dodanie" :error="errors.expected" :hint="order?.sentDate ? `odoslaná ${formatDate(order.sentDate)}` : ''">
         <DatePicker :model-value="date('expected').get()" date-format="d. m. yy" size="small" fluid show-button-bar :disabled="!editable" @update:model-value="date('expected').set($event)" />
       </FormField>
-      <FormField label="Poznámka pre dodávateľa" :span="2">
+      <FormField label="Poznámka pre dodávateľa" :span="4">
         <Textarea v-model="form.note" rows="2" auto-resize :disabled="!editable" placeholder="Napr. dodať do dielne, kontakt pri prevzatí…" />
       </FormField>
     </form>
@@ -306,9 +306,6 @@ const date = (k) => ({
 }
 .spacer {
   flex: 1;
-}
-.fields {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 .supplier {
   display: flex;
@@ -426,7 +423,6 @@ const date = (k) => ({
   .page {
     padding: 10px 10px 20px;
   }
-  .fields,
   .rec-head {
     grid-template-columns: minmax(0, 1fr);
   }

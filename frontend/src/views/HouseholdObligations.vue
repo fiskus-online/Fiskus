@@ -135,7 +135,7 @@ function edit(o) {
   errors.value = {}
   form.value = o
     ? { ...o, principal: fromAmount(o.principal), paidBefore: fromAmount(o.paidBefore), installment: fromAmount(o.installment), firstDue: fromISODate(o.firstDue), months: [...(o.months ?? [])] }
-    : { ...newObligation('loan', accounts.value), firstDue: new Date() }
+    : { ...newObligation(undefined, accounts.value), firstDue: new Date() }
 }
 const formCats = computed(() => categoriesFor(categories.value, form.value?.kind === 'lent' ? 'income' : 'expense'))
 const kindHint = computed(() => obligationKinds.find((k) => k.value === form.value?.kind)?.hint ?? '')
@@ -357,8 +357,15 @@ function remove(o) {
     <Dialog :visible="!!form" :header="form?.id ? 'Upraviť záväzok' : 'Nový záväzok'" modal :style="{ width: '40rem' }" :breakpoints="{ '640px': '100vw' }"
       @update:visible="(v) => !v && (form = null)">
       <form v-if="form" class="form-grid obl-form" @submit.prevent="save">
-        <FormField label="Druh" :span="4" :hint="kindHint" :error="errors.kind">
-          <SelectButton v-model="form.kind" :options="obligationKinds" option-label="label" option-value="value" :allow-empty="false" size="small" class="kinds" />
+        <FormField label="Druh" :span="2" :hint="kindHint" :error="errors.kind">
+          <Select v-model="form.kind" :options="obligationKinds" option-label="label" option-value="value" size="small" class="kind-select" aria-label="Druh záväzku">
+            <template #value="{ value }">
+              <span v-if="value" class="kind-opt"><i :class="['pi', obligationIcon(value)]" aria-hidden="true" />{{ obligationKindLabel(value) }}</span>
+            </template>
+            <template #option="{ option }">
+              <span class="kind-opt"><i :class="['pi', option.icon]" aria-hidden="true" />{{ option.label }}</span>
+            </template>
+          </Select>
         </FormField>
         <FormField label="Názov" :span="2" :error="errors.name">
           <InputText v-model="form.name" size="small" :placeholder="form.kind === 'execution' ? 'napr. Exekúcia EX 845/2024' : form.kind === 'regular' ? 'napr. Nájom bytu' : form.kind === 'fine' ? 'napr. Pokuta za parkovanie' : 'napr. Hypotéka VÚB'" />
@@ -631,8 +638,17 @@ h3 {
 .obl-form {
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
-.kinds {
-  flex-wrap: wrap;
+.kind-select {
+  width: 100%;
+}
+.kind-opt {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.kind-opt .pi {
+  color: var(--blue);
+  font-size: 0.9em;
 }
 .actions {
   grid-column: 1 / -1;
@@ -725,10 +741,19 @@ h3 {
   color: var(--ink-faint);
   font-size: var(--fs-sm);
 }
+/* mesiace v pravidelnej mriežke: 12 v riadku, na mobile 6 */
 .months {
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+}
+.months :deep(.p-togglebutton) {
+  padding-inline: 0;
+  justify-content: center;
 }
 @media (max-width: 760px) {
+  .months {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
   .pm li {
     grid-template-columns: 70px minmax(0, 1fr) auto;
     grid-template-areas: 'd w a' 'd b p';

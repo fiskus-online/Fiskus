@@ -143,11 +143,12 @@ export function listTotals(rows) {
 
 // ---- záväzky ----
 
+// druhy záväzku v poradí výberu; pravidelná platba je najčastejšia, preto prvá
 export const obligationKinds = [
+  { value: 'regular', label: 'Pravidelná platba', icon: 'pi-replay', hint: 'Nájom, zálohy na energie, poistka, predplatné — bez dlžnej sumy' },
   { value: 'loan', label: 'Pôžička, úver', icon: 'pi-building-columns', hint: 'Banka, nebanková spoločnosť, hypotéka, leasing, nákup na splátky' },
   { value: 'debt', label: 'Dlh', icon: 'pi-user-minus', hint: 'Dlžíte niekomu — známemu, firme, štátu' },
   { value: 'execution', label: 'Exekúcia', icon: 'pi-exclamation-triangle', hint: 'Splátky exekútorovi podľa dohody alebo zrážky' },
-  { value: 'regular', label: 'Pravidelná platba', icon: 'pi-replay', hint: 'Nájom, zálohy na energie, poistka, predplatné — bez dlžnej sumy' },
   { value: 'lent', label: 'Požičal som', icon: 'pi-user-plus', hint: 'Niekto vám vracia peniaze — splátky sú príjem' },
   { value: 'fine', label: 'Pokuta, poplatok', icon: 'pi-ticket', hint: 'Pokuta, poplatok, platba do školy, krúžok, výlet — jednorazovo alebo na splátky' },
 ]
@@ -172,7 +173,7 @@ export const dueStatuses = {
 export const dueStatus = (s) => dueStatuses[s] ?? { label: s, tone: 'cancelled' }
 
 /** Nový záväzok pre formulár. */
-export function newObligation(kind = 'loan', accounts = [], today = new Date()) {
+export function newObligation(kind = obligationKinds[0].value, accounts = [], today = new Date()) {
   const acc = accounts.find((a) => !a.closed && a.kind === 'bank') ?? accounts.find((a) => !a.closed)
   return {
     id: 0, kind, name: '', creditor: '', principal: '', paidBefore: '', installment: '', frequency: kind === 'regular' ? 'monthly' : 'monthly',

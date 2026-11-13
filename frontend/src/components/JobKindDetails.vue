@@ -126,9 +126,6 @@ const e = (k) => props.errors[k]
   border-bottom: 1px solid var(--rule);
   padding-bottom: 2px;
 }
-.fields {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
 .plate :deep(input),
 .plate {
   text-transform: uppercase;
@@ -146,9 +143,6 @@ const e = (k) => props.errors[k]
   min-height: 32px;
 }
 @media (max-width: 640px) {
-  .fields {
-    grid-template-columns: minmax(0, 1fr);
-  }
   .gap {
     display: none;
   }

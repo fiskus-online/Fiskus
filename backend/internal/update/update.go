@@ -1,6 +1,8 @@
 // Package update: automatická aktualizácia nainštalovaného Fiškusa.
 //
-// Po spustení aplikácie sa zistí posledné vydanie na GitHube. Ak je novšie,
+// Po spustení aplikácie sa zistí vydanie s najvyššou verziou na GitHube
+// (nie to, ktoré GitHub označí za posledné: omylom vydaná nižšia značka
+// by inak aktualizácie zastavila). Ak je novšie,
 // stiahne sa súbor zodpovedajúci spôsobu inštalácie (inštalátor pre
 // Windows, .dmg pre macOS, balík deb/rpm alebo samotný program), overí sa
 // jeho súčet SHA-256 a program sa vymení. Starý Fiškus sa potom riadne
@@ -20,8 +22,9 @@ import (
 	"time"
 )
 
-// DefaultURL je posledné vydanie Fiškusa (bez predbežných verzií).
-const DefaultURL = "https://api.github.com/repos/fiskus-online/fiskus/releases/latest"
+// DefaultURL je zoznam posledných vydaní Fiškusa; vyberie sa najvyššia
+// verzia bez predbežných vydaní a konceptov.
+const DefaultURL = "https://api.github.com/repos/fiskus-online/fiskus/releases?per_page=30"
 
 // Page je stránka so stiahnutím pre ručnú aktualizáciu.
 const Page = "https://fiskus.online/#stiahnut"
@@ -45,7 +48,23 @@ type Asset struct {
 	Digest string // „sha256:…“ (GitHub ho počíta pri nahraní)
 }
 
-// Check zistí posledné vydanie.
+// rawRelease je vydanie v odpovedi GitHubu.
+type rawRelease struct {
+	Tag    string `json:"tag_name"`
+	Body   string `json:"body"`
+	Page   string `json:"html_url"`
+	Draft  bool   `json:"draft"`
+	Pre    bool   `json:"prerelease"`
+	Assets []struct {
+		Name   string `json:"name"`
+		URL    string `json:"browser_download_url"`
+		Size   int64  `json:"size"`
+		Digest string `json:"digest"`
+	} `json:"assets"`
+}
+
+// Check zistí vydanie s najvyššou verziou. Adresa môže vrátiť zoznam
+// vydaní (/releases) aj jedno vydanie (/releases/latest).
 func Check(ctx context.Context, client *http.Client, url string) (Release, error) {
 	ctx, cancel := context.WithTimeout(ctx, 20*time.Second)
 	defer cancel()
@@ -62,23 +81,20 @@ func Check(ctx context.Context, client *http.Client, url string) (Release, error
 	if res.StatusCode != http.StatusOK {
 		return Release{}, fmt.Errorf("GitHub odpovedal %d", res.StatusCode)
 	}
-	var raw struct {
-		Tag    string `json:"tag_name"`
-		Body   string `json:"body"`
-		Page   string `json:"html_url"`
-		Draft  bool   `json:"draft"`
-		Pre    bool   `json:"prerelease"`
-		Assets []struct {
-			Name   string `json:"name"`
-			URL    string `json:"browser_download_url"`
-			Size   int64  `json:"size"`
-			Digest string `json:"digest"`
-		} `json:"assets"`
-	}
-	if err := json.NewDecoder(io.LimitReader(res.Body, 4<<20)).Decode(&raw); err != nil {
+	body, err := io.ReadAll(io.LimitReader(res.Body, 8<<20))
+	if err != nil {
 		return Release{}, errors.New("nečitateľná odpoveď GitHubu")
 	}
-	if raw.Draft || raw.Pre || parse(raw.Tag) == nil {
+	var list []rawRelease
+	if err := json.Unmarshal(body, &list); err != nil {
+		var one rawRelease
+		if err := json.Unmarshal(body, &one); err != nil {
+			return Release{}, errors.New("nečitateľná odpoveď GitHubu")
+		}
+		list = []rawRelease{one}
+	}
+	raw, ok := highest(list)
+	if !ok {
 		return Release{}, errors.New("posledné vydanie nemá platnú verziu")
 	}
 	r := Release{Version: trimV(raw.Tag), Notes: raw.Body, Page: raw.Page}
@@ -86,6 +102,22 @@ func Check(ctx context.Context, client *http.Client, url string) (Release, error
 		r.Assets = append(r.Assets, Asset{Name: a.Name, URL: a.URL, Size: a.Size, Digest: a.Digest})
 	}
 	return r, nil
+}
+
+// highest vyberie vydanie s najvyššou verziou (bez konceptov, predbežných
+// vydaní a značiek v inom tvare ako v1.2.3).
+func highest(list []rawRelease) (rawRelease, bool) {
+	var best rawRelease
+	found := false
+	for _, r := range list {
+		if r.Draft || r.Pre || parse(r.Tag) == nil {
+			continue
+		}
+		if !found || Newer(r.Tag, best.Tag) {
+			best, found = r, true
+		}
+	}
+	return best, found
 }
 
 // trimV odstráni predponu „v“ alebo „V“ (značka V0.10.0 je tá istá verzia ako v0.10.0).
