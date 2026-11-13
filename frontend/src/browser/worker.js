@@ -19,15 +19,38 @@ const ready = new Promise((resolve) => (markReady = resolve))
 const LOCKED = /Access Handle|NoModificationAllowed/i
 
 let storage = null
+// krok spúšťania — pri chybe sa ukáže, kde Fiškus zlyhal (diagnostika)
+let step = 'SQLite (WebAssembly)'
 
 /**
  * Úložisko databázy: OPFS, a keď ho prehliadač nedovolí (Safari a ostatné
  * prehliadače na iPhone: „WebKit encountered an internal error“), databáza
  * v pamäti ukladaná do IndexedDB, v krajnom prípade iba v pamäti.
  */
+const PROBE = '/skuska.db'
+
+/** Skúšobný zápis a čítanie; pri chybe výnimka (úložisko sa nepoužije). */
+function probeStorage(open, cleanup) {
+  const db = open(PROBE)
+  try {
+    db.exec('CREATE TABLE IF NOT EXISTS t (x); DELETE FROM t; INSERT INTO t VALUES (42)')
+    if (db.selectValue('SELECT x FROM t') !== 42) throw new Error('úložisko vrátilo iné údaje, než sa zapísali')
+  } finally {
+    db.close()
+    try {
+      cleanup()
+    } catch {
+      /* skúšobný súbor nevadí */
+    }
+  }
+}
+
 async function openStorage(sqlite3) {
   try {
     const pool = await sqlite3.installOpfsSAHPoolVfs({ name: 'fiskus', initialCapacity: 12 })
+    // niektoré prehliadače (WebKit na iPhone) úložisko otvoria, ale zápis
+    // do neho zlyhá — skúšobný zápis, inak náhradné úložisko
+    probeStorage((name) => new pool.OpfsSAHPoolDb(name), () => pool.unlink(PROBE))
     // obnova zo zálohy pripravená pred opätovným načítaním (cmd/fiskus-web)
     if (pool.getFileNames().includes(RESTORE)) {
       await pool.importDb(DB, pool.exportFile(RESTORE))
@@ -58,7 +81,9 @@ async function openStorage(sqlite3) {
 
 async function start() {
   const sqlite3 = await sqlite3InitModule({ print: () => {}, printErr: () => {} })
+  step = 'úložisko databázy'
   storage = await openStorage(sqlite3)
+  step = 'sťahovanie programu'
 
   const bridge = createBridge(sqlite3, (name, readonly) => storage.open(name, readonly))
   bridge.readFile = (name) => storage.readFile(name)
@@ -70,7 +95,7 @@ async function start() {
     storage.changed() // nová databáza (po migráciách) sa hneď uloží
     postMessage({ type: 'ready', storage: storage.mode })
   }
-  globalThis.fiskusFailed = (message) => postMessage({ type: 'failed', message })
+  globalThis.fiskusFailed = (message) => postMessage({ type: 'failed', message, step, storage: storage?.mode })
 
   // program sa sťahuje raz, potom je v cache prehliadača (súbor má v mene odtlačok)
   const res = await fetch(fiskusWasm)
@@ -90,9 +115,12 @@ async function start() {
     }
   }
   postMessage({ type: 'progress', loaded, total: loaded })
+  step = 'rozbalenie programu'
   const bytes = await unpack(new Blob(chunks))
+  step = 'spustenie programu (WebAssembly)'
   const go = new globalThis.Go()
   const { instance } = await WebAssembly.instantiate(bytes, go.importObject)
+  step = 'otvorenie databázy'
   go.run(instance).then(() => postMessage({ type: 'failed', message: 'Fiškus sa neočakávane ukončil. Načítajte stránku znova.' }))
 }
 
@@ -125,8 +153,8 @@ onmessage = async (e) => {
 }
 
 start().catch((err) => {
-  const msg = LOCKED.test(err.message)
+  const msg = LOCKED.test(err?.message)
     ? 'Databázu má otvorenú iná karta alebo okno s Fiškusom. Zatvorte ho a skúste znova.'
-    : err.message
-  postMessage({ type: 'failed', message: msg })
+    : err?.message || String(err)
+  postMessage({ type: 'failed', message: msg, step, storage: storage?.mode, detail: `${err?.name ?? 'Error'}: ${err?.message ?? err}` })
 })

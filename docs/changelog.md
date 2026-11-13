@@ -11,6 +11,16 @@ tags: [prehľad]
 Verzie sú značky v repozitári (`v0.2.0`). Podrobný zoznam funkcií po
 etapách je v [pláne vývoja](./ROADMAP.md).
 
+## 0.10.5
+
+- **Fiškus v prehliadači na iPhone** (Safari aj Firefox): stránka sa
+  neotvorila s chybou „Response served by service worker has redirections“.
+  Service worker si stránku sťahoval cez adresu, ktorú web presmeruje,
+  a WebKit takú odpoveď odmietne. Teraz ju sťahuje priamo.
+- Fiškus v prehliadači skúšobne zapíše do úložiska súborov a keď zápis
+  zlyhá, použije IndexedDB. Pri chybe spustenia ukáže, v ktorom kroku
+  zlyhal, s podrobnosťami na skopírovanie.
+
 ## 0.10.4
 
 - **Tlačové zostavy** z každého zoznamu (firma aj domácnosť): výber

@@ -63,25 +63,37 @@ async function api(event) {
 async function cached(req, key = req) {
   const cache = await caches.open(CACHE)
   const hit = await cache.match(key)
-  if (hit) return hit
-  const res = await fetch(req)
+  if (hit) return clean(hit)
+  const res = await clean(await fetch(req))
   if (res.ok) cache.put(key, res.clone())
   return res
 }
+
+// Safari (WebKit) odmietne pri otváraní stránky odpoveď service workera,
+// ktorá prešla presmerovaním („Response served by service worker has
+// redirections“) — Cloudflare Pages presmeruje /index.html na /. Odpoveď
+// sa preto vždy prebalí do novej (bez príznaku presmerovania).
+async function clean(res) {
+  if (!res.redirected) return res
+  return new Response(await res.blob(), { status: res.status, statusText: res.statusText, headers: res.headers })
+}
+
+const PAGE = '/' // index.html (Cloudflare Pages ho podáva na /)
 
 async function page(req) {
   // aplikácia má jednu stránku: každá adresa (aj /faktury/12) = index.html
   const cache = await caches.open(CACHE)
   try {
-    const res = await fetch('/index.html', { cache: 'no-cache' })
+    const res = await clean(await fetch(PAGE, { cache: 'no-cache' }))
     if (res.ok) {
-      cache.put('/index.html', res.clone())
+      cache.put(PAGE, res.clone())
       return res
     }
   } catch {
     /* bez internetu */
   }
-  return (await cache.match('/index.html')) ?? fetch(req)
+  const hit = (await cache.match(PAGE)) ?? (await cache.match('/index.html')) // aj zo starších verzií
+  return hit ? clean(hit) : fetch(req)
 }
 
 self.addEventListener('fetch', (event) => {

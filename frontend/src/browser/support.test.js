@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { missingFeatures, progressShare, progressText } from './support.js'
+import { diagnosis, missingFeatures, progressShare, progressText } from './support.js'
 
 const full = {
   WebAssembly: {},
@@ -23,5 +23,16 @@ describe('Fiškus v prehliadači', () => {
   ])('priebeh %i / %i', (loaded, total, text, share) => {
     expect(progressText(loaded, total)).toBe(text)
     expect(progressShare(loaded, total)).toBe(share)
+  })
+})
+
+describe('podrobnosti chyby', () => {
+  it.each([
+    [{ step: 'úložisko databázy', detail: 'UnknownError: WebKit encountered an internal error', storage: 'opfs' }, ['Krok: úložisko databázy', 'Chyba: UnknownError: WebKit encountered an internal error', 'Úložisko: úložisko súborov (OPFS)']],
+    [{ message: 'databáza: chyba' }, ['Krok: nezistený', 'Chyba: databáza: chyba', 'Úložisko: nezistené']],
+  ])('%#', (info, lines) => {
+    const out = diagnosis(info, 'Mozilla/5.0 (iPhone)')
+    for (const l of lines) expect(out).toContain(l)
+    expect(out).toContain('Prehliadač: Mozilla/5.0 (iPhone)')
   })
 })

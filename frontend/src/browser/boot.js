@@ -9,7 +9,7 @@
 //
 // Rozhranie tak volá rovnaké API ako pri nainštalovanom programe.
 import { downloadURL } from '../lib/install.js'
-import { missingFeatures, progressShare, progressText } from './support.js'
+import { diagnosis, missingFeatures, progressShare, progressText } from './support.js'
 
 const mark = `<svg viewBox="0 0 32 32" width="40" height="40" aria-hidden="true">
   <rect width="32" height="32" rx="7" fill="#1f3a5c" />
@@ -22,11 +22,20 @@ function screen(el, body) {
   el.innerHTML = `<div class="boot">${mark}<h1>Fiškus</h1>${body}</div>`
 }
 
-function problem(el, title, text, retry) {
+function problem(el, title, text, retry, info) {
+  const details = info ? diagnosis(info) : ''
   screen(el, `<p class="boot-title">${esc(title)}</p><p>${text}</p>
     <p class="boot-actions">${retry ? '<button type="button" class="boot-btn" data-retry>Skúsiť znova</button>' : ''}
-    <a class="boot-link" href="${downloadURL}">Stiahnuť nainštalovaný Fiškus</a></p>`)
+    <a class="boot-link" href="${downloadURL}">Stiahnuť nainštalovaný Fiškus</a></p>
+    ${details ? `<details class="boot-details"><summary>Podrobnosti chyby</summary><pre>${esc(details)}</pre>
+      <button type="button" class="boot-link" data-copy>Kopírovať podrobnosti</button></details>` : ''}`)
   el.querySelector('[data-retry]')?.addEventListener('click', () => location.reload())
+  el.querySelector('[data-copy]')?.addEventListener('click', (e) => {
+    navigator.clipboard?.writeText(details).then(
+      () => (e.target.textContent = 'Skopírované'),
+      () => (e.target.textContent = 'Nedá sa kopírovať — odfoťte obrazovku'),
+    )
+  })
 }
 
 /** Jedna karta naraz: databázu v úložisku prehliadača môže mať otvorenú iba jedna. */
@@ -54,7 +63,14 @@ export async function boot(el) {
     problem(el, 'Tento prehliadač Fiškus nespustí', `Chýba mu: ${esc(missing.join(', '))}. Použite aktuálny Chrome, Edge, Firefox alebo Safari, alebo si Fiškus nainštalujte do počítača.`)
     return false
   }
-  if (!(await lockTab())) {
+  let locked
+  try {
+    locked = await lockTab()
+  } catch (e) {
+    problem(el, 'Fiškus sa nespustil', esc(e.message), true, { step: 'zámok karty (Web Locks)', detail: `${e.name}: ${e.message}` })
+    return false
+  }
+  if (!locked) {
     problem(el, 'Fiškus je už otvorený', 'Fiškus v prehliadači môže byť otvorený iba v jednej karte. Prepnite sa do nej, alebo ju zatvorte a skúste znova.', true)
     return false
   }
@@ -71,11 +87,20 @@ export async function boot(el) {
   try {
     await serviceWorker()
   } catch (e) {
-    problem(el, 'Fiškus sa nespustil', `Service worker sa nepodarilo zaregistrovať (${esc(e.message)}). V súkromnom okne niektoré prehliadače úložisko nedovolia.`, true)
+    problem(el, 'Fiškus sa nespustil', `Service worker sa nepodarilo zaregistrovať (${esc(e.message)}). V súkromnom okne niektoré prehliadače úložisko nedovolia.`, true, {
+      step: 'service worker',
+      detail: `${e.name}: ${e.message}`,
+    })
     return false
   }
 
-  const worker = new Worker(new URL('./worker.js', import.meta.url), { type: 'module' })
+  let worker
+  try {
+    worker = new Worker(new URL('./worker.js', import.meta.url), { type: 'module' })
+  } catch (e) {
+    problem(el, 'Fiškus sa nespustil', esc(e.message), true, { step: 'web worker', detail: `${e.name}: ${e.message}` })
+    return false
+  }
   // požiadavky na API zo service workera → worker; odpoveď ide priamo cez port
   navigator.serviceWorker.addEventListener('message', (e) => {
     if (e.data?.type === 'fiskus-api') {
@@ -96,12 +121,15 @@ export async function boot(el) {
         resolve(true)
       }
       else if (m.type === 'failed') {
-        problem(el, 'Fiškus sa nespustil', esc(m.message), true)
+        problem(el, 'Fiškus sa nespustil', esc(m.message), true, m)
         resolve(false)
       }
     }
     worker.onerror = (e) => {
-      problem(el, 'Fiškus sa nespustil', esc(e.message || 'Chyba pri načítaní programu.'), true)
+      problem(el, 'Fiškus sa nespustil', esc(e.message || 'Chyba pri načítaní programu.'), true, {
+        step: 'web worker',
+        detail: [e.message, e.filename && `${e.filename}:${e.lineno}`].filter(Boolean).join(' · ') || 'neznáma chyba workera',
+      })
       resolve(false)
     }
   })
