@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
-  budgetTone, budgetWidth, receiptFacts, receiptRows, listTotals, setAllCategory, splitByCategory, filterObligations, fromAmount, newObligation, obligationTone, paidPercent, toAmount, categoriesFor, categoryErrors, chartBars, entryCategory, entryType, filterEntries, fromForm, newEntry, toForm, monthsLabel, planMonthLabel, filterPlan, ibanGroups,
+  budgetTone, budgetWidth, receiptFacts, receiptRows, listTotals, setAllCategory, splitByCategory, filterObligations, fromAmount, newObligation, obligationKinds, obligationTone, paidPercent, toAmount, categoriesFor, categoryErrors, chartBars, entryCategory, entryType, filterEntries, fromForm, newEntry, toForm, monthsLabel, planMonthLabel, filterPlan, ibanGroups,
 } from './household.js'
 
 const accounts = [
@@ -121,6 +121,14 @@ describe('domácnosť', () => {
     expect(toAmount('1 234,50')).toBe('1234.50')
     expect(fromAmount('1234.50')).toBe('1234,50')
     expect(fromAmount('0.00')).toBe('')
+  })
+
+  it.each([
+    ['prvý druh vo výbere', () => obligationKinds[0].value, 'regular'],
+    ['predvolený druh nového záväzku', () => newObligation().kind, 'regular'],
+    ['všetky druhy ostali', () => obligationKinds.map((k) => k.value).sort().join(','), 'debt,execution,fine,lent,loan,regular'],
+  ])('druh záväzku: %s', (_, got, want) => {
+    expect(got()).toBe(want)
   })
 
   it('bloček: kategórie položiek, popis, filter a hľadanie', () => {
