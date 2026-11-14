@@ -69,3 +69,23 @@ func (s *Server) purchaseFile(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Cache-Control", "private, max-age=3600")
 	_, _ = w.Write(f.Data)
 }
+
+// phoneReceipt: POST …/receipts/phone — bloček z telefónu mimo domu
+// (JSON s fotkou v base64). Na telefóne ide iba do fronty, spracuje ho počítač.
+func (s *Server) phoneReceipt(w http.ResponseWriter, r *http.Request) {
+	cid, ok := s.company(w, r)
+	if !ok {
+		return
+	}
+	var in app.PhoneReceipt
+	r.Body = http.MaxBytesReader(w, r.Body, app.MaxReceiptPhoto*4/3+(64<<10))
+	if !decode(w, r, &in) {
+		return
+	}
+	out, err := s.App.SavePhoneReceipt(r.Context(), cid, in)
+	if err != nil {
+		failEshop(w, err)
+		return
+	}
+	writeJSON(w, http.StatusCreated, out)
+}

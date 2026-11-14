@@ -11,6 +11,18 @@ tags: [prehľad]
 Verzie sú značky v repozitári (`v0.2.0`). Podrobný zoznam funkcií po
 etapách je v [pláne vývoja](./ROADMAP.md).
 
+## 0.10.7
+
+- **Bločky v telefóne mimo domu**: v pruhu telefónu je tlačidlo Bloček.
+  Odfotený bloček (QR kód eKasa, v domácnosti aj iba fotka) sa pošle do
+  počítača a ten ho spracuje ako bloček z mobilu v sieti — prijatá faktúra
+  vo firme, pohyb rozdelený na položky v domácnosti, s fotkou.
+- **Platba v internetbankingu** (záväzok domácnosti): údaje na kopírovanie
+  sú v poradí ako v príkaze na úhradu — príjemca, adresa, IBAN, suma,
+  symboly, správa. Správa pre príjemcu je rovnaká ako v QR kóde PAY by
+  square: keď nie je vyplnená, použije sa názov záväzku. V úzkom paneli je
+  názov nad hodnotou, aby sa hodnoty nelámali.
+
 ## 0.10.6
 
 - **Telefón mimo domu na iPhone z plochy**: Fiškus pridaný na plochu má

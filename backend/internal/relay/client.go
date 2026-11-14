@@ -18,9 +18,9 @@ const DefaultURL = "https://sync.fiskus.online"
 
 // Limity schránky (rovnaké v sync-relay/src/core.js).
 const (
-	MaxSnapshot = 32 << 20  // kópia databázy (zašifrovaná)
-	MaxItem     = 512 << 10 // jeden záznam z telefónu
-	MaxInbox    = 500       // záznamov čakajúcich na počítač
+	MaxSnapshot = 32 << 20   // kópia databázy (zašifrovaná)
+	MaxItem     = 1536 << 10 // jeden záznam z telefónu (aj bloček s fotkou)
+	MaxInbox    = 500        // záznamov čakajúcich na počítač
 )
 
 // Chyby schránky.
