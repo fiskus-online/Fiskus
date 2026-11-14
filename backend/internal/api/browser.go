@@ -37,6 +37,7 @@ var installOnly = map[string]string{
 	"POST /api/companies/{cid}/purchases/extract":          "Čítanie dokladov cez AI",
 	"POST /api/companies/{cid}/household/receipt/photo":    "Čítanie bločkov z fotky",
 	"POST /api/companies/{cid}/household/receipt/qr":       "Načítanie bločku z eKasy",
+	"POST /api/companies/{cid}/receipts/phone":             "Načítanie bločku z eKasy",
 	"PUT /api/companies/{cid}/mail-settings":               "Odosielanie e-mailov",
 	"POST /api/companies/{cid}/mail-settings/test":         "Odosielanie e-mailov",
 	"POST /api/companies/{cid}/invoices/{id}/email":        "Odosielanie e-mailov",

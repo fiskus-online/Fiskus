@@ -499,6 +499,8 @@ export const api = {
   syncJoin: (link) => request('POST', '/api/sync/join', { link }),
   syncLeave: () => request('POST', '/api/sync/leave', {}),
   syncDismiss: (id) => request('DELETE', `/api/sync/failed/${id}`),
+  // bloček z telefónu mimo domu (spracuje ho počítač); photo = base64 JPEG
+  phoneReceipt: (cid, { qr, payment, accountId, photo }) => request('POST', `/api/companies/${cid}/receipts/phone`, { qr, payment, accountId, photo }),
   scanReceipt: (cid, { qr, payment, photo }) => {
     const f = new FormData()
     f.append('qr', qr)

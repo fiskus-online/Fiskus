@@ -10,7 +10,7 @@
 
 export const LIMITS = {
   snapshot: 32 << 20, // kópia databázy
-  item: 512 << 10, // jeden záznam z telefónu
+  item: 1536 << 10, // jeden záznam z telefónu (aj bloček s fotkou)
   inbox: 500, // záznamov čakajúcich na počítač
   chunk: 1 << 20, // kópia sa ukladá po častiach
   ttlDays: 60, // nepoužívaná schránka sa zmaže
