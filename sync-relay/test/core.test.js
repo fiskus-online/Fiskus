@@ -24,7 +24,7 @@ test('stav, kópia a fronta', async () => {
   const s = memStore()
   assert.equal((await call(s, 'GET', '/snapshot')).status, 404)
   let st = await (await call(s, 'GET', '/state')).json()
-  assert.deepEqual(st, { snapshot: null, inbox: [] })
+  assert.deepEqual(st, { snapshot: null, inbox: [], seen: {} })
 
   assert.equal((await call(s, 'POST', '/want')).status, 204)
   assert.ok((await (await call(s, 'GET', '/state')).json()).want)
@@ -78,4 +78,14 @@ test('nepoužívaná schránka sa zmaže', () => {
   assert.equal(expired({ touched: now - 59 * 86400_000 }, now), false)
   assert.equal(expired({ touched: now - 61 * 86400_000 }, now), true)
   assert.equal(expired(undefined, now), true)
+})
+
+test('kedy sa ozval počítač a telefón', async () => {
+  const s = memStore()
+  const t = Date.UTC(2026, 10, 15, 11, 0, 0)
+  await call(s, 'GET', '/state', { headers: { 'X-Fiskus-Role': 'desktop' } }, t)
+  await call(s, 'POST', '/inbox', { body: 'x', headers: { 'X-Fiskus-Role': 'phone' } }, t + 60_000)
+  await call(s, 'GET', '/state', { headers: { 'X-Fiskus-Role': 'iný' } }, t + 120_000)
+  const st = await (await call(s, 'GET', '/state', {}, t + 180_000)).json()
+  assert.deepEqual(st.seen, { desktop: '2026-11-15T11:00:00Z', phone: '2026-11-15T11:01:00Z' })
 })

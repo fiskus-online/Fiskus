@@ -795,6 +795,22 @@ func (s *Store) Snapshot(ctx context.Context, dst string) error {
 }
 
 // Verify otvorí súbor databázy a spustí PRAGMA integrity_check.
+// ReadSetting prečíta nastavenie z iného súboru databázy iba na čítanie,
+// bez migrácie (napr. z kópie pripravenej na obnovu). Prázdne, keď nie je.
+func ReadSetting(ctx context.Context, path, key string) (string, error) {
+	db, err := sql.Open("sqlite", "file:"+path+"?mode=ro")
+	if err != nil {
+		return "", err
+	}
+	defer db.Close()
+	var v string
+	err = db.QueryRowContext(ctx, "SELECT value FROM settings WHERE key = ?", key).Scan(&v)
+	if errors.Is(err, sql.ErrNoRows) {
+		return "", nil
+	}
+	return v, err
+}
+
 func (s *Store) Verify(ctx context.Context, path string) error {
 	db, err := sql.Open("sqlite", "file:"+path+"?mode=ro")
 	if err != nil {

@@ -26,6 +26,9 @@ type BrowserDB interface {
 	// StageRestore overí databázu a pripraví ju na obnovu pri ďalšom
 	// spustení (prehliadač po obnove načíta stránku znova).
 	StageRestore(ctx context.Context, db []byte) error
+	// StagedSetting prečíta nastavenie z databázy pripravenej na obnovu
+	// (výsledky z kópie počítača pre telefón mimo domu).
+	StagedSetting(ctx context.Context, key string) (string, error)
 }
 
 // BrowserRemindDays: po koľkých dňoch bez zálohy Fiškus pripomenie zálohu.

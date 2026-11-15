@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { appleMobile, itemsText, joinFragment, joinName, linkFragment, phoneLine, phoneProblem } from './sync.js'
+import { appleMobile, desktopState, itemsText, joinFragment, joinName, linkFragment, phoneLine, phoneProblem, phoneState, unseenDone } from './sync.js'
 
 describe('telefón mimo domu', () => {
   it.each([
@@ -46,3 +46,30 @@ it.each([
   ['Mozilla/5.0 (iPhone; CPU iPhone OS 18_1 like Mac OS X) AppleWebKit/605.1.15', true],
   ['Mozilla/5.0 (Linux; Android 15) Chrome/140', false],
 ])('iPhone %#', (ua, want) => expect(appleMobile(ua)).toBe(want))
+
+describe('kto je zapnutý', () => {
+  const now = Date.parse('2026-11-15T11:00:00Z')
+  it.each([
+    [{ desktopSeen: '2026-11-15T10:52:00Z' }, true, 'počítač je zapnutý'],
+    [{ desktopSeen: '2026-11-15T10:30:00Z' }, false, 'počítač vypnutý, naposledy'],
+    [{}, false, 'počítač sa ešte neozval'],
+  ])('počítač %#', (p, online, text) => {
+    const s = desktopState(p, now)
+    expect(s.online).toBe(online)
+    expect(s.text).toContain(text)
+  })
+  it.each([
+    [{ phoneSeen: '2026-11-15T10:58:30Z' }, true, 'telefón je otvorený'],
+    [{ phoneSeen: '2026-11-15T10:50:00Z' }, false, 'naposledy'],
+    [{}, false, 'ešte sa neozval'],
+  ])('telefón %#', (ph, online, text) => {
+    const s = phoneState(ph, now)
+    expect(s.online).toBe(online)
+    expect(s.text).toContain(text)
+  })
+  it.each([
+    [{ done: [{ at: '2026-11-15T10:00:00Z' }, { at: '2026-11-15T11:00:25Z', detail: 'Lidl' }] }, '', 'Lidl'],
+    [{ done: [{ at: '2026-11-15T11:00:25Z', detail: 'Lidl' }] }, '2026-11-15T11:00:25Z', null],
+    [{ done: [] }, '', null],
+  ])('nový spracovaný %#', (p, seen, want) => expect(unseenDone(p, seen)?.detail ?? null).toBe(want))
+})

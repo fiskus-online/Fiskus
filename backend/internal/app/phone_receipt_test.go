@@ -42,7 +42,7 @@ func TestSavePhoneReceipt(t *testing.T) {
 
 	// domácnosť: bloček z eKasy na zvolený účet, s fotkou
 	r, err := a.SavePhoneReceipt(ctx, h.ID, PhoneReceipt{QR: qr, AccountID: bank.ID, Photo: jpeg})
-	if err != nil || r.ID == 0 || r.Title != "Lidl Slovenská republika, v.o.s." {
+	if err != nil || r.ID == 0 || r.Title != "Lidl Slovenská republika, v.o.s." || r.Amount == "" || r.Amount[0] != '-' {
 		t.Fatalf("domácnosť: %+v %v", r, err)
 	}
 	e, err := a.Store.GetHHEntry(ctx, h.ID, r.ID)
@@ -55,7 +55,7 @@ func TestSavePhoneReceipt(t *testing.T) {
 
 	// firma: prijatá faktúra z eKasy
 	r, err = a.SavePhoneReceipt(ctx, firm.ID, PhoneReceipt{QR: qr, Payment: "card", Photo: jpeg})
-	if err != nil || r.ID == 0 {
+	if err != nil || r.ID == 0 || r.Amount == "" || r.Amount[0] != '-' {
 		t.Fatalf("firma: %+v %v", r, err)
 	}
 	p, err := a.Store.GetPurchase(ctx, firm.ID, r.ID)

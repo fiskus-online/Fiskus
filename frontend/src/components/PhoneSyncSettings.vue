@@ -9,7 +9,7 @@ import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
 import FormField from './FormField.vue'
 import { api, ApiError } from '../lib/api.js'
-import { itemsText, phoneProblem, syncTime } from '../lib/sync.js'
+import { desktopState, itemsText, phoneProblem, phoneState, syncTime } from '../lib/sync.js'
 
 const toast = useToast()
 const confirm = useConfirm()
@@ -193,6 +193,7 @@ async function dismiss(r) {
           <i class="pi pi-mobile" aria-hidden="true" />
           <span class="pname">
             {{ p.name }}
+            <small class="seen" :class="{ on: phoneState(p).online }"><i class="dot" aria-hidden="true" />{{ phoneState(p).text }}</small>
             <small>
               pripojený {{ syncTime(p.created) }}<template v-if="p.lastUpload"> · kópia poslaná {{ syncTime(p.lastUpload) }}</template>
               <template v-if="p.received"> · prijaté {{ itemsText(p.received) }}</template>
@@ -222,8 +223,9 @@ async function dismiss(r) {
           Tento prehliadač má kópiu údajov z počítača <strong>„{{ phone.desktop }}“</strong><template v-if="phone.version">, stav k {{ syncTime(phone.version) }}</template>.
           Nové záznamy sa prenesú do počítača, keď bude zapnutý; úpravy a mazanie robte v počítači.
         </p>
+        <p class="seen" :class="{ on: desktopState(phone).online }"><i class="dot" aria-hidden="true" />{{ desktopState(phone).text }}</p>
         <p v-if="phoneProblem(phone)" class="err">{{ phoneProblem(phone) }}</p>
-        <p v-if="phone.lastCheck" class="muted">Posledné spojenie {{ syncTime(phone.lastCheck) }}.</p>
+        <p v-if="phone.lastCheck" class="muted">Posledné spojenie so schránkou {{ syncTime(phone.lastCheck) }}.</p>
         <div class="row">
           <Button :label="phone.staged ? 'Načítať novú kópiu' : 'Synchronizovať teraz'" icon="pi pi-sync" size="small" :loading="busy === 'run'" @click="phone.staged ? reloadPage() : run()" />
           <Button label="Odpojiť od počítača" size="small" text severity="secondary" @click="leave" />
@@ -237,6 +239,17 @@ async function dismiss(r) {
             <span class="pname">{{ it.title }}<small>{{ syncTime(it.at) }} · {{ it.status === 'sent' ? 'v schránke, čaká na počítač' : 'v telefóne, čaká na internet' }}</small></span>
           </li>
         </ul>
+
+        <template v-if="phone.done.length">
+          <h3>Spracované v počítači</h3>
+          <ul class="list">
+            <li v-for="r in [...phone.done].reverse()" :key="r.id">
+              <i class="pi pi-check-circle ok" aria-hidden="true" />
+              <span class="pname">{{ r.detail || r.title }}<small>{{ r.title }} · {{ syncTime(r.at) }}</small></span>
+            </li>
+          </ul>
+          <p v-if="phone.staged" class="muted">V telefóne ich uvidíte po načítaní novej kópie.</p>
+        </template>
 
         <template v-if="phone.failed.length">
           <h3>Počítač neprijal</h3>
@@ -338,6 +351,30 @@ h3 {
 }
 .list .pi {
   color: var(--blue);
+}
+.list .pi.ok {
+  color: var(--tone-paid);
+}
+.seen {
+  display: flex !important;
+  align-items: center;
+  gap: 6px;
+  color: var(--ink-soft);
+  font-size: var(--fs-sm);
+}
+.seen .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #9aa4af;
+  flex: none;
+}
+.seen.on {
+  color: var(--tone-paid);
+  font-weight: 600;
+}
+.seen.on .dot {
+  background: var(--tone-paid);
 }
 .list .pi.bad {
   color: var(--tone-overdue);

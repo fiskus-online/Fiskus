@@ -77,3 +77,29 @@ export function standalone() {
 export function appleMobile(ua = globalThis.navigator?.userAgent ?? '') {
   return /iPhone|iPad|iPod/.test(ua)
 }
+
+/** Ozvala sa druhá strana za posledných `minutes` minút? */
+export function isOnline(iso, minutes, now = Date.now()) {
+  const t = Date.parse(iso ?? '')
+  return Number.isFinite(t) && now - t < minutes * 60_000
+}
+
+/** Stav počítača na telefóne (počítač kontroluje schránku najviac každých 10 minút). */
+export function desktopState(p, now = Date.now()) {
+  if (!p?.desktopSeen) return { online: false, text: 'počítač sa ešte neozval' }
+  return isOnline(p.desktopSeen, 15, now)
+    ? { online: true, text: 'počítač je zapnutý' }
+    : { online: false, text: `počítač vypnutý, naposledy ${syncTime(p.desktopSeen)}` }
+}
+
+/** Stav telefónu v počítači (otvorený telefón sa ozýva každé 2 minúty). */
+export function phoneState(ph, now = Date.now()) {
+  if (!ph?.phoneSeen) return { online: false, text: 'ešte sa neozval' }
+  return isOnline(ph.phoneSeen, 3, now) ? { online: true, text: 'telefón je otvorený' } : { online: false, text: `naposledy ${syncTime(ph.phoneSeen)}` }
+}
+
+/** Posledný spracovaný záznam, ktorý používateľ ešte nevidel (podľa času). */
+export function unseenDone(p, seenAt) {
+  const last = p?.done?.at(-1)
+  return last && (!seenAt || last.at > seenAt) ? last : null
+}

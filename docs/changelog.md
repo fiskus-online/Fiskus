@@ -11,6 +11,15 @@ tags: [prehľad]
 Verzie sú značky v repozitári (`v0.2.0`). Podrobný zoznam funkcií po
 etapách je v [pláne vývoja](./ROADMAP.md).
 
+## 0.10.8
+
+- **Telefón mimo domu — výsledky a kto je zapnutý**: telefón ukáže, čo
+  počítač spracoval („Spracované v počítači: Lidl −18,40 €“) alebo
+  neprijal a prečo, hneď keď príde nová kópia — nie až po jej načítaní.
+  Telefón vidí, či je počítač zapnutý, a počítač vidí, či je telefón práve
+  otvorený. Keď je telefón otvorený, počítač kontroluje schránku každých
+  15 sekúnd, takže bloček je spracovaný do pol minúty.
+
 ## 0.10.7
 
 - **Bločky v telefóne mimo domu**: v pruhu telefónu je tlačidlo Bloček.

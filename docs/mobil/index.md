@@ -86,10 +86,13 @@ jazda a udalosť v kalendári. Úpravy a mazanie existujúcich záznamov robíte
 v počítači — telefón ich odmietne s vysvetlením. Čísla dokladov prideľuje iba
 počítač, takže sa nikdy nezopakujú.
 
-**Ako to beží:** počítač každých 10 minút skontroluje, či telefón niečo
-poslal. Záznamy zapíše (v audite ako „Telefón mimo domu“) a telefónu pošle
+**Ako to beží:** keď je telefón otvorený, počítač každých 15 sekúnd
+skontroluje, či telefón niečo poslal, inak každých 10 minút. Telefón ukazuje,
+či je počítač zapnutý, a v Nastaveniach → Telefón mimo domu v počítači je pri
+telefóne „telefón je otvorený“. Záznamy zapíše (v audite ako „Telefón mimo domu“) a telefónu pošle
 čerstvú kópiu. Telefón si kópiu stiahne pri otvorení a potom každé 2 minúty;
-keď je nová, ponúkne **Načítať novú kópiu**. Ak počítač niektorý záznam
+keď je nová, ponúkne **Načítať novú kópiu** a hneď ukáže, čo počítač
+spracoval (napr. „Spracované v počítači: Lidl −18,40 €“). Ak počítač niektorý záznam
 neprijme (napr. účet medzitým zmazali), telefón ho ukáže v Nastaveniach
 → Telefón mimo domu s dôvodom.
 

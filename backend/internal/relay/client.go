@@ -49,12 +49,27 @@ type State struct {
 	Snapshot *Snapshot `json:"snapshot"`
 	Inbox    []Item    `json:"inbox"`
 	Want     string    `json:"want,omitempty"` // telefón si pýta čerstvú kópiu
+	Seen     Seen      `json:"seen"`           // kedy sa ozval počítač a telefón
 }
+
+// Seen: posledný prístup počítača a telefónu ku schránke (RFC 3339) — či je
+// druhá strana práve zapnutá.
+type Seen struct {
+	Desktop string `json:"desktop,omitempty"`
+	Phone   string `json:"phone,omitempty"`
+}
+
+// Roly v hlavičke X-Fiskus-Role.
+const (
+	RoleDesktop = "desktop"
+	RolePhone   = "phone"
+)
 
 // Client volá schránku jedného spárovania.
 type Client struct {
 	Base string
 	Keys Keys
+	Role string // RoleDesktop | RolePhone (schránka si zapamätá, kedy sa ozval)
 	HTTP *http.Client
 }
 
@@ -72,6 +87,9 @@ func (c Client) do(ctx context.Context, method, path string, body []byte, hdr ma
 		return nil, err
 	}
 	req.Header.Set("Authorization", "Bearer "+c.Keys.Auth)
+	if c.Role != "" {
+		req.Header.Set("X-Fiskus-Role", c.Role)
+	}
 	if body != nil {
 		req.Header.Set("Content-Type", "application/octet-stream")
 	}
