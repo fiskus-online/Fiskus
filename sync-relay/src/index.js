@@ -7,7 +7,7 @@ import { LIMITS, expired, handle } from './core.js'
 const CORS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, PUT, POST, DELETE',
-  'Access-Control-Allow-Headers': 'Authorization, Content-Type, X-Version',
+  'Access-Control-Allow-Headers': 'Authorization, Content-Type, X-Version, X-Fiskus-Role',
   'Access-Control-Expose-Headers': 'X-Version',
   'Access-Control-Max-Age': '86400',
 }

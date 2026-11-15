@@ -159,6 +159,7 @@ type SyncResult struct {
 	NewID   int64  `json:"newId,omitempty"`
 	At      string `json:"at"`
 	Title   string `json:"title"`
+	Detail  string `json:"detail,omitempty"` // čo v počítači vzniklo (napr. „BILLA s.r.o. −43,70 €“)
 }
 
 // SyncPhoneInfo je spárovaný telefón (v počítači, bez tajomstva).
@@ -169,6 +170,7 @@ type SyncPhoneInfo struct {
 	LastUpload string `json:"lastUpload,omitempty"` // posledná kópia poslaná telefónu
 	LastItem   string `json:"lastItem,omitempty"`   // posledný prijatý záznam
 	Received   int    `json:"received"`             // prijatých záznamov
+	PhoneSeen  string `json:"phoneSeen,omitempty"`  // kedy sa telefón naposledy ozval schránke
 	LastError  string `json:"lastError,omitempty"`
 }
 
@@ -190,8 +192,11 @@ type SyncPhoneStatus struct {
 	Pending   int           `json:"pending"`             // záznamov čaká na prenos do počítača
 	Failed    []SyncResult  `json:"failed"`              // záznamy, ktoré počítač neprijal
 	Items     []SyncItemRow `json:"items"`               // čakajúce záznamy
+	Done      []SyncResult  `json:"done"`                // naposledy spracované v počítači
 	LastCheck string        `json:"lastCheck,omitempty"` // posledné spojenie so schránkou
 	LastError string        `json:"lastError,omitempty"`
+	// DesktopSeen: kedy sa počítač naposledy ozval (či je zapnutý)
+	DesktopSeen string `json:"desktopSeen,omitempty"`
 }
 
 // SyncItemRow je čakajúci záznam na telefóne.
@@ -231,9 +236,12 @@ type phoneState struct {
 	Staged    int64        `json:"staged,omitempty"` // pripravená na načítanie
 	Outbox    []phoneItem  `json:"outbox"`
 	Failed    []SyncResult `json:"failed"`
+	Done      []SyncResult `json:"done"` // naposledy spracované v počítači
 	LastCheck string       `json:"lastCheck,omitempty"`
 	LastError string       `json:"lastError,omitempty"`
 	Wanted    string       `json:"wanted,omitempty"`
+	// DesktopSeen: kedy sa počítač naposledy ozval schránke
+	DesktopSeen string `json:"desktopSeen,omitempty"`
 }
 
 type syncMem struct {
@@ -277,7 +285,27 @@ func (a *App) relayClient(secretB64, custom string) (relay.Client, error) {
 	if err != nil {
 		return relay.Client{}, err
 	}
-	return relay.Client{Base: a.relayURL(custom), Keys: k, HTTP: a.SyncHTTP}, nil
+	role := relay.RoleDesktop
+	if a.SyncRole() == "phone" {
+		role = relay.RolePhone
+	}
+	return relay.Client{Base: a.relayURL(custom), Keys: k, HTTP: a.SyncHTTP, Role: role}, nil
+}
+
+// syncActive: druhá strana sa ozvala nedávno (je zapnutá) — synchronizuje
+// sa vtedy častejšie.
+func (a *App) syncActive(seen string, within time.Duration) bool {
+	t, err := time.Parse(time.RFC3339, seen)
+	return err == nil && a.now().Sub(t) < within
+}
+
+// syncFast: najbližšie kolo synchronizácie skôr (do času until).
+func (a *App) syncFast(until time.Time) {
+	a.syncMem.mu.Lock()
+	if until.After(a.syncMem.fast) {
+		a.syncMem.fast = until
+	}
+	a.syncMem.mu.Unlock()
 }
 
 // SyncKick spustí synchronizáciu hneď (napr. po zázname na telefóne).
@@ -368,10 +396,13 @@ func (a *App) SyncStatus(ctx context.Context) (SyncStatus, error) {
 }
 
 func (ps phoneState) status() *SyncPhoneStatus {
-	out := &SyncPhoneStatus{Desktop: ps.Desktop, Staged: ps.Staged != 0, Failed: ps.Failed, Items: []SyncItemRow{},
-		LastCheck: ps.LastCheck, LastError: ps.LastError}
+	out := &SyncPhoneStatus{Desktop: ps.Desktop, Staged: ps.Staged != 0, Failed: ps.Failed, Done: ps.Done, Items: []SyncItemRow{},
+		LastCheck: ps.LastCheck, LastError: ps.LastError, DesktopSeen: ps.DesktopSeen}
 	if out.Failed == nil {
 		out.Failed = []SyncResult{}
+	}
+	if out.Done == nil {
+		out.Done = []SyncResult{}
 	}
 	if ps.Version > 0 {
 		out.Version = time.UnixMilli(ps.Version).UTC().Format(time.RFC3339)
@@ -596,7 +627,11 @@ func (a *App) desktopSyncPhone(ctx context.Context, c *syncDesktop, i int) error
 	if err != nil {
 		return err
 	}
-	p.LastError = ""
+	p.LastError, p.PhoneSeen = "", st.Seen.Phone
+	if a.syncActive(st.Seen.Phone, 3*time.Minute) {
+		// telefón je práve otvorený — jeho záznamy spracovať hneď
+		a.syncFast(a.now().Add(time.Minute))
+	}
 	applied := 0
 	if len(st.Inbox) > 0 {
 		results, err := a.loadApplied(ctx, cl.Keys.Channel)
@@ -747,6 +782,7 @@ func (a *App) replayItem(ctx context.Context, actor auth.Actor, it SyncItem, ids
 		return fail(apiError(status, resp))
 	}
 	r.Status = "ok"
+	r.Detail = resultDetail(resp)
 	if kind != "" {
 		var out struct {
 			ID int64 `json:"id"`
@@ -757,6 +793,36 @@ func (a *App) replayItem(ctx context.Context, actor auth.Actor, it SyncItem, ids
 		}
 	}
 	return r
+}
+
+// resultDetail: krátky popis toho, čo z odpovede API vzniklo (meno, suma).
+func resultDetail(resp []byte) string {
+	var v struct {
+		Title  string `json:"title"`
+		Payee  string `json:"payee"`
+		Name   string `json:"name"`
+		Number string `json:"number"`
+		Amount string `json:"amount"`
+	}
+	if json.Unmarshal(resp, &v) != nil {
+		return ""
+	}
+	parts := slicesCompact([]string{v.Number, v.Title, v.Payee, v.Name})
+	if len(parts) > 1 {
+		parts = parts[:1]
+	}
+	if v.Amount != "" {
+		a := strings.Replace(v.Amount, ".", ",", 1)
+		if strings.HasPrefix(a, "-") {
+			a = "−" + a[1:]
+		}
+		parts = append(parts, a+" €")
+	}
+	out := strings.Join(parts, " ")
+	if r := []rune(out); len(r) > 80 {
+		out = string(r[:80]) + "…"
+	}
+	return out
 }
 
 // apiError: text chyby z odpovede API (aj s chybami polí).
@@ -1039,10 +1105,7 @@ func (a *App) SyncPhoneStart(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	byID := map[string]SyncResult{}
-	for _, r := range results {
-		byID[r.ID] = r
-	}
+	ps.reconcile(results)
 	// záznamy, ktoré počítač ešte neprijal, sa zapíšu do novej kópie znova
 	// (dostanú nové id; odkazy medzi nimi idú cez Refs ako v počítači)
 	keep := ps.Outbox[:0]
@@ -1050,12 +1113,6 @@ func (a *App) SyncPhoneStart(ctx context.Context) error {
 	actor := auth.Local
 	actor.Name = "Telefón"
 	for _, it := range ps.Outbox {
-		if r, done := byID[it.ID]; done {
-			if r.Status == "error" {
-				ps.Failed = append(ps.Failed, r)
-			}
-			continue
-		}
 		if a.SyncPattern != nil && SyncDeferred(a.SyncPattern(it.Method, it.Path)) {
 			keep = append(keep, it) // spracuje ho až počítač
 			continue
@@ -1066,10 +1123,35 @@ func (a *App) SyncPhoneStart(ctx context.Context) error {
 		keep = append(keep, it)
 	}
 	ps.Outbox = keep
+	return a.savePhone(ctx, ps)
+}
+
+// reconcile: záznamy, ktoré počítač už spracoval (výsledky z kópie), idú
+// z fronty medzi spracované alebo neprijaté.
+func (ps *phoneState) reconcile(results []SyncResult) {
+	byID := map[string]SyncResult{}
+	for _, r := range results {
+		byID[r.ID] = r
+	}
+	keep := ps.Outbox[:0]
+	for _, it := range ps.Outbox {
+		r, done := byID[it.ID]
+		switch {
+		case !done:
+			keep = append(keep, it)
+		case r.Status == "error":
+			ps.Failed = append(ps.Failed, r)
+		default:
+			ps.Done = append(ps.Done, r)
+		}
+	}
+	ps.Outbox = keep
 	if len(ps.Failed) > 50 {
 		ps.Failed = ps.Failed[len(ps.Failed)-50:]
 	}
-	return a.savePhone(ctx, ps)
+	if len(ps.Done) > 20 {
+		ps.Done = ps.Done[len(ps.Done)-20:]
+	}
 }
 
 // SyncDismiss skryje záznam, ktorý počítač neprijal.
@@ -1112,6 +1194,10 @@ func (a *App) phoneSync(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+	before := map[string]bool{}
+	for _, it := range ps.Outbox {
+		before[it.ID] = true
+	}
 	runErr := a.phoneSyncOnce(ctx, cl, &ps)
 	ps.LastCheck = a.now().UTC().Format(time.RFC3339)
 	ps.LastError = ""
@@ -1119,18 +1205,25 @@ func (a *App) phoneSync(ctx context.Context) error {
 		ps.LastError = runErr.Error()
 	}
 	// stav sa mohol medzitým zmeniť novým záznamom — zlúčiť frontu
+	// (záznamy spracované v počítači sú už z fronty preč, nové pribudnú)
 	cur, ok, err := a.loadPhone(ctx)
 	if err == nil && ok && cur.Secret == ps.Secret {
-		sent := map[string]string{}
+		status := map[string]string{}
 		for _, it := range ps.Outbox {
-			sent[it.ID] = it.Status
+			status[it.ID] = it.Status
 		}
-		for i, it := range cur.Outbox {
-			if s, ok := sent[it.ID]; ok {
-				cur.Outbox[i].Status = s
+		merged := []phoneItem{}
+		for _, it := range cur.Outbox {
+			s, kept := status[it.ID]
+			switch {
+			case kept:
+				it.Status = s
+				merged = append(merged, it)
+			case !before[it.ID]:
+				merged = append(merged, it) // pribudol počas synchronizácie
 			}
 		}
-		ps.Outbox = cur.Outbox
+		ps.Outbox = merged
 	} else if err == nil && !ok {
 		return runErr // medzitým odpojený
 	}
@@ -1163,6 +1256,15 @@ func (a *App) phoneSyncOnce(ctx context.Context, cl relay.Client, ps *phoneState
 	if err != nil {
 		return err
 	}
+	ps.DesktopSeen = st.Seen.Desktop
+	waiting := false
+	for _, it := range ps.Outbox {
+		waiting = waiting || it.Status == "sent"
+	}
+	if waiting && a.syncActive(st.Seen.Desktop, 15*time.Minute) {
+		// počítač je zapnutý a spracúva — výsledok vyzdvihnúť skoro
+		a.syncFast(a.now().Add(time.Minute))
+	}
 	newest := max(ps.Version, ps.Staged)
 	if st.Snapshot != nil && st.Snapshot.Version > newest {
 		sealed, version, err := cl.GetSnapshot(ctx)
@@ -1191,6 +1293,15 @@ func (a *App) phoneSyncOnce(ctx context.Context, cl relay.Client, ps *phoneState
 			return fmt.Errorf("kópia z počítača: %w", err)
 		}
 		ps.Staged = version
+		// výsledky spracovania sú v kópii — ukázať ich hneď, nie až po načítaní
+		if keys, err := a.phoneKeys(*ps); err == nil {
+			if v, err := a.Browser.StagedSetting(ctx, syncAppliedPrefix+keys.Channel); err == nil && v != "" {
+				var results []SyncResult
+				if json.Unmarshal([]byte(v), &results) == nil {
+					ps.reconcile(results)
+				}
+			}
+		}
 		return nil
 	}
 	// kópia chýba alebo je staršia ako 10 minút — vypýtať si čerstvú

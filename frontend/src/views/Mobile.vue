@@ -2,7 +2,7 @@
 // Mobil: odfotenie bločku eKasa. QR kód sa prečíta z fotky priamo v telefóne
 // (ZXing, záložne jsQR — lib/qrscan.js), na server ide iba kód a zmenšená fotka. Funguje aj cez http v sieti
 // (fotoaparát cez <input capture>, bez živého náhľadu kamery).
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
 import SelectButton from 'primevue/selectbutton'
@@ -12,6 +12,7 @@ import { formatMoney, formatDate } from '../lib/format.js'
 import { blobBase64, imageReader, loadImage, payments, receiptId, shrinkImage } from '../lib/receipt.js'
 import { decodeQR } from '../lib/qrscan.js'
 import { inBrowser } from '../lib/install.js'
+import { desktopState, syncTime } from '../lib/sync.js'
 
 const fileInput = ref(null)
 const busy = ref('')
@@ -27,23 +28,46 @@ const account = ref(null)
 // telefón mimo domu (Fiškus v prehliadači s kópiou z počítača): bloček sa
 // iba pošle do fronty, spracuje ho počítač (eKasa, čítanie fotky)
 const phoneCopy = ref(false)
-onMounted(async () => {
-  if (!inBrowser) return
+const phone = ref(null) // stav telefónu: čo čaká, čo počítač spracoval
+let poll = null
+async function loadPhone() {
   try {
     const st = await api.syncStatus()
     phoneCopy.value = st.role === 'phone' && !!st.phone
+    phone.value = st.phone ?? null
   } catch {
     /* bez stavu ako doteraz */
   }
+}
+onMounted(() => {
+  if (!inBrowser) return
+  loadPhone()
+  poll = setInterval(loadPhone, 8000)
 })
+onBeforeUnmount(() => clearInterval(poll))
+const isReceipt = (x) => x.title?.startsWith('Bloček')
+// bločky z tohto telefónu: čakajúce, spracované a neprijaté (najnovšie hore)
+const receipts = computed(() => {
+  const p = phone.value
+  if (!p) return []
+  return [
+    ...p.items.filter(isReceipt).map((x) => ({ ...x, state: x.status === 'sent' ? 'sent' : 'local' })),
+    ...p.failed.filter(isReceipt).map((x) => ({ ...x, state: 'error' })),
+    ...p.done.filter(isReceipt).map((x) => ({ ...x, state: 'done' })),
+  ]
+    .sort((a, b) => (a.at < b.at ? 1 : -1))
+    .slice(0, 12)
+})
+const desk = computed(() => desktopState(phone.value))
+const stateText = { local: 'v telefóne, čaká na internet', sent: 'odoslaný, čaká na počítač', done: 'spracované v počítači', error: 'počítač neprijal' }
 
 async function queue(qr, img) {
   busy.value = 'send'
   try {
     const photo = img ? await blobBase64(await shrinkImage(img, 1280)) : undefined
     await api.phoneReceipt(session.companyId, { qr, payment: payment.value, accountId: hh.value ? account.value : undefined, photo })
-    done.value = [{ id: `q${Date.now()}`, queued: true, name: qr ? 'Bloček z eKasy' : 'Bloček z fotky' }, ...done.value].slice(0, 20)
     manual.value = ''
+    await loadPhone()
   } catch (err) {
     error.value = err instanceof ApiError && err.fields.length ? err.fields[0].message : err.message
   } finally {
@@ -256,14 +280,27 @@ function sendManual() {
           </form>
         </details>
 
-        <section v-if="done.length" class="list" aria-label="Zapísané bločky">
-          <h2>{{ phoneCopy ? 'Odoslané' : 'Zapísané' }}</h2>
+        <section v-if="phoneCopy" class="list" aria-label="Bločky z tohto telefónu">
+          <h2>Bločky z telefónu</h2>
+          <p class="desk" :class="{ on: desk.online }"><i class="dot" aria-hidden="true" />{{ desk.text }}</p>
+          <p v-if="!receipts.length" class="where">Zatiaľ žiadny.</p>
+          <div v-for="r in receipts" :key="r.id" class="row" :class="r.state">
+            <span class="who">
+              {{ r.state === 'done' && r.detail ? r.detail : r.title }}
+              <small>{{ syncTime(r.at) }} · {{ stateText[r.state] }}</small>
+              <small v-if="r.state === 'error'" class="err">{{ r.error }}</small>
+            </span>
+            <i
+              class="pi sum"
+              :class="{ 'pi-clock': r.state === 'local', 'pi-cloud-upload': r.state === 'sent', 'pi-check-circle': r.state === 'done', 'pi-times-circle': r.state === 'error' }"
+              aria-hidden="true"
+            />
+          </div>
+        </section>
+        <section v-else-if="done.length" class="list" aria-label="Zapísané bločky">
+          <h2>Zapísané</h2>
           <template v-for="p in done" :key="p.id">
-            <div v-if="p.queued" class="row">
-              <span class="who">{{ p.name }}<small>odoslaný do počítača, čaká na spracovanie</small></span>
-              <i class="pi pi-cloud-upload sum" aria-hidden="true" />
-            </div>
-            <RouterLink v-else-if="p.hh" to="/domacnost/pohyby" class="row">
+            <RouterLink v-if="p.hh" to="/domacnost/pohyby" class="row">
               <span class="who">{{ p.name }}<small>{{ formatDate(p.date) }}, {{ p.items }} položiek · {{ p.category }}</small></span>
               <strong class="sum">{{ formatMoney(p.total) }}</strong>
             </RouterLink>
@@ -452,5 +489,37 @@ function sendManual() {
 .sum {
   font-variant-numeric: tabular-nums;
   color: var(--tone-paid);
+}
+.desk {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ink-soft);
+  font-size: var(--fs-sm);
+  margin: 0 0 6px;
+}
+.desk .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #9aa4af;
+}
+.desk.on {
+  color: var(--tone-paid);
+  font-weight: 600;
+}
+.desk.on .dot {
+  background: var(--tone-paid);
+}
+.row.done .sum {
+  color: var(--tone-paid);
+}
+.row.error .sum,
+.row .err {
+  color: var(--tone-overdue);
+}
+.row.sent .sum,
+.row.local .sum {
+  color: var(--ink-soft);
 }
 </style>

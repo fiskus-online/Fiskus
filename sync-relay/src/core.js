@@ -53,6 +53,9 @@ export async function handle(req, path, store, now = Date.now()) {
   }
   const at = new Date(now).toISOString().replace(/\.\d{3}Z$/, 'Z')
   meta.touched = now
+  // kedy sa ozval počítač a telefón (či je druhá strana zapnutá)
+  const role = req.headers.get('X-Fiskus-Role')
+  if (role === 'desktop' || role === 'phone') meta.seen = { ...meta.seen, [role]: at }
   const save = (extra = {}) => store.put({ meta, ...extra })
 
   if (req.method === 'GET' && path === '/state') {
@@ -61,7 +64,7 @@ export async function handle(req, path, store, now = Date.now()) {
       .map(([id, i]) => ({ id, size: i.size, at: i.at }))
       .sort((a, b) => (a.id < b.id ? -1 : 1))
     const snap = meta.snap && { version: meta.snap.version, size: meta.snap.size, at: meta.snap.at }
-    return json({ snapshot: snap, inbox, want: meta.want || undefined })
+    return json({ snapshot: snap, inbox, want: meta.want || undefined, seen: meta.seen ?? {} })
   }
 
   if (req.method === 'PUT' && path === '/snapshot') {

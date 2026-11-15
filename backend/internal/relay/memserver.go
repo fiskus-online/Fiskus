@@ -32,6 +32,7 @@ type memChannel struct {
 	info     map[string]Item
 	next     int64
 	want     string
+	seen     Seen
 }
 
 // NewMemServer vytvorí prázdnu schránku.
@@ -60,7 +61,7 @@ func (s *MemServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Expose-Headers", "X-Version") // prehliadač inak hlavičku verzie neukáže
 	if r.Method == http.MethodOptions {
 		w.Header().Set("Access-Control-Allow-Methods", "GET, PUT, POST, DELETE")
-		w.Header().Set("Access-Control-Allow-Headers", "Authorization, Content-Type, X-Version")
+		w.Header().Set("Access-Control-Allow-Headers", "Authorization, Content-Type, X-Version, X-Fiskus-Role")
 		w.WriteHeader(http.StatusNoContent)
 		return
 	}
@@ -92,6 +93,12 @@ func (s *MemServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	path := m[2]
 	at := s.now().UTC().Format(time.RFC3339)
+	switch r.Header.Get("X-Fiskus-Role") {
+	case RoleDesktop:
+		ch.seen.Desktop = at
+	case RolePhone:
+		ch.seen.Phone = at
+	}
 	body := func(limit int) ([]byte, bool) {
 		b, err := io.ReadAll(io.LimitReader(r.Body, int64(limit)+1))
 		if err != nil {
@@ -106,7 +113,7 @@ func (s *MemServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	switch {
 	case r.Method == http.MethodGet && path == "/state":
-		st := State{Snapshot: ch.snapInfo, Inbox: []Item{}, Want: ch.want}
+		st := State{Snapshot: ch.snapInfo, Inbox: []Item{}, Want: ch.want, Seen: ch.seen}
 		for _, it := range ch.info {
 			st.Inbox = append(st.Inbox, it)
 		}

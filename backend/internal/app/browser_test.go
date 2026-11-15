@@ -25,6 +25,8 @@ type fakeBrowserDB struct {
 func (f *fakeBrowserDB) Export(context.Context) ([]byte, error) {
 	return append([]byte(nil), f.db...), nil
 }
+func (f *fakeBrowserDB) StagedSetting(context.Context, string) (string, error) { return "", nil }
+
 func (f *fakeBrowserDB) StageRestore(_ context.Context, b []byte) error {
 	if f.bad {
 		return errors.New("integrity_check: chyba")

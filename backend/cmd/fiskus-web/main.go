@@ -248,6 +248,11 @@ func (b browserDB) Export(ctx context.Context) ([]byte, error) {
 	return out, nil
 }
 
+// StagedSetting: nastavenie z databázy pripravenej na obnovu.
+func (b browserDB) StagedSetting(ctx context.Context, key string) (string, error) {
+	return sqlite.ReadSetting(ctx, restoreFile, key)
+}
+
 // StageRestore zapíše databázu vedľa aktuálnej a overí ju; pri ďalšom
 // štarte ju worker presunie na miesto aktuálnej.
 func (b browserDB) StageRestore(ctx context.Context, db []byte) error {

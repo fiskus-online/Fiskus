@@ -94,8 +94,9 @@ func (m stateMap) Set(_ context.Context, k, v string) error { m[k] = v; return n
 
 type stageDB struct{}
 
-func (stageDB) Export(context.Context) ([]byte, error)     { return nil, nil }
-func (stageDB) StageRestore(context.Context, []byte) error { return nil }
+func (stageDB) Export(context.Context) ([]byte, error)                { return nil, nil }
+func (stageDB) StageRestore(context.Context, []byte) error            { return nil }
+func (stageDB) StagedSetting(context.Context, string) (string, error) { return "", nil }
 
 // Po načítaní novej kópie sa záznamy, ktoré počítač ešte neprijal, zapíšu
 // znova; nový záznam odkazujúci na znova zapísaný kontakt dostane odkaz na

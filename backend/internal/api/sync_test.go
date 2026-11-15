@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"errors"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -91,6 +92,14 @@ func TestPhoneSync(t *testing.T) {
 
 	p := app.New(memstore.New(), edition.ForBrowser())
 	pdb := &memBrowserDB{}
+	// výsledky prehratia sú v kópii z počítača (tu priamo z počítača)
+	pdb.setting = func(key string) (string, error) {
+		v, err := d.Store.GetSetting(auth.WithActor(ctx, auth.Local), key)
+		if errors.Is(err, store.ErrNotFound) {
+			return "", nil
+		}
+		return v, err
+	}
 	p.Browser, p.SyncState, p.SyncRelayURL = pdb, &mapState{}, rs.URL
 	psrv := httptest.NewServer((&Server{App: p}).Handler())
 	defer psrv.Close()
@@ -192,12 +201,14 @@ func TestPhoneSync(t *testing.T) {
 		t.Fatalf("pohyb v počítači: %+v", entries)
 	}
 	st, _ := d.SyncStatus(dctx)
-	if len(st.Phones) != 1 || st.Phones[0].Received != 2 || st.Phones[0].LastError != "" {
+	if len(st.Phones) != 1 || st.Phones[0].Received != 2 || st.Phones[0].LastError != "" || st.Phones[0].PhoneSeen == "" {
 		t.Fatalf("stav v počítači: %+v", st.Phones)
 	}
-	// telefón stiahne kópiu, záznamy sú vybavené
-	if st := phone(); st["staged"] != true {
+	// telefón stiahne kópiu a hneď (pred načítaním) vie, čo počítač spracoval
+	if st := phone(); st["staged"] != true || st["pending"] != float64(0) || len(st["done"].([]any)) != 2 || st["desktopSeen"] == nil {
 		t.Fatalf("nová kópia: %v", st)
+	} else if det := st["done"].([]any)[1].(map[string]any)["detail"]; det != "Škola −12,50 €" {
+		t.Fatalf("popis spracovaného pohybu: %v", det)
 	}
 	reload()
 	if st := phone(); st["pending"] != float64(0) || len(st["failed"].([]any)) != 0 {

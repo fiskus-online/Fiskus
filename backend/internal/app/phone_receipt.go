@@ -22,8 +22,9 @@ type PhoneReceipt struct {
 
 // PhoneReceiptResult: čo z bločku v počítači vzniklo.
 type PhoneReceiptResult struct {
-	ID    int64  `json:"id"`
-	Title string `json:"title"`
+	ID     int64  `json:"id"`
+	Title  string `json:"title"`
+	Amount string `json:"amount,omitempty"` // výdavok so znamienkom (telefón ho ukáže pri výsledku)
 }
 
 // SavePhoneReceipt spracuje bloček z telefónu: vo firme prijatá faktúra
@@ -50,7 +51,7 @@ func (a *App) SavePhoneReceipt(ctx context.Context, companyID int64, in PhoneRec
 		if err != nil {
 			return PhoneReceiptResult{}, err
 		}
-		return PhoneReceiptResult{ID: r.Purchase.ID, Title: r.Purchase.Supplier.Name}, nil
+		return PhoneReceiptResult{ID: r.Purchase.ID, Title: r.Purchase.Supplier.Name, Amount: r.Receipt.Total.Neg().String()}, nil
 	}
 	var d ReceiptDraft
 	if _, perr := ekasa.ParseQR(qr); qr != "" && perr == nil {
@@ -73,5 +74,5 @@ func (a *App) SavePhoneReceipt(ctx context.Context, companyID int64, in PhoneRec
 	if len(in.Photo) > 0 {
 		_ = a.SaveHouseholdPhoto(ctx, companyID, saved.ID, "image/jpeg", in.Photo) // pohyb je hlavný, fotka navyše
 	}
-	return PhoneReceiptResult{ID: saved.ID, Title: saved.Payee}, nil
+	return PhoneReceiptResult{ID: saved.ID, Title: saved.Payee, Amount: saved.Amount.String()}, nil
 }

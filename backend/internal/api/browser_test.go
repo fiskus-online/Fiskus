@@ -17,7 +17,18 @@ import (
 	"github.com/fiskus-online/fiskus/backend/internal/store/memstore"
 )
 
-type memBrowserDB struct{ staged []byte }
+type memBrowserDB struct {
+	staged []byte
+	// setting: nastavenie z pripravenej kópie (telefón mimo domu)
+	setting func(key string) (string, error)
+}
+
+func (m *memBrowserDB) StagedSetting(_ context.Context, key string) (string, error) {
+	if m.setting == nil {
+		return "", nil
+	}
+	return m.setting(key)
+}
 
 func (m *memBrowserDB) Export(context.Context) ([]byte, error) {
 	return []byte("SQLite format 3\x00 kópia"), nil
