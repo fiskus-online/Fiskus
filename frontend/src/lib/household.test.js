@@ -311,11 +311,15 @@ describe('platobné údaje splátky', () => {
   it.each([
     ['všetko v poradí banky', o, '1032.4', [
       ['payee', 'Základná škola, Moyzesova 18', 'Základná škola, Moyzesova 18'],
+      ['address', 'Moyzesova 18, 974 01 Banská Bystrica', 'Moyzesova 18, 974 01 Banská Bystrica'],
       ['iban', 'SK64 5600 0000 0012 3456 1004', 'SK6456000000001234561004'],
       ['amount', '1032,40', '1032,40'],
       ['vs', '20261', '20261'],
       ['message', 'stravné Janko 4.B', 'stravné Janko 4.B'],
-      ['address', 'Moyzesova 18, 974 01 Banská Bystrica', 'Moyzesova 18, 974 01 Banská Bystrica'],
+    ]],
+    ['bez správy → názov záväzku (ako v QR kóde)', { kind: 'regular', name: 'Krúžok - Hanka', creditor: 'ZUŠ', iban: 'SK6456000000001234561004' }, '18', [
+      ['payee', 'ZUŠ', 'ZUŠ'], ['iban', 'SK64 5600 0000 0012 3456 1004', 'SK6456000000001234561004'], ['amount', '18,00', '18,00'],
+      ['message', 'Krúžok - Hanka', 'Krúžok - Hanka'],
     ]],
     ['bez mena v banke → veriteľ, bez sumy', { kind: 'loan', creditor: 'Home Credit', vs: '4471023' }, '0', [
       ['payee', 'Home Credit', 'Home Credit'], ['vs', '4471023', '4471023'],

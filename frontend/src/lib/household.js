@@ -417,14 +417,16 @@ export function paymentRows(o, amount) {
   const iban = String(o.iban ?? '').replace(/\s/g, '').toUpperCase()
   const payee = o.payeeName || o.creditor || ''
   const amt = Number(amount) > 0 ? Number(amount).toFixed(2).replace('.', ',') : ''
+  // poradie ako v príkaze na úhradu v banke: komu (meno, adresa, účet),
+  // koľko, symboly a správa — správa ako v QR kóde (inak názov záväzku)
   const rows = [
     { key: 'payee', label: 'Príjemca', value: payee },
+    { key: 'address', label: 'Adresa príjemcu', value: o.address },
     { key: 'iban', label: 'IBAN', value: ibanGroups(iban), copy: iban },
     { key: 'amount', label: 'Suma (€)', value: amt },
     { key: 'vs', label: 'Variabilný symbol', value: o.vs },
     { key: 'ss', label: 'Špecifický symbol', value: o.ss },
-    { key: 'message', label: 'Správa pre príjemcu', value: o.message },
-    { key: 'address', label: 'Adresa príjemcu', value: o.address },
+    { key: 'message', label: 'Správa pre príjemcu', value: String(o.message || o.name || '').slice(0, 140) },
   ]
   return rows.filter((r) => r.value).map((r) => ({ ...r, copy: r.copy ?? String(r.value) }))
 }

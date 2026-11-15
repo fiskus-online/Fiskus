@@ -142,4 +142,23 @@ figcaption {
     align-self: center;
   }
 }
+/* úzky panel: názov nad hodnotou, aby sa hodnota nelámala po slovách */
+@container (max-width: 380px) {
+  .row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: 'label copy' 'value copy';
+    gap: 0 6px;
+    padding: 4px 0;
+  }
+  dt {
+    grid-area: label;
+    font-size: var(--fs-xs, 0.75rem);
+  }
+  dd {
+    grid-area: value;
+  }
+  .cp {
+    grid-area: copy;
+  }
+}
 </style>
