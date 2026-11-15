@@ -159,7 +159,7 @@ type SyncResult struct {
 	NewID   int64  `json:"newId,omitempty"`
 	At      string `json:"at"`
 	Title   string `json:"title"`
-	Detail  string `json:"detail,omitempty"` // čo v počítači vzniklo (napr. „BILLA s.r.o. −43,70 €“)
+	Detail  string `json:"detail,omitempty"` // čo v počítači vzniklo (napr. „Potraviny u Jana −12,37 €“)
 }
 
 // SyncPhoneInfo je spárovaný telefón (v počítači, bez tajomstva).

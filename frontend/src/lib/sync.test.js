@@ -68,8 +68,8 @@ describe('kto je zapnutý', () => {
     expect(s.text).toContain(text)
   })
   it.each([
-    [{ done: [{ at: '2026-11-15T10:00:00Z' }, { at: '2026-11-15T11:00:25Z', detail: 'BILLA' }] }, '', 'BILLA'],
-    [{ done: [{ at: '2026-11-15T11:00:25Z', detail: 'BILLA' }] }, '2026-11-15T11:00:25Z', null],
+    [{ done: [{ at: '2026-11-15T10:00:00Z' }, { at: '2026-11-15T11:00:25Z', detail: 'Lidl' }] }, '', 'Lidl'],
+    [{ done: [{ at: '2026-11-15T11:00:25Z', detail: 'Lidl' }] }, '2026-11-15T11:00:25Z', null],
     [{ done: [] }, '', null],
   ])('nový spracovaný %#', (p, seen, want) => expect(unseenDone(p, seen)?.detail ?? null).toBe(want))
 })
