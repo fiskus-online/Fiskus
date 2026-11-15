@@ -33,7 +33,10 @@ const reloadPage = () => location.reload()
       <small v-if="phoneProblem(p)">{{ phoneProblem(p) }}</small>
     </span>
     <button v-if="p.staged" type="button" class="go" @click="reloadPage">Načítať novú kópiu</button>
-    <RouterLink v-else to="/nastavenia/telefon">Podrobnosti</RouterLink>
+    <template v-else>
+      <RouterLink to="/m" class="shot"><i class="pi pi-camera" aria-hidden="true" /> Bloček</RouterLink>
+      <RouterLink to="/nastavenia/telefon">Podrobnosti</RouterLink>
+    </template>
   </div>
 </template>
 

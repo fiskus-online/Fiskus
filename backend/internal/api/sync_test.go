@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"net/http/httptest"
 	"strconv"
 	"strings"
@@ -239,5 +240,66 @@ func TestPhoneSync(t *testing.T) {
 	}
 	if code, _ := jsonCall(t, psrv, "PUT", fmt.Sprintf("%s/household/accounts/%d", base, accID), map[string]any{"name": "Iný"}); code == 409 {
 		t.Fatal("po odpojení je Fiškus v prehliadači znova samostatný")
+	}
+}
+
+// Bloček z telefónu: v kópii sa nespracuje (eKasa v prehliadači nejde), iba
+// ide do fronty; počítač ho spracuje.
+func TestPhoneReceiptQueued(t *testing.T) {
+	ctx := context.Background()
+	rs := httptest.NewServer(relay.NewMemServer())
+	defer rs.Close()
+	ek := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = w.Write([]byte(`{"returnValue":0,"receipt":{"receiptId":"O-11112222333344445555666677778888","issueDate":"27.10.2026 17:02:00","totalPrice":0.99,
+ "items":[{"name":"MLIEKO 1L","quantity":1,"vatRate":5,"price":0.99}],"organization":{"name":"Potraviny Jana","ico":"35793783"}}}`))
+	}))
+	defer ek.Close()
+
+	desk, _ := edition.For(edition.Desktop)
+	d := app.New(memstore.New(), desk)
+	d.SyncSource, d.SyncRelayURL, d.EKasaURL = &fakeSource{}, rs.URL, ek.URL
+	dsrv := httptest.NewServer((&Server{App: d}).Handler())
+	defer dsrv.Close()
+	hid, accID := household3(t, d)
+
+	p := app.New(memstore.New(), edition.ForBrowser())
+	p.Browser, p.SyncState, p.SyncRelayURL = &memBrowserDB{}, &mapState{}, rs.URL
+	psrv := httptest.NewServer((&Server{App: p}).Handler())
+	defer psrv.Close()
+	household3(t, p)
+
+	path := fmt.Sprintf("/api/companies/%d/receipts/phone", hid)
+	body := map[string]any{"qr": "O-11112222333344445555666677778888", "accountId": accID, "photo": []byte{0xff, 0xd8}}
+	// samostatný Fiškus v prehliadači: iba v nainštalovanom (eKasa)
+	if code, out := jsonCall(t, psrv, "POST", path, body); code != 501 || out["install"] == nil {
+		t.Fatalf("bez spárovania: %d %v", code, out)
+	}
+	_, out := jsonCall(t, dsrv, "POST", "/api/sync/phones", map[string]string{"name": "Mobil"})
+	if code, out := jsonCall(t, psrv, "POST", "/api/sync/join", map[string]string{"link": out["link"].(string)}); code != 200 {
+		t.Fatalf("pripojenie: %d %v", code, out)
+	}
+	code, out := jsonCall(t, psrv, "POST", path, body)
+	if code != 202 || out["queued"] != true {
+		t.Fatalf("bloček na telefóne: %d %v", code, out)
+	}
+	pctx := auth.WithActor(ctx, auth.Local)
+	if es, _ := p.HouseholdEntries(pctx, hid, 2026); len(es) != 0 {
+		t.Fatalf("telefón bloček nespracuje: %+v", es)
+	}
+	_, out = jsonCall(t, psrv, "POST", "/api/sync/run", nil)
+	st := out["phone"].(map[string]any)
+	items := st["items"].([]any)
+	if len(items) != 1 || items[0].(map[string]any)["title"] != "Bloček: eKasa" || items[0].(map[string]any)["status"] != "sent" {
+		t.Fatalf("fronta: %v", st)
+	}
+	if err := d.SyncRun(auth.WithActor(ctx, auth.System)); err != nil {
+		t.Fatal(err)
+	}
+	es, _ := d.HouseholdEntries(pctx, hid, 2026)
+	if len(es) != 1 || es[0].Payee != "Potraviny Jana" || es[0].AccountID != accID {
+		t.Fatalf("bloček v počítači: %+v", es)
+	}
+	if ph, err := d.HouseholdPhoto(pctx, hid, es[0].ID); err != nil || len(ph.Data) != 2 {
+		t.Fatalf("fotka v počítači: %v", err)
 	}
 }

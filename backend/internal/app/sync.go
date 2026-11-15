@@ -73,7 +73,17 @@ var syncWrites = map[string]string{
 	"POST /api/companies/{cid}/trips":                          "trips",
 	"POST /api/companies/{cid}/calendar/own":                   "calendar",
 	"POST /api/companies/{cid}/calendar/own/{id}/done":         "",
+	"POST /api/companies/{cid}/receipts/phone":                 "",
 }
+
+// syncDeferred: zápisy, ktoré telefón nevykoná vo svojej kópii (nedá sa —
+// bloček potrebuje eKasu alebo AI), iba ich pošle počítaču.
+var syncDeferred = map[string]bool{
+	"POST /api/companies/{cid}/receipts/phone": true,
+}
+
+// SyncDeferred: zapíše sa iba do fronty, v kópii na telefóne sa nevykoná?
+func SyncDeferred(pattern string) bool { return syncDeferred[pattern] }
 
 // syncTitles: popis záznamu vo fronte telefónu.
 var syncTitles = map[string]string{
@@ -974,6 +984,13 @@ func syncTitle(kind, pattern string, body []byte) string {
 		base = "Úhrada záväzku"
 	} else if strings.HasSuffix(pattern, "/done") {
 		base = "Splnená udalosť"
+	} else if strings.HasSuffix(pattern, "/receipts/phone") {
+		base = "Bloček"
+		detail = "z fotky"
+		var r PhoneReceipt
+		if json.Unmarshal(body, &r) == nil && r.QR != "" {
+			detail = "eKasa"
+		}
 	}
 	if detail != "" {
 		return base + ": " + detail
@@ -1037,6 +1054,10 @@ func (a *App) SyncPhoneStart(ctx context.Context) error {
 			if r.Status == "error" {
 				ps.Failed = append(ps.Failed, r)
 			}
+			continue
+		}
+		if a.SyncPattern != nil && SyncDeferred(a.SyncPattern(it.Method, it.Path)) {
+			keep = append(keep, it) // spracuje ho až počítač
 			continue
 		}
 		if r := a.replayItem(ctx, actor, it.SyncItem, ids); r.Status == "ok" && r.NewID > 0 {

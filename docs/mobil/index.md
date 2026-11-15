@@ -75,6 +75,11 @@ prehliadača nevidí a ukáže sa prázdny. Postup:
    z tlačidla Kopírovať odkaz).
 :::
 
+**Bločky:** v pruhu hore ťuknite na **Bloček** a odfoťte ho. Bloček sa
+pošle do počítača a ten ho spracuje, keď bude zapnutý — údaje z eKasy,
+položky do kategórií, fotka pri pohybe. V telefóne ho uvidíte po ďalšej
+kópii z počítača.
+
 **Čo sa dá v telefóne zapísať:** pohyb v domácnosti, úhrada záväzku, nový
 kontakt, pokladničný doklad, koncept faktúry, prijatá faktúra, cenová ponuka,
 jazda a udalosť v kalendári. Úpravy a mazanie existujúcich záznamov robíte
