@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
-  budgetTone, budgetWidth, receiptFacts, receiptRows, listTotals, setAllCategory, splitByCategory, filterObligations, fromAmount, newObligation, obligationBody, accountBody, obligationKinds, payeeContact, payeeOptions, setPayee, partnerAccounts, paymentRows, pickColumns, obligationCell, defaultObligationColumns, obligationTone, paidPercent, toAmount, categoriesFor, categoryErrors, chartBars, entryCategory, entryType, filterEntries, fromForm, newEntry, toForm, monthsLabel, planMonthLabel, filterPlan, ibanGroups,
+  budgetTone, budgetWidth, receiptFacts, receiptRows, listTotals, setAllCategory, splitByCategory, filterObligations, fromAmount, newObligation, obligationBody, accountBody, obligationKinds, payeeContact, payeeOptions, setPayee, partnerAccounts, paymentRows, pickColumns, obligationCell, defaultObligationColumns, obligationTone, paidPercent, toAmount, categoriesFor, categoryErrors, chartBars, entryCategory, entryType, filterEntries, fromForm, newEntry, toForm, monthsLabel, planMonthLabel, filterPlan, ibanGroups, amountInput, reconcileNote,
 } from './household.js'
 
 const accounts = [
@@ -351,5 +351,26 @@ describe('stĺpce zoznamu záväzkov', () => {
     ['rest', ''],
   ])('bunka %s', (key, want) => {
     expect(obligationCell(o, key, [{ id: 2, name: 'Bežný účet' }]).replace(/\u00a0/g, ' ')).toBe(want)
+  })
+})
+
+describe('odsúhlasenie účtu', () => {
+  it.each([
+    ['1 234,56', '1234.56'],
+    ['-12,5', '-12.5'],
+    ['', ''],
+    [null, ''],
+  ])('suma %s', (input, want) => {
+    expect(amountInput(input)).toBe(want)
+  })
+  it.each([
+    ['neodsúhlasený', { name: 'Účet' }, null],
+    ['platí', { reconciled: { date: '2026-10-31', balance: '895.50' }, stale: '0.00' }, { stale: false, text: 'odsúhlasené k 31. 10. 2026' }],
+    ['zmenené pohyby', { reconciled: { date: '2026-10-31', balance: '895.50' }, stale: '-10.00' }, { stale: true, text: 'odsúhlasené k 31. 10. 2026' }],
+  ])('%s', (_, acc, want) => {
+    const got = reconcileNote(acc)
+    if (!want) return expect(got).toBeNull()
+    expect(got).toMatchObject(want)
+    expect(got.title).toMatch(want.stale ? /zmenili o/ : /zhodoval/)
   })
 })

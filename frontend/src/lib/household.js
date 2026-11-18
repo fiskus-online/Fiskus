@@ -338,6 +338,24 @@ export function obligationBody(f) {
 }
 
 /** Telo na uloženie účtu z formulára (bez zostatku a počtu pohybov zo zoznamu). */
+/** Suma zo vstupu „1 234,56“ do tvaru pre API „1234.56“ ('' = nezadaná). */
+export function amountInput(s) {
+  return String(s ?? '').replace(/\s/g, '').replace(',', '.')
+}
+
+/** Stav odsúhlasenia účtu do zoznamu; null = účet ešte odsúhlasený nebol. */
+export function reconcileNote(a) {
+  if (!a?.reconciled) return null
+  const stale = Number(a.stale ?? 0) !== 0
+  return {
+    text: `odsúhlasené k ${formatDate(a.reconciled.date)}`,
+    stale,
+    title: stale
+      ? `Pohyby do ${formatDate(a.reconciled.date)} sa od odsúhlasenia zmenili o ${formatMoney(a.stale)} — odsúhlaste účet znova`
+      : `Zostatok ${formatMoney(a.reconciled.balance)} sa zhodoval s výpisom`,
+  }
+}
+
 export function accountBody(f) {
   return {
     id: f.id || 0, name: f.name ?? '', kind: f.kind, iban: f.iban ?? '', closed: !!f.closed,
