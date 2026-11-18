@@ -383,3 +383,21 @@ func (s *Server) hhPartner(w http.ResponseWriter, r *http.Request) {
 	}
 	writeJSON(w, http.StatusOK, out)
 }
+
+// hhBulkEntries: POST …/household/entries/bulk {ids, category, accountId, delete}
+func (s *Server) hhBulkEntries(w http.ResponseWriter, r *http.Request) {
+	cid, ok := s.company(w, r)
+	if !ok {
+		return
+	}
+	var in app.BulkInput
+	if !decode(w, r, &in) {
+		return
+	}
+	res, err := s.App.BulkHouseholdEntries(r.Context(), cid, in)
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, res)
+}

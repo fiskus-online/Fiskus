@@ -11,6 +11,13 @@ tags: [prehľad]
 Verzie sú značky v repozitári (`v0.2.0`). Podrobný zoznam funkcií po
 etapách je v [pláne vývoja](./ROADMAP.md).
 
+## 0.10.9
+
+- **Hromadná úprava pohybov** (domácnosť): zaškrtnuté pohyby dostanú
+  naraz inú kategóriu alebo účet, prípadne sa zmažú. Pohyby, ktoré sa
+  zmeniť nedajú (prevod, rozdelený bloček, kategória iného druhu), Fiškus
+  vypíše aj s dôvodom.
+
 ## 0.10.8
 
 - **Telefón mimo domu — výsledky a kto je zapnutý**: telefón ukáže, čo

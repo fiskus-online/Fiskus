@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
-  budgetTone, budgetWidth, receiptFacts, receiptRows, listTotals, setAllCategory, splitByCategory, filterObligations, fromAmount, newObligation, obligationBody, accountBody, obligationKinds, payeeContact, payeeOptions, setPayee, partnerAccounts, paymentRows, pickColumns, obligationCell, defaultObligationColumns, obligationTone, paidPercent, toAmount, categoriesFor, categoryErrors, chartBars, entryCategory, entryType, filterEntries, fromForm, newEntry, toForm, monthsLabel, planMonthLabel, filterPlan, ibanGroups,
+  budgetTone, budgetWidth, receiptFacts, receiptRows, listTotals, setAllCategory, splitByCategory, filterObligations, fromAmount, newObligation, obligationBody, accountBody, obligationKinds, payeeContact, payeeOptions, setPayee, partnerAccounts, paymentRows, pickColumns, obligationCell, defaultObligationColumns, obligationTone, paidPercent, toAmount, categoriesFor, categoryErrors, chartBars, entryCategory, entryType, filterEntries, fromForm, newEntry, toForm, monthsLabel, planMonthLabel, filterPlan, ibanGroups, entriesWord, bulkSummary,
 } from './household.js'
 
 const accounts = [
@@ -351,5 +351,21 @@ describe('stĺpce zoznamu záväzkov', () => {
     ['rest', ''],
   ])('bunka %s', (key, want) => {
     expect(obligationCell(o, key, [{ id: 2, name: 'Bežný účet' }]).replace(/\u00a0/g, ' ')).toBe(want)
+  })
+})
+
+describe('hromadná úprava pohybov', () => {
+  it.each([[1, '1 pohyb'], [3, '3 pohyby'], [5, '5 pohybov'], [0, '0 pohybov']])('%i', (n, want) => expect(entriesWord(n)).toBe(want))
+  it('bez preskočených', () => {
+    expect(bulkSummary({ changed: 2, skipped: [] })).toMatchObject({ severity: 'success', summary: 'Zmenené: 2 pohyby' })
+    expect(bulkSummary({ changed: 1, skipped: [] }, true).summary).toBe('Zmazané: 1 pohyb')
+  })
+  it('s preskočenými', () => {
+    const skipped = [1, 2, 3, 4, 5].map((i) => ({ id: i, what: `${i}. 10. 2026 prevod 50,00 €`, reason: 'prevod nemá kategóriu' }))
+    const r = bulkSummary({ changed: 0, skipped })
+    expect(r.severity).toBe('warn')
+    expect(r.summary).toBe('Zmenené: 0 pohybov, nezmenené: 5 pohybov')
+    expect(r.detail.split('\n')).toHaveLength(4)
+    expect(r.detail).toContain('a ďalšie (2)')
   })
 })

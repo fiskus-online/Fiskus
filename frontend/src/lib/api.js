@@ -238,6 +238,7 @@ export const api = {
   hhDeleteAccount: (cid, id) => request('DELETE', `/api/companies/${cid}/household/accounts/${id}`),
   hhImportBank: (cid, accountId, file) => request('POST', `/api/companies/${cid}/household/accounts/${accountId}/import`, file),
   hhEntries: (cid, year) => request('GET', `/api/companies/${cid}/household/entries` + query({ year })),
+  hhBulkEntries: (cid, body) => request('POST', `/api/companies/${cid}/household/entries/bulk`, body),
   hhSaveEntry: (cid, e) => (e.id ? request('PUT', `/api/companies/${cid}/household/entries/${e.id}`, e) : request('POST', `/api/companies/${cid}/household/entries`, e)),
   hhDeleteEntry: (cid, id) => request('DELETE', `/api/companies/${cid}/household/entries/${id}`),
   hhCategories: (cid) => request('GET', `/api/companies/${cid}/household/categories`),
