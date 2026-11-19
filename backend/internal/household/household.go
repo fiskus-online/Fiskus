@@ -37,6 +37,9 @@ type Account struct {
 	// Opening je počiatočný zostatok (stav pred prvým pohybom vo Fiškuse).
 	Opening money.Dec `json:"opening"`
 	Closed  bool      `json:"closed"` // zrušený účet sa neponúka pri nových pohyboch
+	// Reconciled je posledné odsúhlasenie zostatku s výpisom banky
+	// (nastavuje ho iba odsúhlasenie, nie úprava účtu).
+	Reconciled *Reconciled `json:"reconciled,omitempty"`
 }
 
 // Entry je pohyb peňazí v domácnosti. Amount má znamienko: príjem kladný,

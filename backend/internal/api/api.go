@@ -362,6 +362,8 @@ func (s *Server) Handler() http.Handler {
 	need("PUT /api/companies/{cid}/household/accounts/{id}", auth.PermLedgerWrite, s.hhSaveAccount)
 	need("DELETE /api/companies/{cid}/household/accounts/{id}", auth.PermLedgerWrite, s.hhDeleteAccount)
 	need("POST /api/companies/{cid}/household/accounts/{id}/import", auth.PermLedgerWrite, s.hhImportBank)
+	need("GET /api/companies/{cid}/household/accounts/{id}/reconcile", auth.PermLedgerRead, s.hhReconcile)
+	need("POST /api/companies/{cid}/household/accounts/{id}/reconcile", auth.PermLedgerWrite, s.hhReconcile)
 	need("GET /api/companies/{cid}/household/entries", auth.PermLedgerRead, s.hhEntries)
 	need("POST /api/companies/{cid}/household/entries", auth.PermLedgerWrite, s.hhSaveEntry)
 	need("POST /api/companies/{cid}/household/entries/bulk", auth.PermLedgerWrite, s.hhBulkEntries)

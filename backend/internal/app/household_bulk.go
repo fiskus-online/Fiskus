@@ -51,21 +51,12 @@ func (a *App) BulkHouseholdEntries(ctx context.Context, companyID int64, in Bulk
 		return res, vErr("category", "Vyberte kategóriu alebo účet")
 	}
 	if in.AccountID != 0 {
-		accs, err := a.Store.ListHHAccounts(ctx, companyID)
+		acc, err := a.hhAccount(ctx, companyID, in.AccountID)
 		if err != nil {
-			return res, err
-		}
-		found := false
-		for _, acc := range accs {
-			if acc.ID == in.AccountID {
-				found = true
-				if acc.Closed {
-					return res, vErr("accountId", "Účet „"+acc.Name+"“ je zrušený")
-				}
-			}
-		}
-		if !found {
 			return res, vErr("accountId", "Účet neexistuje")
+		}
+		if acc.Closed {
+			return res, vErr("accountId", "Účet „"+acc.Name+"“ je zrušený")
 		}
 	}
 	s, err := a.householdSettings(ctx, companyID)

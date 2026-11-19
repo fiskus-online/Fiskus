@@ -665,6 +665,8 @@ export const householdAccountColumns = [
   t('IBAN', (r) => r.iban, 26),
   money('Počiatočný stav €', (r) => r.opening),
   money('Zostatok €', (r) => r.balance),
+  date('Odsúhlasené k', (r) => r.reconciled?.date),
+  money('Odsúhlasený zostatok €', (r) => r.reconciled?.balance),
   t('Zrušený', (r) => yes(r.closed), 8),
 ]
 

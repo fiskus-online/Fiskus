@@ -17,6 +17,11 @@ etapách je v [pláne vývoja](./ROADMAP.md).
   naraz inú kategóriu alebo účet, prípadne sa zmažú. Pohyby, ktoré sa
   zmeniť nedajú (prevod, rozdelený bloček, kategória iného druhu), Fiškus
   vypíše aj s dôvodom.
+- **Odsúhlasenie účtu s výpisom** (domácnosť): pri účte zadáte zostatok
+  z výpisu k dátumu, Fiškus ho porovná so svojím a rozdiel, ktorý
+  nedohľadáte, zapíše ako pohyb „Vyrovnanie podľa výpisu“. V zozname
+  účtov je dátum posledného odsúhlasenia; keď sa potom zmenia staršie
+  pohyby, zafarbí sa na červeno.
 
 ## 0.10.8
 
