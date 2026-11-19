@@ -65,6 +65,7 @@ import HouseholdEntries from './views/HouseholdEntries.vue'
 import HouseholdAccounts from './views/HouseholdAccounts.vue'
 import HouseholdBudget from './views/HouseholdBudget.vue'
 import HouseholdRules from './views/HouseholdRules.vue'
+import HouseholdAssets from './views/HouseholdAssets.vue'
 import HouseholdObligations from './views/HouseholdObligations.vue'
 import Employees from './views/Employees.vue'
 import Payroll from './views/Payroll.vue'
@@ -80,6 +81,7 @@ export const modules = [
       { path: '/domacnost/pohyby', label: 'Pohyby', icon: 'pi-list', ready: true, perm: 'ledger.read', book: 'household' },
       { path: '/domacnost/zavazky', label: 'Záväzky a platby', icon: 'pi-calendar-clock', ready: true, perm: 'ledger.read', book: 'household' },
       { path: '/domacnost/ucty', label: 'Účty', icon: 'pi-wallet', ready: true, perm: 'ledger.read', book: 'household' },
+      { path: '/domacnost/majetok', label: 'Majetok', icon: 'pi-building', ready: true, perm: 'ledger.read', book: 'household' },
       { path: '/domacnost/rozpocet', label: 'Kategórie a rozpočet', icon: 'pi-chart-bar', ready: true, perm: 'ledger.read', book: 'household' },
       { path: '/domacnost/pravidla', label: 'Pravidlá kategórií', icon: 'pi-filter', ready: true, perm: 'ledger.read', book: 'household' },
     ],
@@ -205,6 +207,7 @@ export const router = createRouter({
     { path: '/domacnost/zavazky', component: HouseholdObligations, meta: { title: 'Záväzky a platby', perm: 'ledger.read' } },
     { path: '/domacnost/zavazky/:id(\\d+)', component: HouseholdObligations, props: true, meta: { title: 'Záväzok', perm: 'ledger.read' } },
     { path: '/domacnost/ucty', component: HouseholdAccounts, meta: { title: 'Účty', perm: 'ledger.read' } },
+    { path: '/domacnost/majetok', component: HouseholdAssets, meta: { title: 'Majetok', perm: 'ledger.read' } },
     { path: '/domacnost/rozpocet', component: HouseholdBudget, meta: { title: 'Kategórie a rozpočet', perm: 'ledger.read' } },
     { path: '/domacnost/pravidla', component: HouseholdRules, meta: { title: 'Pravidlá kategórií', perm: 'ledger.read' } },
     { path: '/pravidelne', component: RecurringList, meta: { title: 'Pravidelná fakturácia', perm: 'invoices.read' } },

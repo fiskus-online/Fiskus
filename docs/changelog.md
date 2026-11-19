@@ -13,6 +13,9 @@ etapách je v [pláne vývoja](./ROADMAP.md).
 
 ## 0.10.9
 
+- **Majetok a čistý majetok** (domácnosť): byt, auto či fondy s hodnotou
+  zadanou k dátumu; Fiškus spočíta čistý majetok (účty + majetok +
+  požičané − dlhy zo záväzkov) a ukáže jeho vývoj za rok.
 - **Pravidlá kategórií** (domácnosť): „text obsahuje LIDL → Potraviny“.
   Platia pri zápise pohybu, importe výpisu, Fio aj bločkoch a majú
   prednosť pred odhadom podľa histórie; staršie pohyby sa dajú podľa

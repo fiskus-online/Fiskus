@@ -1145,6 +1145,19 @@ func seedHousehold(ctx context.Context, a *app.App) error {
 		Split: split, Source: "ekasa:O-DEMO0000000000000000000000000001", Receipt: demoReceipt(items, today.AddDays(-1))}); err != nil {
 		return err
 	}
+	// majetok mimo účtov s hodnotou zadanou ručne
+	for _, x := range []household.Asset{
+		{Name: "Byt", Kind: household.Realty, Values: []household.AssetValue{
+			{Date: today.AddMonths(-14), Value: m.MustParse("145000")}, {Date: today.AddMonths(-2), Value: m.MustParse("152000")}}},
+		{Name: "Škoda Fabia", Kind: household.Vehicle, Values: []household.AssetValue{
+			{Date: today.AddMonths(-14), Value: m.MustParse("9500")}, {Date: today.AddMonths(-6), Value: m.MustParse("8600")}}},
+		{Name: "Podielový fond", Kind: household.Investment, Note: "Mesačne 50 € z účtu", Values: []household.AssetValue{
+			{Date: today.AddMonths(-12), Value: m.MustParse("2400")}, {Date: today.AddMonths(-6), Value: m.MustParse("2810")}, {Date: today.AddMonths(-1), Value: m.MustParse("3190")}}},
+	} {
+		if _, err := a.SaveHouseholdAsset(ctx, h.ID, x); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 

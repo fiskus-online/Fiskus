@@ -11,6 +11,55 @@ export const accountKinds = [
   { value: 'savings', label: 'Sporenie', icon: 'pi-database' },
 ]
 
+export const assetKinds = [
+  { value: 'realty', label: 'Nehnuteľnosť', icon: 'pi-home' },
+  { value: 'vehicle', label: 'Auto, motorka', icon: 'pi-car' },
+  { value: 'investment', label: 'Investície, fondy', icon: 'pi-chart-line' },
+  { value: 'other', label: 'Iný majetok', icon: 'pi-box' },
+]
+export const assetKindLabel = (k) => assetKinds.find((x) => x.value === k)?.label ?? k
+export const assetIcon = (k) => assetKinds.find((x) => x.value === k)?.icon ?? 'pi-box'
+
+/** Telo majetku pre API: sumy „12 500,00“ → „12500.00“, prázdne riadky hodnôt sa vynechajú. */
+export function assetBody(f) {
+  return {
+    id: f.id ?? 0,
+    name: (f.name ?? '').trim(),
+    kind: f.kind,
+    note: (f.note ?? '').trim(),
+    values: (f.values ?? []).filter((v) => v.date || String(v.value ?? '').trim()).map((v) => ({ date: v.date, value: amountInput(v.value) })),
+  }
+}
+
+/**
+ * Stĺpce grafu vývoja čistého majetku (sumy sú hotové zo servera, tu sa iba
+ * prepočítajú na výšku v pixeloch). Keď sú všetky hodnoty rovnakého
+ * znamienka, os nezačína nulou, ale pod najmenšou hodnotou — inak by pri
+ * veľkom majetku nebolo zmeny vidieť. Vráti os (zero, ak je v grafe),
+ * stĺpce {x, w, y, h, neg} a indexy najmenšej a najväčšej hodnoty.
+ */
+export function netWorthBars(history, width, height) {
+  const vals = history.map((n) => Number(n.total))
+  if (!vals.length) return { zero: null, bars: [], lo: -1, hi: -1 }
+  let max = Math.max(...vals)
+  let min = Math.min(...vals)
+  const lo = vals.indexOf(min)
+  const hi = vals.indexOf(max)
+  const pad = (max - min) * 0.3 || Math.abs(max) * 0.05 || 1
+  if (min >= 0) min = Math.max(0, min - pad)
+  else if (max <= 0) max = Math.min(0, max + pad)
+  const span = max - min || 1
+  const y = (v) => ((max - v) / span) * height
+  const base = min > 0 ? height : max < 0 ? 0 : y(0)
+  const step = width / vals.length
+  const bars = vals.map((v, i) => {
+    const top = Math.min(y(v), base)
+    const h = Math.abs(y(v) - base)
+    return { x: i * step + step * 0.15, w: step * 0.7, y: top, h: Math.max(h, 1), neg: v < 0 }
+  })
+  return { zero: min <= 0 && max >= 0 ? y(0) : null, bars, lo, hi }
+}
+
 export const accountKindLabel = (k) => accountKinds.find((x) => x.value === k)?.label ?? k
 export const accountIcon = (k) => accountKinds.find((x) => x.value === k)?.icon ?? 'pi-wallet'
 

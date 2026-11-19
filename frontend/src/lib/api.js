@@ -241,6 +241,11 @@ export const api = {
     request('GET', `/api/companies/${cid}/household/accounts/${accountId}/reconcile` + query({ date, balance, category })),
   hhReconcile: (cid, accountId, body) => request('POST', `/api/companies/${cid}/household/accounts/${accountId}/reconcile`, body),
   hhEntries: (cid, year) => request('GET', `/api/companies/${cid}/household/entries` + query({ year })),
+  hhAssets: (cid) => request('GET', `/api/companies/${cid}/household/assets`),
+  hhSaveAsset: (cid, a) =>
+    a.id ? request('PUT', `/api/companies/${cid}/household/assets/${a.id}`, a) : request('POST', `/api/companies/${cid}/household/assets`, a),
+  hhDeleteAsset: (cid, id) => request('DELETE', `/api/companies/${cid}/household/assets/${id}`),
+  hhNetWorth: (cid, months = 12) => request('GET', `/api/companies/${cid}/household/networth` + query({ months })),
   hhRules: (cid) => request('GET', `/api/companies/${cid}/household/rules`),
   hhSaveRules: (cid, rules) => request('PUT', `/api/companies/${cid}/household/rules`, rules),
   hhRuleChanges: (cid) => request('GET', `/api/companies/${cid}/household/rules/changes`),

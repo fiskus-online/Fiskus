@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
-  budgetTone, budgetWidth, receiptFacts, receiptRows, listTotals, setAllCategory, splitByCategory, filterObligations, fromAmount, newObligation, obligationBody, accountBody, obligationKinds, payeeContact, payeeOptions, setPayee, partnerAccounts, paymentRows, pickColumns, obligationCell, defaultObligationColumns, obligationTone, paidPercent, toAmount, categoriesFor, categoryErrors, chartBars, entryCategory, entryType, filterEntries, fromForm, newEntry, toForm, monthsLabel, planMonthLabel, filterPlan, ibanGroups, amountInput, reconcileNote, entriesWord, bulkSummary, ruleErrors,
+  budgetTone, budgetWidth, receiptFacts, receiptRows, listTotals, setAllCategory, splitByCategory, filterObligations, fromAmount, newObligation, obligationBody, accountBody, obligationKinds, payeeContact, payeeOptions, setPayee, partnerAccounts, paymentRows, pickColumns, obligationCell, defaultObligationColumns, obligationTone, paidPercent, toAmount, categoriesFor, categoryErrors, chartBars, entryCategory, entryType, filterEntries, fromForm, newEntry, toForm, monthsLabel, planMonthLabel, filterPlan, ibanGroups, amountInput, reconcileNote, entriesWord, bulkSummary, ruleErrors, assetBody, netWorthBars,
 } from './household.js'
 
 const accounts = [
@@ -404,4 +404,28 @@ describe('pravidlá kategórií', () => {
     expect(Object.keys(got)).toEqual(Object.keys(want))
     for (const [k, re] of Object.entries(want)) expect(got[k]).toMatch(re)
   })
+})
+
+describe('majetok', () => {
+  it('telo pre API', () => {
+    expect(assetBody({ name: ' Auto ', kind: 'vehicle', note: '', values: [{ date: '2026-01-01', value: '12 500,50' }, { date: '', value: ' ' }] })).toEqual({
+      id: 0, name: 'Auto', kind: 'vehicle', note: '', values: [{ date: '2026-01-01', value: '12500.50' }],
+    })
+  })
+  it.each([
+    ['iba kladné, os nad nulou', ['100', '200'], { zero: null, neg: [false, false], tallest: 1, lo: 0, hi: 1 }],
+    ['kladné aj záporné', ['300', '-100'], { zero: 75, neg: [false, true], tallest: 0, lo: 1, hi: 0 }],
+    ['iba záporné', ['-300', '-100'], { zero: null, neg: [true, true], tallest: 0, lo: 0, hi: 1 }],
+    ['rovnaké', ['5', '5'], { zero: null, neg: [false, false], tallest: 0, lo: 0, hi: 0 }],
+  ])('graf: %s', (_, totals, want) => {
+    const g = netWorthBars(totals.map((total) => ({ total })), 200, 100)
+    if (want.zero === null) expect(g.zero).toBeNull()
+    else expect(g.zero).toBeCloseTo(want.zero)
+    expect(g.bars.map((b) => b.neg)).toEqual(want.neg)
+    const hs = g.bars.map((b) => b.h)
+    expect(hs.indexOf(Math.max(...hs))).toBe(want.tallest)
+    expect([g.lo, g.hi]).toEqual([want.lo, want.hi])
+    for (const b of g.bars) expect(b.y >= -0.0001 && b.y + b.h <= 100.0001).toBe(true)
+  })
+  it('graf bez údajov', () => expect(netWorthBars([], 100, 100).bars).toEqual([]))
 })

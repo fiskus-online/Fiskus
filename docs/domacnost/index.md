@@ -48,6 +48,24 @@ zmeníte, pridáte alebo zmažete starší pohyb, dátum sa zafarbí na červeno
 — zostatok k tomu dňu už nesedí s výpisom a účet treba odsúhlasiť znova.
 
 
+## Majetok
+
+V časti **Majetok** je čistý majetok domácnosti: peniaze na účtoch
++ majetok mimo účtov + požičané, ešte nevrátené − zostatok pôžičiek
+a dlhov. Graf ukazuje, ako sa menil za posledný rok (koniec každého
+mesiaca a dnešok); os grafu nezačína nulou, aby bolo zmenu vidieť —
+najmenšia a najväčšia hodnota sú vypísané pod ním.
+
+- **Majetok mimo účtov** — byt, auto, fondy, dôchodkové sporenie.
+  Hodnotu zadáte ručne k dátumu (odhad, výpis z fondu); keď sa zmení,
+  pridáte novú hodnotu a stará ostane v histórii. Platí posledná hodnota
+  k dátumu. Predaný majetok nemažte — pridajte hodnotu 0 k dátumu predaja.
+- **Dlhy a požičané** sa berú zo [záväzkov](#zavazky-a-platby) so
+  zadanou celkovou sumou (pôžička, dlh, exekúcia, pokuta, požičané
+  niekomu): celková suma mínus to, čo je zaplatené. Do histórie sa
+  záväzok ráta od mesiaca pred prvou splátkou. Pravidelné platby
+  (nájom, energie) sa nerátajú.
+
 ## Pohyby
 
 ![Pohyby — príjmy, výdavky a prevody s kategóriami](../obrazky/domacnost-pohyby.webp)
