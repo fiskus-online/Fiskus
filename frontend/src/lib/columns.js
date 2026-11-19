@@ -8,7 +8,7 @@ import { levelShort } from './reminders.js'
 import { kindLabel } from './advance.js'
 import { assetStatus, disposalOptions, periodLabel } from './assets.js'
 import { tripTime } from './logbook.js'
-import { accountKindLabel, accountName, entryCategory, typeLabel, entryType, frequencyLabel, obligationKindLabel, obligationTone, monthsLabel } from './household.js'
+import { accountKindLabel, accountName, assetKindLabel, entryCategory, typeLabel, entryType, frequencyLabel, obligationKindLabel, obligationTone, monthsLabel } from './household.js'
 import { moveLabel } from './itemcard.js'
 import { plain } from './richtext.js'
 import { jobKindLabel, jobStatusOf, marginText } from './jobs.js'
@@ -668,6 +668,14 @@ export const householdAccountColumns = [
   date('Odsúhlasené k', (r) => r.reconciled?.date),
   money('Odsúhlasený zostatok €', (r) => r.reconciled?.balance),
   t('Zrušený', (r) => yes(r.closed), 8),
+]
+
+export const householdAssetColumns = [
+  t('Majetok', (r) => r.name, 26),
+  t('Druh', (r) => assetKindLabel(r.kind), 18),
+  money('Hodnota €', (r) => r.value),
+  date('Hodnota k', (r) => r.values?.at(-1)?.date),
+  t('Poznámka', (r) => r.note, 30),
 ]
 
 export const householdPlanColumns = [

@@ -482,3 +482,41 @@ func (s *Server) hhRuleChanges(w http.ResponseWriter, r *http.Request) {
 	}
 	writeJSON(w, http.StatusOK, out)
 }
+
+func (s *Server) hhAssets(w http.ResponseWriter, r *http.Request) {
+	cid, ok := s.company(w, r)
+	if !ok {
+		return
+	}
+	out, err := s.App.HouseholdAssets(r.Context(), cid)
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, out)
+}
+
+func (s *Server) hhSaveAsset(w http.ResponseWriter, r *http.Request) {
+	saveEntity(s, w, r, func(a *household.Asset, id int64) { a.ID = id }, func(cid int64, a household.Asset) (household.Asset, error) {
+		return s.App.SaveHouseholdAsset(r.Context(), cid, a)
+	})
+}
+
+func (s *Server) hhDeleteAsset(w http.ResponseWriter, r *http.Request) {
+	s.deleteEntity(w, r, func(cid, id int64) error { return s.App.DeleteHouseholdAsset(r.Context(), cid, id) })
+}
+
+// hhNetWorth: GET …/household/networth?months=12
+func (s *Server) hhNetWorth(w http.ResponseWriter, r *http.Request) {
+	cid, ok := s.company(w, r)
+	if !ok {
+		return
+	}
+	months, _ := strconv.Atoi(r.URL.Query().Get("months"))
+	out, err := s.App.HouseholdNetWorth(r.Context(), cid, months)
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, out)
+}
