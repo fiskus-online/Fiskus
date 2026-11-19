@@ -4,6 +4,7 @@
 import { computed, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
+import { useConfirm } from 'primevue/useconfirm'
 import { AgGridVue } from 'ag-grid-vue3'
 import Button from 'primevue/button'
 import Dialog from 'primevue/dialog'
@@ -18,7 +19,7 @@ import { fiskusGridTheme, skGridLocale, gridRows } from '../lib/grid.js'
 import { formatAmount, formatDate, formatMoney } from '../lib/format.js'
 import { householdEntryColumns } from '../lib/columns.js'
 import {
-  accountName, entryCategory, entryType, entryTypes, filterEntries, listTotals, monthNames, newEntry,
+  accountName, bulkSummary, entriesWord, entryCategory, entryType, entryTypes, filterEntries, listTotals, monthNames, newEntry,
 } from '../lib/household.js'
 import ExportButton from '../components/ExportButton.vue'
 import HouseholdEntryDialog from '../components/HouseholdEntryDialog.vue'
@@ -101,6 +102,42 @@ narrow.addEventListener('change', applyResponsive)
 onBeforeUnmount(() => narrow.removeEventListener('change', applyResponsive))
 
 const receiptOpen = ref(false)
+
+// ---- hromadná úprava označených pohybov ----
+const confirm = useConfirm()
+const rowSelection = computed(() => (canWrite.value ? { mode: 'multiRow', checkboxes: true, headerCheckbox: true, enableClickSelection: false, selectAll: 'filtered' } : undefined))
+const selected = shallowRef([])
+const onSelection = () => (selected.value = gridApi.value?.getSelectedRows() ?? [])
+const selTotals = computed(() => listTotals(selected.value))
+const bulk = ref({ category: null, accountId: null })
+const bulkBusy = ref(false)
+const openAccounts = computed(() => accounts.value.filter((a) => !a.closed))
+function clearSelection() {
+  gridApi.value?.deselectAll()
+  bulk.value = { category: null, accountId: null }
+}
+async function runBulk(del) {
+  bulkBusy.value = true
+  try {
+    const body = { ids: selected.value.map((e) => e.id), delete: del, category: del ? '' : bulk.value.category ?? '', accountId: del ? 0 : bulk.value.accountId ?? 0 }
+    toast.add(bulkSummary(await api.hhBulkEntries(session.companyId, body), del))
+    clearSelection()
+    await load()
+  } catch (e) {
+    toast.add({ severity: 'error', summary: 'Pohyby sa nezmenili', detail: e.fields?.[0]?.message ?? e.message, life: 6000 })
+  } finally {
+    bulkBusy.value = false
+  }
+}
+function bulkDelete() {
+  confirm.require({
+    header: 'Zmazať pohyby',
+    message: `Zmazať ${entriesWord(selected.value.length)}? Zmazanie sa zapíše do auditu, späť sa pohyby dajú vrátiť iba zo zálohy.`,
+    acceptProps: { label: 'Zmazať', severity: 'danger', size: 'small' },
+    rejectProps: { label: 'Zrušiť', text: true, size: 'small' },
+    accept: () => runBulk(true),
+  })
+}
 
 // ---- pohyb ----
 const editing = ref(null)
@@ -249,6 +286,18 @@ async function importDraws() {
       Najprv pridajte účty domácnosti v časti <router-link to="/domacnost/ucty">Účty</router-link>.
     </p>
 
+    <div v-if="selected.length" class="bulk" role="region" aria-label="Označené pohyby">
+      <strong>Označené: {{ entriesWord(selected.length) }}</strong>
+      <span v-if="Number(selTotals.expense)" class="num">výdavky {{ formatMoney(selTotals.expense) }}</span>
+      <span v-if="Number(selTotals.income)" class="num">príjmy {{ formatMoney(selTotals.income) }}</span>
+      <Select v-model="bulk.category" :options="categoryOptions" option-label="label" option-value="value" size="small" filter show-clear
+        placeholder="Zmeniť kategóriu" aria-label="Nová kategória" />
+      <Select v-model="bulk.accountId" :options="openAccounts" option-label="name" option-value="id" size="small" show-clear
+        placeholder="Presunúť na účet" aria-label="Nový účet" />
+      <Button label="Použiť" icon="pi pi-check" size="small" :loading="bulkBusy" :disabled="!bulk.category && !bulk.accountId" @click="runBulk(false)" />
+      <Button label="Zmazať" icon="pi pi-trash" size="small" severity="danger" text :disabled="bulkBusy" @click="bulkDelete" />
+      <Button label="Zrušiť označenie" size="small" text severity="secondary" @click="clearSelection" />
+    </div>
     <div class="grid-wrap">
       <AgGridVue
         class="grid"
@@ -259,9 +308,11 @@ async function importDraws() {
         :locale-text="skGridLocale"
         :loading="loading"
         :get-row-id="(p) => String(p.data.id)"
+        :row-selection="rowSelection"
         :overlay-no-rows-template="'<span>Žiadne pohyby. Zapíšte výdavok alebo nahrajte výpis z banky.</span>'"
         @grid-ready="(e) => { gridApi = e.api; applyResponsive() }"
         @row-clicked="(e) => (editing = e.data)"
+        @selection-changed="onSelection"
       />
     </div>
     <footer class="sums" aria-label="Súčty zoznamu">
@@ -363,6 +414,19 @@ async function importDraws() {
 .hint {
   color: var(--ink-soft);
   font-size: var(--fs-sm);
+}
+.bulk {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 6px 10px;
+  background: var(--blue-wash);
+  border: 1px solid var(--rule);
+  font-size: var(--fs-sm);
+}
+.bulk .num {
+  color: var(--ink-soft);
 }
 .grid-wrap {
   flex: 1;

@@ -77,6 +77,17 @@ načíta nové pohyby. Podrobnosti o tokene a limitoch banky sú v časti
 ![Napojenie domácnosti na Fio banku](../obrazky/domacnost-fio.webp)
 *Napojenie domácnosti na Fio banku*
 
+### Hromadná úprava
+
+Zaškrtnite pohyby v prvom stĺpci (zaškrtnutím v hlavičke označíte všetky,
+ktoré prešli filtrom a hľadaním). Nad zoznamom sa objaví lišta so súčtom
+označených pohybov, kde im naraz zmeníte **kategóriu**, presuniete ich na
+iný **účet** alebo ich **zmažete**. Každá zmena sa zapíše do auditu.
+
+Niektoré pohyby sa nezmenia a Fiškus povie prečo: prevod nemá kategóriu,
+bloček rozdelený na položky má kategórie pri položkách a výdavok nemôže
+dostať kategóriu príjmov (ani naopak).
+
 ### Bločky a platby kartou
 
 Nákup zaplatený kartou je raz bloček a raz platba v banke. Fiškus ich spojí

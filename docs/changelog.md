@@ -13,6 +13,10 @@ etapách je v [pláne vývoja](./ROADMAP.md).
 
 ## 0.10.9
 
+- **Hromadná úprava pohybov** (domácnosť): zaškrtnuté pohyby dostanú
+  naraz inú kategóriu alebo účet, prípadne sa zmažú. Pohyby, ktoré sa
+  zmeniť nedajú (prevod, rozdelený bloček, kategória iného druhu), Fiškus
+  vypíše aj s dôvodom.
 - **Odsúhlasenie účtu s výpisom** (domácnosť): pri účte zadáte zostatok
   z výpisu k dátumu, Fiškus ho porovná so svojím a rozdiel, ktorý
   nedohľadáte, zapíše ako pohyb „Vyrovnanie podľa výpisu“. V zozname

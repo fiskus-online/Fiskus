@@ -141,6 +141,21 @@ export function listTotals(rows) {
   return { income: fromCents(inc), expense: fromCents(out), count: rows.length }
 }
 
+/** Počet pohybov po slovensky: 1 pohyb, 2 pohyby, 5 pohybov. */
+export function entriesWord(n) {
+  return n === 1 ? '1 pohyb' : n >= 2 && n <= 4 ? `${n} pohyby` : `${n} pohybov`
+}
+
+/** Hlásenie po hromadnej úprave pohybov (toast). */
+export function bulkSummary(r, deleted) {
+  const done = deleted ? `Zmazané: ${entriesWord(r.changed)}` : `Zmenené: ${entriesWord(r.changed)}`
+  const skipped = r.skipped ?? []
+  if (!skipped.length) return { severity: 'success', summary: done, detail: '', life: 3000 }
+  const lines = skipped.slice(0, 3).map((s) => `${s.what} — ${s.reason}`)
+  if (skipped.length > 3) lines.push(`a ďalšie (${skipped.length - 3})`)
+  return { severity: 'warn', summary: `${done}, nezmenené: ${entriesWord(skipped.length)}`, detail: lines.join('\n'), life: 10000 }
+}
+
 // ---- záväzky ----
 
 // druhy záväzku v poradí výberu; pravidelná platba je najčastejšia, preto prvá
