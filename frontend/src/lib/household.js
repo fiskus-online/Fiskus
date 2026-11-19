@@ -156,6 +156,21 @@ export function bulkSummary(r, deleted) {
   return { severity: 'warn', summary: `${done}, nezmenené: ${entriesWord(skipped.length)}`, detail: lines.join('\n'), life: 10000 }
 }
 
+/** Chyby pravidiel kategórií pred uložením: { index: správa }. */
+export function ruleErrors(rules, categories) {
+  const names = new Set(categories.map((c) => c.name))
+  const seen = new Set()
+  const out = {}
+  rules.forEach((r, i) => {
+    const key = fold(r.text ?? '').replace(/[^\p{L}\p{N}]+/gu, ' ').trim()
+    if (!key) out[i] = 'Zadajte text, podľa ktorého sa pohyb spozná (napr. LIDL)'
+    else if (!names.has(r.category)) out[i] = r.category ? `Kategória „${r.category}“ už nie je v zozname` : 'Vyberte kategóriu'
+    else if (seen.has(key)) out[i] = `Pravidlo pre „${r.text.trim()}“ je dvakrát`
+    seen.add(key)
+  })
+  return out
+}
+
 // ---- záväzky ----
 
 // druhy záväzku v poradí výberu; pravidelná platba je najčastejšia, preto prvá

@@ -64,6 +64,7 @@ import HouseholdOverview from './views/HouseholdOverview.vue'
 import HouseholdEntries from './views/HouseholdEntries.vue'
 import HouseholdAccounts from './views/HouseholdAccounts.vue'
 import HouseholdBudget from './views/HouseholdBudget.vue'
+import HouseholdRules from './views/HouseholdRules.vue'
 import HouseholdObligations from './views/HouseholdObligations.vue'
 import Employees from './views/Employees.vue'
 import Payroll from './views/Payroll.vue'
@@ -80,6 +81,7 @@ export const modules = [
       { path: '/domacnost/zavazky', label: 'Záväzky a platby', icon: 'pi-calendar-clock', ready: true, perm: 'ledger.read', book: 'household' },
       { path: '/domacnost/ucty', label: 'Účty', icon: 'pi-wallet', ready: true, perm: 'ledger.read', book: 'household' },
       { path: '/domacnost/rozpocet', label: 'Kategórie a rozpočet', icon: 'pi-chart-bar', ready: true, perm: 'ledger.read', book: 'household' },
+      { path: '/domacnost/pravidla', label: 'Pravidlá kategórií', icon: 'pi-filter', ready: true, perm: 'ledger.read', book: 'household' },
     ],
   },
   {
@@ -204,6 +206,7 @@ export const router = createRouter({
     { path: '/domacnost/zavazky/:id(\\d+)', component: HouseholdObligations, props: true, meta: { title: 'Záväzok', perm: 'ledger.read' } },
     { path: '/domacnost/ucty', component: HouseholdAccounts, meta: { title: 'Účty', perm: 'ledger.read' } },
     { path: '/domacnost/rozpocet', component: HouseholdBudget, meta: { title: 'Kategórie a rozpočet', perm: 'ledger.read' } },
+    { path: '/domacnost/pravidla', component: HouseholdRules, meta: { title: 'Pravidlá kategórií', perm: 'ledger.read' } },
     { path: '/pravidelne', component: RecurringList, meta: { title: 'Pravidelná fakturácia', perm: 'invoices.read' } },
     { path: '/pravidelne/nova', component: InvoiceEdit, props: { recurring: true }, meta: { title: 'Nová pravidelná faktúra', perm: 'invoices.write' } },
     { path: '/pravidelne/:id(\\d+)', component: InvoiceEdit, props: (r) => ({ id: r.params.id, recurring: true }), meta: { title: 'Pravidelná faktúra', perm: 'invoices.read' } },

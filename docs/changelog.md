@@ -13,6 +13,10 @@ etapách je v [pláne vývoja](./ROADMAP.md).
 
 ## 0.10.9
 
+- **Pravidlá kategórií** (domácnosť): „text obsahuje LIDL → Potraviny“.
+  Platia pri zápise pohybu, importe výpisu, Fio aj bločkoch a majú
+  prednosť pred odhadom podľa histórie; staršie pohyby sa dajú podľa
+  nich preradiť naraz.
 - **Hromadná úprava pohybov** (domácnosť): zaškrtnuté pohyby dostanú
   naraz inú kategóriu alebo účet, prípadne sa zmažú. Pohyby, ktoré sa
   zmeniť nedajú (prevod, rozdelený bloček, kategória iného druhu), Fiškus
