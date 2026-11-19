@@ -29,6 +29,24 @@ zmazať; keď ho zrušíte v banke, označte ho ako zrušený.
 ![Účty domácnosti so zostatkami](../obrazky/domacnost-ucty.webp)
 *Účty domácnosti so zostatkami*
 
+### Odsúhlasenie s výpisom
+
+Raz za mesiac (keď príde výpis) skontrolujte, či zostatok vo Fiškuse sedí
+s bankou. Pri účte kliknite na **Odsúhlasiť**, zadajte dátum a zostatok
+z výpisu — pri peňaženke spočítajte hotovosť. Fiškus ukáže svoj zostatok
+k tomu istému dňu a rozdiel. Pohyby po zadanom dátume do porovnania
+nevstupujú.
+
+- **Rozdiel 0,00 €** — účet sa označí ako odsúhlasený k dátumu.
+- **Rozdiel** — najprv skúste dohľadať chýbajúci alebo dvakrát zapísaný
+  pohyb. Ak ho nedohľadáte (bankový poplatok, úrok, drobné), Fiškus ho
+  zapíše ako pohyb „Vyrovnanie podľa výpisu“ v kategórii Iné príjmy alebo
+  Iné výdavky (kategóriu môžete zmeniť) a účet odsúhlasí.
+
+V zozname účtov je pri účte dátum posledného odsúhlasenia. Ak potom
+zmeníte, pridáte alebo zmažete starší pohyb, dátum sa zafarbí na červeno
+— zostatok k tomu dňu už nesedí s výpisom a účet treba odsúhlasiť znova.
+
 
 ## Pohyby
 

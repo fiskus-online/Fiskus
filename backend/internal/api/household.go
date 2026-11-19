@@ -10,6 +10,8 @@ import (
 
 	"github.com/fiskus-online/fiskus/backend/internal/app"
 	"github.com/fiskus-online/fiskus/backend/internal/household"
+	"github.com/fiskus-online/fiskus/backend/internal/invoice"
+	"github.com/fiskus-online/fiskus/backend/internal/money"
 	"github.com/fiskus-online/fiskus/backend/internal/store"
 )
 
@@ -382,4 +384,44 @@ func (s *Server) hhPartner(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusOK, out)
+}
+
+// hhReconcile: GET …/household/accounts/{id}/reconcile?date=&balance= (náhľad)
+// a POST s telom {date, balance, adjust, category} (odsúhlasenie).
+func (s *Server) hhReconcile(w http.ResponseWriter, r *http.Request) {
+	cid, ok := s.company(w, r)
+	if !ok {
+		return
+	}
+	id, ok := pathID(w, r, "id")
+	if !ok {
+		return
+	}
+	var in app.ReconcileInput
+	commit := r.Method == http.MethodPost
+	if commit {
+		if !decode(w, r, &in) {
+			return
+		}
+	} else {
+		q := r.URL.Query()
+		var err error
+		if q.Get("date") != "" {
+			if in.Date, err = invoice.ParseDate(q.Get("date")); err != nil {
+				fail(w, &invoice.ValidationError{Fields: []invoice.FieldError{{Field: "date", Message: "Neplatný dátum"}}})
+				return
+			}
+		}
+		if in.Balance, err = money.Parse(q.Get("balance")); err != nil {
+			fail(w, &invoice.ValidationError{Fields: []invoice.FieldError{{Field: "balance", Message: "Neplatná suma"}}})
+			return
+		}
+		in.Category = q.Get("category")
+	}
+	res, err := s.App.ReconcileHouseholdAccount(r.Context(), cid, id, in, commit)
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, res)
 }

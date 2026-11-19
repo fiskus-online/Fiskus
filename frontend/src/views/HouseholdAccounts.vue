@@ -13,11 +13,12 @@ import FormField from '../components/FormField.vue'
 import IbanInput from '../components/IbanInput.vue'
 import ExportButton from '../components/ExportButton.vue'
 import FioPanel from '../components/FioPanel.vue'
+import HouseholdReconcileDialog from '../components/HouseholdReconcileDialog.vue'
 import { api, ApiError } from '../lib/api.js'
 import { can, session } from '../lib/session.js'
 import { formatMoney } from '../lib/format.js'
 import { householdAccountColumns } from '../lib/columns.js'
-import { accountBody, accountIcon, accountKindLabel, accountKinds } from '../lib/household.js'
+import { accountBody, accountIcon, accountKindLabel, accountKinds, reconcileNote } from '../lib/household.js'
 import { matches, searchTerms } from '../lib/search.js'
 
 const router = useRouter()
@@ -54,6 +55,18 @@ async function loadFio() {
 }
 onMounted(loadFio)
 const fioOf = (a) => fioAccounts.value.some((f) => f.householdAccountId === a.id)
+
+// odsúhlasenie zostatku s výpisom
+const reconciling = ref(null)
+const categories = ref([])
+async function reconcile(a) {
+  if (!categories.value.length) categories.value = await api.hhCategories(session.companyId).catch(() => [])
+  reconciling.value = a
+}
+async function reconciled() {
+  reconciling.value = null
+  await load()
+}
 
 const form = ref(null)
 const errors = ref({})
@@ -115,20 +128,27 @@ function remove(a) {
 
     <table v-if="list.length" class="accounts">
       <thead>
-        <tr><th>Účet</th><th>Druh</th><th class="iban">IBAN</th><th class="num">Zostatok</th></tr>
+        <tr><th>Účet</th><th class="kind">Druh</th><th class="iban">IBAN</th><th class="num">Zostatok</th><th class="rec">Výpis</th></tr>
       </thead>
       <tbody>
         <tr v-for="a in visible" :key="a.id" :class="{ closed: a.closed }" @click="canWrite ? edit(a) : router.push({ path: '/domacnost/pohyby', query: { ucet: a.id } })">
           <td data-label="Účet"><i class="pi" :class="accountIcon(a.kind)" aria-hidden="true" /> {{ a.name }}<small v-if="a.closed"> · zrušený</small>
             <span v-if="fioOf(a)" class="fio" title="Pohyby sa sťahujú z Fio banky (Pohyby → Stiahnuť z Fio)">Fio</span></td>
-          <td data-label="Druh">{{ accountKindLabel(a.kind) }}</td>
+          <td class="kind" data-label="Druh">{{ accountKindLabel(a.kind) }}</td>
           <td class="iban" data-label="IBAN">{{ a.iban || '—' }}</td>
           <td class="num bal" :class="{ neg: Number(a.balance) < 0 }" data-label="Zostatok">{{ formatMoney(a.balance) }}</td>
+          <td class="rec" data-label="Výpis">
+            <span v-if="reconcileNote(a)" class="recnote" :class="{ stale: reconcileNote(a).stale }" :title="reconcileNote(a).title">
+              <i class="pi" :class="reconcileNote(a).stale ? 'pi-exclamation-triangle' : 'pi-check'" aria-hidden="true" />{{ reconcileNote(a).text }}</span>
+            <Button v-if="!a.closed" :label="a.reconciled ? '' : 'Odsúhlasiť'" icon="pi pi-check-square" size="small" text
+              :aria-label="`Odsúhlasiť ${a.name} s výpisom`" title="Odsúhlasiť zostatok s výpisom" @click.stop="reconcile(a)" />
+          </td>
         </tr>
       </tbody>
     </table>
     <p v-else-if="!loading" class="empty">Zatiaľ žiadny účet. Začnite bežným účtom a peňaženkou.</p>
 
+    <HouseholdReconcileDialog :account="reconciling" :categories="categories" :can-write="canWrite" @close="reconciling = null" @done="reconciled" />
     <FioPanel v-if="fioOn" v-model:visible="fioOpen" :cid="session.companyId" :can-write="canWrite" :accounts="fioAccounts" :household-accounts="list"
       @changed="(l) => (fioAccounts = l)" @synced="load" />
     <Dialog :visible="!!form" :header="form?.id ? 'Účet' : 'Nový účet'" modal :style="{ width: '30rem' }" :breakpoints="{ '560px': '96vw' }"
@@ -261,9 +281,37 @@ function remove(a) {
   gap: 6px;
   align-items: center;
 }
+.accounts .rec {
+  text-align: right;
+  white-space: nowrap;
+}
+.recnote {
+  font-size: var(--fs-sm);
+  color: var(--ink-soft);
+}
+.recnote .pi {
+  font-size: 0.75rem;
+}
+.recnote.stale,
+.recnote.stale .pi {
+  color: var(--tone-overdue);
+}
 @media (max-width: 560px) {
-  .accounts .iban {
+  .accounts .iban,
+  .accounts .kind {
     display: none;
+  }
+  /* na mobile iba ikona a dátum odsúhlasenia pod sebou */
+  .accounts .rec {
+    white-space: normal;
+    padding-left: 4px;
+    padding-right: 4px;
+  }
+  .accounts .rec :deep(.p-button-label) {
+    display: none;
+  }
+  .recnote {
+    display: block;
   }
 }
 </style>

@@ -122,6 +122,9 @@ type HouseholdAccount struct {
 	household.Account
 	Balance money.Dec `json:"balance"`
 	Entries int       `json:"entries"`
+	// Stale je rozdiel, o ktorý sa od odsúhlasenia zmenili staršie pohyby
+	// (nula = odsúhlasenie platí).
+	Stale money.Dec `json:"stale"`
 }
 
 // HouseholdAccounts vráti účty domácnosti so zostatkami.
@@ -147,7 +150,7 @@ func (a *App) HouseholdAccounts(ctx context.Context, companyID int64) ([]Househo
 	}
 	out := make([]HouseholdAccount, 0, len(accs))
 	for _, x := range accs {
-		out = append(out, HouseholdAccount{Account: x, Balance: bal[x.ID], Entries: n[x.ID]})
+		out = append(out, HouseholdAccount{Account: x, Balance: bal[x.ID], Entries: n[x.ID], Stale: household.Stale(x, es)})
 	}
 	return out, nil
 }
@@ -176,6 +179,10 @@ func (a *App) SaveHouseholdAccount(ctx context.Context, companyID int64, x house
 	}
 	if x.ID != 0 && before == nil {
 		return x, store.ErrNotFound
+	}
+	x.Reconciled = nil // odsúhlasenie mení iba ReconcileHouseholdAccount
+	if before != nil {
+		x.Reconciled = before.Reconciled
 	}
 	if err := a.Store.SaveHHAccount(ctx, companyID, &x); err != nil {
 		return x, err
