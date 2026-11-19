@@ -443,3 +443,42 @@ func (s *Server) hhBulkEntries(w http.ResponseWriter, r *http.Request) {
 	}
 	writeJSON(w, http.StatusOK, res)
 }
+
+// hhRules: GET a PUT …/household/rules (pravidlá kategórií).
+func (s *Server) hhRules(w http.ResponseWriter, r *http.Request) {
+	cid, ok := s.company(w, r)
+	if !ok {
+		return
+	}
+	var out []household.Rule
+	var err error
+	if r.Method == http.MethodPut {
+		var in []household.Rule
+		if !decode(w, r, &in) {
+			return
+		}
+		out, err = s.App.SaveHouseholdRules(r.Context(), cid, in)
+	} else {
+		out, err = s.App.HouseholdRules(r.Context(), cid)
+	}
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, out)
+}
+
+// hhRuleChanges: GET …/household/rules/changes (náhľad) a POST (použiť na
+// staršie pohyby).
+func (s *Server) hhRuleChanges(w http.ResponseWriter, r *http.Request) {
+	cid, ok := s.company(w, r)
+	if !ok {
+		return
+	}
+	out, err := s.App.HouseholdRuleChanges(r.Context(), cid, r.Method == http.MethodPost)
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, out)
+}

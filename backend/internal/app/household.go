@@ -44,6 +44,15 @@ func householdKey(companyID int64) string { return "household." + strconv.Format
 // HouseholdSettings sú kategórie a rozpočet domácnosti.
 type HouseholdSettings struct {
 	Categories []household.Category `json:"categories"`
+	Rules      []household.Rule     `json:"rules,omitempty"` // pravidlá kategórií
+}
+
+// suggest navrhne kategóriu: najprv pravidlá, potom odhad z histórie.
+func (s HouseholdSettings) suggest(text string, income bool, hist []household.Entry) string {
+	if c := household.MatchRule(text, income, s.Rules, s.Categories); c != "" {
+		return c
+	}
+	return household.Suggest(text, income, hist, s.Categories)
 }
 
 func (a *App) householdSettings(ctx context.Context, companyID int64) (HouseholdSettings, error) {
@@ -106,7 +115,9 @@ func (a *App) SaveHouseholdCategories(ctx context.Context, companyID int64, cats
 	if err != nil {
 		return nil, err
 	}
-	data, err := json.Marshal(HouseholdSettings{Categories: cats})
+	next := before
+	next.Categories = cats // pravidlá ostávajú
+	data, err := json.Marshal(next)
 	if err != nil {
 		return nil, err
 	}
@@ -425,7 +436,7 @@ func (a *App) HouseholdSuggest(ctx context.Context, companyID int64, text string
 	if err != nil {
 		return "", err
 	}
-	return household.Suggest(text, income, es, s.Categories), nil
+	return s.suggest(text, income, es), nil
 }
 
 // fallbackCategory: posledná kategória daného druhu (zvyčajne „Iné …“).
@@ -469,7 +480,7 @@ func (a *App) addImported(ctx context.Context, companyID int64, es []household.E
 	for _, e := range es {
 		if e.Category == "" {
 			income := e.Amount.Sign() > 0
-			e.Category = household.Suggest(strings.TrimSpace(e.Payee+" "+e.Note), income, hist, s.Categories)
+			e.Category = s.suggest(strings.TrimSpace(e.Payee+" "+e.Note), income, hist)
 			if e.Category == "" {
 				e.Category = fallbackCategory(s.Categories, income)
 			}

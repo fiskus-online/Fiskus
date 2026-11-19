@@ -216,3 +216,22 @@ kategórie sú červené. Kategórie si môžete premenovať, pridať aj odobra�
 ![Kategórie a mesačný rozpočet](../obrazky/domacnost-rozpocet.webp)
 *Kategórie a mesačný rozpočet*
 
+
+## Pravidlá kategórií
+
+Kategóriu nového pohybu Fiškus navrhne podľa starších pohybov s rovnakým
+obchodom. Keď chcete mať istotu, nastavte v časti **Pravidlá kategórií**
+pravidlo: *text obsahuje* → *kategória*, napríklad „Slovnaft“ → Auto
+a doprava.
+
+- Text sa hľadá v obchode, popise platby z výpisu a v položkách bločku,
+  bez ohľadu na diakritiku a veľké písmená, od začiatku slova („lidl“
+  sedí na „LIDL DAKUJEME“, nie na „KALIDL“).
+- Pravidlá platia pri zápise pohybu, importe výpisu, Fio aj bločkoch
+  (z eKasy aj z fotky) a majú prednosť pred odhadom. Ak sedí viac
+  pravidiel, vyhráva vyššie v zozname — poradie meníte šípkou.
+- Pravidlo s kategóriou príjmov sa použije iba na príjmy a naopak.
+
+Po uložení Fiškus ukáže **staršie pohyby s inou kategóriou**, než by im
+dali pravidlá, a tlačidlom **Zmeniť kategóriu** ich opraví naraz (každá
+zmena ide do auditu). Prevody a bločky rozdelené na položky sa nemenia.

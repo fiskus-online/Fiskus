@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
-  budgetTone, budgetWidth, receiptFacts, receiptRows, listTotals, setAllCategory, splitByCategory, filterObligations, fromAmount, newObligation, obligationBody, accountBody, obligationKinds, payeeContact, payeeOptions, setPayee, partnerAccounts, paymentRows, pickColumns, obligationCell, defaultObligationColumns, obligationTone, paidPercent, toAmount, categoriesFor, categoryErrors, chartBars, entryCategory, entryType, filterEntries, fromForm, newEntry, toForm, monthsLabel, planMonthLabel, filterPlan, ibanGroups, amountInput, reconcileNote, entriesWord, bulkSummary,
+  budgetTone, budgetWidth, receiptFacts, receiptRows, listTotals, setAllCategory, splitByCategory, filterObligations, fromAmount, newObligation, obligationBody, accountBody, obligationKinds, payeeContact, payeeOptions, setPayee, partnerAccounts, paymentRows, pickColumns, obligationCell, defaultObligationColumns, obligationTone, paidPercent, toAmount, categoriesFor, categoryErrors, chartBars, entryCategory, entryType, filterEntries, fromForm, newEntry, toForm, monthsLabel, planMonthLabel, filterPlan, ibanGroups, amountInput, reconcileNote, entriesWord, bulkSummary, ruleErrors,
 } from './household.js'
 
 const accounts = [
@@ -388,5 +388,20 @@ describe('hromadná úprava pohybov', () => {
     expect(r.summary).toBe('Zmenené: 0 pohybov, nezmenené: 5 pohybov')
     expect(r.detail.split('\n')).toHaveLength(4)
     expect(r.detail).toContain('a ďalšie (2)')
+  })
+})
+
+describe('pravidlá kategórií', () => {
+  const cats = [{ name: 'Potraviny' }, { name: 'Mzda', income: true }]
+  it.each([
+    ['v poriadku', [{ text: 'Lidl', category: 'Potraviny' }, { text: 'výplata', category: 'Mzda' }], {}],
+    ['prázdny text', [{ text: ' - ', category: 'Potraviny' }], { 0: /Zadajte text/ }],
+    ['bez kategórie', [{ text: 'lidl', category: null }], { 0: /Vyberte kategóriu/ }],
+    ['zmazaná kategória', [{ text: 'lidl', category: 'Jedlo' }], { 0: /už nie je v zozname/ }],
+    ['dvakrát bez diakritiky', [{ text: 'Výplata', category: 'Mzda' }, { text: 'VYPLATA ', category: 'Mzda' }], { 1: /dvakrát/ }],
+  ])('%s', (_, rules, want) => {
+    const got = ruleErrors(rules, cats)
+    expect(Object.keys(got)).toEqual(Object.keys(want))
+    for (const [k, re] of Object.entries(want)) expect(got[k]).toMatch(re)
   })
 })

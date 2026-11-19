@@ -52,7 +52,7 @@ func (a *App) receiptDraft(ctx context.Context, companyID int64, date invoice.Da
 			have[c.Name] = true
 		}
 	}
-	shopCat := household.Suggest(shop, false, hist, s.Categories)
+	shopCat := s.suggest(shop, false, hist)
 	if shopCat == "" {
 		shopCat = fallbackCategory(s.Categories, false)
 	}
@@ -61,7 +61,9 @@ func (a *App) receiptDraft(ctx context.Context, companyID int64, date invoice.Da
 		if !have[it.Category] {
 			it.Category = ""
 		}
-		if c := household.SuggestItem(it.Name, hist, s.Categories); c != "" && (it.Category == "" || hasItemHistory(it.Name, hist)) {
+		if c := household.MatchRule(it.Name, false, s.Rules, s.Categories); c != "" {
+			it.Category = c // pravidlo má prednosť pred všetkým
+		} else if c := household.SuggestItem(it.Name, hist, s.Categories); c != "" && (it.Category == "" || hasItemHistory(it.Name, hist)) {
 			it.Category = c // história má prednosť aj pred návrhom AI
 		}
 	}
