@@ -23,8 +23,8 @@ func plan(t *testing.T, a Asset) map[int]Year {
 		out[y.Year] = y
 		sum = sum.Add(y.Claimed).Add(y.Disposal)
 	}
-	if a.Share == 100 && !sum.Equal(a.Cost) {
-		t.Fatalf("súčet odpisov %s ≠ VC %s", sum, a.Cost)
+	if a.Share == 100 && !sum.Equal(a.TotalCost()) {
+		t.Fatalf("súčet odpisov %s ≠ VC s technickým zhodnotením %s", sum, a.TotalCost())
 	}
 	return out
 }

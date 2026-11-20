@@ -1,3 +1,4 @@
+import { pauseYears, improvementsBody } from './assets.js'
 import { describe, expect, it } from 'vitest'
 import { accPeriodLabel, accountOptions, assetStatus, canAccelerate, filterAssets, fixMethod, groupOptions, periodLabel, postingState } from './assets.js'
 
@@ -80,4 +81,18 @@ describe('účtovné odpisy', () => {
     [30, '30 mesiacov'],
   ])('doba %i', (m, want) => expect(accPeriodLabel(m)).toBe(want))
   it('účty', () => expect(accountOptions.map((o) => o.value)).toContain('022'))
+})
+
+describe('technické zhodnotenie a prerušenie', () => {
+  it.each([
+    ['od zaradenia po rok pred vyradením', '2024-06-01', '2027-03-01', 2026, [2024, 2025, 2026]],
+    ['bez vyradenia o 5 rokov dopredu', '2025-01-01', '', 2026, [2025, 2026, 2027, 2028, 2029, 2030, 2031]],
+  ])('roky na prerušenie: %s', (_, acq, disp, now, want) => {
+    expect(pauseYears(acq, disp, now)).toEqual(want)
+  })
+  it('telo technických zhodnotení', () => {
+    expect(improvementsBody([{ date: '2026-05-10', amount: 1200.5, note: ' strecha ' }, { date: '', amount: null }])).toEqual([
+      { date: '2026-05-10', amount: '1200.5', note: 'strecha' },
+    ])
+  })
 })

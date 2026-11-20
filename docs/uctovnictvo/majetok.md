@@ -30,6 +30,35 @@ Daňové odpisy podľa § 22 – 29 zákona o dani z príjmov:
 Odpisový plán sa ukáže na celé obdobie. Odpisy roka prenesiete jedným
 tlačidlom do uzávierky (stĺpec e6) a zostatkové ceny do výkazu o majetku.
 
+### Technické zhodnotenie
+
+Prístavbu, modernizáciu alebo rekonštrukciu (nad 1 700 € za rok pri
+hmotnom, nad 2 400 € pri nehmotnom majetku) zapíšete na karte majetku:
+dátum dokončenia, suma a čo sa robilo. Fiškus podľa § 29 a pokynov
+finančnej správy:
+
+- **v roku zaradenia** pripočíta zhodnotenie k vstupnej cene od začiatku —
+  aj pomerná časť prvého roka sa počíta zo zvýšenej ceny;
+- **neskôr pri rovnomernom odpisovaní** počíta ročný odpis od roku
+  zhodnotenia ako zvýšená vstupná cena / doba odpisovania; odpisuje sa,
+  kým sa celá cena neodpíše (doba sa predĺži);
+- **neskôr pri zrýchlenom odpisovaní** zvýši zostatkovú cenu o zhodnotenie
+  a neuplatnenú časť prvého roka a ďalej počíta koeficientom pre zvýšenú
+  zostatkovú cenu (6 v 2. skupine, 8 v 3. skupine).
+
+V registri je stĺpec VC s technickým zhodnotením. V podvojnom účtovníctve
+sa účtovne zhodnotenie odpisuje počas zvyšku účtovnej doby odpisovania
+a pri vyradení sa oprávky zúčtujú proti zvýšenej cene.
+
+### Prerušenie odpisovania
+
+Pri hmotnom majetku môžete daňové odpisovanie na celé roky prerušiť
+(§ 22 ods. 9) — vyberte roky v poli **Prerušené odpisovanie**. V tých
+rokoch sa odpis neuplatní a potom sa pokračuje, akoby prerušené nebolo;
+doba odpisovania sa predĺži. Ak prerušíte už rok zaradenia, prvým rokom
+odpisovania je až ďalší rok a uplatní sa v ňom celý ročný odpis.
+Pri paušálnych výdavkoch sa odpisovanie neprerušuje.
+
 ## Účtovné odpisy (podvojné účtovníctvo)
 
 V podvojnom účtovníctve má každá položka majetku aj **účet** (predvolene

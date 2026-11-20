@@ -11,6 +11,14 @@ tags: [prehľad]
 Verzie sú značky v repozitári (`v0.2.0`). Podrobný zoznam funkcií po
 etapách je v [pláne vývoja](./ROADMAP.md).
 
+## 0.10.10
+
+- **Majetok: technické zhodnotenie a prerušenie odpisovania.** Na karte
+  majetku zapíšete technické zhodnotenie (prístavba, modernizácia) —
+  odpisový plán sa prepočíta podľa § 29 a pokynov finančnej správy pre
+  rovnomerné aj zrýchlené odpisovanie. Daňové odpisovanie hmotného
+  majetku sa dá prerušiť na vybrané roky (§ 22 ods. 9); plán sa predĺži.
+
 ## 0.10.9
 
 - **Majetok a čistý majetok** (domácnosť): byt, auto či fondy s hodnotou

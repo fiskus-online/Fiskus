@@ -17,11 +17,13 @@ import (
 // AssetItem je položka registra so stavom v zvolenom roku.
 type AssetItem struct {
 	asset.Asset
-	Period   int          `json:"period"`   // doba odpisovania v rokoch
-	Year     asset.Year   `json:"thisYear"` // odpis / vyradenie v roku
-	Opening  money.Dec    `json:"opening"`  // zostatková cena na začiatku roka
-	Residual money.Dec    `json:"residual"` // zostatková cena na konci roka
-	Plan     []asset.Year `json:"plan"`
+	Period   int        `json:"period"`   // doba odpisovania v rokoch
+	Year     asset.Year `json:"thisYear"` // odpis / vyradenie v roku
+	Opening  money.Dec  `json:"opening"`  // zostatková cena na začiatku roka
+	Residual money.Dec  `json:"residual"` // zostatková cena na konci roka
+	// CostInYear je vstupná cena zvýšená o technické zhodnotenia do konca roka.
+	CostInYear money.Dec    `json:"costInYear"`
+	Plan       []asset.Year `json:"plan"`
 	// účtovné odpisy (podvojné účtovníctvo)
 	Account    string          `json:"accountOrDefault"`
 	DepAccount string          `json:"depAccount"`
@@ -90,7 +92,7 @@ func (a *App) Assets(ctx context.Context, companyID int64, year int) (AssetRegis
 		accPlan, _ := x.AccSchedule()
 		acc := x.AccountOrDefault()
 		out.Items = append(out.Items, AssetItem{Asset: x, Period: x.Period(), Year: x.InYear(year),
-			Opening: opening, Residual: x.ResidualAt(year), Plan: plan,
+			Opening: opening, Residual: x.ResidualAt(year), CostInYear: x.CostAt(year), Plan: plan,
 			Account: acc, DepAccount: asset.DepAccount(acc), Acc: x.AccInYear(year), AccPlan: accPlan})
 	}
 	overrides, err := a.Store.ListJournalOverrides(ctx, companyID)

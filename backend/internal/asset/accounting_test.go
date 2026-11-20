@@ -27,6 +27,16 @@ func TestAccSchedule(t *testing.T) {
 			{2028, "1200", "300", "0", "0"},
 			{2029, "300", "0", "0", "100"}, // neuplatnená časť daňového odpisu 200
 		}},
+		{"technické zhodnotenie na zvyšok doby", func(a *Asset) {
+			a.AccMonths = 48
+			a.Improvements = []Improvement{{Date: d("2026-12-10"), Amount: m("1200")}}
+		}, []row{
+			{2025, "900", "3900", "0", "-100"},
+			{2026, "1200", "3900", "0", "-300"}, // TZ v decembri: daňový odpis 2026 = 6 000 / 4
+			{2027, "1733.28", "2166.72", "0", "233.28"},
+			{2028, "1733.28", "433.44", "0", "233.28"},
+			{2029, "433.44", "0", "0", "-66.56"}, // daňový zvyšok 300 + neuplatnená časť 200
+		}},
 		{"vyradenie v júni 2027", func(a *Asset) { a.AccMonths = 48; a.Disposed = d("2027-06-10"); a.DisposalKind = DisposalSale }, []row{
 			{2025, "900", "3900", "0", "-100"},
 			{2026, "1200", "2700", "0", "0"},

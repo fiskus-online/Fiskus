@@ -24,8 +24,9 @@ import { fiskusGridTheme, skGridLocale, gridRows } from '../lib/grid.js'
 import { assetColumns } from '../lib/columns.js'
 import {
   assetStatus, blankAsset, canAccelerate, disposalOptions, filterAssets, fixMethod, groupOptions, kindOptions,
-  methodOptions, periodLabel, postingState, accountOptions, accPeriodLabel,
+  methodOptions, periodLabel, postingState, accountOptions, accPeriodLabel, pauseYears, improvementsBody,
 } from '../lib/assets.js'
+import MultiSelect from 'primevue/multiselect'
 
 const props = defineProps({ id: String })
 const router = useRouter()
@@ -81,13 +82,19 @@ watch(year, async () => {
 function toForm(a) {
   return { ...a, acquired: fromISODate(a.acquired), disposed: a.disposed ? fromISODate(a.disposed) : null,
     cost: a.cost == null || a.cost === '' ? null : Number(a.cost), purchaseId: a.purchaseId || null,
-    account: a.account ?? '', accMonths: a.accMonths || null }
+    account: a.account ?? '', accMonths: a.accMonths || null,
+    improvements: (a.improvements ?? []).map((t) => ({ ...t, date: fromISODate(t.date), amount: t.amount === '' ? null : Number(t.amount) })),
+    paused: [...(a.paused ?? [])] }
 }
 function fromForm(f) {
   return { ...f, acquired: f.acquired ? toISODate(f.acquired) : '', disposed: f.disposed ? toISODate(f.disposed) : '',
     disposal: f.disposed ? f.disposal : '', cost: f.cost == null ? '' : String(f.cost), years: f.years ?? 0,
-    purchaseId: f.purchaseId ?? 0, accMonths: f.accMonths ?? 0, account: f.account ?? '' }
+    purchaseId: f.purchaseId ?? 0, accMonths: f.accMonths ?? 0, account: f.account ?? '',
+    improvements: improvementsBody((f.improvements ?? []).map((t) => ({ ...t, date: t.date ? toISODate(t.date) : '' }))),
+    paused: f.kind === 'tangible' ? f.paused ?? [] : [] }
 }
+const pauseOptions = computed(() =>
+  form.value ? pauseYears(form.value.acquired ? toISODate(form.value.acquired) : '', form.value.disposed ? toISODate(form.value.disposed) : '') : [])
 function openFromRoute() {
   errors.value = {}
   if (props.id === 'novy') form.value = toForm(blankAsset(toISODate(new Date())))
@@ -355,6 +362,24 @@ onBeforeUnmount(() => {
               <InputNumber v-model="form.accMonths" :min="1" :max="1200" size="small" :invalid="!!errors.accMonths" :disabled="!canWrite" />
             </FormField>
           </template>
+          <FormField v-if="form.kind === 'tangible'" label="Prerušené odpisovanie" :span="4" :error="Object.entries(errors).find(([k]) => k.startsWith('paused'))?.[1]"
+            hint="§ 22 ods. 9 — v týchto rokoch sa daňový odpis neuplatní, odpisovanie sa predĺži">
+            <MultiSelect v-model="form.paused" :options="pauseOptions" display="chip" size="small" placeholder="neprerušené" :disabled="!canWrite"
+              aria-label="Roky s prerušeným odpisovaním" />
+          </FormField>
+          <div class="tz" :class="{ 'span-4': true }">
+            <span class="tz-label">Technické zhodnotenie</span>
+            <div v-for="(t, i) in form.improvements" :key="i" class="tz-row">
+              <DatePicker v-model="t.date" date-format="d. m. yy" size="small" fluid placeholder="dokončené" :disabled="!canWrite" :aria-label="`Dátum technického zhodnotenia ${i + 1}`" />
+              <InputNumber v-model="t.amount" fluid mode="decimal" :min-fraction-digits="2" :max-fraction-digits="2" locale="sk-SK" suffix=" €" size="small"
+                placeholder="suma" :invalid="!!errors[`improvements.${i}`]" :disabled="!canWrite" :aria-label="`Suma technického zhodnotenia ${i + 1}`" />
+              <InputText v-model="t.note" size="small" fluid placeholder="čo (prístavba, modernizácia…)" :disabled="!canWrite" :aria-label="`Popis technického zhodnotenia ${i + 1}`" />
+              <Button v-if="canWrite" icon="pi pi-times" text size="small" severity="secondary" aria-label="Odobrať technické zhodnotenie" @click="form.improvements.splice(i, 1)" />
+              <small v-if="errors[`improvements.${i}`]" class="tz-err">{{ errors[`improvements.${i}`] }}</small>
+            </div>
+            <Button v-if="canWrite" label="Pridať technické zhodnotenie" icon="pi pi-plus" text size="small" @click="form.improvements.push({ date: new Date(), amount: null, note: '' })" />
+            <small class="tz-hint">Prístavba, modernizácia, rekonštrukcia nad 1 700 € (nehmotný 2 400 €) za rok — zvyšuje vstupnú cenu a ročný odpis.</small>
+          </div>
           <FormField label="Poznámka" :span="4">
             <Textarea v-model="form.note" rows="2" auto-resize :disabled="!canWrite" />
           </FormField>
@@ -577,6 +602,44 @@ onBeforeUnmount(() => {
 }
 .placeholder {
   color: var(--ink-faint);
+}
+.tz {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.tz-label {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+.tz-row {
+  display: grid;
+  grid-template-columns: 8.5rem 8.5rem minmax(0, 1fr) auto;
+  gap: 6px;
+  align-items: center;
+}
+.tz-row > * {
+  min-width: 0;
+}
+.tz-err {
+  grid-column: 1 / -1;
+  color: var(--tone-overdue);
+  font-size: var(--fs-xs);
+}
+.tz-hint {
+  color: var(--ink-faint);
+  font-size: var(--fs-xs);
+}
+@media (max-width: 560px) {
+  .tz-row {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  }
+  .tz-row > :nth-child(3) {
+    grid-column: 1 / 3;
+    grid-row: 2;
+  }
 }
 .plan {
   margin-top: 16px;
