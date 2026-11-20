@@ -328,6 +328,8 @@ export const api = {
   vatFilings: (cid, period) => request('GET', `/api/companies/${cid}/vat/filings` + query({ period })),
   recordVatFiling: (cid, period, excess, opts = {}, podane) =>
     request('POST', `/api/companies/${cid}/vat/filings` + query({ period, excess, ...opts, podane })),
+  /** Podaný kontrolný výkaz zo súboru XML (základ pre dodatočný KV). */
+  loadFiledKV: (cid, period, file) => request('POST', `/api/companies/${cid}/vat/kv-podany` + query({ period }), file),
   /** XML pre eDane ako Blob (kind: 'dph' | 'kv'). */
   vatXML: (cid, kind, period, excess, opts = {}, fetchImpl = globalThis.fetch) =>
     download(`/api/companies/${cid}/vat/${kind}.xml` + query({ period, excess, ...opts }), `${kind}.xml`, fetchImpl),

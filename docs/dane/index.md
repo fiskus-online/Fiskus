@@ -43,8 +43,11 @@ Súhrnné riadky B.3.1, D.1 a D.2 sa opravujú rovnako. XML pre eDane má druh
 podanie** — ďalší dodatočný výkaz sa porovná už s ním.
 
 Ak ste podanie vo Fiškuse nezaznamenali (alebo ste ho zaznamenali vo
-verzii pred 0.10.10), Fiškus nevie, čo bolo podané, a dodatočný kontrolný
-výkaz nevytvorí — opravte ho v eDane.
+verzii pred 0.10.10), kliknite pri druhu Dodatočné na **Načítať podaný KV
+(XML)** a vyberte súbor podaného výkazu — ten, ktorý ste podávali, alebo
+stiahnutý z eDane. Najprv riadny (alebo opravný), potom prípadné dodatočné
+v poradí, v akom ste ich podali. Fiškus skontroluje IČ DPH a obdobie
+a porovná s novším z oboch: so záznamom podania alebo s načítaným súborom.
 
 ![Kontrolný výkaz — časti A.1, A.2, B.1 až B.3](../obrazky/kontrolny-vykaz.webp)
 *Kontrolný výkaz — časti A.1, A.2, B.1 až B.3*
