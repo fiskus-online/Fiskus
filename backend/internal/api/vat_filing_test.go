@@ -53,9 +53,40 @@ func TestVATSupplementAPI(t *testing.T) {
 	if res.StatusCode != 200 || !strings.Contains(string(body), "<ddp>1</ddp>") || !strings.Contains(res.Header.Get("Content-Disposition"), "dph-2026-09-dodatocne.xml") {
 		t.Fatalf("XML: %d %s", res.StatusCode, body)
 	}
-	e.do("GET", base+"/vat/kv.xml"+strings.TrimPrefix(q, "/vat"), nil, 422, nil) // dodatočný KV nie
+	// dodatočný KV: iba nová faktúra s kódom opravy 2
+	res, err = e.client.Get(e.srv.URL + base + "/vat/kv.xml" + strings.TrimPrefix(q, "/vat"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	body, _ = io.ReadAll(res.Body)
+	res.Body.Close()
+	kv := string(body)
+	if res.StatusCode != 200 || !strings.Contains(kv, "<Druh>D</Druh>") || strings.Count(kv, "<A1 ") != 1 ||
+		!strings.Contains(kv, `Z="100.00" D="23.00" S="23" KOpr="2"/>`) ||
+		!strings.Contains(res.Header.Get("Content-Disposition"), "kv-dph-2026-09-dodatocne.xml") {
+		t.Fatalf("dodatočný KV: %d %s", res.StatusCode, kv)
+	}
 	e.do("GET", base+"/vat/filings?period=2026-09", nil, 200, &filings)
 	if len(filings) != 1 {
 		t.Fatalf("zoznam: %+v", filings)
 	}
+	// po zázname dodatočného podania sa ďalší dodatočný KV nemá z čoho zostaviť
+	e.do("POST", base+"/vat/filings"+strings.TrimPrefix(q, "/vat")+"&podane=2026-11-04", nil, 200, &filings)
+	e.do("GET", base+"/vat/kv.xml"+strings.TrimPrefix(q, "/vat"), nil, 422, nil)
+}
+
+func TestVATSupplementKVWithoutFiling(t *testing.T) {
+	e := setup(t, edition.Desktop)
+	base := fmt.Sprintf("/api/companies/%d", e.cid)
+	e.do("PUT", base, `{"name":"Moja firma","vatPayer":true,"icdph":"SK2020372640","dic":"2020372640","city":"Zvolen"}`, 200, nil)
+	var ret struct {
+		KVFix     any    `json:"kvFix"`
+		KVFixNote string `json:"kvFixNote"`
+	}
+	q := "?period=2026-09&druh=dodatocne&zistene=2026-11-03&posledne=0"
+	e.do("GET", base+"/vat"+q, nil, 200, &ret)
+	if ret.KVFix != nil || !strings.Contains(ret.KVFixNote, "nemá uložený podaný kontrolný výkaz") {
+		t.Fatalf("%+v", ret)
+	}
+	e.do("GET", base+"/vat/kv.xml"+q, nil, 422, nil)
 }
