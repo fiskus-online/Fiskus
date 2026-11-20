@@ -1,6 +1,7 @@
 <script setup>
-// Uzávierka roka v jednoduchom účtovníctve: kontroly, uzavretie (zámok
-// roka a prenos stavov účtov do ďalšieho roka), otvorenie s dôvodom.
+// Uzávierka roka v jednoduchom aj podvojnom účtovníctve: kontroly,
+// uzavretie (zámok roka a prenos stavov do ďalšieho roka), otvorenie
+// s dôvodom.
 import { computed, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
@@ -13,7 +14,7 @@ import { can, session } from '../lib/session.js'
 import { formatDate, formatMoney } from '../lib/format.js'
 import { closeSummary, eventLabel } from '../lib/yearclose.js'
 
-const props = defineProps({ year: { type: Number, required: true } })
+const props = defineProps({ year: { type: Number, required: true }, double: { type: Boolean, default: false } })
 const emit = defineEmits(['changed'])
 const toast = useToast()
 const confirm = useConfirm()
@@ -37,14 +38,18 @@ const summary = computed(() => closeSummary(info.value))
 function close() {
   confirm.require({
     header: `Uzavrieť rok ${props.year}`,
-    message: `Doklady, pohyby peňazí a rozpis denníka s dátumom v roku ${props.year} sa uzamknú. Konečné stavy bankových účtov sa prenesú ako počiatočné stavy roka ${props.year + 1}. Rok sa dá neskôr otvoriť s uvedením dôvodu.`,
+    message: props.double
+      ? `Doklady, pohyby peňazí a zápisy hlavnej knihy s dátumom v roku ${props.year} sa uzamknú. Konečné stavy súvahových účtov sa prenesú ako počiatočné stavy roka ${props.year + 1} (výsledok hospodárenia na 431), ak ich rok ${props.year + 1} ešte nemá zadané. Rok sa dá neskôr otvoriť s uvedením dôvodu.`
+      : `Doklady, pohyby peňazí a rozpis denníka s dátumom v roku ${props.year} sa uzamknú. Konečné stavy bankových účtov sa prenesú ako počiatočné stavy roka ${props.year + 1}. Rok sa dá neskôr otvoriť s uvedením dôvodu.`,
     acceptProps: { label: 'Uzavrieť rok', size: 'small' },
     rejectProps: { label: 'Zrušiť', text: true, size: 'small' },
     accept: async () => {
       busy.value = true
       try {
         info.value = await api.closeYear(session.companyId, props.year)
-        toast.add({ severity: 'success', summary: `Rok ${props.year} je uzavretý`, detail: `Stavy účtov sú prenesené do roka ${props.year + 1}.`, life: 5000 })
+        const carried = !info.value.close?.double || info.value.close?.opening
+        toast.add({ severity: 'success', summary: `Rok ${props.year} je uzavretý`,
+          detail: carried ? `Stavy účtov sú prenesené do roka ${props.year + 1}.` : `Počiatočné stavy roka ${props.year + 1} ostali tak, ako boli zadané.`, life: 5000 })
         emit('changed', true)
       } catch (e) {
         toast.add({ severity: 'error', summary: 'Rok sa neuzavrel', detail: e.fields?.[0]?.message ?? e.message, life: 6000 })
@@ -89,10 +94,13 @@ async function reopen() {
 
     <div v-if="closed" class="done">
       <dl>
-        <div><dt>Príjmy</dt><dd class="num">{{ formatMoney(info.close.income) }}</dd></div>
-        <div><dt>Výdavky</dt><dd class="num">{{ formatMoney(info.close.expenses) }}</dd></div>
-        <div><dt>Rozdiel</dt><dd class="num"><span class="ledger">{{ formatMoney(info.close.result) }}</span></dd></div>
+        <div><dt>{{ info.close.double ? 'Výnosy' : 'Príjmy' }}</dt><dd class="num">{{ formatMoney(info.close.income) }}</dd></div>
+        <div><dt>{{ info.close.double ? 'Náklady' : 'Výdavky' }}</dt><dd class="num">{{ formatMoney(info.close.expenses) }}</dd></div>
+        <div><dt>{{ info.close.double ? 'Výsledok hospodárenia' : 'Rozdiel' }}</dt><dd class="num"><span class="ledger">{{ formatMoney(info.close.result) }}</span></dd></div>
       </dl>
+      <p v-if="info.close.double" class="carry">
+        {{ info.close.opening ? `Konečné stavy súvahových účtov sú prenesené ako počiatočné stavy roka ${year + 1}.` : `Počiatočné stavy roka ${year + 1} ostali tak, ako boli zadané.` }}
+      </p>
       <p v-if="Object.keys(info.close.bank || {}).length" class="carry">
         Prenesené do {{ year + 1 }}:
         <span v-for="(v, k) in info.close.bank" :key="k" class="acc">{{ k }} <b class="num">{{ formatMoney(v) }}</b></span>

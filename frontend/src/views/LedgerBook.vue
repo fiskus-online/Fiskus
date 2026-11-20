@@ -19,6 +19,7 @@ import FormField from '../components/FormField.vue'
 import ExportButton from '../components/ExportButton.vue'
 import LedgerLines from '../components/LedgerLines.vue'
 import ImportWarnings from '../components/ImportWarnings.vue'
+import YearClosePanel from '../components/YearClosePanel.vue'
 import { api, ApiError } from '../lib/api.js'
 import { can, session } from '../lib/session.js'
 import { formatAmount, formatDate, formatMoney, fromISODate, toISODate } from '../lib/format.js'
@@ -389,6 +390,7 @@ function removeInternal() {
       </div>
 
       <template v-if="statementTab">
+        <YearClosePanel v-if="year < thisYear" :year="year" double @changed="load" />
         <div v-if="st" class="st-notes">
           <p v-if="st.unposted" class="warn">{{ st.unposted }} dokladov nie je zaúčtovaných — závierka z nich nevychádza.</p>
           <p v-if="!st.balanced" class="warn">Hlavná kniha nie je vyrovnaná (MD ≠ D alebo počiatočné stavy).</p>

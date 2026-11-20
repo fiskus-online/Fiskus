@@ -13,6 +13,10 @@ etapách je v [pláne vývoja](./ROADMAP.md).
 
 ## 0.10.10
 
+- **Uzávierka roka aj v podvojnom účtovníctve.** V Súvahe a Výsledovke
+  pri minulom roku: kontroly, uzamknutie dokladov aj zápisov hlavnej
+  knihy, súhrn výnosov, nákladov a výsledku hospodárenia a prenos
+  konečných stavov do počiatočných stavov ďalšieho roka.
 - **DPH pri aute kúpenom s 50 % odpočtom:** pri predaji do 5 rokov alebo
   prechode na výlučne podnikanie (nové pole Plný odpočet od roku) Fiškus
   v priznaní za posledné obdobie roka dodatočne odpočíta časť DPH z kúpy

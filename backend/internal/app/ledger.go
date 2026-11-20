@@ -124,6 +124,9 @@ func (a *App) editLedger(ctx context.Context, companyID int64, year int, edit fu
 	if year < 2000 || year > 2100 {
 		return mfaFieldErr("year", "Neplatný rok")
 	}
+	if err := a.checkOpenYear(ctx, companyID, year); err != nil {
+		return err
+	}
 	a.ledgerMu.Lock()
 	defer a.ledgerMu.Unlock()
 	cb, err := a.loadChart(ctx, companyID)

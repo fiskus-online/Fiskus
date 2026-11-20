@@ -5,21 +5,25 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/fiskus-online/fiskus/backend/internal/audit"
 	"github.com/fiskus-online/fiskus/backend/internal/auth"
+	"github.com/fiskus-online/fiskus/backend/internal/chart"
 	"github.com/fiskus-online/fiskus/backend/internal/invoice"
 	"github.com/fiskus-online/fiskus/backend/internal/journal"
 	"github.com/fiskus-online/fiskus/backend/internal/money"
 	"github.com/fiskus-online/fiskus/backend/internal/store"
 )
 
-// Uzávierka roka v jednoduchom účtovníctve: po kontrole sa rok uzamkne
+// Uzávierka roka v jednoduchom aj podvojnom účtovníctve: po kontrole sa rok uzamkne
 // (pohyby peňazí, doklady a rozpis denníka s dátumom v roku sa už nedajú
 // meniť), konečné stavy bankových účtov sa prenesú ako počiatočné stavy
-// nasledujúceho roka a uloží sa súhrn výkazov. Rok sa dá znova otvoriť
+// nasledujúceho roka a uloží sa súhrn výkazov. V podvojnom účtovníctve sa
+// uzamknú aj zápisy hlavnej knihy roka a konečné stavy súvahových účtov sa
+// prenesú ako počiatočné stavy ďalšieho roka (výsledok hospodárenia na 431). Rok sa dá znova otvoriť
 // s uvedením dôvodu (zapíše sa do auditu).
 
 // YearClose je uzávierka roka.
@@ -28,9 +32,13 @@ type YearClose struct {
 	Closed   bool                 `json:"closed"`
 	ClosedAt time.Time            `json:"closedAt"`
 	ClosedBy string               `json:"closedBy"`
-	Income   money.Dec            `json:"income"`   // príjmy celkom (Úč FO 1-01 r. 4)
-	Expenses money.Dec            `json:"expenses"` // výdavky celkom (r. 11)
-	Result   money.Dec            `json:"result"`   // rozdiel príjmov a výdavkov (r. 12)
+	Income   money.Dec            `json:"income"`   // príjmy celkom (Úč FO 1-01 r. 4); podvojné: výnosy
+	Expenses money.Dec            `json:"expenses"` // výdavky celkom (r. 11); podvojné: náklady
+	Result   money.Dec            `json:"result"`   // rozdiel príjmov a výdavkov (r. 12); podvojné: výsledok hospodárenia
+	Double   bool                 `json:"double"`   // podvojné účtovníctvo
+	// Opening: počiatočné stavy ďalšieho roka boli prenesené z uzávierky
+	// (false = rok už mal zadané vlastné počiatočné stavy, ostali).
+	Opening bool `json:"opening"`
 	Bank     map[string]money.Dec `json:"bank"`     // konečné stavy účtov (IBAN) → počiatočné stavy ďalšieho roka
 	Cash     map[string]money.Dec `json:"cash"`     // konečné stavy pokladníc (prenášajú sa samy z dokladov)
 	History  []YearCloseEvent     `json:"history"`
@@ -152,13 +160,19 @@ func (a *App) YearCloseFor(ctx context.Context, companyID int64, year int) (Year
 		return out, err
 	}
 	add := func(c YearCheck) { out.Checks = append(out.Checks, c) }
-	if co.Bookkeeping == store.BookkeepingDouble || co.Bookkeeping == store.BookkeepingHousehold {
-		add(YearCheck{ID: "bookkeeping", Blocking: true, Text: "Uzávierka roka je pre jednoduché účtovníctvo"})
+	if co.Bookkeeping == store.BookkeepingHousehold {
+		add(YearCheck{ID: "bookkeeping", Blocking: true, Text: "Uzávierka roka je pre jednoduché a podvojné účtovníctvo"})
 		return out, nil
 	}
 	today := a.Today()
 	add(YearCheck{ID: "ended", OK: today.Year() > year, Blocking: true,
 		Text: fmt.Sprintf("Rok %d skončil (uzavrieť sa dá od 1. 1. %d)", year, year+1)})
+	if co.Bookkeeping == store.BookkeepingDouble {
+		if err := a.doubleChecks(ctx, companyID, year, add); err != nil {
+			return out, err
+		}
+		return finishChecks(out), nil
+	}
 	st, err := a.StatementsFor(ctx, companyID, year)
 	if err != nil {
 		return out, err
@@ -193,6 +207,10 @@ func (a *App) YearCloseFor(ctx context.Context, companyID int64, year int) (Year
 	add(YearCheck{ID: "cash", OK: len(negative) == 0, Link: "/pokladna",
 		Text: map[bool]string{true: "Pokladnice nemajú záporný zostatok",
 			false: "Záporný zostatok pokladnice: " + strings.Join(negative, ", ") + " — chýba príjmový doklad"}[len(negative) == 0]})
+	return finishChecks(out), nil
+}
+
+func finishChecks(out YearCloseInfo) YearCloseInfo {
 	out.CanClose = true
 	for _, c := range out.Checks {
 		if c.Blocking && !c.OK {
@@ -202,7 +220,71 @@ func (a *App) YearCloseFor(ctx context.Context, companyID int64, year int) (Year
 	if out.Close != nil && out.Close.Closed {
 		out.CanClose = false
 	}
-	return out, nil
+	return out
+}
+
+// doubleChecks sú kontroly pred uzávierkou v podvojnom účtovníctve.
+func (a *App) doubleChecks(ctx context.Context, companyID int64, year int, add func(YearCheck)) error {
+	book, err := a.Ledger(ctx, companyID, year)
+	if err != nil {
+		return err
+	}
+	add(YearCheck{ID: "unposted", OK: book.Unposted == 0, Blocking: true, Link: "/hlavna-kniha",
+		Text: map[bool]string{true: "Všetky doklady sú zaúčtované",
+			false: fmt.Sprintf("V účtovnom denníku je %d dokladov bez zápisu alebo s chybou", book.Unposted)}[book.Unposted == 0]})
+	add(YearCheck{ID: "balanced", OK: book.Totals.Balanced, Blocking: true, Link: "/hlavna-kniha",
+		Text: map[bool]string{true: "Hlavná kniha je vyrovnaná (MD = D, počiatočné stavy sedia)",
+			false: "Hlavná kniha nie je vyrovnaná — skontrolujte počiatočné stavy a ručné zápisy"}[book.Totals.Balanced]})
+	st, err := a.LedgerStatementsFor(ctx, companyID, year)
+	if err != nil {
+		return err
+	}
+	add(YearCheck{ID: "unmapped", OK: len(st.Unmapped) == 0, Link: "/hlavna-kniha",
+		Text: map[bool]string{true: "Všetky účty so zostatkom patria do súvahy alebo výkazu ziskov a strát",
+			false: fmt.Sprintf("%d účtov so zostatkom nepatrí do žiadneho riadku závierky", len(st.Unmapped))}[len(st.Unmapped) == 0]})
+	prevOK := true
+	if prev, err := a.Ledger(ctx, companyID, year-1); err == nil && len(prev.Postings) > 0 {
+		prevOK = a.YearClosed(ctx, companyID, year-1)
+	}
+	add(YearCheck{ID: "previous", OK: prevOK,
+		Text: map[bool]string{true: "Predchádzajúci rok je uzavretý alebo bez zápisov",
+			false: fmt.Sprintf("Rok %d ešte nie je uzavretý — odporúčame uzavierať po poradí", year-1)}[prevOK]})
+	return nil
+}
+
+// closeDouble uzavrie rok v podvojnom účtovníctve: výnosy, náklady,
+// výsledok hospodárenia a prenos počiatočných stavov ďalšieho roka (ak
+// ešte nie sú zadané).
+func (a *App) closeDouble(ctx context.Context, companyID int64, year int, c *YearClose) error {
+	book, err := a.Ledger(ctx, companyID, year)
+	if err != nil {
+		return err
+	}
+	for _, t := range book.Accounts {
+		switch t.Type {
+		case chart.Revenue:
+			c.Income = c.Income.Sub(t.Closing) // výnosy majú zostatok D (záporný)
+		case chart.Expense:
+			c.Expenses = c.Expenses.Add(t.Closing)
+		}
+	}
+	c.Result = c.Income.Sub(c.Expenses)
+	next, err := a.loadLedger(ctx, companyID, year+1)
+	if err != nil {
+		return err
+	}
+	if len(next.Opening) > 0 {
+		return nil // vlastné počiatočné stavy ďalšieho roka ostanú
+	}
+	lines, err := a.OpeningProposal(ctx, companyID, year+1)
+	if err != nil || len(lines) == 0 {
+		return err
+	}
+	if err := a.SetLedgerOpening(ctx, companyID, year+1, lines); err != nil {
+		return err
+	}
+	c.Opening = true
+	return nil
 }
 
 // CloseYear uzavrie rok: overí kontroly, uloží súhrn výkazov a konečné
@@ -224,6 +306,32 @@ func (a *App) CloseYear(ctx context.Context, companyID int64, year int) (YearClo
 			return info, vErr("year", c.Text)
 		}
 	}
+	co, err := a.Store.GetCompany(ctx, companyID)
+	if err != nil {
+		return info, err
+	}
+	c := YearClose{Year: year, Closed: true, ClosedAt: a.now(), ClosedBy: a.actorName(ctx), Bank: map[string]money.Dec{}, Cash: map[string]money.Dec{}}
+	if info.Close != nil {
+		c.History = info.Close.History
+	}
+	if co.Bookkeeping == store.BookkeepingDouble {
+		c.Double = true
+		if err := a.closeDouble(ctx, companyID, year, &c); err != nil {
+			return info, err
+		}
+		c.History = append(c.History, YearCloseEvent{At: c.ClosedAt, By: c.ClosedBy, Action: "close"})
+		b, _ := json.Marshal(c)
+		if err := a.Store.SetSetting(ctx, yearCloseKey(companyID, year), string(b)); err != nil {
+			return info, err
+		}
+		carry := "počiatočné stavy " + strconv.Itoa(year+1) + " ostali zadané"
+		if c.Opening {
+			carry = "počiatočné stavy prenesené do " + strconv.Itoa(year+1)
+		}
+		a.record(ctx, companyID, audit.CatLedger, "close_year", "year", int64(year),
+			fmt.Sprintf("Uzávierka roka %d: výnosy %s €, náklady %s €, výsledok hospodárenia %s €, %s", year, c.Income.Display(), c.Expenses.Display(), c.Result.Display(), carry), nil, c)
+		return a.YearCloseFor(ctx, companyID, year)
+	}
 	book, err := a.Journal(ctx, companyID, year)
 	if err != nil {
 		return info, err
@@ -232,7 +340,6 @@ func (a *App) CloseYear(ctx context.Context, companyID int64, year int) (YearClo
 	if err != nil {
 		return info, err
 	}
-	c := YearClose{Year: year, Closed: true, ClosedAt: a.now(), ClosedBy: a.actorName(ctx), Bank: map[string]money.Dec{}, Cash: map[string]money.Dec{}}
 	for _, r := range st.Income {
 		switch r.Code {
 		case "04":
@@ -242,9 +349,6 @@ func (a *App) CloseYear(ctx context.Context, companyID int64, year int) (YearClo
 		case "12":
 			c.Result = r.Current
 		}
-	}
-	if info.Close != nil {
-		c.History = info.Close.History
 	}
 	for _, b := range book.Balances {
 		// účet bez stavu a pohybov v roku sa neprenáša (neprepíše zadaný stav ďalšieho roka)
