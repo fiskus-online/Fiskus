@@ -56,6 +56,31 @@ dajú ručné zápisy a interné doklady.
   ziskov a strát (Úč MÚJ 2-01); počiatočné stavy z konečných stavov
   minulého roka.
 
+### Uzávierka roka
+
+Na karte **Súvaha** alebo **Výsledovka** pri minulom roku je panel
+**Uzávierka roka**. Rok sa dá uzavrieť, keď:
+
+- rok skončil,
+- všetky doklady sú zaúčtované,
+- hlavná kniha je vyrovnaná (MD = D, počiatočné stavy sedia).
+
+Upozorní aj na účty so zostatkom mimo riadkov závierky a na neuzavretý
+predchádzajúci rok (uzávierku to neblokuje).
+
+Po uzavretí:
+
+- doklady, pohyby peňazí, interné doklady, počiatočné stavy aj
+  zaúčtovanie dokladov s dátumom v roku sa uzamknú;
+- uloží sa súhrn: výnosy, náklady a výsledok hospodárenia;
+- konečné stavy súvahových účtov sa prenesú ako **počiatočné stavy
+  ďalšieho roka** (výsledok hospodárenia na 431) — iba ak ďalší rok ešte
+  nemá počiatočné stavy zadané, inak ostanú.
+
+Rok sa dá znova otvoriť s uvedením dôvodu (zapíše sa do auditu); po
+oprave ho znova uzavrite. Pred kurzovými rozdielmi a účtovnými odpismi
+za rok rok neuzavierajte — po uzavretí sa už nedajú zaúčtovať.
+
 ### Kurzové rozdiely k 31. 12.
 
 V **Súvahe** kliknite na **Kurzové rozdiely k 31. 12.** Fiškus prepočíta

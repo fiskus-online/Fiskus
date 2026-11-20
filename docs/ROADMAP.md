@@ -121,7 +121,8 @@ Všetky časti (podvojné účtovníctvo, sklad, majetok, EPO, mzdy) píšeme od
 - [x] Podvojné účtovníctvo: kurzové rozdiely pri čiastočných úhradách faktúr v cudzej mene z eurového účtu (párovanie so sumou v mene faktúry, pomerná časť v eurách, posledná platba zvyšok)
 - [ ] Podvojné účtovníctvo ďalej: clo a náklady obstarania pri dovoze, zostatky bankových účtov a pokladníc v cudzej mene k 31. 12.
 - [x] Závierka mikro účtovnej jednotky z hlavnej knihy: súvaha (Úč MÚJ 1-01) a výkaz ziskov a strát (Úč MÚJ 2-01), počiatočné stavy z konečných stavov minulého roka
-- [ ] Závierka ďalej: malá účtovná jednotka (Úč POD), poznámky, uzamknutie obdobia, uloženie do RÚZ (XML)
+- [x] Uzávierka roka v podvojnom účtovníctve: kontroly (zaúčtované doklady, vyrovnaná hlavná kniha), uzamknutie dokladov aj zápisov hlavnej knihy, súhrn výnosov, nákladov a VH, prenos počiatočných stavov do ďalšieho roka, otvorenie s dôvodom
+- [ ] Závierka ďalej: malá účtovná jednotka (Úč POD), poznámky, uloženie do RÚZ (XML)
 - [ ] Daňové priznanie k dani z príjmov (typ A/B pre FO, PO)
 
 ## Etapa 3 — sklad a majetok
