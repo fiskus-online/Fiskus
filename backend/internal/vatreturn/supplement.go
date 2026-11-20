@@ -43,7 +43,7 @@ var (
 	ErrBadKind        = errors.New("neznámy druh priznania")
 	ErrNoDiscovery    = errors.New("pri dodatočnom priznaní zadajte dátum zistenia skutočností")
 	ErrNoLastKnown    = errors.New("pri dodatočnom priznaní zadajte poslednú známu daňovú povinnosť alebo nadmerný odpočet")
-	ErrSupplementaryK = errors.New("dodatočný kontrolný výkaz obsahuje iba opravované záznamy — Fiškus ho zatiaľ nevytvára, opravte KV v eDane")
+	ErrSupplementaryK = errors.New("Fiškus nemá uložený podaný kontrolný výkaz za toto obdobie, preto nevie určiť opravované riadky. Načítajte podaný výkaz zo súboru XML (stiahnete ho z eDane alebo je to súbor, ktorý ste podávali)")
 )
 
 // Result je výsledok priznania so znamienkom: vlastná daňová povinnosť

@@ -183,6 +183,7 @@ export const kvColumns = [
   t('Druh tovaru', (r) => r.goods, 8),
   { header: 'Množstvo', value: (r) => r.quantity, type: 'number', width: 10 },
   t('MJ', (r) => r.unit, 5),
+  { header: 'Kód opravy', value: (r) => r.fix || '', type: 'number', width: 8 },
 ]
 
 const bankStatus = { open: 'Nespárované', matched: 'Spárované', ignored: 'Nepárované' }

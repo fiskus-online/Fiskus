@@ -56,18 +56,21 @@ func TestCashDocuments(t *testing.T) {
 	if b == nil || b.Count != 3 || b.Base.String() != "80.00" || b.VAT.String() != "16.20" || b.Deducted.String() != "16.20" || len(ret.KV.B32) != 0 {
 		t.Fatalf("B.3.1: %+v %+v", b, ret.KV.B32)
 	}
-	if d1 := ret.KV.D1; d1.Count != 1 || d1.Base.String() != "100.00" || d1.VAT.String() != "23.00" || d1.BaseReduced.String() != "20.00" || d1.VATReduced.String() != "1.00" {
+	if d1 := ret.KV.D1; d1.Count != 1 || d1.Base.String() != "100.00" || d1.VAT.String() != "23.00" || d1.BaseReduced.String() != "20.00" || d1.VATReduced.String() != "1.00" || d1.Turnover.String() != "149.00" {
 		t.Fatalf("D.1: %+v", d1)
 	}
 	var warns []string
 	for _, w := range ret.Warnings {
 		warns = append(warns, w.Message)
 	}
-	if len(warns) != 2 || !strings.Contains(warns[0], "bez IČ DPH") || !strings.Contains(warns[1], "B.3.1") {
+	if len(warns) != 1 || !strings.Contains(warns[0], "bez IČ DPH") {
 		t.Fatalf("upozornenia: %q", warns)
 	}
 	kv := string(KVXML(ret, Taxpayer{Name: "Firma", DIC: "2020372640", ICDPH: "SK2020372640", City: "Zvolen"}))
-	if !strings.Contains(kv, `<D1 Z="100.00" D="23.00" ZZn="20.00" DZn="1.00"/>`) {
+	if !strings.Contains(kv, `<B31 Z="80.00" D="16.20" O="16.20"/>`) || strings.Index(kv, "<B31") > strings.Index(kv, "<D1") {
+		t.Fatalf("B31 v XML:\n%s", kv)
+	}
+	if !strings.Contains(kv, `<D1 SumaObratov="149.00" Z="100.00" D="23.00" ZZn="20.00" DZn="1.00"/>`) {
 		t.Fatalf("D1 v XML:\n%s", kv)
 	}
 
@@ -82,5 +85,9 @@ func TestCashDocuments(t *testing.T) {
 	}
 	if s := ret.KV.B32[1]; s.Partner != "SK2120000003" || s.Count != 2 || s.Deducted.String() != "3451.90" {
 		t.Fatalf("dodávateľ 2: %+v", s)
+	}
+	kv = string(KVXML(ret, Taxpayer{Name: "Firma", DIC: "2020372640", ICDPH: "SK2020372640", City: "Zvolen"}))
+	if strings.Contains(kv, "<B31") || strings.Count(kv, "<B32 ") != 2 || !strings.Contains(kv, `<B32 Dod="SK2120000003" Z=`) {
+		t.Fatalf("B32 v XML:\n%s", kv)
 	}
 }

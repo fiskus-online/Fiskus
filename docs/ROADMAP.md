@@ -52,7 +52,7 @@ Všetky časti (podvojné účtovníctvo, sklad, majetok, EPO, mzdy) píšeme od
 - [x] Pokladňa: príjmové a výdavkové doklady (PPD/VPD), kontrola záporného zostatku, úhrada faktúr v hotovosti, storno, tlač so sumou slovom
 - [x] Pokladňa: DPH na pokladničných dokladoch — blok ako zjednodušená faktúra (odpočet, KV B.3.1/B.3.2 podľa limitu 3 000 €), tržba z e-kasy (daň na výstupe, KV D.1), rozpis v peňažnom denníku
 - [x] Viac pokladní (vlastný zostatok a rad dokladov s predponou, archivácia) a pokladňa v cudzej mene (kurz ECB ku dňu dokladu, v peňažnom denníku v eurách, úhrada faktúr v tej istej mene)
-- [ ] Pokladňa: časť B.3 v XML kontrolného výkazu (overiť voči XSD KVDPHv25)
+- [x] Pokladňa: časť B.3 v XML kontrolného výkazu (B31 súhrnne, B32 po dodávateľoch podľa XSD KVDPH_2025)
 - [x] Pokladňa: uzávierky e-kasy (PPD na tržbu, VPD na platby kartou na ceste, pripísanie z terminálu 221 / 261)
 - [ ] Uzávierky e-kasy: načítanie zo súboru (podľa vzorky z pokladnice alebo e-kasa zóny)
 - [x] **Priznanie k DPH (DPHv25) a kontrolný výkaz (KVDPHv25)**: výpočet z dokladov, XML pre eDane, mesačne aj štvrťročne
@@ -67,7 +67,7 @@ Všetky časti (podvojné účtovníctvo, sklad, majetok, EPO, mzdy) píšeme od
 - [x] Dobropisy pri prenesení daňovej povinnosti (služby zo zahraničia, tuzemské § 69 ods. 12): zníženie samozdanenia v r. 09–10 a odpočtu v r. 18–19, C.2 v období prijatia
 - [x] Dobropis k nadobudnutiu tovaru z EÚ: oprava r. 05–08 (trojstranný r. 11–12) a odpočtu v období pôvodného nadobudnutia (podľa čísla pôvodnej faktúry), C.2 v období prijatia, upozornenie na dodatočné priznanie
 - [x] Opravné a dodatočné priznanie k DPH (dátum zistenia, r. 36 rozdiel oproti poslednej známej povinnosti, r. 37), opravný KV, záznam o podaní (posledná známa povinnosť, návrh druhu podľa lehoty)
-- [ ] Dodatočný kontrolný výkaz (iba opravované záznamy)
+- [x] Dodatočný kontrolný výkaz: porovnanie s KV uloženým pri zázname podania, storno (kód opravy 1) a nové riadky (kód 2) vo všetkých častiach
 - [ ] Podanie priamo na portál finančnej správy (vyžaduje autentifikáciu)
 - [x] Upomienky: faktúry po splatnosti podľa odberateľov, 1., 2. a posledná upomienka, zákonný úrok z omeškania (ECB + 9 p. b. podnikateľ, + 5 p. b. spotrebiteľ, k prvému dňu omeškania), dohodnutá sadzba, paušálna náhrada 40 € (§ 369c ObZ), tlač listu, číselný rad UP
 - [x] Legislatíva v nastaveniach (spoločná pre všetky firmy): obdobia sadzieb DPH, sadzby ECB, prirážky úroku z omeškania, paušálna náhrada; nová inštalácia sa predvyplní, nová verzia programu doplní nové riadky a úpravy používateľa nechá
@@ -78,7 +78,7 @@ Všetky časti (podvojné účtovníctvo, sklad, majetok, EPO, mzdy) píšeme od
 - [x] Záloha priamo do cloudového úložiska (S3, WebDAV) — kópia po každej zálohe s rovnakou rotáciou, overenie spojenia skúšobným súborom, stav poslednej kópie, stiahnutie zálohy z cloudu na novom počítači
 - [x] Inštalačky: Inno Setup (Windows), DMG s Fiškus.app (macOS), .deb a .rpm (Linux); aplikácia s dátami v priečinku používateľa, otvorí prehliadač, skončí po zatvorení okna
 - [x] Fiškus v prehliadači bez inštalácie: program v Go ako WebAssembly, SQLite v úložisku prehliadača (OPFS), funkcie nainštalovaného programu s výzvou na inštaláciu, šifrovaná záloha a obnova `.fbk` kompatibilná s nainštalovaným Fiškusom
-- [ ] Fiškus v prehliadači: nasadenie na `app.fiskus.online`, odkaz „Otvoriť v prehliadači“ na fiskus.online
+- [x] Fiškus v prehliadači: nasadenie na `app.fiskus.online`, odkaz „Otvoriť v prehliadači“ na fiskus.online
 - [ ] Podpísané inštalačky (Authenticode, notarizácia Apple), automatická aktualizácia, AppImage
 - [x] Bez licencií: licencie, predaj cez Paddle a limit počtu firiem zrušené
 - [x] Web fiskus.online (priečinok `site/`): funkcie, stiahnutie podľa systému, Fiškus v prehliadači, ochrana údajov
