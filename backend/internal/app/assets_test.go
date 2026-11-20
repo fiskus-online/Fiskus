@@ -125,3 +125,34 @@ func TestAssetRegister(t *testing.T) {
 		t.Fatal("uzávierková operácia ostala")
 	}
 }
+
+func TestAssetImprovementRegister(t *testing.T) {
+	a, c := newApp(t, edition.Desktop)
+	x, err := a.SaveAsset(ctx, c.ID, asset.Asset{Name: "Dielňa", Group: 1, Acquired: invoice.MustDate("2024-06-01"), Cost: m.MustParse("120000"),
+		Improvements: []asset.Improvement{{Date: invoice.MustDate("2026-05-10"), Amount: m.MustParse("10000"), Note: "prístavba"}}, Paused: []int{2025}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	reg, err := a.Assets(ctx, c.ID, 2026)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var it AssetItem
+	for _, i := range reg.Items {
+		if i.ID == x.ID {
+			it = i
+		}
+	}
+	// 2024: 17 500, 2025 prerušené, 2026: (120 000 + 10 000) / 4
+	if !it.CostInYear.Equal(m.MustParse("130000")) || !it.Year.Claimed.Equal(m.MustParse("32500")) || len(it.Improvements) != 1 || len(it.Paused) != 1 {
+		t.Fatalf("%+v", it)
+	}
+	if !reg.Totals.Claimed.Equal(m.MustParse("32500")) {
+		t.Fatalf("súčet odpisov %s", reg.Totals.Claimed)
+	}
+	// zlé technické zhodnotenie (pred zaradením)
+	x.Improvements = append(x.Improvements, asset.Improvement{Date: invoice.MustDate("2024-01-01"), Amount: m.MustParse("1")})
+	if _, err := a.SaveAsset(ctx, c.ID, x); !fieldErr(err, "improvements.0") {
+		t.Fatalf("chcem chybu improvements.0: %v", err)
+	}
+}

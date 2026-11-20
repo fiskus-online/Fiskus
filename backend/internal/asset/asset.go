@@ -11,12 +11,20 @@
 //     nasledujúcom po uplynutí doby odpisovania;
 //   - v roku vyradenia (predaj, likvidácia) sa odpis neuplatní, zostatková
 //     cena je výdavkom (§ 22 ods. 11, § 24 ods. 2);
-//   - pri čiastočnom používaní na podnikanie sa uplatní pomerná časť.
+//   - pri čiastočnom používaní na podnikanie sa uplatní pomerná časť;
+//   - technické zhodnotenie (§ 29) zvyšuje vstupnú cenu: v prvom roku
+//     odpisovania od začiatku, neskôr pri rovnomernom odpisovaní ročný odpis
+//     = zvýšená VC / doba odpisovania (doba sa predĺži, kým sa neodpíše),
+//     pri zrýchlenom zvyšuje zostatkovú cenu spolu s neuplatnenou časťou
+//     prvého roka a ďalej sa počíta koeficientom pre zvýšenú ZC (§ 28 ods. 3);
+//   - prerušenie odpisovania hmotného majetku (§ 22 ods. 9) na celé roky:
+//     v odpisovaní sa potom pokračuje, akoby prerušené nebolo.
 package asset
 
 import (
 	"errors"
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/fiskus-online/fiskus/backend/internal/invoice"
@@ -57,8 +65,19 @@ var (
 // GroupYears je doba odpisovania podľa odpisovej skupiny (§ 26 ods. 1).
 var GroupYears = []int{2, 4, 6, 8, 12, 20, 40}
 
-// accel sú koeficienty zrýchleného odpisovania (§ 28 ods. 1): [prvý rok, ďalšie roky].
-var accel = map[int][2]int64{2: {6, 7}, 3: {8, 9}}
+// accel sú koeficienty zrýchleného odpisovania (§ 28 ods. 1):
+// [prvý rok, ďalšie roky, zvýšená zostatková cena].
+var accel = map[int][3]int64{2: {6, 7, 6}, 3: {8, 9, 8}}
+
+// Improvement je technické zhodnotenie (§ 29): dokončené a zaradené do
+// užívania v deň Date.
+type Improvement struct {
+	Date       invoice.Date `json:"date"`
+	Amount     money.Dec    `json:"amount"`
+	Note       string       `json:"note,omitempty"`
+	PurchaseID int64        `json:"purchaseId,omitempty"` // prijatá faktúra
+	PurchaseNo string       `json:"purchaseNumber,omitempty"`
+}
 
 // Asset je položka dlhodobého majetku.
 type Asset struct {
@@ -83,6 +102,33 @@ type Asset struct {
 	// a doba účtovného odpisovania v mesiacoch (0 = ako daňové odpisy).
 	Account   string `json:"account,omitempty"`
 	AccMonths int    `json:"accMonths,omitempty"`
+	// Technické zhodnotenia (zoradené podľa dátumu) a roky, v ktorých je
+	// daňové odpisovanie prerušené (§ 22 ods. 9, iba hmotný majetok).
+	Improvements []Improvement `json:"improvements,omitempty"`
+	Paused       []int         `json:"paused,omitempty"`
+}
+
+// CostAt vráti vstupnú cenu zvýšenú o technické zhodnotenia do konca roka.
+func (a *Asset) CostAt(year int) money.Dec {
+	c := a.Cost
+	for _, t := range a.Improvements {
+		if t.Date.Year() <= year {
+			c = c.Add(t.Amount)
+		}
+	}
+	return c
+}
+
+// TotalCost je vstupná cena so všetkými technickými zhodnoteniami.
+func (a *Asset) TotalCost() money.Dec { return a.CostAt(9999) }
+
+func (a *Asset) paused(year int) bool {
+	for _, y := range a.Paused {
+		if y == year {
+			return true
+		}
+	}
+	return false
 }
 
 // Period vráti dobu odpisovania v rokoch.
@@ -115,6 +161,14 @@ func (a *Asset) Normalize() {
 	}
 	if a.Disposed.IsZero() {
 		a.DisposalKind = ""
+	}
+	for i := range a.Improvements {
+		a.Improvements[i].Note = strings.TrimSpace(a.Improvements[i].Note)
+	}
+	sort.SliceStable(a.Improvements, func(i, j int) bool { return a.Improvements[i].Date.Before(a.Improvements[j].Date) })
+	sort.Ints(a.Paused)
+	if a.Kind == Intangible {
+		a.Paused = nil
 	}
 }
 
@@ -173,6 +227,28 @@ func (a *Asset) Validate() error {
 			add("disposal", "Vyberte dôvod vyradenia")
 		}
 	}
+	for i, t := range a.Improvements {
+		f := fmt.Sprintf("improvements.%d", i)
+		switch {
+		case t.Amount.Sign() <= 0 || !t.Amount.Equal(t.Amount.RoundCents()):
+			add(f, "Zadajte sumu technického zhodnotenia (najviac dve desatinné miesta)")
+		case t.Date.IsZero() || (!a.Acquired.IsZero() && t.Date.Before(a.Acquired)):
+			add(f, "Technické zhodnotenie musí byť po zaradení majetku do užívania")
+		case !a.Disposed.IsZero() && t.Date.After(a.Disposed):
+			add(f, "Technické zhodnotenie nemôže byť po vyradení majetku")
+		}
+	}
+	for i, y := range a.Paused {
+		f := fmt.Sprintf("paused.%d", i)
+		switch {
+		case !a.Acquired.IsZero() && y < a.Acquired.Year():
+			add(f, "Prerušiť sa dá iba rok od zaradenia do užívania")
+		case !a.Disposed.IsZero() && y >= a.Disposed.Year():
+			add(f, "V roku vyradenia a neskôr sa odpisovanie neprerušuje")
+		case i > 0 && a.Paused[i-1] == y:
+			add(f, "Rok je prerušený dvakrát")
+		}
+	}
 	a.validateAccounting(add)
 	if len(fe) > 0 {
 		return &invoice.ValidationError{Fields: fe}
@@ -201,7 +277,6 @@ func (a *Asset) Schedule() ([]Year, error) {
 	if n <= 0 || a.Acquired.IsZero() || a.Cost.Sign() <= 0 {
 		return nil, ErrNoSchedule
 	}
-	months := money.FromInt(int64(13 - a.Acquired.Month())) // od mesiaca zaradenia do decembra
 	twelve := money.FromInt(12)
 	share := func(d money.Dec) money.Dec {
 		if a.Share >= 100 {
@@ -210,83 +285,151 @@ func (a *Asset) Schedule() ([]Year, error) {
 		return d.MulRatio(money.FromInt(int64(a.Share)), money.FromInt(100)).RoundCents()
 	}
 	start := a.Acquired.Year()
-	var out []Year
-	residual := a.Cost // daňová ZC (pri zrýchlenom „zvýšená“ ZC podľa § 28)
-	var unclaimed money.Dec
-
-	// ročné odpisy podľa spôsobu, rok i = 0..n-1
-	annual := make([]money.Dec, 0, n)
-	switch a.Method {
-	case Accelerated:
-		k := accel[a.Group]
-		first := a.Cost.MulRatio(money.FromInt(1), money.FromInt(k[0])).RoundCents()
-		annual = append(annual, first)
-		zc := a.Cost.Sub(first)
-		for i := 1; i < n; i++ {
-			var v money.Dec
-			if int64(i) >= k[1]-1 || i == n-1 {
-				v = zc // posledný rok: celá zostatková cena
-			} else {
-				v = zc.MulRatio(money.FromInt(2), money.FromInt(k[1]-int64(i))).RoundCents()
-			}
-			annual = append(annual, v)
-			zc = zc.Sub(v)
-		}
-	default:
-		per := a.Cost.MulRatio(money.FromInt(1), money.FromInt(int64(n))).RoundCents()
-		sum := money.Zero
-		for i := 0; i < n; i++ {
-			v := per
-			if i == n-1 {
-				v = a.Cost.Sub(sum) // posledný rok vyrovná zaokrúhlenie
-			}
-			annual = append(annual, v)
-			sum = sum.Add(v)
+	lastTZ := start
+	for _, t := range a.Improvements {
+		if t.Date.Year() > lastTZ {
+			lastTZ = t.Date.Year()
 		}
 	}
+	improved := func(year int) money.Dec {
+		sum := money.Zero
+		for _, t := range a.Improvements {
+			if t.Date.Year() == year {
+				sum = sum.Add(t.Amount)
+			}
+		}
+		return sum
+	}
+	accelerated := a.Method == Accelerated
+	k := accel[a.Group]
 
-	for i := 0; i <= n; i++ {
-		y := Year{Year: start + i}
-		if !a.Disposed.IsZero() && a.Disposed.Year() == y.Year {
+	var out []Year
+	base := a.Cost.Add(improved(start)) // TZ v prvom roku zvyšuje VC od začiatku
+	// rest je ešte neodpísaná časť (pri zrýchlenom ZC na účely výpočtu
+	// odpisov), unclaimed neuplatnená pomerná časť prvého roka
+	rest, unclaimed := base, money.Zero
+	annual := money.Zero
+	i := 0                 // poradie odpisovaného roka (bez prerušených)
+	coef, since := k[1], 0 // zrýchlené: koeficient a roky od posledného zvýšenia ZC
+	started := false
+
+	for year := start; ; year++ {
+		if year > start+200 {
+			return nil, ErrNoSchedule
+		}
+		y := Year{Year: year}
+		if tz := improved(year); year > start && tz.Sign() > 0 {
+			if accelerated && started {
+				// § 28 ods. 3: ZC sa zvýši o TZ a neuplatnenú časť prvého roka
+				rest = rest.Add(tz).Add(unclaimed)
+				unclaimed = money.Zero
+				coef, since = k[2], 0
+			} else {
+				rest = rest.Add(tz)
+			}
+			base = base.Add(tz)
+			if !accelerated && started {
+				annual = base.MulRatio(money.FromInt(1), money.FromInt(int64(n))).RoundCents()
+			}
+			y.Note = "technické zhodnotenie " + tz.Display() + " €"
+		}
+		if !a.Disposed.IsZero() && a.Disposed.Year() == year {
 			// rok vyradenia: odpis sa neuplatní, ZC (vrátane neuplatnenej
 			// časti prvého roka) je výdavkom
-			y.Disposal = share(residual.Add(unclaimed))
+			y.Disposal = share(rest.Add(unclaimed))
 			y.Note = map[Disposal]string{DisposalSale: "predaj", DisposalLiquidation: "likvidácia", DisposalOther: "vyradenie"}[a.DisposalKind]
 			out = append(out, y)
 			return out, nil
 		}
-		switch {
-		case i == 0:
-			y.Annual = annual[0]
-			claimed := annual[0].Mul(months).MulRatio(money.FromInt(1), twelve).RoundCents()
-			if months.Equal(twelve) {
-				claimed = annual[0]
-			}
-			unclaimed = annual[0].Sub(claimed)
-			y.Claimed = share(claimed)
-			residual = residual.Sub(annual[0])
-			if !unclaimed.IsZero() {
-				y.Note = fmt.Sprintf("pomerná časť %d/12", 13-a.Acquired.Month())
-			}
-		case i < n:
-			y.Annual = annual[i]
-			y.Claimed = share(annual[i])
-			residual = residual.Sub(annual[i])
-		default:
-			if unclaimed.IsZero() {
+		if rest.IsZero() && unclaimed.IsZero() {
+			if year > lastTZ {
 				return out, nil
 			}
-			y.Annual = unclaimed
-			y.Claimed = share(unclaimed)
-			y.Note = "neuplatnená časť prvého roka"
-			unclaimed = money.Zero
+			continue // odpísané; možno ešte príde technické zhodnotenie
 		}
-		// zostatková cena na konci roka: VC mínus odpisy (neuplatnená časť prvého
-		// roka ostáva v ZC, kým sa nedoodpíše)
-		y.Residual = residual.Add(unclaimed)
+		if a.paused(year) && a.Kind == Tangible {
+			y.Note = joinNote(y.Note, "odpisovanie prerušené")
+			y.Residual = rest.Add(unclaimed)
+			out = append(out, y)
+			continue
+		}
+		var claimed money.Dec
+		switch {
+		case !started:
+			// prvý odpisovaný rok: pomerná časť podľa mesiacov od zaradenia;
+			// ak je odpisovanie prerušené už v roku zaradenia, prvým rokom
+			// odpisovania je až ďalší rok a uplatní sa celý ročný odpis
+			started = true
+			if accelerated {
+				annual = base.MulRatio(money.FromInt(1), money.FromInt(k[0])).RoundCents()
+			} else {
+				annual = base.MulRatio(money.FromInt(1), money.FromInt(int64(n))).RoundCents()
+			}
+			months := money.FromInt(int64(13 - a.Acquired.Month()))
+			if year != start {
+				months = twelve
+			}
+			claimed = annual
+			if !months.Equal(twelve) {
+				claimed = annual.Mul(months).MulRatio(money.FromInt(1), twelve).RoundCents()
+				y.Note = joinNote(y.Note, fmt.Sprintf("pomerná časť %d/12", 13-a.Acquired.Month()))
+			}
+			unclaimed = annual.Sub(claimed)
+			rest = rest.Sub(annual)
+			y.Annual = annual
+		case accelerated && rest.Sign() > 0:
+			since++
+			den := coef - int64(since)
+			if coef == k[2] {
+				den = coef - int64(since-1) // v roku zvýšenia ZC sa delí koeficientom pre zvýšenú ZC
+			}
+			v := rest
+			if den > 2 {
+				v = rest.MulRatio(money.FromInt(2), money.FromInt(den)).RoundCents()
+			}
+			if v.Cmp(rest) > 0 {
+				v = rest
+			}
+			rest = rest.Sub(v)
+			claimed, y.Annual = v, v
+		case !accelerated && rest.Sign() > 0:
+			v := annual
+			// posledný riadny rok vyrovná zaokrúhlenie
+			if rest.Cmp(v) < 0 || (i == n-1 && rest.Sub(v).Cmp(money.FromCents(int64(n))) <= 0) {
+				v = rest
+			}
+			rest = rest.Sub(v)
+			claimed, y.Annual = v, annual
+			// po uplynutí doby sa v rámci ročného odpisu doodpíše aj
+			// neuplatnená časť prvého roka
+			if i >= n && unclaimed.Sign() > 0 {
+				room := annual.Sub(v)
+				if room.Cmp(unclaimed) > 0 {
+					room = unclaimed
+				}
+				claimed, unclaimed = claimed.Add(room), unclaimed.Sub(room)
+				if room.Sign() > 0 {
+					y.Note = joinNote(y.Note, "aj neuplatnená časť prvého roka")
+				}
+			}
+		default:
+			// odpísané: v nasledujúcom roku neuplatnená časť prvého roka
+			claimed, unclaimed = unclaimed, money.Zero
+			y.Annual = claimed
+			y.Note = joinNote(y.Note, "neuplatnená časť prvého roka")
+		}
+		i++
+		y.Claimed = share(claimed)
+		y.Residual = rest.Add(unclaimed)
 		out = append(out, y)
 	}
-	return out, nil
+}
+
+func joinNote(a, b string) string {
+	if a == "" {
+		return b
+	}
+	return a + "; " + b
 }
 
 // InYear vráti riadok plánu za rok (nulový, ak v tom roku nič nie je).

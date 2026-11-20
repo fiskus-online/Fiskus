@@ -441,6 +441,7 @@ export const assetColumns = [
   t('Skupina / doba', (r) => periodLabel(r), 16),
   date('Zaradený', (r) => r.acquired),
   money('Vstupná cena', (r) => r.cost),
+  money('VC s technickým zhodnotením', (r) => r.costInYear),
   { header: 'Podiel na podnikaní (%)', value: (r) => r.share, type: 'number', width: 10 },
   money('ZC na začiatku roka', (r) => r.opening),
   money('Odpis v roku', (r) => r.thisYear?.claimed),

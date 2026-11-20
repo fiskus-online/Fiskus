@@ -26,6 +26,11 @@ etapách je v [pláne vývoja](./ROADMAP.md).
 - **Kontrolný výkaz, časť B.3** (pokladničné bloky s odpočtom): XML ju
   teraz obsahuje — súhrnne v B.3.1, od 3 000 € odpočtu po dodávateľoch
   v B.3.2. Netreba ju už dopĺňať ručne v eDane.
+- **Majetok: technické zhodnotenie a prerušenie odpisovania.** Na karte
+  majetku zapíšete technické zhodnotenie (prístavba, modernizácia) —
+  odpisový plán sa prepočíta podľa § 29 a pokynov finančnej správy pre
+  rovnomerné aj zrýchlené odpisovanie. Daňové odpisovanie hmotného
+  majetku sa dá prerušiť na vybrané roky (§ 22 ods. 9); plán sa predĺži.
 
 ## 0.10.9
 

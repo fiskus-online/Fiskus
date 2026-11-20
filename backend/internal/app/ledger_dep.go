@@ -84,7 +84,7 @@ func (a *App) AccDepreciationFor(ctx context.Context, companyID int64, year int)
 		acc := x.AccountOrDefault()
 		dep := asset.DepAccount(acc)
 		it := DepItem{AssetID: x.ID, Number: x.Number, Name: x.Name, Account: acc, DepAccount: dep,
-			Amount: y.Amount, Tax: y.Tax, Diff: y.Diff, Disposal: y.Disposal, Cost: x.Cost}
+			Amount: y.Amount, Tax: y.Tax, Diff: y.Diff, Disposal: y.Disposal, Cost: x.CostAt(year)}
 		addLine("551", dep, y.Amount)
 		if !x.Disposed.IsZero() && x.Disposed.Year() == year {
 			it.Kind = string(x.DisposalKind)
@@ -93,7 +93,7 @@ func (a *App) AccDepreciationFor(ctx context.Context, companyID int64, year int)
 				zcAcc = "541" // zostatková cena predaného majetku
 			}
 			addLine(zcAcc, dep, y.Disposal)
-			addLine(dep, acc, x.Cost) // vyradenie: oprávky proti obstarávacej cene
+			addLine(dep, acc, x.CostAt(year)) // vyradenie: oprávky proti obstarávacej cene (s TZ)
 		}
 		out.Items = append(out.Items, it)
 		out.Total = out.Total.Add(y.Amount)

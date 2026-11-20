@@ -106,3 +106,19 @@ export function accPeriodLabel(months) {
   const y = months / 12
   return Number.isInteger(y) ? `${months} mesiacov (${y} ${y === 1 ? 'rok' : y < 5 ? 'roky' : 'rokov'})` : `${months} mesiacov`
 }
+
+/** Roky, v ktorých sa dá prerušiť odpisovanie: od zaradenia po rok pred vyradením (najviac 50 rokov). */
+export function pauseYears(acquired, disposed, now = new Date().getFullYear()) {
+  const from = acquired ? Number(String(acquired).slice(0, 4)) : now
+  const to = disposed ? Number(String(disposed).slice(0, 4)) - 1 : Math.max(now + 5, from)
+  const out = []
+  for (let y = from; y <= to && out.length < 50; y++) out.push(y)
+  return out
+}
+
+/** Technické zhodnotenia z formulára do tela pre API (prázdne riadky sa vynechajú). */
+export function improvementsBody(list) {
+  return (list ?? [])
+    .filter((t) => t.date || (t.amount != null && t.amount !== ''))
+    .map((t) => ({ date: t.date ?? '', amount: t.amount == null || t.amount === '' ? '' : String(t.amount), note: (t.note ?? '').trim() }))
+}
