@@ -84,6 +84,9 @@ type KVSum struct {
 	BaseReduced money.Dec `json:"baseReduced"`
 	VATReduced  money.Dec `json:"vatReduced"`
 	Count       int       `json:"count"` // počet faktúr v súčte
+	// Turnover je celková suma obratov z e-kasy vrátane dane a oslobodených
+	// plnení (iba D.1, stĺpec „Celková suma obratov“, v XML SumaObratov).
+	Turnover money.Dec `json:"turnover"`
 }
 
 // KVA2 je riadok A.2: dodanie s tuzemským prenesením daňovej povinnosti
@@ -944,6 +947,7 @@ func (ret *Return) addCash(in Input, add func(string, money.Dec), warn func(stri
 		if d.Kind == cash.In {
 			ret.Cash++
 			for _, r := range d.Tax.Rows {
+				ret.KV.D1.Turnover = ret.KV.D1.Turnover.Add(r.Base).Add(r.VAT)
 				if r.Rate == 0 {
 					add("r13", r.Base)
 					ret.Turnover.Exempt = ret.Turnover.Exempt.Add(r.Base)

@@ -422,10 +422,11 @@ async function downloadXML(which) {
           <h2><span class="part">D.1</span> Tržby z e-kasy súhrnne <span class="muted">{{ d1?.count ?? 0 }}</span></h2>
           <table v-if="d1?.count" class="lines d2">
             <thead>
-              <tr><th class="num">Základ 23 %</th><th class="num">Daň 23 %</th><th class="num">Základ znížené</th><th class="num">Daň znížené</th></tr>
+              <tr><th class="num">Obrat spolu</th><th class="num">Základ 23 %</th><th class="num">Daň 23 %</th><th class="num">Základ znížené</th><th class="num">Daň znížené</th></tr>
             </thead>
             <tbody>
               <tr>
+                <td class="num">{{ formatAmount(d1.turnover) }}</td>
                 <td class="num">{{ formatAmount(d1.base) }}</td>
                 <td class="num">{{ formatAmount(d1.vat) }}</td>
                 <td class="num">{{ formatAmount(d1.baseReduced) }}</td>

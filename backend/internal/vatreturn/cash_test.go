@@ -56,7 +56,7 @@ func TestCashDocuments(t *testing.T) {
 	if b == nil || b.Count != 3 || b.Base.String() != "80.00" || b.VAT.String() != "16.20" || b.Deducted.String() != "16.20" || len(ret.KV.B32) != 0 {
 		t.Fatalf("B.3.1: %+v %+v", b, ret.KV.B32)
 	}
-	if d1 := ret.KV.D1; d1.Count != 1 || d1.Base.String() != "100.00" || d1.VAT.String() != "23.00" || d1.BaseReduced.String() != "20.00" || d1.VATReduced.String() != "1.00" {
+	if d1 := ret.KV.D1; d1.Count != 1 || d1.Base.String() != "100.00" || d1.VAT.String() != "23.00" || d1.BaseReduced.String() != "20.00" || d1.VATReduced.String() != "1.00" || d1.Turnover.String() != "149.00" {
 		t.Fatalf("D.1: %+v", d1)
 	}
 	var warns []string
@@ -67,7 +67,7 @@ func TestCashDocuments(t *testing.T) {
 		t.Fatalf("upozornenia: %q", warns)
 	}
 	kv := string(KVXML(ret, Taxpayer{Name: "Firma", DIC: "2020372640", ICDPH: "SK2020372640", City: "Zvolen"}))
-	if !strings.Contains(kv, `<D1 Z="100.00" D="23.00" ZZn="20.00" DZn="1.00"/>`) {
+	if !strings.Contains(kv, `<D1 SumaObratov="149.00" Z="100.00" D="23.00" ZZn="20.00" DZn="1.00"/>`) {
 		t.Fatalf("D1 v XML:\n%s", kv)
 	}
 

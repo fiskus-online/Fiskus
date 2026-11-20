@@ -224,7 +224,7 @@ func KVXML(r Return, tp Taxpayer) []byte {
 			attr("OR", amountReq(c.DeductedDiff)) + "/>")
 	}
 	if d := r.KV.D1; d.Count > 0 {
-		w.raw("<D1" + attr("Z", amountReq(d.Base)) + attr("D", amountReq(d.VAT)) +
+		w.raw("<D1" + attr("SumaObratov", amountReq(d.Turnover)) + attr("Z", amountReq(d.Base)) + attr("D", amountReq(d.VAT)) +
 			attr("ZZn", amountReq(d.BaseReduced)) + attr("DZn", amountReq(d.VATReduced)) + "/>")
 	}
 	if d := r.KV.D2; d.Count > 0 {
