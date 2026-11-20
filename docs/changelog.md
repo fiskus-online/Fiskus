@@ -17,6 +17,9 @@ etapách je v [pláne vývoja](./ROADMAP.md).
   celkovú sumu obratov (`SumaObratov`, vrátane dane a oslobodených tržieb).
   Doteraz chýbala a portál by takýto výkaz s D.1 odmietol. V náhľade KV je
   nový stĺpec Obrat spolu.
+- **Kontrolný výkaz, časť B.3** (pokladničné bloky s odpočtom): XML ju
+  teraz obsahuje — súhrnne v B.3.1, od 3 000 € odpočtu po dodávateľoch
+  v B.3.2. Netreba ju už dopĺňať ručne v eDane.
 
 ## 0.10.9
 

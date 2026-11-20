@@ -1011,17 +1011,11 @@ func (ret *Return) addCash(in Input, add func(string, money.Dec), warn func(stri
 	if total.Count == 0 {
 		return
 	}
-	// Štruktúru B.3 v XML zatiaľ nemáme overenú voči schéme KVDPHv25 —
-	// súbor ju neobsahuje a účtovník ju doplní v eDane.
-	part := "B.3.1"
 	if total.Deducted.Cmp(B3Limit) < 0 {
 		ret.KV.B31 = &total
 	} else {
-		part = "B.3.2"
 		for _, p := range order {
 			ret.KV.B32 = append(ret.KV.B32, *b3[p])
 		}
 	}
-	warn("", "cash", 0, fmt.Sprintf("Pokladničné bloky (%d) patria do časti %s kontrolného výkazu, ktorú súbor XML zatiaľ neobsahuje — doplňte ju v eDane podľa prehľadu (základ %s €, daň %s €)",
-		total.Count, part, total.Base.Display(), total.VAT.Display()))
 }
