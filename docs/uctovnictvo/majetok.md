@@ -59,6 +59,22 @@ doba odpisovania sa predĺži. Ak prerušíte už rok zaradenia, prvým rokom
 odpisovania je až ďalší rok a uplatní sa v ňom celý ročný odpis.
 Pri paušálnych výdavkoch sa odpisovanie neprerušuje.
 
+### Prenájom majetku
+
+Ak hmotný majetok prenajímate, do výdavkov ide odpis najviac do výšky
+príjmov z prenájmu (§ 19 ods. 3 písm. a). Na karte majetku pridajte
+**rok prenájmu**: príjem z prenájmu za rok (časovo rozlíšený), prenajatú
+časť majetku v % (napr. polovica budovy) a počet mesiacov prenájmu.
+
+Fiškus z ročného odpisu vyčlení časť na prenajatú časť a mesiace. Ak je
+vyššia ako príjem, rozdiel sa v tom roku neuplatní a uplatní sa po
+skončení doby odpisovania, ročne najviac vstupná cena / doba. Ostatná
+časť odpisu (vlastné používanie) ide do výdavkov celá.
+
+Mikrodaňovník majetok v skupinách 0 – 4 (okrem osobného auta so
+vstupnou cenou od 48 000 €) takto neobmedzuje — vtedy prenájom
+nezadávajte.
+
 ## Účtovné odpisy (podvojné účtovníctvo)
 
 V podvojnom účtovníctve má každá položka majetku aj **účet** (predvolene

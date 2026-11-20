@@ -132,3 +132,52 @@ func fieldsOf(ve *invoice.ValidationError) string {
 	}
 	return strings.Join(s, ",")
 }
+
+// Príklady finančnej správy k obmedzeniu odpisov prenajatého majetku.
+func TestLease(t *testing.T) {
+	cases := []struct {
+		name  string
+		a     Asset
+		want  map[int]string
+		years int
+	}{
+		{"celý rok, príjem nižší ako odpis: rozdiel po skončení doby",
+			Asset{Group: 1, Acquired: invoice.MustDate("2025-01-10"), Cost: money.MustParse("24000"), Leases: []Lease{{Year: 2025, Income: money.MustParse("5000")}}},
+			map[int]string{2025: "5000.00", 2026: "6000.00", 2027: "6000.00", 2028: "6000.00", 2029: "1000.00"}, 5},
+		{"prenájom 3 mesiace (príjem 1 200 z odpisu 1 500)",
+			Asset{Group: 1, Acquired: invoice.MustDate("2025-01-10"), Cost: money.MustParse("24000"), Leases: []Lease{{Year: 2025, Months: 3, Income: money.MustParse("1200")}}},
+			map[int]string{2025: "5700.00", 2029: "300.00"}, 5},
+		{"polovica budovy prenajatá",
+			Asset{Group: 5, Acquired: invoice.MustDate("2025-01-10"), Cost: money.MustParse("60000"), Leases: []Lease{{Year: 2025, Share: 50, Income: money.MustParse("1200")}}},
+			map[int]string{2025: "2700.00", 2026: "3000.00", 2045: "300.00"}, 21},
+		{"príjem vyšší ako odpis: bez obmedzenia",
+			Asset{Group: 1, Acquired: invoice.MustDate("2025-01-10"), Cost: money.MustParse("24000"), Leases: []Lease{{Year: 2025, Income: money.MustParse("9000")}}},
+			map[int]string{2025: "6000.00", 2028: "6000.00"}, 4},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			c.a.Name = "Majetok"
+			p := plan(t, c.a)
+			if len(p) != c.years {
+				t.Fatalf("riadkov %d, chcem %d", len(p), c.years)
+			}
+			for y, w := range c.want {
+				if got := p[y]; !got.Claimed.Equal(money.MustParse(w)) {
+					t.Errorf("%d: %s, chcem %s (%s)", y, got.Claimed, w, got.Note)
+				}
+			}
+		})
+	}
+	// predaj: ZC aj s odloženým odpisom
+	a := Asset{Name: "Auto", Group: 1, Acquired: invoice.MustDate("2025-01-10"), Cost: money.MustParse("24000"), Leases: []Lease{{Year: 2025, Income: money.MustParse("5000")}},
+		Disposed: invoice.MustDate("2026-06-01"), DisposalKind: DisposalSale}
+	if p := plan(t, a); !p[2026].Disposal.Equal(money.MustParse("19000")) {
+		t.Fatalf("vyradenie %+v", p[2026])
+	}
+	// validácia
+	b := Asset{Name: "X", Group: 1, Acquired: invoice.MustDate("2025-01-10"), Cost: money.MustParse("24000"), Leases: []Lease{{Year: 2024, Income: money.MustParse("1")}}}
+	b.Normalize()
+	if err := b.Validate(); err == nil || !strings.Contains(fieldsOf(err.(*invoice.ValidationError)), "leases.0") {
+		t.Fatalf("prenájom pred zaradením: %v", err)
+	}
+}

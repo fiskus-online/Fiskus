@@ -18,6 +18,9 @@ etapách je v [pláne vývoja](./ROADMAP.md).
   odpisový plán sa prepočíta podľa § 29 a pokynov finančnej správy pre
   rovnomerné aj zrýchlené odpisovanie. Daňové odpisovanie hmotného
   majetku sa dá prerušiť na vybrané roky (§ 22 ods. 9); plán sa predĺži.
+- **Majetok: prenájom.** Pri prenajatom majetku zadáte za rok príjem
+  z prenájmu, prenajatú časť a mesiace; odpis nad príjem sa odloží na
+  obdobie po skončení doby odpisovania.
 
 ## 0.10.9
 

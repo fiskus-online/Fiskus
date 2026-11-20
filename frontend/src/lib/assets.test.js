@@ -1,4 +1,4 @@
-import { pauseYears, improvementsBody } from './assets.js'
+import { pauseYears, improvementsBody, leasesBody } from './assets.js'
 import { describe, expect, it } from 'vitest'
 import { accPeriodLabel, accountOptions, assetStatus, canAccelerate, filterAssets, fixMethod, groupOptions, periodLabel, postingState } from './assets.js'
 
@@ -94,5 +94,12 @@ describe('technické zhodnotenie a prerušenie', () => {
     expect(improvementsBody([{ date: '2026-05-10', amount: 1200.5, note: ' strecha ' }, { date: '', amount: null }])).toEqual([
       { date: '2026-05-10', amount: '1200.5', note: 'strecha' },
     ])
+  })
+})
+
+describe('prenájom majetku', () => {
+  it('telo prenájmu', () => {
+    expect(leasesBody([{ year: 2026, share: 50, months: null, income: 1200 }, { year: null }])).toEqual([{ year: 2026, share: 50, months: 12, income: '1200' }])
+    expect(leasesBody([{ year: '2025', share: '', months: 3, income: null }])).toEqual([{ year: 2025, share: 100, months: 3, income: '0' }])
   })
 })
