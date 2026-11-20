@@ -54,6 +54,7 @@ type KVLine struct {
 	Deducted money.Dec    `json:"deducted"` // odpočítaná daň (iba B.1, B.2)
 	Kind     string       `json:"kind"`
 	ID       int64        `json:"id"`
+	Fix      int          `json:"fix,omitempty"` // kód opravy v dodatočnom KV: 1 storno, 2 nový/správny
 }
 
 // KVCorrection je riadok C.1 (vydané opravné faktúry) alebo C.2 (prijaté
@@ -75,6 +76,7 @@ type KVCorrection struct {
 	Quantity *money.Dec `json:"quantity,omitempty"`
 	Unit     string     `json:"unit,omitempty"`
 	ID       int64      `json:"id"`
+	Fix      int        `json:"fix,omitempty"` // kód opravy v dodatočnom KV: 1 storno, 2 nový/správny
 }
 
 // KVSum je súhrnný riadok D.2: základná sadzba a znížené sadzby spolu.
@@ -84,6 +86,10 @@ type KVSum struct {
 	BaseReduced money.Dec `json:"baseReduced"`
 	VATReduced  money.Dec `json:"vatReduced"`
 	Count       int       `json:"count"` // počet faktúr v súčte
+	// Turnover je celková suma obratov z e-kasy vrátane dane a oslobodených
+	// plnení (iba D.1, stĺpec „Celková suma obratov“, v XML SumaObratov).
+	Turnover money.Dec `json:"turnover"`
+	Fix      int       `json:"fix,omitempty"` // kód opravy v dodatočnom KV: 1 storno, 2 nový/správny
 }
 
 // KVA2 je riadok A.2: dodanie s tuzemským prenesením daňovej povinnosti
@@ -100,6 +106,7 @@ type KVA2 struct {
 	Unit     string       `json:"unit,omitempty"` // t, kg, m, ks
 	Label    string       `json:"label"`          // druh plnenia (iba na zobrazenie)
 	ID       int64        `json:"id"`
+	Fix      int          `json:"fix,omitempty"` // kód opravy v dodatočnom KV: 1 storno, 2 nový/správny
 }
 
 // KVB3 je riadok B.3 (prijaté zjednodušené faktúry — pokladničné bloky):
@@ -110,7 +117,8 @@ type KVB3 struct {
 	Base     money.Dec `json:"base"`
 	VAT      money.Dec `json:"vat"`
 	Deducted money.Dec `json:"deducted"`
-	Count    int       `json:"count"` // počet dokladov
+	Count    int       `json:"count"`         // počet dokladov
+	Fix      int       `json:"fix,omitempty"` // kód opravy v dodatočnom KV: 1 storno, 2 nový/správny
 }
 
 // B3Limit: od tejto sumy odpočítanej dane zo zjednodušených faktúr za
@@ -129,6 +137,11 @@ type KV struct {
 	C2  []KVCorrection `json:"c2"` // prijaté dobropisy od dodávateľov
 	D1  KVSum          `json:"d1"` // tržby z e-kasy (ERP) súhrnne
 	D2  KVSum          `json:"d2"`
+	// Iba v dodatočnom KV: pôvodné súhrnné riadky so storno (kód opravy 1),
+	// ak sa súhrn zmenil (B31, D1, D2 môžu byť v dodatočnom KV dvakrát).
+	B31Old *KVB3  `json:"b31Old,omitempty"`
+	D1Old  *KVSum `json:"d1Old,omitempty"`
+	D2Old  *KVSum `json:"d2Old,omitempty"`
 }
 
 // Kódy plnenia v súhrnnom výkaze.
@@ -161,7 +174,12 @@ type Return struct {
 	// Deduction je odpočet dane spolu (r. 18 + 18a + 19) na prehľad.
 	Deduction money.Dec `json:"deduction"`
 	KV        KV        `json:"kv"`
-	SV        []SVLine  `json:"sv"` // súhrnný výkaz
+	// Iba pri dodatočnom priznaní: dodatočný KV (opravované riadky voči
+	// podanému KV) alebo dôvod, prečo ho Fiškus nevie zostaviť.
+	KVFix     *KV       `json:"kvFix,omitempty"`
+	KVFixNote string    `json:"kvFixNote,omitempty"`
+	KVBase    string    `json:"kvBase,omitempty"` // s čím sa porovnávalo (záznam podania / súbor XML)
+	SV        []SVLine  `json:"sv"`               // súhrnný výkaz
 	Warnings  []Warning `json:"warnings"`
 	Invoices  int       `json:"invoices"`  // počet zahrnutých vydaných dokladov
 	Purchase  int       `json:"purchases"` // počet zahrnutých prijatých faktúr
@@ -944,6 +962,7 @@ func (ret *Return) addCash(in Input, add func(string, money.Dec), warn func(stri
 		if d.Kind == cash.In {
 			ret.Cash++
 			for _, r := range d.Tax.Rows {
+				ret.KV.D1.Turnover = ret.KV.D1.Turnover.Add(r.Base).Add(r.VAT)
 				if r.Rate == 0 {
 					add("r13", r.Base)
 					ret.Turnover.Exempt = ret.Turnover.Exempt.Add(r.Base)
@@ -1007,17 +1026,11 @@ func (ret *Return) addCash(in Input, add func(string, money.Dec), warn func(stri
 	if total.Count == 0 {
 		return
 	}
-	// Štruktúru B.3 v XML zatiaľ nemáme overenú voči schéme KVDPHv25 —
-	// súbor ju neobsahuje a účtovník ju doplní v eDane.
-	part := "B.3.1"
 	if total.Deducted.Cmp(B3Limit) < 0 {
 		ret.KV.B31 = &total
 	} else {
-		part = "B.3.2"
 		for _, p := range order {
 			ret.KV.B32 = append(ret.KV.B32, *b3[p])
 		}
 	}
-	warn("", "cash", 0, fmt.Sprintf("Pokladničné bloky (%d) patria do časti %s kontrolného výkazu, ktorú súbor XML zatiaľ neobsahuje — doplňte ju v eDane podľa prehľadu (základ %s €, daň %s €)",
-		total.Count, part, total.Base.Display(), total.VAT.Display()))
 }

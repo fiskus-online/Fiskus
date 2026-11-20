@@ -19,11 +19,35 @@ v tlačive berú.
 | Tlačivo | Verzia | Výstup |
 |---|---|---|
 | Priznanie k DPH | DPHv25 | XML pre eDane, náhľad po riadkoch |
-| Kontrolný výkaz | KVDPHv25 | XML, časti A.1, A.2, B.1–B.3, C.1, C.2, D.1 |
+| Kontrolný výkaz | KVDPHv25 | XML, časti A.1, A.2, B.1–B.3, C.1, C.2, D.1, D.2; riadny, opravný aj dodatočný |
 | Súhrnný výkaz | SVDPHv20 | XML, kódy 0, 1, 2 |
 
 Opravné a dodatočné priznanie: dátum zistenia, rozdiel oproti poslednej
 známej povinnosti (r. 36), záznam o podaní.
+
+### Dodatočný kontrolný výkaz
+
+Po podaní v eDane kliknite na **Zaznamenať podanie**. Fiškus si zapamätá
+výsledok priznania aj celý kontrolný výkaz, ako bol podaný.
+
+Keď neskôr opravíte doklady za podané obdobie (chýbajúca faktúra, zlá
+suma, faktúra, ktorá tam nepatrí), zvoľte druh **Dodatočné**. Kontrolný
+výkaz potom ukáže iba opravované riadky:
+
+- **storno** (kód opravy 1) — pôvodný riadok, ktorý sa ruší,
+- **nový** (kód opravy 2) — správny alebo chýbajúci riadok.
+
+Zmenená faktúra je teda dvakrát: pôvodná ako storno a správna ako nová.
+Súhrnné riadky B.3.1, D.1 a D.2 sa opravujú rovnako. XML pre eDane má druh
+„dodatočný“. Po podaní dodatočného výkazu znova kliknite na **Zaznamenať
+podanie** — ďalší dodatočný výkaz sa porovná už s ním.
+
+Ak ste podanie vo Fiškuse nezaznamenali (alebo ste ho zaznamenali vo
+verzii pred 0.10.10), kliknite pri druhu Dodatočné na **Načítať podaný KV
+(XML)** a vyberte súbor podaného výkazu — ten, ktorý ste podávali, alebo
+stiahnutý z eDane. Najprv riadny (alebo opravný), potom prípadné dodatočné
+v poradí, v akom ste ich podali. Fiškus skontroluje IČ DPH a obdobie
+a porovná s novším z oboch: so záznamom podania alebo s načítaným súborom.
 
 ![Kontrolný výkaz — časti A.1, A.2, B.1 až B.3](../obrazky/kontrolny-vykaz.webp)
 *Kontrolný výkaz — časti A.1, A.2, B.1 až B.3*
