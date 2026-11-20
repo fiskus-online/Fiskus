@@ -133,8 +133,8 @@ func DPHXML(r Return, tp Taxpayer, declared invoice.Date) []byte {
 }
 
 // KVXML vytvorí riadny alebo opravný kontrolný výkaz vo formáte eDane
-// (KVDPHv25). Dodatočný KV obsahuje iba opravované záznamy — ten Fiškus
-// nevytvára (ErrSupplementaryK).
+// (KVDPHv25). Pri dodatočnom KV (Druh D) má r.KV iba opravované riadky
+// s kódom opravy (pozri SupplementKV).
 func KVXML(r Return, tp Taxpayer) []byte {
 	var w xw
 	street, number := splitStreet(tp.Street)
@@ -142,8 +142,11 @@ func KVXML(r Return, tp Taxpayer) []byte {
 	w.raw(`<KVDPH_2025 xmlns="` + KVNamespace + `"><Identifikacia>`)
 	w.el("IcDphPlatitela", strings.ToUpper(noSpaces(tp.ICDPH)))
 	druh := "R"
-	if r.Kind == KindCorrective {
+	switch r.Kind {
+	case KindCorrective:
 		druh = "O" // opravný KV nahrádza riadny celý
+	case KindSupplementary:
+		druh = "D" // iba opravované riadky s kódom opravy
 	}
 	w.el("Druh", druh)
 	w.raw("<Obdobie>")
@@ -169,9 +172,16 @@ func KVXML(r Return, tp Taxpayer) []byte {
 	optional("Email", tp.Email)
 	w.raw("</Identifikacia><Transakcie>")
 	attr := func(name, v string) string { return fmt.Sprintf(` %s="%s"`, name, esc(v)) }
+	// kód opravy (iba dodatočný KV)
+	kopr := func(fix int) string {
+		if fix == 0 {
+			return ""
+		}
+		return attr("KOpr", strconv.Itoa(fix))
+	}
 	for _, l := range r.KV.A1 {
 		w.raw("<A1" + attr("Odb", l.Partner) + attr("F", l.Number) + attr("Den", l.Date.String()) +
-			attr("Z", amountReq(l.Base)) + attr("D", amountReq(l.VAT)) + attr("S", strconv.Itoa(int(l.Rate))) + "/>")
+			attr("Z", amountReq(l.Base)) + attr("D", amountReq(l.VAT)) + attr("S", strconv.Itoa(int(l.Rate))) + kopr(l.Fix) + "/>")
 	}
 	for _, l := range r.KV.A2 {
 		el := "<A2" + attr("Odb", l.Partner) + attr("F", l.Number) + attr("Den", l.Date.String()) + attr("Z", amountReq(l.Base))
@@ -184,7 +194,7 @@ func KVXML(r Return, tp Taxpayer) []byte {
 		if l.Quantity != nil {
 			el += attr("Mn", amountReq(*l.Quantity)) + attr("MJ", l.Unit)
 		}
-		w.raw(el + "/>")
+		w.raw(el + kopr(l.Fix) + "/>")
 	}
 	for _, l := range r.KV.B1 {
 		odb := ""
@@ -193,12 +203,22 @@ func KVXML(r Return, tp Taxpayer) []byte {
 		}
 		w.raw("<B1" + odb + attr("F", l.Number) + attr("Den", l.Date.String()) +
 			attr("Z", amountReq(l.Base)) + attr("D", amountReq(l.VAT)) + attr("S", strconv.Itoa(int(l.Rate))) +
-			attr("O", amountReq(l.Deducted)) + "/>")
+			attr("O", amountReq(l.Deducted)) + kopr(l.Fix) + "/>")
 	}
 	for _, l := range r.KV.B2 {
 		w.raw("<B2" + attr("Dod", l.Partner) + attr("F", l.Number) + attr("Den", l.Date.String()) +
 			attr("Z", amountReq(l.Base)) + attr("D", amountReq(l.VAT)) + attr("S", strconv.Itoa(int(l.Rate))) +
-			attr("O", amountReq(l.Deducted)) + "/>")
+			attr("O", amountReq(l.Deducted)) + kopr(l.Fix) + "/>")
+	}
+	// B.3: zjednodušené faktúry (pokladničné bloky) — súhrn B.3.1 alebo po
+	// dodávateľoch B.3.2
+	for _, b := range []*KVB3{r.KV.B31Old, r.KV.B31} {
+		if b != nil {
+			w.raw("<B31" + attr("Z", amountReq(b.Base)) + attr("D", amountReq(b.VAT)) + attr("O", amountReq(b.Deducted)) + kopr(b.Fix) + "/>")
+		}
+	}
+	for _, b := range r.KV.B32 {
+		w.raw("<B32" + attr("Dod", b.Partner) + attr("Z", amountReq(b.Base)) + attr("D", amountReq(b.VAT)) + attr("O", amountReq(b.Deducted)) + kopr(b.Fix) + "/>")
 	}
 	for _, c := range r.KV.C1 {
 		el := "<C1" + attr("Odb", c.Partner) + attr("FO", c.Number) + attr("FP", c.Original) + attr("ZR", amountReq(c.BaseDiff))
@@ -216,20 +236,24 @@ func KVXML(r Return, tp Taxpayer) []byte {
 		} else {
 			el += attr("DR", amountReq(c.VATDiff)) + attr("S", strconv.Itoa(int(c.Rate)))
 		}
-		w.raw(el + "/>")
+		w.raw(el + kopr(c.Fix) + "/>")
 	}
 	for _, c := range r.KV.C2 {
 		w.raw("<C2" + attr("Dod", c.Partner) + attr("FO", c.Number) + attr("FP", c.Original) +
 			attr("ZR", amountReq(c.BaseDiff)) + attr("DR", amountReq(c.VATDiff)) + attr("S", strconv.Itoa(int(c.Rate))) +
-			attr("OR", amountReq(c.DeductedDiff)) + "/>")
+			attr("OR", amountReq(c.DeductedDiff)) + kopr(c.Fix) + "/>")
 	}
-	if d := r.KV.D1; d.Count > 0 {
-		w.raw("<D1" + attr("Z", amountReq(d.Base)) + attr("D", amountReq(d.VAT)) +
-			attr("ZZn", amountReq(d.BaseReduced)) + attr("DZn", amountReq(d.VATReduced)) + "/>")
+	for _, d := range []*KVSum{r.KV.D1Old, &r.KV.D1} {
+		if d != nil && (d.Count > 0 || d.Fix > 0) {
+			w.raw("<D1" + attr("SumaObratov", amountReq(d.Turnover)) + attr("Z", amountReq(d.Base)) + attr("D", amountReq(d.VAT)) +
+				attr("ZZn", amountReq(d.BaseReduced)) + attr("DZn", amountReq(d.VATReduced)) + kopr(d.Fix) + "/>")
+		}
 	}
-	if d := r.KV.D2; d.Count > 0 {
-		w.raw("<D2" + attr("Z", amountReq(d.Base)) + attr("D", amountReq(d.VAT)) +
-			attr("ZZn", amountReq(d.BaseReduced)) + attr("DZn", amountReq(d.VATReduced)) + "/>")
+	for _, d := range []*KVSum{r.KV.D2Old, &r.KV.D2} {
+		if d != nil && (d.Count > 0 || d.Fix > 0) {
+			w.raw("<D2" + attr("Z", amountReq(d.Base)) + attr("D", amountReq(d.VAT)) +
+				attr("ZZn", amountReq(d.BaseReduced)) + attr("DZn", amountReq(d.VATReduced)) + kopr(d.Fix) + "/>")
+		}
 	}
 	w.raw("</Transakcie></KVDPH_2025>\n")
 	return w.b.Bytes()

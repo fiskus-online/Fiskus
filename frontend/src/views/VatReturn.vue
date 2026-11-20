@@ -111,6 +111,25 @@ async function recordFiling() {
     recording.value = false
   }
 }
+// podaný KV zo súboru XML — keď podanie nebolo zaznamenané vo Fiškuse
+const kvFileInput = ref(null)
+const loadingKV = ref(false)
+async function loadFiledKV(ev) {
+  const file = ev.target.files?.[0]
+  ev.target.value = ''
+  if (!file) return
+  loadingKV.value = true
+  try {
+    const r = await api.loadFiledKV(session.companyId, period.value, file)
+    const what = { R: 'riadny', O: 'opravný', D: 'dodatočný' }[r.druh] ?? ''
+    toast.add({ severity: 'success', summary: `Načítaný podaný ${what} kontrolný výkaz`, detail: r.druh === 'D' ? 'Použitý na predchádzajúci podaný stav.' : '', life: 4000 })
+    await load()
+  } catch (e) {
+    toast.add({ severity: 'error', summary: 'Výkaz sa nenačítal', detail: e.fields?.[0]?.message ?? e.message, life: 8000 })
+  } finally {
+    loadingKV.value = false
+  }
+}
 const kindLabel = (k) => returnKinds.find((x) => x.value === k)?.label.toLowerCase() ?? k
 
 const rows = computed(() => data.value?.rows ?? {})
@@ -135,9 +154,12 @@ const result = computed(() => {
   return { label: 'Vlastná daňová povinnosť na úhradu', value: rows.value.r35 ?? rows.value.r32 ?? '0', tone: 'issued' }
 })
 
-// kontrolný výkaz
+// kontrolný výkaz; pri dodatočnom priznaní iba opravované riadky (dodatočný KV zo servera)
+const fixMode = computed(() => data.value?.kind === 'dodatocne' && !!data.value?.kvFix)
+const kvData = computed(() => (fixMode.value ? data.value.kvFix : data.value?.kv))
+const FIX = { 1: { label: 'storno', title: 'Kód opravy 1 — ruší pôvodne podaný riadok' }, 2: { label: 'nový', title: 'Kód opravy 2 — správny alebo chýbajúci riadok' } }
 const kvSections = computed(() => {
-  const kv = data.value?.kv
+  const kv = kvData.value
   if (!kv) return []
   const terms = searchTerms(search.value)
   const f = (list, section) =>
@@ -161,12 +183,15 @@ const svRows = computed(() => {
   const terms = searchTerms(search.value)
   return (data.value?.sv ?? []).filter((l) => matches(terms, [l.country, l.vatId, l.name, l.value, SV_CODES[l.code]]))
 })
-const d2 = computed(() => data.value?.kv?.d2)
-const d1 = computed(() => data.value?.kv?.d1)
+// súhrnné riadky D.1 a D.2; v dodatočnom KV aj storno pôvodného
+const sumRows = (old, cur) => [old, cur].filter((x) => x && (x.count > 0 || x.fix))
+const d1 = computed(() => sumRows(kvData.value?.d1Old, kvData.value?.d1))
+const d2 = computed(() => sumRows(kvData.value?.d2Old, kvData.value?.d2))
 // B.3: súhrn (B.3.1) alebo po dodávateľoch (B.3.2) — rozhodol server podľa limitu
 const b3 = computed(() => {
-  const kv = data.value?.kv
-  if (kv?.b31) return { part: 'B.3.1', rows: [kv.b31] }
+  const kv = kvData.value
+  const sums = [kv?.b31Old, kv?.b31].filter(Boolean)
+  if (sums.length) return { part: 'B.3.1', rows: sums }
   const rows = kv?.b32 ?? []
   return { part: rows.length ? 'B.3.2' : 'B.3', rows }
 })
@@ -226,9 +251,19 @@ async function downloadXML(which) {
         </span>
         <Button label="Zaznamenať podanie" icon="pi pi-check-square" severity="secondary" outlined size="small" :loading="recording" :disabled="!data"
           v-tooltip.bottom="'Po podaní v eDane si Fiškus zapamätá výsledok — pri ďalšej oprave navrhne opravné alebo dodatočné priznanie'" @click="recordFiling" />
+        <template v-if="tab === 'kv' && sup.druh === 'dodatocne'">
+          <input ref="kvFileInput" type="file" accept=".xml,text/xml,application/xml" hidden @change="loadFiledKV" />
+          <Button label="Načítať podaný KV (XML)" icon="pi pi-upload" severity="secondary" outlined size="small" :loading="loadingKV"
+            v-tooltip.bottom="'Podaný kontrolný výkaz zo súboru XML — riadny alebo opravný, potom dodatočné v poradí podania'" @click="kvFileInput.click()" />
+        </template>
       </section>
-      <p v-if="tab === 'kv' && sup.druh === 'dodatocne'" class="kindnote">
-        <i class="pi pi-info-circle" /> Dodatočný kontrolný výkaz obsahuje iba opravované záznamy — Fiškus ho zatiaľ nevytvára, opravu urobte v eDane. Opravný KV (pred lehotou) vytvorí.
+      <p v-if="tab === 'kv' && sup.druh === 'dodatocne' && (fixMode || data?.kvFixNote)" class="kindnote">
+        <i class="pi pi-info-circle" />
+        <template v-if="fixMode">
+          Dodatočný kontrolný výkaz obsahuje iba opravované riadky voči podanému výkazu: <b>storno</b> (kód opravy 1) ruší
+          pôvodný riadok, <b>nový</b> (kód 2) je správny alebo chýbajúci riadok. Porovnané s: {{ data.kvBase }}.
+        </template>
+        <template v-else-if="data?.kvFixNote">{{ data.kvFixNote }}</template>
       </p>
     <p v-if="error" class="error"><i class="pi pi-exclamation-circle" /> {{ error }}</p>
 
@@ -372,6 +407,7 @@ async function downloadXML(which) {
                     <th class="num">%</th>
                   </template>
                   <th v-if="s.kind === 'purchase'" class="num">Odpočet</th>
+                  <th v-if="fixMode">Oprava</th>
                 </tr>
               </thead>
               <tbody>
@@ -394,6 +430,7 @@ async function downloadXML(which) {
                     <td v-else class="num">{{ l.rate }}</td>
                   </template>
                   <td v-if="s.kind === 'purchase'" class="num">{{ formatAmount(s.code === 'C.2' ? l.deductedDiff : l.deducted) }}</td>
+                  <td v-if="fixMode"><span class="fix" :data-fix="l.fix" :title="FIX[l.fix]?.title">{{ FIX[l.fix]?.label }}</span></td>
                 </tr>
               </tbody>
             </table>
@@ -406,7 +443,7 @@ async function downloadXML(which) {
           <div v-if="b3.rows.length" class="table-wrap">
             <table class="lines">
               <thead>
-                <tr><th v-if="b3.part === 'B.3.2'">IČ DPH dodávateľa</th><th v-if="b3.part === 'B.3.2'">Dodávateľ</th><th class="num">Základ</th><th class="num">Daň</th><th class="num">Odpočet</th></tr>
+                <tr><th v-if="b3.part === 'B.3.2'">IČ DPH dodávateľa</th><th v-if="b3.part === 'B.3.2'">Dodávateľ</th><th class="num">Základ</th><th class="num">Daň</th><th class="num">Odpočet</th><th v-if="fixMode">Oprava</th></tr>
               </thead>
               <tbody>
                 <tr v-for="(r, i) in b3.rows" :key="i">
@@ -415,6 +452,7 @@ async function downloadXML(which) {
                   <td class="num">{{ formatAmount(r.base) }}</td>
                   <td class="num">{{ formatAmount(r.vat) }}</td>
                   <td class="num">{{ formatAmount(r.deducted) }}</td>
+                  <td v-if="fixMode"><span class="fix" :data-fix="r.fix" :title="FIX[r.fix]?.title">{{ FIX[r.fix]?.label }}</span></td>
                 </tr>
               </tbody>
             </table>
@@ -423,17 +461,19 @@ async function downloadXML(which) {
         </section>
 
         <section class="kv">
-          <h2><span class="part">D.1</span> Tržby z e-kasy súhrnne <span class="muted">{{ d1?.count ?? 0 }}</span></h2>
-          <table v-if="d1?.count" class="lines d2">
+          <h2><span class="part">D.1</span> Tržby z e-kasy súhrnne <span class="muted">{{ d1.find((x) => x.fix !== 1)?.count ?? 0 }}</span></h2>
+          <table v-if="d1.length" class="lines d2">
             <thead>
-              <tr><th class="num">Základ 23 %</th><th class="num">Daň 23 %</th><th class="num">Základ znížené</th><th class="num">Daň znížené</th></tr>
+              <tr><th class="num">Obrat spolu</th><th class="num">Základ 23 %</th><th class="num">Daň 23 %</th><th class="num">Základ znížené</th><th class="num">Daň znížené</th><th v-if="fixMode">Oprava</th></tr>
             </thead>
             <tbody>
-              <tr>
-                <td class="num">{{ formatAmount(d1.base) }}</td>
-                <td class="num">{{ formatAmount(d1.vat) }}</td>
-                <td class="num">{{ formatAmount(d1.baseReduced) }}</td>
-                <td class="num">{{ formatAmount(d1.vatReduced) }}</td>
+              <tr v-for="(r, i) in d1" :key="i">
+                <td class="num">{{ formatAmount(r.turnover) }}</td>
+                <td class="num">{{ formatAmount(r.base) }}</td>
+                <td class="num">{{ formatAmount(r.vat) }}</td>
+                <td class="num">{{ formatAmount(r.baseReduced) }}</td>
+                <td class="num">{{ formatAmount(r.vatReduced) }}</td>
+                <td v-if="fixMode"><span class="fix" :data-fix="r.fix" :title="FIX[r.fix]?.title">{{ FIX[r.fix]?.label }}</span></td>
               </tr>
             </tbody>
           </table>
@@ -441,17 +481,18 @@ async function downloadXML(which) {
         </section>
 
         <section class="kv">
-          <h2><span class="part">D.2</span> Ostatné vydané faktúry súhrnne (neplatitelia DPH) <span class="muted">{{ d2?.count ?? 0 }}</span></h2>
-          <table v-if="d2?.count" class="lines d2">
+          <h2><span class="part">D.2</span> Ostatné vydané faktúry súhrnne (neplatitelia DPH) <span class="muted">{{ d2.find((x) => x.fix !== 1)?.count ?? 0 }}</span></h2>
+          <table v-if="d2.length" class="lines d2">
             <thead>
-              <tr><th class="num">Základ 23 %</th><th class="num">Daň 23 %</th><th class="num">Základ znížené</th><th class="num">Daň znížené</th></tr>
+              <tr><th class="num">Základ 23 %</th><th class="num">Daň 23 %</th><th class="num">Základ znížené</th><th class="num">Daň znížené</th><th v-if="fixMode">Oprava</th></tr>
             </thead>
             <tbody>
-              <tr>
-                <td class="num">{{ formatAmount(d2.base) }}</td>
-                <td class="num">{{ formatAmount(d2.vat) }}</td>
-                <td class="num">{{ formatAmount(d2.baseReduced) }}</td>
-                <td class="num">{{ formatAmount(d2.vatReduced) }}</td>
+              <tr v-for="(r, i) in d2" :key="i">
+                <td class="num">{{ formatAmount(r.base) }}</td>
+                <td class="num">{{ formatAmount(r.vat) }}</td>
+                <td class="num">{{ formatAmount(r.baseReduced) }}</td>
+                <td class="num">{{ formatAmount(r.vatReduced) }}</td>
+                <td v-if="fixMode"><span class="fix" :data-fix="r.fix" :title="FIX[r.fix]?.title">{{ FIX[r.fix]?.label }}</span></td>
               </tr>
             </tbody>
           </table>
@@ -771,5 +812,19 @@ table {
   .form td {
     padding: 3px 6px;
   }
+}
+.fix {
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  padding: 1px 6px;
+  border: 1px solid currentColor;
+  border-radius: 2px;
+  white-space: nowrap;
+}
+.fix[data-fix='1'] {
+  color: var(--tone-overdue);
+}
+.fix[data-fix='2'] {
+  color: var(--blue);
 }
 </style>
