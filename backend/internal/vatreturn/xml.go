@@ -200,6 +200,14 @@ func KVXML(r Return, tp Taxpayer) []byte {
 			attr("Z", amountReq(l.Base)) + attr("D", amountReq(l.VAT)) + attr("S", strconv.Itoa(int(l.Rate))) +
 			attr("O", amountReq(l.Deducted)) + "/>")
 	}
+	// B.3: zjednodušené faktúry (pokladničné bloky) — súhrn B.3.1 alebo po
+	// dodávateľoch B.3.2
+	if b := r.KV.B31; b != nil {
+		w.raw("<B31" + attr("Z", amountReq(b.Base)) + attr("D", amountReq(b.VAT)) + attr("O", amountReq(b.Deducted)) + "/>")
+	}
+	for _, b := range r.KV.B32 {
+		w.raw("<B32" + attr("Dod", b.Partner) + attr("Z", amountReq(b.Base)) + attr("D", amountReq(b.VAT)) + attr("O", amountReq(b.Deducted)) + "/>")
+	}
 	for _, c := range r.KV.C1 {
 		el := "<C1" + attr("Odb", c.Partner) + attr("FO", c.Number) + attr("FP", c.Original) + attr("ZR", amountReq(c.BaseDiff))
 		if c.A2 {
@@ -224,7 +232,7 @@ func KVXML(r Return, tp Taxpayer) []byte {
 			attr("OR", amountReq(c.DeductedDiff)) + "/>")
 	}
 	if d := r.KV.D1; d.Count > 0 {
-		w.raw("<D1" + attr("Z", amountReq(d.Base)) + attr("D", amountReq(d.VAT)) +
+		w.raw("<D1" + attr("SumaObratov", amountReq(d.Turnover)) + attr("Z", amountReq(d.Base)) + attr("D", amountReq(d.VAT)) +
 			attr("ZZn", amountReq(d.BaseReduced)) + attr("DZn", amountReq(d.VATReduced)) + "/>")
 	}
 	if d := r.KV.D2; d.Count > 0 {

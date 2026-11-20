@@ -52,7 +52,7 @@ Všetky časti (podvojné účtovníctvo, sklad, majetok, EPO, mzdy) píšeme od
 - [x] Pokladňa: príjmové a výdavkové doklady (PPD/VPD), kontrola záporného zostatku, úhrada faktúr v hotovosti, storno, tlač so sumou slovom
 - [x] Pokladňa: DPH na pokladničných dokladoch — blok ako zjednodušená faktúra (odpočet, KV B.3.1/B.3.2 podľa limitu 3 000 €), tržba z e-kasy (daň na výstupe, KV D.1), rozpis v peňažnom denníku
 - [x] Viac pokladní (vlastný zostatok a rad dokladov s predponou, archivácia) a pokladňa v cudzej mene (kurz ECB ku dňu dokladu, v peňažnom denníku v eurách, úhrada faktúr v tej istej mene)
-- [ ] Pokladňa: časť B.3 v XML kontrolného výkazu (overiť voči XSD KVDPHv25)
+- [x] Pokladňa: časť B.3 v XML kontrolného výkazu (B31 súhrnne, B32 po dodávateľoch podľa XSD KVDPH_2025)
 - [x] Pokladňa: uzávierky e-kasy (PPD na tržbu, VPD na platby kartou na ceste, pripísanie z terminálu 221 / 261)
 - [ ] Uzávierky e-kasy: načítanie zo súboru (podľa vzorky z pokladnice alebo e-kasa zóny)
 - [x] **Priznanie k DPH (DPHv25) a kontrolný výkaz (KVDPHv25)**: výpočet z dokladov, XML pre eDane, mesačne aj štvrťročne

@@ -84,6 +84,9 @@ type KVSum struct {
 	BaseReduced money.Dec `json:"baseReduced"`
 	VATReduced  money.Dec `json:"vatReduced"`
 	Count       int       `json:"count"` // počet faktúr v súčte
+	// Turnover je celková suma obratov z e-kasy vrátane dane a oslobodených
+	// plnení (iba D.1, stĺpec „Celková suma obratov“, v XML SumaObratov).
+	Turnover money.Dec `json:"turnover"`
 }
 
 // KVA2 je riadok A.2: dodanie s tuzemským prenesením daňovej povinnosti
@@ -944,6 +947,7 @@ func (ret *Return) addCash(in Input, add func(string, money.Dec), warn func(stri
 		if d.Kind == cash.In {
 			ret.Cash++
 			for _, r := range d.Tax.Rows {
+				ret.KV.D1.Turnover = ret.KV.D1.Turnover.Add(r.Base).Add(r.VAT)
 				if r.Rate == 0 {
 					add("r13", r.Base)
 					ret.Turnover.Exempt = ret.Turnover.Exempt.Add(r.Base)
@@ -1007,17 +1011,11 @@ func (ret *Return) addCash(in Input, add func(string, money.Dec), warn func(stri
 	if total.Count == 0 {
 		return
 	}
-	// Štruktúru B.3 v XML zatiaľ nemáme overenú voči schéme KVDPHv25 —
-	// súbor ju neobsahuje a účtovník ju doplní v eDane.
-	part := "B.3.1"
 	if total.Deducted.Cmp(B3Limit) < 0 {
 		ret.KV.B31 = &total
 	} else {
-		part = "B.3.2"
 		for _, p := range order {
 			ret.KV.B32 = append(ret.KV.B32, *b3[p])
 		}
 	}
-	warn("", "cash", 0, fmt.Sprintf("Pokladničné bloky (%d) patria do časti %s kontrolného výkazu, ktorú súbor XML zatiaľ neobsahuje — doplňte ju v eDane podľa prehľadu (základ %s €, daň %s €)",
-		total.Count, part, total.Base.Display(), total.VAT.Display()))
 }

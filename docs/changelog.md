@@ -11,6 +11,16 @@ tags: [prehľad]
 Verzie sú značky v repozitári (`v0.2.0`). Podrobný zoznam funkcií po
 etapách je v [pláne vývoja](./ROADMAP.md).
 
+## 0.10.10
+
+- **Kontrolný výkaz, časť D.1** (tržby z e-kasy): XML obsahuje povinnú
+  celkovú sumu obratov (`SumaObratov`, vrátane dane a oslobodených tržieb).
+  Doteraz chýbala a portál by takýto výkaz s D.1 odmietol. V náhľade KV je
+  nový stĺpec Obrat spolu.
+- **Kontrolný výkaz, časť B.3** (pokladničné bloky s odpočtom): XML ju
+  teraz obsahuje — súhrnne v B.3.1, od 3 000 € odpočtu po dodávateľoch
+  v B.3.2. Netreba ju už dopĺňať ručne v eDane.
+
 ## 0.10.9
 
 - **Majetok a čistý majetok** (domácnosť): byt, auto či fondy s hodnotou
