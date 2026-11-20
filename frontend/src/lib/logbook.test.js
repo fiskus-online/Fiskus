@@ -63,6 +63,8 @@ describe('DPH vozidla', () => {
     [{ category: 'M1' }, '50 % DPH'],
     [{ category: 'M1', fullVat: true, vatReason: 'exclusive' }, 'oznámenie daňovému úradu'],
     [{ category: 'L3e', fullVat: true, vatReason: 'transport' }, 'výnimky'],
+    [{ category: 'M1' }, 'predáte do 5 rokov'],
+    [{ category: 'M1', fullVat: true, vatReason: 'exclusive', fullVatFrom: 2028 }, 'od 2028'],
   ])('vysvetlenie %#', (v, part) => expect(vatHint(v)).toContain(part))
   it('obmedzené kategórie', () => {
     expect(['M1', 'N1', 'L3e', 'L1e'].map(limitedVAT)).toEqual([true, false, true, true])

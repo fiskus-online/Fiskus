@@ -13,6 +13,11 @@ etapách je v [pláne vývoja](./ROADMAP.md).
 
 ## 0.10.10
 
+- **DPH pri aute kúpenom s 50 % odpočtom:** pri predaji do 5 rokov alebo
+  prechode na výlučne podnikanie (nové pole Plný odpočet od roku) Fiškus
+  v priznaní za posledné obdobie roka dodatočne odpočíta časť DPH z kúpy
+  podľa § 85n ods. 10 a prílohy č. 1 zákona o DPH. Plný odpočet od roku
+  platí aj pre nákupy — staršie nákupy ostanú s 50 %.
 - **Dodatočný kontrolný výkaz.** Pri zázname podania si Fiškus uloží aj
   podaný kontrolný výkaz. Pri dodatočnom priznaní potom vytvorí dodatočný
   KV iba s opravovanými riadkami: pôvodný riadok ako storno (kód opravy 1),

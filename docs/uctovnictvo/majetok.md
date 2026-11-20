@@ -141,3 +141,30 @@ so stĺpcami čas, zemepisná šírka a dĺžka a v knihe jázd kliknite na
     Pri osobnom aute (M1, L1e, L3e) sa z nákupov odpočíta 50 % DPH. Plný
     odpočet je pri výlučnom podnikateľskom použití (VIN, kniha jázd, dátum
     oznámenia). Vozidlo na prijatej faktúre nastaví odpočet samo.
+
+### Úprava odpočtu pri aute kúpenom s 50 % DPH
+
+Ak je vozidlo prepojené s položkou v registri majetku, Fiškus sleduje
+5 kalendárnych rokov od zaradenia (obdobie na úpravu odpočítanej dane)
+a podľa § 85n ods. 10 a prílohy č. 1 zákona o DPH dodatočne odpočíta
+časť DPH z kúpy:
+
+- **Predaj do 5 rokov** — v registri majetku vyraďte auto ako *predaj*.
+  V priznaní za posledné obdobie roka predaja (december alebo IV.
+  štvrťrok) sa v r. 19 dodatočne odpočíta DPH z kúpy × 0,5 × počet
+  zostávajúcich rokov vrátane roka predaja / 5. Napríklad DPH z kúpy
+  9 200 €, kúpa 2026, predaj 2028 → 9 200 × 0,5 × 3 / 5 = 2 760 €.
+- **Prechod na výlučne podnikanie** — po oznámení daňovému úradu (do
+  31. 12.) zaškrtnite pri vozidle plný odpočet a zadajte **Plný odpočet
+  od roku** (rok po oznámení). Od toho roka sa z nákupov odpočíta celá
+  DPH a v poslednom období každého roka až do konca obdobia sa dodatočne
+  odpočíta 1/10 DPH z kúpy.
+
+DPH z kúpy sa berie z prijatej faktúry položky majetku; ak faktúru
+nemáte, zadajte ju pri vozidle (DPH z obstarania vozidla). Úprava je
+v priznaní vypísaná pod tabuľkou.
+
+Pri aute s plným odpočtom, ktoré sa neskôr použije aj súkromne, sa
+odpočet neupravuje — súkromné použitie sa zdaňuje ako dodanie služby
+(§ 9 ods. 2, základ dane = náklady na službu). Toto Fiškus nepočíta,
+dohodnite postup s účtovníkom.

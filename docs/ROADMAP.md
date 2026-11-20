@@ -139,7 +139,8 @@ Všetky časti (podvojné účtovníctvo, sklad, majetok, EPO, mzdy) píšeme od
 - [x] Kalkulačky bez firmy: DPH, úrok z omeškania, úver a RPMN, sporenie, čistá mzda, kurzy
 - [x] Tlačivá: vyplnenie a tlač bez firmy, ukladanie a zaúčtovanie ako účtovný doklad, vzory a vlastné tlačivá
 - [x] Kniha jázd: import jázd zo záznamu GPS (GPX, CSV) s pomenovanými miestami
-- [ ] Kniha jázd: zdanenie súkromného použitia vozidla s plným odpočtom (§ 9 ods. 2), úprava odpočtu pri predaji do 5 rokov
+- [x] Úprava odpočtu pri osobnom aute s 50 % odpočtom (§ 85n ods. 10, § 54d, príloha č. 1): predaj do 5 rokov a prechod na výlučne podnikanie od roka, r. 19 v poslednom období roka
+- [ ] Kniha jázd: zdanenie súkromného použitia vozidla s plným odpočtom (§ 9 ods. 2, základ = náklady na službu)
 
 ## Prenos dát z iných programov
 - [x] POHODA (XML export, aj Windows-1250): adresár, zásoby do cenníka, vydané faktúry a dobropisy s pôvodnými číslami a úhradami, prijaté faktúry; náhľad pred prenosom, opakovaný prenos nevytvorí duplicity, číselný rad pokračuje za prenesenými číslami

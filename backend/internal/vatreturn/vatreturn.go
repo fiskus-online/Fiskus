@@ -189,6 +189,8 @@ type Return struct {
 	// Coef je vysporiadanie pomerného odpočítania za rok (§ 50 ods. 4)
 	// v poslednom zdaňovacom období roka; nil = nie je.
 	Coef *CoefAdjustment `json:"coef,omitempty"`
+	// Adjustments sú úpravy odpočítanej dane zahrnuté v r. 18 – 19.
+	Adjustments []DeductionAdjustment `json:"adjustments,omitempty"`
 }
 
 // Turnover sú plnenia bez dane pre koeficient (§ 50 ods. 2): s nárokom na
@@ -227,6 +229,19 @@ type Input struct {
 	ExcessCarried money.Dec
 	// Coef je ročné vysporiadanie koeficientu (posledné obdobie roka).
 	Coef *CoefAdjustment
+	// Adjustments sú úpravy odpočítanej dane pri investičnom majetku
+	// (§ 54d, § 85n ods. 10) — iba v poslednom období roka.
+	Adjustments []DeductionAdjustment
+}
+
+// DeductionAdjustment je úprava odpočítanej dane (Tax kladná = dodatočne
+// odpočítateľná, záporná = dodatočne neodpočítateľná); ide do riadku
+// odpočítania dane podľa sadzby (r. 18, 18a, 19).
+type DeductionAdjustment struct {
+	Label  string    `json:"label"`
+	Rate   vat.Rate  `json:"rate"`
+	Tax    money.Dec `json:"tax"`
+	Reason string    `json:"reason"`
 }
 
 // riadky základu a dane podľa sadzby (DPHv25)
@@ -479,6 +494,15 @@ func Compute(in Input) Return {
 		r17 = r17.Add(ret.Rows[k])
 	}
 	ret.Rows["r17"] = r17
+	for _, a := range in.Adjustments {
+		row, ok := deductRows[a.Rate]
+		if !ok {
+			warn("", "vehicle", 0, fmt.Sprintf("Úprava odpočítanej dane (%s): sadzba %d %% nepatrí do tlačiva", a.Label, a.Rate))
+			continue
+		}
+		add(row, a.Tax)
+		ret.Adjustments = append(ret.Adjustments, a)
+	}
 	if c := in.Coef; c != nil && !c.Total.IsZero() {
 		for rate, v := range c.ByRate {
 			if row, ok := deductRows[rate]; ok {
