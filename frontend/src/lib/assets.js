@@ -122,3 +122,10 @@ export function improvementsBody(list) {
     .filter((t) => t.date || (t.amount != null && t.amount !== ''))
     .map((t) => ({ date: t.date ?? '', amount: t.amount == null || t.amount === '' ? '' : String(t.amount), note: (t.note ?? '').trim() }))
 }
+
+/** Prenájom po rokoch z formulára do tela pre API (riadky bez roka sa vynechajú). */
+export function leasesBody(list) {
+  return (list ?? [])
+    .filter((l) => l.year)
+    .map((l) => ({ year: Number(l.year), share: Number(l.share) || 100, months: Number(l.months) || 12, income: l.income == null || l.income === '' ? '0' : String(l.income) }))
+}

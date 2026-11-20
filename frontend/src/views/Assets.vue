@@ -24,7 +24,7 @@ import { fiskusGridTheme, skGridLocale, gridRows } from '../lib/grid.js'
 import { assetColumns } from '../lib/columns.js'
 import {
   assetStatus, blankAsset, canAccelerate, disposalOptions, filterAssets, fixMethod, groupOptions, kindOptions,
-  methodOptions, periodLabel, postingState, accountOptions, accPeriodLabel, pauseYears, improvementsBody,
+  methodOptions, periodLabel, postingState, accountOptions, accPeriodLabel, pauseYears, improvementsBody, leasesBody,
 } from '../lib/assets.js'
 import MultiSelect from 'primevue/multiselect'
 
@@ -84,14 +84,16 @@ function toForm(a) {
     cost: a.cost == null || a.cost === '' ? null : Number(a.cost), purchaseId: a.purchaseId || null,
     account: a.account ?? '', accMonths: a.accMonths || null,
     improvements: (a.improvements ?? []).map((t) => ({ ...t, date: fromISODate(t.date), amount: t.amount === '' ? null : Number(t.amount) })),
-    paused: [...(a.paused ?? [])] }
+    paused: [...(a.paused ?? [])],
+    leases: (a.leases ?? []).map((l) => ({ ...l, income: Number(l.income) })) }
 }
 function fromForm(f) {
   return { ...f, acquired: f.acquired ? toISODate(f.acquired) : '', disposed: f.disposed ? toISODate(f.disposed) : '',
     disposal: f.disposed ? f.disposal : '', cost: f.cost == null ? '' : String(f.cost), years: f.years ?? 0,
     purchaseId: f.purchaseId ?? 0, accMonths: f.accMonths ?? 0, account: f.account ?? '',
     improvements: improvementsBody((f.improvements ?? []).map((t) => ({ ...t, date: t.date ? toISODate(t.date) : '' }))),
-    paused: f.kind === 'tangible' ? f.paused ?? [] : [] }
+    paused: f.kind === 'tangible' ? f.paused ?? [] : [],
+    leases: f.kind === 'tangible' ? leasesBody(f.leases) : [] }
 }
 const pauseOptions = computed(() =>
   form.value ? pauseYears(form.value.acquired ? toISODate(form.value.acquired) : '', form.value.disposed ? toISODate(form.value.disposed) : '') : [])
@@ -367,7 +369,24 @@ onBeforeUnmount(() => {
             <MultiSelect v-model="form.paused" :options="pauseOptions" display="chip" size="small" placeholder="neprerušené" :disabled="!canWrite"
               aria-label="Roky s prerušeným odpisovaním" />
           </FormField>
-          <div class="tz" :class="{ 'span-4': true }">
+          <div v-if="form.kind === 'tangible'" class="tz">
+            <span class="tz-label">Prenájom</span>
+            <div v-for="(l, i) in form.leases" :key="i" class="tz-row lease-row">
+              <Select v-model="l.year" :options="pauseOptions" size="small" fluid placeholder="rok" :disabled="!canWrite" :aria-label="`Rok prenájmu ${i + 1}`" />
+              <InputNumber v-model="l.income" fluid mode="decimal" :min-fraction-digits="2" :max-fraction-digits="2" locale="sk-SK" suffix=" €" size="small"
+                placeholder="príjem za rok" :invalid="!!errors[`leases.${i}`]" :disabled="!canWrite" :aria-label="`Príjem z prenájmu ${i + 1}`" />
+              <div class="lease-part">
+                <InputNumber v-model="l.share" fluid :min="1" :max="100" suffix=" %" size="small" placeholder="100 %" :disabled="!canWrite" :aria-label="`Prenajatá časť ${i + 1}`" />
+                <InputNumber v-model="l.months" fluid :min="1" :max="12" suffix=" mes." size="small" placeholder="12 mes." :disabled="!canWrite" :aria-label="`Mesiace prenájmu ${i + 1}`" />
+              </div>
+              <Button v-if="canWrite" icon="pi pi-times" text size="small" severity="secondary" aria-label="Odobrať prenájom" @click="form.leases.splice(i, 1)" />
+              <small v-if="errors[`leases.${i}`]" class="tz-err">{{ errors[`leases.${i}`] }}</small>
+            </div>
+            <Button v-if="canWrite" label="Pridať rok prenájmu" icon="pi pi-plus" text size="small"
+              @click="form.leases.push({ year: null, income: null, share: 100, months: 12 })" />
+            <small class="tz-hint">Odpis na prenajatú časť a mesiace sa uplatní najviac do výšky príjmov z prenájmu; zvyšok po skončení doby odpisovania (§ 19 ods. 3 písm. a). Mikrodaňovníka sa netýka pri skupinách 0 – 4 okrem drahých áut.</small>
+          </div>
+          <div class="tz">
             <span class="tz-label">Technické zhodnotenie</span>
             <div v-for="(t, i) in form.improvements" :key="i" class="tz-row">
               <DatePicker v-model="t.date" date-format="d. m. yy" size="small" fluid placeholder="dokončené" :disabled="!canWrite" :aria-label="`Dátum technického zhodnotenia ${i + 1}`" />
@@ -619,6 +638,11 @@ onBeforeUnmount(() => {
   grid-template-columns: 8.5rem 8.5rem minmax(0, 1fr) auto;
   gap: 6px;
   align-items: center;
+}
+.lease-part {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
 }
 .tz-row > * {
   min-width: 0;

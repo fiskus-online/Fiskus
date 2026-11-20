@@ -18,7 +18,11 @@
 //     pri zrýchlenom zvyšuje zostatkovú cenu spolu s neuplatnenou časťou
 //     prvého roka a ďalej sa počíta koeficientom pre zvýšenú ZC (§ 28 ods. 3);
 //   - prerušenie odpisovania hmotného majetku (§ 22 ods. 9) na celé roky:
-//     v odpisovaní sa potom pokračuje, akoby prerušené nebolo.
+//     v odpisovaní sa potom pokračuje, akoby prerušené nebolo;
+//   - prenajatý hmotný majetok (§ 19 ods. 3 písm. a): odpis pripadajúci na
+//     prenajatú časť a mesiace prenájmu sa uplatní najviac do výšky príjmov
+//     z prenájmu za rok; zvyšok sa uplatní po skončení doby odpisovania
+//     ročne najviac vo výške VC / doba.
 package asset
 
 import (
@@ -69,6 +73,15 @@ var GroupYears = []int{2, 4, 6, 8, 12, 20, 40}
 // [prvý rok, ďalšie roky, zvýšená zostatková cena].
 var accel = map[int][3]int64{2: {6, 7, 6}, 3: {8, 9, 8}}
 
+// Lease je prenájom majetku v roku: aká časť majetku a koľko mesiacov
+// bola prenajatá a príjem z prenájmu (časovo rozlíšený na rok).
+type Lease struct {
+	Year   int       `json:"year"`
+	Share  int       `json:"share"`  // prenajatá časť majetku v % (1–100)
+	Months int       `json:"months"` // mesiace prenájmu v roku (1–12)
+	Income money.Dec `json:"income"` // príjem z prenájmu za rok
+}
+
 // Improvement je technické zhodnotenie (§ 29): dokončené a zaradené do
 // užívania v deň Date.
 type Improvement struct {
@@ -106,6 +119,17 @@ type Asset struct {
 	// daňové odpisovanie prerušené (§ 22 ods. 9, iba hmotný majetok).
 	Improvements []Improvement `json:"improvements,omitempty"`
 	Paused       []int         `json:"paused,omitempty"`
+	// Prenájom po rokoch (iba hmotný majetok).
+	Leases []Lease `json:"leases,omitempty"`
+}
+
+func (a *Asset) lease(year int) *Lease {
+	for i := range a.Leases {
+		if a.Leases[i].Year == year {
+			return &a.Leases[i]
+		}
+	}
+	return nil
 }
 
 // CostAt vráti vstupnú cenu zvýšenú o technické zhodnotenia do konca roka.
@@ -167,8 +191,17 @@ func (a *Asset) Normalize() {
 	}
 	sort.SliceStable(a.Improvements, func(i, j int) bool { return a.Improvements[i].Date.Before(a.Improvements[j].Date) })
 	sort.Ints(a.Paused)
+	sort.SliceStable(a.Leases, func(i, j int) bool { return a.Leases[i].Year < a.Leases[j].Year })
+	for i := range a.Leases {
+		if a.Leases[i].Share == 0 {
+			a.Leases[i].Share = 100
+		}
+		if a.Leases[i].Months == 0 {
+			a.Leases[i].Months = 12
+		}
+	}
 	if a.Kind == Intangible {
-		a.Paused = nil
+		a.Paused, a.Leases = nil, nil
 	}
 }
 
@@ -249,6 +282,21 @@ func (a *Asset) Validate() error {
 			add(f, "Rok je prerušený dvakrát")
 		}
 	}
+	for i, l := range a.Leases {
+		f := fmt.Sprintf("leases.%d", i)
+		switch {
+		case !a.Acquired.IsZero() && l.Year < a.Acquired.Year():
+			add(f, "Prenájom môže byť až od roku zaradenia do užívania")
+		case l.Share < 1 || l.Share > 100:
+			add(f, "Prenajatá časť majetku musí byť 1 až 100 %")
+		case l.Months < 1 || l.Months > 12:
+			add(f, "Počet mesiacov prenájmu musí byť 1 až 12")
+		case l.Income.Sign() < 0 || !l.Income.Equal(l.Income.RoundCents()):
+			add(f, "Zadajte príjem z prenájmu za rok (najviac dve desatinné miesta)")
+		case i > 0 && a.Leases[i-1].Year == l.Year:
+			add(f, "Prenájom za rok je zadaný dvakrát")
+		}
+	}
 	a.validateAccounting(add)
 	if len(fe) > 0 {
 		return &invoice.ValidationError{Fields: fe}
@@ -308,6 +356,7 @@ func (a *Asset) Schedule() ([]Year, error) {
 	// rest je ešte neodpísaná časť (pri zrýchlenom ZC na účely výpočtu
 	// odpisov), unclaimed neuplatnená pomerná časť prvého roka
 	rest, unclaimed := base, money.Zero
+	deferred := money.Zero // odpis nad príjmy z prenájmu — po skončení doby
 	annual := money.Zero
 	i := 0                 // poradie odpisovaného roka (bez prerušených)
 	coef, since := k[1], 0 // zrýchlené: koeficient a roky od posledného zvýšenia ZC
@@ -336,10 +385,23 @@ func (a *Asset) Schedule() ([]Year, error) {
 		if !a.Disposed.IsZero() && a.Disposed.Year() == year {
 			// rok vyradenia: odpis sa neuplatní, ZC (vrátane neuplatnenej
 			// časti prvého roka) je výdavkom
-			y.Disposal = share(rest.Add(unclaimed))
+			y.Disposal = share(rest.Add(unclaimed).Add(deferred))
 			y.Note = map[Disposal]string{DisposalSale: "predaj", DisposalLiquidation: "likvidácia", DisposalOther: "vyradenie"}[a.DisposalKind]
 			out = append(out, y)
 			return out, nil
+		}
+		if rest.IsZero() && unclaimed.IsZero() && deferred.Sign() > 0 {
+			// odpis obmedzený príjmami z prenájmu: ročne najviac VC / doba
+			v := base.MulRatio(money.FromInt(1), money.FromInt(int64(n))).RoundCents()
+			if v.Cmp(deferred) > 0 {
+				v = deferred
+			}
+			deferred = deferred.Sub(v)
+			y.Annual, y.Claimed = v, share(v)
+			y.Note = joinNote(y.Note, "odpis obmedzený prenájmom z minulých rokov")
+			y.Residual = deferred
+			out = append(out, y)
+			continue
 		}
 		if rest.IsZero() && unclaimed.IsZero() {
 			if year > lastTZ {
@@ -349,7 +411,7 @@ func (a *Asset) Schedule() ([]Year, error) {
 		}
 		if a.paused(year) && a.Kind == Tangible {
 			y.Note = joinNote(y.Note, "odpisovanie prerušené")
-			y.Residual = rest.Add(unclaimed)
+			y.Residual = rest.Add(unclaimed).Add(deferred)
 			out = append(out, y)
 			continue
 		}
@@ -419,8 +481,16 @@ func (a *Asset) Schedule() ([]Year, error) {
 			y.Note = joinNote(y.Note, "neuplatnená časť prvého roka")
 		}
 		i++
+		// prenájom: časť odpisu na prenajatú časť a mesiace najviac do príjmov
+		if l := a.lease(year); l != nil && a.Kind == Tangible && claimed.Sign() > 0 {
+			rented := claimed.MulRatio(money.FromInt(int64(l.Share*l.Months)), money.FromInt(1200)).RoundCents()
+			if over := rented.Sub(l.Income); over.Sign() > 0 {
+				claimed, deferred = claimed.Sub(over), deferred.Add(over)
+				y.Note = joinNote(y.Note, "prenájom: odpis nad príjem "+over.Display()+" € sa uplatní po skončení doby")
+			}
+		}
 		y.Claimed = share(claimed)
-		y.Residual = rest.Add(unclaimed)
+		y.Residual = rest.Add(unclaimed).Add(deferred)
 		out = append(out, y)
 	}
 }
