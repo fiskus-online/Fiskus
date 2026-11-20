@@ -13,6 +13,11 @@ etapách je v [pláne vývoja](./ROADMAP.md).
 
 ## 0.10.10
 
+- **Dodatočný kontrolný výkaz.** Pri zázname podania si Fiškus uloží aj
+  podaný kontrolný výkaz. Pri dodatočnom priznaní potom vytvorí dodatočný
+  KV iba s opravovanými riadkami: pôvodný riadok ako storno (kód opravy 1),
+  správny alebo chýbajúci ako nový (kód 2). Doteraz ho bolo treba
+  vyplniť ručne v eDane.
 - **Kontrolný výkaz, časť D.1** (tržby z e-kasy): XML obsahuje povinnú
   celkovú sumu obratov (`SumaObratov`, vrátane dane a oslobodených tržieb).
   Doteraz chýbala a portál by takýto výkaz s D.1 odmietol. V náhľade KV je

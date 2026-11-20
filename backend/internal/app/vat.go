@@ -81,7 +81,36 @@ func (a *App) VATReturnWith(ctx context.Context, companyID int64, period string,
 	if err := r.Apply(o); err != nil {
 		return r, c, &invoice.ValidationError{Fields: []invoice.FieldError{{Field: "kind", Message: err.Error()}}}
 	}
+	if r.Kind == vatreturn.KindSupplementary {
+		if err := a.supplementKV(ctx, companyID, &r); err != nil {
+			return r, c, err
+		}
+	}
 	return r, c, nil
+}
+
+// supplementKV pripojí k dodatočnému priznaniu dodatočný KV: rozdiel medzi
+// KV z posledného zaznamenaného podania a KV z aktuálnych dokladov.
+func (a *App) supplementKV(ctx context.Context, companyID int64, r *vatreturn.Return) error {
+	list, err := a.VATFilings(ctx, companyID, r.Period.String())
+	if err != nil {
+		return err
+	}
+	var filed *vatreturn.KV
+	for i := len(list) - 1; i >= 0 && filed == nil; i-- {
+		filed = list[i].KV
+	}
+	if filed == nil {
+		r.KVFixNote = vatreturn.ErrSupplementaryK.Error()
+		return nil
+	}
+	fix, err := vatreturn.SupplementKV(*filed, r.KV)
+	if err != nil {
+		r.KVFixNote = err.Error()
+		return nil
+	}
+	r.KVFix = &fix
+	return nil
 }
 
 // Taxpayer pripraví údaje platiteľa do hlavičky.
@@ -102,7 +131,10 @@ func (a *App) VATExportWith(ctx context.Context, companyID int64, kind, period s
 		return nil, "", err
 	}
 	if kind == "kv" && r.Kind == vatreturn.KindSupplementary {
-		return nil, "", &invoice.ValidationError{Fields: []invoice.FieldError{{Field: "kind", Message: vatreturn.ErrSupplementaryK.Error()}}}
+		if r.KVFix == nil {
+			return nil, "", &invoice.ValidationError{Fields: []invoice.FieldError{{Field: "kind", Message: r.KVFixNote}}}
+		}
+		r.KV = *r.KVFix // dodatočný KV obsahuje iba opravované riadky
 	}
 	if c.ICDPH == "" || c.DIC == "" {
 		return nil, "", ErrMissingVATData
@@ -148,13 +180,16 @@ func kindText(k vatreturn.Kind) string {
 // pre dodatočné priznanie). Fiškus priznanie nepodáva sám — zapíše ho
 // používateľ po podaní v eDane.
 type VATFiling struct {
-	Kind     vatreturn.Kind `json:"kind"`
-	Filed    invoice.Date   `json:"filed"`
-	Result   money.Dec      `json:"result"` // + vlastná daňová povinnosť, − nadmerný odpočet
-	R35      money.Dec      `json:"r35"`
-	R37      money.Dec      `json:"r37"`
-	User     string         `json:"user"`
-	Recorded time.Time      `json:"recorded"`
+	Kind   vatreturn.Kind `json:"kind"`
+	Filed  invoice.Date   `json:"filed"`
+	Result money.Dec      `json:"result"` // + vlastná daňová povinnosť, − nadmerný odpočet
+	R35    money.Dec      `json:"r35"`
+	R37    money.Dec      `json:"r37"`
+	// KV je kontrolný výkaz v stave po tomto podaní (celý, aj po
+	// dodatočnom) — základ pre ďalší dodatočný KV.
+	KV       *vatreturn.KV `json:"kv,omitempty"`
+	User     string        `json:"user"`
+	Recorded time.Time     `json:"recorded"`
 }
 
 func filingKey(companyID int64, period string) string {
@@ -198,7 +233,8 @@ func (a *App) RecordVATFiling(ctx context.Context, companyID int64, period strin
 	if err != nil {
 		return nil, err
 	}
-	list = append(list, VATFiling{Kind: r.Kind, Filed: filed, Result: r.Result(), R35: r.Rows["r35"], R37: r.Rows["r37"],
+	kv := r.KV
+	list = append(list, VATFiling{Kind: r.Kind, Filed: filed, Result: r.Result(), R35: r.Rows["r35"], R37: r.Rows["r37"], KV: &kv,
 		User: actorName(ctx), Recorded: a.clock().UTC()})
 	b, _ := json.Marshal(list)
 	if err := a.Store.SetSetting(ctx, filingKey(companyID, r.Period.String()), string(b)); err != nil {
