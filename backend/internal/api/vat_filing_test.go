@@ -3,6 +3,7 @@ package api
 import (
 	"fmt"
 	"io"
+	"net/http"
 	"strings"
 	"testing"
 
@@ -88,5 +89,62 @@ func TestVATSupplementKVWithoutFiling(t *testing.T) {
 	if ret.KVFix != nil || !strings.Contains(ret.KVFixNote, "nemá uložený podaný kontrolný výkaz") {
 		t.Fatalf("%+v", ret)
 	}
+	e.do("GET", base+"/vat/kv.xml"+q, nil, 422, nil)
+}
+
+func TestVATLoadFiledKV(t *testing.T) {
+	e := setup(t, edition.Desktop)
+	base := fmt.Sprintf("/api/companies/%d", e.cid)
+	e.do("PUT", base, `{"name":"Moja firma","vatPayer":true,"icdph":"SK2020372640","dic":"2020372640","city":"Zvolen"}`, 200, nil)
+	var draft struct{ ID int64 }
+	e.do("POST", base+"/invoices", `{"customer":{"name":"Odberateľ s.r.o.","icdph":"SK2120000003"},"issueDate":"2026-09-10","deliveryDate":"2026-09-10",
+	  "lines":[{"description":"Montáž","quantity":"1","unit":"ks","unitPrice":"1000","vatRate":23}]}`, 201, &draft)
+	e.do("POST", fmt.Sprintf("%s/invoices/%d/issue", base, draft.ID), nil, 200, nil)
+	get := func(path string) string {
+		res, err := e.client.Get(e.srv.URL + base + path)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer res.Body.Close()
+		b, _ := io.ReadAll(res.Body)
+		return string(b)
+	}
+	// podaný riadny KV stiahnutý z Fiškusa (podanie sa vo Fiškuse nezaznamenalo)
+	filed := get("/vat/kv.xml?period=2026-09")
+	post := func(period, body string, status int) {
+		req, _ := http.NewRequest("POST", e.srv.URL+base+"/vat/kv-podany?period="+period, strings.NewReader(body))
+		req.Header.Set("X-Fiskus", "1")
+		res, err := e.client.Do(req)
+		if err != nil {
+			t.Fatal(err)
+		}
+		b, _ := io.ReadAll(res.Body)
+		res.Body.Close()
+		if res.StatusCode != status {
+			t.Fatalf("načítanie %s: %d %s", period, res.StatusCode, b)
+		}
+	}
+	post("2026-08", filed, 422)                                                     // iné obdobie
+	post("2026-09", strings.Replace(filed, "SK2020372640", "SK2020999999", 1), 422) // iná firma
+	post("2026-09", "<html/>", 422)
+	post("2026-09", filed, 200)
+	// oprava: ďalšia faktúra → dodatočný KV s jedným novým riadkom
+	e.do("POST", base+"/invoices", `{"customer":{"name":"Odberateľ s.r.o.","icdph":"SK2120000003"},"issueDate":"2026-09-20","deliveryDate":"2026-09-20",
+	  "lines":[{"description":"Servis","quantity":"1","unit":"ks","unitPrice":"100","vatRate":23}]}`, 201, &draft)
+	e.do("POST", fmt.Sprintf("%s/invoices/%d/issue", base, draft.ID), nil, 200, nil)
+	q := "?period=2026-09&druh=dodatocne&zistene=2026-11-03&posledne=230.00"
+	sup := get("/vat/kv.xml" + q)
+	if !strings.Contains(sup, "<Druh>D</Druh>") || strings.Count(sup, "<A1 ") != 1 || !strings.Contains(sup, `KOpr="2"`) {
+		t.Fatalf("dodatočný KV: %s", sup)
+	}
+	var ret struct {
+		KVBase string `json:"kvBase"`
+	}
+	e.do("GET", base+"/vat"+q, nil, 200, &ret)
+	if !strings.Contains(ret.KVBase, "súbor XML") {
+		t.Fatalf("základ: %q", ret.KVBase)
+	}
+	// načítaný aj dodatočný → nič na opravu
+	post("2026-09", sup, 200)
 	e.do("GET", base+"/vat/kv.xml"+q, nil, 422, nil)
 }

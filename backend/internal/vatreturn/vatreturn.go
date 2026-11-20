@@ -178,7 +178,8 @@ type Return struct {
 	// podanému KV) alebo dôvod, prečo ho Fiškus nevie zostaviť.
 	KVFix     *KV       `json:"kvFix,omitempty"`
 	KVFixNote string    `json:"kvFixNote,omitempty"`
-	SV        []SVLine  `json:"sv"` // súhrnný výkaz
+	KVBase    string    `json:"kvBase,omitempty"` // s čím sa porovnávalo (záznam podania / súbor XML)
+	SV        []SVLine  `json:"sv"`               // súhrnný výkaz
 	Warnings  []Warning `json:"warnings"`
 	Invoices  int       `json:"invoices"`  // počet zahrnutých vydaných dokladov
 	Purchase  int       `json:"purchases"` // počet zahrnutých prijatých faktúr

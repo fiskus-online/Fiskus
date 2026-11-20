@@ -1,6 +1,7 @@
 package api
 
 import (
+	"io"
 	"net/http"
 	"strconv"
 	"strings"
@@ -171,4 +172,24 @@ func (s *Server) setVATCoefficient(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	writeJSON(w, http.StatusOK, v)
+}
+
+// maxKVFile je najväčší súbor kontrolného výkazu na načítanie.
+const maxKVFile = 20 << 20
+
+// loadFiledKV: POST …/vat/kv-podany?period=… s telom XML z eDane — podaný
+// kontrolný výkaz ako základ pre dodatočný KV.
+func (s *Server) loadFiledKV(w http.ResponseWriter, r *http.Request) {
+	cid, _ := pathID(w, r, "cid")
+	data, err := io.ReadAll(http.MaxBytesReader(w, r.Body, maxKVFile))
+	if err != nil {
+		writeErr(w, http.StatusRequestEntityTooLarge, "Súbor je príliš veľký", nil)
+		return
+	}
+	l, err := s.App.LoadFiledKV(r.Context(), cid, r.URL.Query().Get("period"), data)
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"druh": l.Druh, "files": l.Files, "loaded": l.Loaded})
 }

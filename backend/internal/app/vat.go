@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/fiskus-online/fiskus/backend/internal/audit"
@@ -90,27 +91,144 @@ func (a *App) VATReturnWith(ctx context.Context, companyID int64, period string,
 }
 
 // supplementKV pripojí k dodatočnému priznaniu dodatočný KV: rozdiel medzi
-// KV z posledného zaznamenaného podania a KV z aktuálnych dokladov.
+// naposledy podaným KV (zo záznamu podania alebo načítaný z XML — novší
+// z nich) a KV z aktuálnych dokladov.
 func (a *App) supplementKV(ctx context.Context, companyID int64, r *vatreturn.Return) error {
-	list, err := a.VATFilings(ctx, companyID, r.Period.String())
+	filed, from, err := a.filedKV(ctx, companyID, r.Period)
 	if err != nil {
 		return err
-	}
-	var filed *vatreturn.KV
-	for i := len(list) - 1; i >= 0 && filed == nil; i-- {
-		filed = list[i].KV
 	}
 	if filed == nil {
 		r.KVFixNote = vatreturn.ErrSupplementaryK.Error()
 		return nil
 	}
+	r.KVBase = from
 	fix, err := vatreturn.SupplementKV(*filed, r.KV)
 	if err != nil {
 		r.KVFixNote = err.Error()
 		return nil
 	}
+	// názvy partnerov iba na zobrazenie (XML ich nemá)
+	names := map[string]string{}
+	for _, l := range append(append(append([]vatreturn.KVLine{}, r.KV.A1...), r.KV.B1...), r.KV.B2...) {
+		names[l.Partner] = l.Name
+	}
+	for _, list := range [][]vatreturn.KVLine{fix.A1, fix.B1, fix.B2} {
+		for i := range list {
+			if list[i].Name == "" {
+				list[i].Name = names[list[i].Partner]
+			}
+		}
+	}
 	r.KVFix = &fix
 	return nil
+}
+
+// LoadedKV je kontrolný výkaz načítaný zo súboru XML z eDane — podaný stav
+// pre dodatočný KV pri obdobiach, ktorých podanie Fiškus nezaznamenal.
+type LoadedKV struct {
+	KV     vatreturn.KV `json:"kv"`
+	Druh   string       `json:"druh"` // R, O, D (posledný načítaný súbor)
+	Files  int          `json:"files"`
+	User   string       `json:"user"`
+	Loaded time.Time    `json:"loaded"`
+}
+
+func loadedKVKey(companyID int64, period string) string {
+	return fmt.Sprintf("vat.kvloaded.%d.%s", companyID, period)
+}
+
+func (a *App) loadedKV(ctx context.Context, companyID int64, p vatreturn.Period) (*LoadedKV, error) {
+	raw, err := a.Store.GetSetting(ctx, loadedKVKey(companyID, p.String()))
+	if errors.Is(err, store.ErrNotFound) || (err == nil && raw == "") {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	var l LoadedKV
+	return &l, json.Unmarshal([]byte(raw), &l)
+}
+
+// filedKV vráti posledný podaný stav KV za obdobie a odkiaľ je.
+func (a *App) filedKV(ctx context.Context, companyID int64, p vatreturn.Period) (*vatreturn.KV, string, error) {
+	list, err := a.VATFilings(ctx, companyID, p.String())
+	if err != nil {
+		return nil, "", err
+	}
+	var rec *VATFiling
+	for i := len(list) - 1; i >= 0 && rec == nil; i-- {
+		if list[i].KV != nil {
+			rec = &list[i]
+		}
+	}
+	l, err := a.loadedKV(ctx, companyID, p)
+	if err != nil {
+		return nil, "", err
+	}
+	switch {
+	case l != nil && (rec == nil || l.Loaded.After(rec.Recorded)):
+		return &l.KV, "súbor XML načítaný " + l.Loaded.In(time.Local).Format("2. 1. 2006"), nil
+	case rec != nil:
+		return rec.KV, "záznam podania " + rec.Filed.Display(), nil
+	}
+	return nil, "", nil
+}
+
+// LoadFiledKV načíta podaný kontrolný výkaz zo súboru XML z eDane. Riadny
+// a opravný nahradí podaný stav, dodatočný sa použije na posledný podaný
+// stav. Slúži ako základ pre dodatočný KV.
+func (a *App) LoadFiledKV(ctx context.Context, companyID int64, period string, data []byte) (LoadedKV, error) {
+	if err := a.Require(ctx, companyID, auth.PermLedgerWrite); err != nil {
+		return LoadedKV{}, err
+	}
+	c, err := a.Store.GetCompany(ctx, companyID)
+	if err != nil {
+		return LoadedKV{}, err
+	}
+	p, err := vatreturn.ParsePeriod(period)
+	if err != nil {
+		return LoadedKV{}, vErr("period", err.Error())
+	}
+	f, err := vatreturn.ParseKVXML(data)
+	if err != nil {
+		return LoadedKV{}, vErr("file", err.Error())
+	}
+	if want := strings.ToUpper(strings.ReplaceAll(c.ICDPH, " ", "")); f.ICDPH != want {
+		return LoadedKV{}, vErr("file", "Výkaz je pre IČ DPH "+f.ICDPH+", firma má "+want)
+	}
+	if f.Period != p {
+		return LoadedKV{}, vErr("file", "Výkaz je za obdobie "+f.Period.Label()+", nie za "+p.Label())
+	}
+	kv := f.KV
+	prev, err := a.loadedKV(ctx, companyID, p)
+	if err != nil {
+		return LoadedKV{}, err
+	}
+	files := 1
+	if f.Druh == "D" {
+		base, _, err := a.filedKV(ctx, companyID, p)
+		if err != nil {
+			return LoadedKV{}, err
+		}
+		if base == nil {
+			return LoadedKV{}, vErr("file", "Toto je dodatočný kontrolný výkaz — najprv načítajte riadny alebo opravný výkaz za "+p.Label()+", potom dodatočné v poradí podania")
+		}
+		if kv, err = vatreturn.ApplySupplement(*base, f.KV); err != nil {
+			return LoadedKV{}, vErr("file", err.Error())
+		}
+		if prev != nil {
+			files = prev.Files + 1
+		}
+	}
+	l := LoadedKV{KV: kv, Druh: f.Druh, Files: files, User: actorName(ctx), Loaded: a.clock().UTC()}
+	b, _ := json.Marshal(l)
+	if err := a.Store.SetSetting(ctx, loadedKVKey(companyID, p.String()), string(b)); err != nil {
+		return LoadedKV{}, err
+	}
+	a.record(ctx, companyID, audit.CatTaxes, "import", "vat", 0,
+		fmt.Sprintf("Načítaný podaný kontrolný výkaz (%s) za %s zo súboru XML", map[string]string{"R": "riadny", "O": "opravný", "D": "dodatočný"}[f.Druh], p.Label()), nil, nil)
+	return l, nil
 }
 
 // Taxpayer pripraví údaje platiteľa do hlavičky.

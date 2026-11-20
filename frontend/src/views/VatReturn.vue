@@ -111,6 +111,25 @@ async function recordFiling() {
     recording.value = false
   }
 }
+// podaný KV zo súboru XML — keď podanie nebolo zaznamenané vo Fiškuse
+const kvFileInput = ref(null)
+const loadingKV = ref(false)
+async function loadFiledKV(ev) {
+  const file = ev.target.files?.[0]
+  ev.target.value = ''
+  if (!file) return
+  loadingKV.value = true
+  try {
+    const r = await api.loadFiledKV(session.companyId, period.value, file)
+    const what = { R: 'riadny', O: 'opravný', D: 'dodatočný' }[r.druh] ?? ''
+    toast.add({ severity: 'success', summary: `Načítaný podaný ${what} kontrolný výkaz`, detail: r.druh === 'D' ? 'Použitý na predchádzajúci podaný stav.' : '', life: 4000 })
+    await load()
+  } catch (e) {
+    toast.add({ severity: 'error', summary: 'Výkaz sa nenačítal', detail: e.fields?.[0]?.message ?? e.message, life: 8000 })
+  } finally {
+    loadingKV.value = false
+  }
+}
 const kindLabel = (k) => returnKinds.find((x) => x.value === k)?.label.toLowerCase() ?? k
 
 const rows = computed(() => data.value?.rows ?? {})
@@ -232,12 +251,17 @@ async function downloadXML(which) {
         </span>
         <Button label="Zaznamenať podanie" icon="pi pi-check-square" severity="secondary" outlined size="small" :loading="recording" :disabled="!data"
           v-tooltip.bottom="'Po podaní v eDane si Fiškus zapamätá výsledok — pri ďalšej oprave navrhne opravné alebo dodatočné priznanie'" @click="recordFiling" />
+        <template v-if="tab === 'kv' && sup.druh === 'dodatocne'">
+          <input ref="kvFileInput" type="file" accept=".xml,text/xml,application/xml" hidden @change="loadFiledKV" />
+          <Button label="Načítať podaný KV (XML)" icon="pi pi-upload" severity="secondary" outlined size="small" :loading="loadingKV"
+            v-tooltip.bottom="'Podaný kontrolný výkaz zo súboru XML — riadny alebo opravný, potom dodatočné v poradí podania'" @click="kvFileInput.click()" />
+        </template>
       </section>
       <p v-if="tab === 'kv' && sup.druh === 'dodatocne' && (fixMode || data?.kvFixNote)" class="kindnote">
         <i class="pi pi-info-circle" />
         <template v-if="fixMode">
-          Dodatočný kontrolný výkaz obsahuje iba opravované riadky voči výkazu zaznamenanému pri podaní: <b>storno</b> (kód opravy 1) ruší
-          pôvodný riadok, <b>nový</b> (kód 2) je správny alebo chýbajúci riadok.
+          Dodatočný kontrolný výkaz obsahuje iba opravované riadky voči podanému výkazu: <b>storno</b> (kód opravy 1) ruší
+          pôvodný riadok, <b>nový</b> (kód 2) je správny alebo chýbajúci riadok. Porovnané s: {{ data.kvBase }}.
         </template>
         <template v-else-if="data?.kvFixNote">{{ data.kvFixNote }}</template>
       </p>
