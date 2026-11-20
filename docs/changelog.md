@@ -11,6 +11,14 @@ tags: [prehľad]
 Verzie sú značky v repozitári (`v0.2.0`). Podrobný zoznam funkcií po
 etapách je v [pláne vývoja](./ROADMAP.md).
 
+## 0.10.10
+
+- **DPH pri aute kúpenom s 50 % odpočtom:** pri predaji do 5 rokov alebo
+  prechode na výlučne podnikanie (nové pole Plný odpočet od roku) Fiškus
+  v priznaní za posledné obdobie roka dodatočne odpočíta časť DPH z kúpy
+  podľa § 85n ods. 10 a prílohy č. 1 zákona o DPH. Plný odpočet od roku
+  platí aj pre nákupy — staršie nákupy ostanú s 50 %.
+
 ## 0.10.9
 
 - **Majetok a čistý majetok** (domácnosť): byt, auto či fondy s hodnotou

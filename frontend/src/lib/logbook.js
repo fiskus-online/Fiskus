@@ -125,7 +125,10 @@ export function vatHint(v) {
   if (!v) return ''
   if (!limitedVAT(v.category)) return 'DPH z nákupov k vozidlu sa odpočítava v plnej výške (obmedzenie platí iba pre osobné autá a motocykle).'
   if (!v.fullVat) {
-    return 'Osobné vozidlo používané aj súkromne: z nákupov k nemu (PHM, servis, nájom, kúpa) sa od 1. 1. 2026 do 30. 6. 2028 odpočíta 50 % DPH. Na doklade vyberte vozidlo a odpočet sa nastaví sám.'
+    return 'Osobné vozidlo používané aj súkromne: z nákupov k nemu (PHM, servis, nájom, kúpa) sa od 1. 1. 2026 do 30. 6. 2028 odpočíta 50 % DPH. Na doklade vyberte vozidlo a odpočet sa nastaví sám. Ak vozidlo predáte do 5 rokov, Fiškus v decembrovom (alebo IV. štvrťročnom) priznaní dodatočne odpočíta pomernú časť zvyšnej DPH z kúpy.'
+  }
+  if (v.fullVatFrom) {
+    return `Kúpené s 50 % odpočtom, výlučne na podnikanie od ${v.fullVatFrom}: od toho roka sa z nákupov odpočíta celá DPH a v priznaní za posledné obdobie každého roka (do konca 5 rokov od kúpy) sa dodatočne odpočíta 1/10 DPH z kúpy. Oznámenie musí byť podané do 31. 12. predchádzajúceho roka.`
   }
   return v.vatReason === 'exclusive'
     ? 'Plný odpočet DPH: vozidlo iba na podnikanie. Treba elektronickú evidenciu každej jazdy (kniha jázd s VIN a tachometrom) aj nákladov a oznámenie daňovému úradu do lehoty na podanie priznania. Súkromná jazda sa zdaňuje.'

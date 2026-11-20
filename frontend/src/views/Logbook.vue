@@ -285,8 +285,8 @@ const assets = ref([])
 async function openVehicle(v) {
   errors.value = {}
   const x = v ?? { id: 0, name: '', plate: '', moto: false, fuel: 'diesel', consumption: null, ownership: 'business', method: 'log', assetId: 0, driver: '', odometer: null,
-    odometerDate: todayISO, archived: false, note: '', category: 'M1', vin: '', fullVat: false, vatReason: 'exclusive', notified: '' }
-  vehForm.value = { ...x, consumption: x.consumption == null ? null : Number(x.consumption), odometerDate: x.odometerDate ? fromISODate(x.odometerDate) : null,
+    odometerDate: todayISO, archived: false, note: '', category: 'M1', vin: '', fullVat: false, vatReason: 'exclusive', notified: '', fullVatFrom: 0, acquiredVat: '' }
+  vehForm.value = { ...x, fullVatFrom: x.fullVatFrom || null, acquiredVat: Number(x.acquiredVat) ? Number(x.acquiredVat) : null, consumption: x.consumption == null ? null : Number(x.consumption), odometerDate: x.odometerDate ? fromISODate(x.odometerDate) : null,
     assetId: x.assetId || null, notified: x.notified ? fromISODate(x.notified) : null, vatReason: x.vatReason || 'exclusive' }
   try {
     const reg = await api.assets(session.companyId, year.value)
@@ -301,7 +301,8 @@ async function saveVehicle() {
     const f = vehForm.value
     const saved = await api.saveVehicle(session.companyId, {
       ...f, consumption: String(f.consumption ?? 0), odometer: f.odometer || 0, odometerDate: f.odometerDate ? toISODate(f.odometerDate) : '', assetId: f.assetId || 0,
-      notified: f.notified ? toISODate(f.notified) : '',
+      notified: f.notified ? toISODate(f.notified) : '', fullVatFrom: f.fullVat ? f.fullVatFrom || 0 : 0,
+      acquiredVat: f.acquiredVat == null ? '0' : String(f.acquiredVat),
     })
     toast.add({ severity: 'success', summary: f.id ? 'Vozidlo uložené' : 'Vozidlo pridané', life: 2500 })
     vehForm.value = null
@@ -658,7 +659,14 @@ onBeforeUnmount(() => {
           <FormField label="Oznámené daňovému úradu" :error="errors.notified" hint="dátum podania oznámenia">
             <DatePicker v-model="vehForm.notified" date-format="d. m. yy" size="small" fluid show-clear />
           </FormField>
+          <FormField label="Plný odpočet od roku" :error="errors.fullVatFrom" hint="prázdne = od kúpy; inak rok po oznámení zmeny">
+            <InputNumber v-model="vehForm.fullVatFrom" :use-grouping="false" :min="2026" :max="2040" size="small" fluid placeholder="od kúpy" />
+          </FormField>
         </template>
+        <FormField v-if="limitedVAT(vehForm.category) && vehForm.assetId" label="DPH z obstarania vozidla" :error="errors.acquiredVat"
+          hint="pre úpravu odpočtu; prázdne = z prijatej faktúry v registri majetku">
+          <InputNumber v-model="vehForm.acquiredVat" fluid mode="decimal" :min-fraction-digits="2" :max-fraction-digits="2" locale="sk-SK" suffix=" €" size="small" placeholder="z faktúry" />
+        </FormField>
         <p class="method span2">{{ vatHint(vehForm) }}</p>
         <FormField label="Stav tachometra na začiatku" :error="errors.odometer">
           <InputNumber v-model="vehForm.odometer" :use-grouping="false" size="small" suffix=" km" />

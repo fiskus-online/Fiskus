@@ -297,6 +297,10 @@ async function downloadXML(which) {
           V r. 18 – 19 je vysporiadanie pomerného odpočítania za rok {{ data.coef.year }}: {{ formatMoney(data.coef.total) }}
           (ročný koeficient {{ data.coef.final }} %<template v-if="data.coef.provisional">, predbežný {{ data.coef.provisional }} %</template>, {{ data.coef.docs }} dokladov).
         </p>
+        <p v-for="(a, i) in data.adjustments ?? []" :key="'adj' + i" class="coef-note">
+          V r. 18 – 19 je úprava odpočítanej dane — {{ a.label }}: {{ Number(a.tax) > 0 ? 'dodatočne odpočítateľná' : 'dodatočne neodpočítateľná' }}
+          daň {{ formatMoney(a.tax) }} ({{ a.reason }}).
+        </p>
         <VatCoefficient :year="coefYear(period)" @saved="load" />
       </template>
 

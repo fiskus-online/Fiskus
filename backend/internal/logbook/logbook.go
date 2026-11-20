@@ -94,6 +94,14 @@ type Vehicle struct {
 	FullVAT   bool         `json:"fullVat"`
 	VATReason string       `json:"vatReason,omitempty"`
 	Notified  invoice.Date `json:"notified"` // oznámenie daňovému úradu (plný odpočet)
+	// FullVATFrom je rok, od ktorého platí plný odpočet, ak sa vozidlo
+	// kúpené s 50 % odpočtom začalo používať výlučne na podnikanie
+	// (oznámenie do 31. 12. predchádzajúceho roka, § 85n ods. 10 písm. b);
+	// 0 = od začiatku.
+	FullVATFrom int `json:"fullVatFrom,omitempty"`
+	// AcquiredVAT je daň z obstarania vozidla (DV v prílohe č. 1); prázdne
+	// = DPH z prijatej faktúry položky majetku.
+	AcquiredVAT money.Dec `json:"acquiredVat"`
 }
 
 // Dôvody plného odpočtu DPH pri osobnom vozidle (§ 85n).
@@ -119,7 +127,10 @@ var (
 // vozidle (M1, L1e, L3e) používanom aj súkromne od 1. 1. 2026 do
 // 30. 6. 2028, inak 100 %.
 func (v Vehicle) VATPercent(d invoice.Date) int {
-	if !LimitedCategories[v.Category] || v.FullVAT || d.Before(LimitFrom) || d.After(LimitTo) {
+	if !LimitedCategories[v.Category] || d.Before(LimitFrom) || d.After(LimitTo) {
+		return 100
+	}
+	if v.FullVAT && (v.FullVATFrom == 0 || d.Year() >= v.FullVATFrom) {
 		return 100
 	}
 	return 50
@@ -160,7 +171,7 @@ func (v *Vehicle) Normalize() {
 		}
 	}
 	if !v.FullVAT {
-		v.VATReason, v.Notified = "", invoice.Date{}
+		v.VATReason, v.Notified, v.FullVATFrom = "", invoice.Date{}, 0
 	} else if v.VATReason == "" {
 		v.VATReason = VATExclusive
 	}
@@ -192,6 +203,12 @@ func (v *Vehicle) Validate() error {
 	}
 	if v.Method != MethodLog && v.Method != MethodFlat {
 		add("method", "Vyberte spôsob uplatnenia výdavkov na PHM")
+	}
+	if v.FullVATFrom != 0 && (v.FullVATFrom < LimitFrom.Year() || v.FullVATFrom > LimitTo.Year()+AdjustPeriod) {
+		add("fullVatFrom", "Rok začiatku plného odpočtu musí byť od 2026 (obdobie § 85n)")
+	}
+	if v.AcquiredVAT.Sign() < 0 || !v.AcquiredVAT.Equal(v.AcquiredVAT.RoundCents()) {
+		add("acquiredVat", "Daň z obstarania vozidla nemôže byť záporná (najviac dve desatinné miesta)")
 	}
 	if v.Consumption.Sign() < 0 || v.Consumption.Cmp(money.FromInt(100)) > 0 {
 		add("consumption", "Spotreba z technického preukazu musí byť 0 až 100 na 100 km")

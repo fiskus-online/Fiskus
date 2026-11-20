@@ -77,7 +77,17 @@ func (a *App) VATReturnWith(ctx context.Context, companyID int64, period string,
 	if err != nil {
 		return vatreturn.Return{}, c, err
 	}
-	r := vatreturn.Compute(vatreturn.Input{Period: p, Invoices: invs, Purchases: purs, CashDocs: cashDocs, ExcessCarried: excess, Coef: coef})
+	var adj []vatreturn.DeductionAdjustment
+	if p.End().Month() == 12 {
+		list, err := a.VehicleVATAdjustments(ctx, companyID, p.Year)
+		if err != nil {
+			return vatreturn.Return{}, c, err
+		}
+		for _, x := range list {
+			adj = append(adj, vatreturn.DeductionAdjustment{Label: x.Vehicle, Rate: x.Rate, Tax: x.Tax, Reason: x.Reason})
+		}
+	}
+	r := vatreturn.Compute(vatreturn.Input{Period: p, Invoices: invs, Purchases: purs, CashDocs: cashDocs, ExcessCarried: excess, Coef: coef, Adjustments: adj})
 	if err := r.Apply(o); err != nil {
 		return r, c, &invoice.ValidationError{Fields: []invoice.FieldError{{Field: "kind", Message: err.Error()}}}
 	}
