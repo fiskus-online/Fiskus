@@ -90,6 +90,13 @@ func ValidatePeriods(ps []Period) error {
 		if i > 0 && p.From <= ps[i-1].To {
 			return fmt.Errorf("obdobie %d sa prekrýva s predchádzajúcim alebo nie je zoradené", n)
 		}
+		if i > 0 {
+			// bez medzery: dátum medzi obdobiami by nemal platné sadzby
+			prev, _ := time.Parse("2006-01-02", ps[i-1].To)
+			if next := prev.AddDate(0, 0, 1).Format("2006-01-02"); p.From != next {
+				return fmt.Errorf("obdobie %d musí začínať %s — deň po konci predchádzajúceho", n, displayDate(next))
+			}
+		}
 		if len(p.Rates) == 0 {
 			return fmt.Errorf("obdobie %d: zadajte sadzby", n)
 		}
@@ -252,4 +259,13 @@ func Calculate(lines []Line, mode PriceMode, reverseCharge bool) (Summary, error
 		out.Total = out.Total.Add(rs.Total)
 	}
 	return out, nil
+}
+
+// displayDate zobrazí dátum RRRR-MM-DD ako D. M. RRRR.
+func displayDate(iso string) string {
+	t, err := time.Parse("2006-01-02", iso)
+	if err != nil {
+		return iso
+	}
+	return fmt.Sprintf("%d. %d. %d", t.Day(), int(t.Month()), t.Year())
 }

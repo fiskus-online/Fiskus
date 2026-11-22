@@ -13,6 +13,9 @@ etapách je v [pláne vývoja](./ROADMAP.md).
 
 ## 0.10.10
 
+- **Kontrola: obdobia sadzieb DPH bez medzery.** V Legislatíve sa nedá
+  uložiť číselník, v ktorom by dátum medzi dvoma obdobiami nemal platné
+  sadzby (doteraz by dostal sadzby posledného obdobia).
 - **Oprava: predkontácia nákupu zásob.** Prijatá faktúra s príjemkou
   tovaru sa navrhne na 131 (FP-TOVAR), s príjemkou materiálu na 111 (nová
   FP-MATERIAL-SKLAD); doteraz vždy 501, hoci príjemka účtovala 132/131.
