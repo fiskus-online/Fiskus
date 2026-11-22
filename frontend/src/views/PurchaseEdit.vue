@@ -21,7 +21,7 @@ import { codes, ratesOn, supplyKindsFor, isForeign, supplyHint } from '../lib/co
 import SelectButton from 'primevue/selectbutton'
 import { filterContacts, customerFromContact } from '../lib/contacts.js'
 import { fillFromRegistry, fillFromVIES } from '../lib/registry.js'
-import { formatAmount, formatDate, formatMoney, fromISODate, parseNumber, purchaseStatusOf, toISODate } from '../lib/format.js'
+import { formatAmount, formatDate, formatMoney, fromISODate, parseNumber, paymentSource, purchaseStatusOf, toISODate } from '../lib/format.js'
 import { takePurchaseDraft } from '../lib/drafts.js'
 import { currencyOptions, isForeignCurrency, rateHint, rateText } from '../lib/fx.js'
 import { customsForm, customsPayload, importCandidates } from '../lib/customs.js'
@@ -320,14 +320,15 @@ watch(() => !!p.value?.customs, (on) => on && !imports.value.length && loadImpor
       <span v-if="status" class="tag" :data-tone="status.tone"><span class="tag-text">{{ status.label }}</span></span>
       <span v-if="dirty && !locked" class="unsaved">neuložené zmeny</span>
       <div class="spacer" />
-      <Button v-if="p.id && !locked" label="Zmazať" severity="danger" text size="small" @click="remove" />
+      <Button v-if="p.id && !locked && !p.payments?.length" label="Zmazať" severity="danger" text size="small" @click="remove" />
       <template v-if="!canWrite" />
       <template v-else-if="locked">
         <span class="paid-on">Uhradená {{ formatDate(p.paidDate) }}</span>
         <Button label="Zrušiť úhradu" severity="secondary" text size="small" :loading="busy" @click="pay(true)" />
       </template>
       <template v-else>
-        <Button v-if="p.id && !dirty" label="Označiť ako uhradenú" icon="pi pi-wallet" severity="secondary" outlined size="small" :loading="busy" @click="pay()" />
+        <Button v-if="p.payments?.length && !dirty" label="Zrušiť úhrady" severity="secondary" text size="small" :loading="busy" @click="pay(true)" />
+        <Button v-if="p.id && !dirty" :label="p.payments?.length ? 'Uhradiť zvyšok' : 'Označiť ako uhradenú'" icon="pi pi-wallet" severity="secondary" outlined size="small" :loading="busy" @click="pay()" />
         <Button :label="p.id ? 'Uložiť' : 'Zaevidovať'" icon="pi pi-check" size="small" :loading="busy" @click="save" v-tooltip.bottom="'Ctrl+S'" />
       </template>
     </header>
@@ -565,6 +566,20 @@ watch(() => !!p.value?.customs, (on) => on && !imports.value.length && loadImpor
           <span>{{ p.customs ? 'Na úhradu colnému úradu' : 'Na úhradu' }}</span>
           <strong class="num">{{ formatMoney(summary.total, p.currency || 'EUR') }}</strong>
         </div>
+        <div v-if="p.payments?.length" class="payments">
+          <h3>Úhrady</h3>
+          <ul>
+            <li v-for="(x, i) in p.payments" :key="i">
+              <span>{{ formatDate(x.date) }}</span>
+              <span class="src">{{ paymentSource(x.source) }}<template v-if="x.eur && Number(x.eur)"> · {{ formatMoney(x.eur) }}</template></span>
+              <strong class="num">{{ formatMoney(x.amount, p.currency || 'EUR') }}</strong>
+            </li>
+          </ul>
+          <div v-if="p.status === 'booked'" class="rest">
+            <span>Zostáva uhradiť</span>
+            <strong class="num">{{ formatMoney(p.balance, p.currency || 'EUR') }}</strong>
+          </div>
+        </div>
         <div v-if="foreign" class="local">
           <p class="rate-line">{{ p.local ? rateText(p) : 'Bez kurzu sa doklad neprepočíta na eurá a nejde do priznania DPH.' }}</p>
           <dl v-if="p.local">
@@ -586,6 +601,39 @@ watch(() => !!p.value?.customs, (on) => on && !imports.value.length && loadImpor
 </template>
 
 <style scoped>
+.payments {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--rule);
+  font-size: var(--fs-sm);
+}
+.payments h3 {
+  margin: 0 0 4px;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+.payments ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.payments li {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 8px;
+  padding: 2px 0;
+}
+.payments .src {
+  color: var(--ink-faint);
+}
+.payments .rest {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 4px;
+  padding-top: 4px;
+  border-top: 1px dashed var(--rule);
+}
 .photo img {
   display: block;
   max-width: 100%;
