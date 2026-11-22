@@ -119,9 +119,9 @@ func (a *App) SavePurchase(ctx context.Context, companyID int64, p purchase.Purc
 			return p, nil, purchase.ErrPaid
 		}
 		// interné číslo a stav sa menia iba vlastnými akciami
-		p.Number, p.Status, p.PaidDate = old.Number, old.Status, old.PaidDate
+		p.Number, p.Status, p.PaidDate, p.Payments = old.Number, old.Status, old.PaidDate, old.Payments
 	} else {
-		p.Number, p.Status, p.PaidDate = "", purchase.StatusBooked, invoice.Date{}
+		p.Number, p.Status, p.PaidDate, p.Payments = "", purchase.StatusBooked, invoice.Date{}, nil
 	}
 	normalizePurchase(&p)
 	if err := a.applyPurchaseRate(ctx, &p); err != nil {
@@ -140,6 +140,18 @@ func (a *App) SavePurchase(ctx context.Context, companyID int64, p purchase.Purc
 	warns := p.Normalize()
 	if err := p.Validate(); err != nil {
 		return p, warns, err
+	}
+	if len(p.Payments) > 0 {
+		// čiastočne uhradená faktúra: suma nesmie klesnúť pod úhrady
+		paid := p.Paid()
+		if p.Summary.Total.Abs().Cmp(paid.Abs()) < 0 || p.Summary.Total.Sign()*paid.Sign() < 0 {
+			return p, warns, &invoice.ValidationError{Fields: []invoice.FieldError{{Field: "rates",
+				Message: "Suma faktúry je nižšia ako jej úhrady (" + paid.Display() + ") — najprv zrušte úhradu"}}}
+		}
+		if p.Remaining().IsZero() {
+			p.Status, p.PaidDate = purchase.StatusPaid, p.Payments[len(p.Payments)-1].Date
+		}
+		p.SyncPaid()
 	}
 	if err := a.checkCustomsLink(ctx, companyID, &p); err != nil {
 		return p, warns, err
@@ -180,7 +192,7 @@ func (a *App) SavePurchase(ctx context.Context, companyID int64, p purchase.Purc
 	return p, warns, nil
 }
 
-// MarkPurchasePaid označí prijatú faktúru ako uhradenú.
+// MarkPurchasePaid označí prijatú faktúru ako uhradenú (zvyšok ručnou úhradou).
 func (a *App) MarkPurchasePaid(ctx context.Context, companyID, id int64, on invoice.Date) (purchase.Purchase, error) {
 	return a.purchaseTransition(ctx, companyID, id, "pay", "Uhradená prijatá faktúra ", func(p *purchase.Purchase) error {
 		if on.IsZero() {
@@ -190,7 +202,26 @@ func (a *App) MarkPurchasePaid(ctx context.Context, companyID, id int64, on invo
 	})
 }
 
-// UnpayPurchase zruší označenie úhrady.
+// AddPurchasePayment pripíše úhradu prijatej faktúry (aj čiastočnú) —
+// spárovaný bankový pohyb alebo pokladničný doklad.
+func (a *App) AddPurchasePayment(ctx context.Context, companyID, id int64, pay invoice.Payment) (purchase.Purchase, error) {
+	return a.purchaseTransition(ctx, companyID, id, "payment", "Úhrada prijatej faktúry ", func(p *purchase.Purchase) error {
+		return p.AddPayment(pay)
+	})
+}
+
+// RemovePurchasePayment zruší úhradu z daného zdroja (zrušené spárovanie,
+// stornovaný pokladničný doklad).
+func (a *App) RemovePurchasePayment(ctx context.Context, companyID, id int64, source string, ref int64) (purchase.Purchase, error) {
+	return a.purchaseTransition(ctx, companyID, id, "unpay", "Zrušená úhrada prijatej faktúry ", func(p *purchase.Purchase) error {
+		if !p.RemovePayment(source, ref) {
+			return invoice.ErrBadTransition
+		}
+		return nil
+	})
+}
+
+// UnpayPurchase zruší všetky úhrady.
 func (a *App) UnpayPurchase(ctx context.Context, companyID, id int64) (purchase.Purchase, error) {
 	return a.purchaseTransition(ctx, companyID, id, "unpay", "Zrušená úhrada prijatej faktúry ", (*purchase.Purchase).Unpay)
 }
@@ -200,7 +231,7 @@ func (a *App) purchaseTransition(ctx context.Context, companyID, id int64, actio
 	if err != nil {
 		return p, err
 	}
-	before := map[string]any{"status": p.Status, "paidDate": p.PaidDate}
+	before := map[string]any{"status": p.Status, "paidDate": p.PaidDate, "paid": p.Paid(), "payments": p.Payments}
 	if err := fn(&p); err != nil {
 		return p, err
 	}
@@ -208,7 +239,7 @@ func (a *App) purchaseTransition(ctx context.Context, companyID, id int64, actio
 		return p, err
 	}
 	a.record(ctx, companyID, audit.CatPurchases, action, "purchase", p.ID, what+p.Number, before,
-		map[string]any{"status": p.Status, "paidDate": p.PaidDate})
+		map[string]any{"status": p.Status, "paidDate": p.PaidDate, "paid": p.Paid(), "payments": p.Payments})
 	return p, nil
 }
 
@@ -218,7 +249,7 @@ func (a *App) DeletePurchase(ctx context.Context, companyID, id int64) error {
 	if err != nil {
 		return err
 	}
-	if p.Status == purchase.StatusPaid {
+	if p.Status == purchase.StatusPaid || len(p.Payments) > 0 {
 		return purchase.ErrPaid
 	}
 	if err := a.checkOpen(ctx, companyID, p.IssueDate); err != nil {

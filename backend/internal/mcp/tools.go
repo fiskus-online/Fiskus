@@ -210,9 +210,9 @@ func (s *Server) baseTools() []Tool {
 					var nPay, nLate int
 					for _, p := range purs {
 						if p.Status == purchase.StatusBooked {
-							toPay, nPay = toPay.Add(p.TotalEUR()), nPay+1
+							toPay, nPay = toPay.Add(p.RemainingEUR()), nPay+1
 							if p.Overdue(today) {
-								late, nLate = late.Add(p.TotalEUR()), nLate+1
+								late, nLate = late.Add(p.RemainingEUR()), nLate+1
 							}
 						}
 					}
