@@ -78,8 +78,14 @@ func (a *App) candidatesIn(ctx context.Context, companyID int64, currency string
 		if p.Status != purchase.StatusBooked || currencyCode(p.Currency) != currency {
 			continue // účty sú v eurách — doklad v cudzej mene sa označí ako uhradený ručne (ako pri faktúrach)
 		}
-		out = append(out, bank.Candidate{Kind: "purchase", ID: p.ID, Number: p.Number, VS: p.VariableSymbol, Partner: p.Supplier.Name,
-			IBAN: p.SupplierIBAN, Amount: p.Summary.Total, Direction: bank.Out, Due: p.DueDate})
+		// suma kandidáta je zostatok na úhradu (po čiastočných platbách);
+		// dobropis dodávateľa vracia peniaze nám
+		c := bank.Candidate{Kind: "purchase", ID: p.ID, Number: p.Number, VS: p.VariableSymbol, Partner: p.Supplier.Name,
+			IBAN: p.SupplierIBAN, Amount: p.Remaining(), Direction: bank.Out, Due: p.DueDate}
+		if p.Remaining().Sign() < 0 {
+			c.Amount, c.Direction = p.Remaining().Neg(), bank.In
+		}
+		out = append(out, c)
 	}
 	return out, nil
 }
@@ -215,13 +221,33 @@ func (a *App) pair(ctx context.Context, companyID int64, t *bank.Transaction, c 
 		if err != nil {
 			return err
 		}
-		if t.Direction != bank.Out {
+		if (p.Remaining().Sign() < 0) != (t.Direction == bank.In) {
 			return ErrWrongDirection
 		}
 		if p.Status != purchase.StatusBooked {
 			return ErrDocumentPaid
 		}
-		if _, err := a.MarkPurchasePaid(ctx, companyID, c.ID, t.Date); err != nil {
+		// čiastočná platba ostane ako úhrada, faktúra čaká na zvyšok
+		pay := invoice.Payment{Date: t.Date, Amount: t.Amount, Source: invoice.PaymentBank, Ref: t.ID}
+		if t.Direction == bank.In {
+			pay.Amount = pay.Amount.Neg()
+		}
+		if p.Foreign() && currencyCode(t.Currency) == "EUR" {
+			// faktúra v cudzej mene z eurového účtu: suma v mene faktúry
+			// a v eurách (kurzový rozdiel)
+			if t.Direction != bank.Out {
+				return ErrWrongDirection
+			}
+			rest := p.Remaining()
+			pay.Amount, pay.EUR = c.Amount, t.Amount
+			if pay.Amount.IsZero() {
+				pay.Amount = rest
+			}
+			if pay.Amount.Sign() <= 0 || pay.Amount.Cmp(rest) > 0 {
+				return vErr("foreignAmount", fmt.Sprintf("Uhradená suma v %s je 0,01 až %s", p.Currency, rest.String()))
+			}
+		}
+		if _, err := a.AddPurchasePayment(ctx, companyID, c.ID, pay); err != nil {
 			return err
 		}
 		number = p.Number
@@ -287,11 +313,11 @@ func (a *App) foreignCandidates(ctx context.Context, companyID int64) ([]bank.Ca
 		return nil, err
 	}
 	for _, p := range purs {
-		if p.Status != purchase.StatusBooked || !p.Foreign() {
+		if p.Status != purchase.StatusBooked || !p.Foreign() || p.Remaining().Sign() <= 0 {
 			continue
 		}
 		out = append(out, bank.Candidate{Kind: "purchase", ID: p.ID, Number: p.Number, VS: p.VariableSymbol, Partner: p.Supplier.Name,
-			Amount: p.Summary.Total, Direction: bank.Out, Due: p.DueDate, Currency: p.Currency})
+			Amount: p.Remaining(), Direction: bank.Out, Due: p.DueDate, Currency: p.Currency})
 	}
 	return out, nil
 }
@@ -363,7 +389,7 @@ func (a *App) UnmatchTransaction(ctx context.Context, companyID, id int64) (bank
 	case "invoice":
 		_, err = a.RemovePayment(ctx, companyID, m.ID, invoice.PaymentBank, t.ID)
 	case "purchase":
-		_, err = a.UnpayPurchase(ctx, companyID, m.ID)
+		_, err = a.RemovePurchasePayment(ctx, companyID, m.ID, invoice.PaymentBank, t.ID)
 	}
 	// doklad mohol byť medzitým upravený alebo zmazaný — spárovanie zrušíme aj tak
 	if err != nil && !errors.Is(err, invoice.ErrBadTransition) && !errors.Is(err, store.ErrNotFound) {

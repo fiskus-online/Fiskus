@@ -543,6 +543,10 @@ func (a *App) ledgerSources(ctx context.Context, companyID int64, year int, p *p
 		}
 	}
 	purs := map[int64]*purchase.Purchase{}
+	kinds, err := a.receiptKinds(ctx, companyID)
+	if err != nil {
+		return nil, err
+	}
 	for _, y := range []int{year, year + 1} {
 		list, err := a.Store.ListPurchases(ctx, companyID, store.PurchaseFilter{Year: y})
 		if err != nil {
@@ -602,7 +606,7 @@ func (a *App) ledgerSources(ctx context.Context, companyID int64, year int, p *p
 				p.set(key, chart.Amounts{Total: s.Total, Base: s.Base, VAT: deduct, VATNon: non})
 			}
 			if post.Problem == "" {
-				post.Template = purchaseTemplate(pu)
+				post.Template, post.Problem = purchaseTemplate(pu, kinds[pu.ID])
 			}
 			out = append(out, post)
 		}
@@ -685,11 +689,17 @@ func (a *App) ledgerSources(ctx context.Context, companyID int64, year int, p *p
 				if pu := getPur(t.Match.ID); pu != nil && pu.Customs != nil {
 					post.Template = "B-COLNY"
 				}
-				if pu := getPur(t.Match.ID); pu != nil && pu.Foreign() && single && pu.Status == purchase.StatusPaid {
-					if v, ok := revalued["purchase:"+strconv.FormatInt(pu.ID, 10)]; ok {
+				if pu := getPur(t.Match.ID); pu != nil && pu.Foreign() {
+					rv, hasRV := revalued["purchase:"+strconv.FormatInt(pu.ID, 10)]
+					if v, ok := fxPurchaseBook(pu, t.ID, year, rv, hasRV); ok {
 						p.setFX(key, v)
-					} else if tx, ok := pu.Tax(); ok {
-						p.setFX(key, tx.Summary.Total)
+					} else if single && pu.Status == purchase.StatusPaid {
+						// úhrada bez evidencie platby v mene faktúry: celá faktúra
+						if hasRV {
+							p.setFX(key, rv)
+						} else if tx, ok := pu.Tax(); ok {
+							p.setFX(key, tx.Summary.Total)
+						}
 					}
 				}
 			}
@@ -791,18 +801,67 @@ func abs(d money.Dec) money.Dec {
 	return d
 }
 
-// purchaseTemplate navrhne predkontáciu prijatej faktúry podľa druhu výdavku.
-func purchaseTemplate(p *purchase.Purchase) string {
+// purchaseTemplate navrhne predkontáciu prijatej faktúry podľa druhu
+// výdavku. Zásoby: ak k faktúre patria príjemky, rozhodne druh skladovej
+// karty — tovar na 131, materiál na 111 (príjemka ich preúčtuje na 132,
+// 112); bez príjemky je to materiál priamo do spotreby (501). Faktúra
+// s tovarom aj materiálom sa zaúčtuje ručne (bez návrhu).
+func purchaseTemplate(p *purchase.Purchase, kinds map[stock.ItemKind]bool) (code, problem string) {
 	if p.Customs != nil {
-		return "FP-CLO"
+		return "FP-CLO", ""
 	}
 	switch p.Expense {
 	case purchase.ExpenseStock:
-		return "FP-MATERIAL"
+		switch {
+		case kinds[stock.Goods] && kinds[stock.Material]:
+			return "", "K faktúre patria príjemky tovaru aj materiálu — zaúčtujte ju ručne (131 a 111)"
+		case kinds[stock.Goods]:
+			return "FP-TOVAR", ""
+		case kinds[stock.Material]:
+			return "FP-MATERIAL-SKLAD", ""
+		}
+		return "FP-MATERIAL", ""
 	case purchase.ExpenseAsset:
-		return "FP-MAJETOK"
+		return "FP-MAJETOK", ""
 	}
-	return "FP-SLUZBY"
+	return "FP-SLUZBY", ""
+}
+
+// receiptKinds vráti pre každú prijatú faktúru druhy skladových kariet
+// na príjemkách, ktoré sú k nej pripojené.
+func (a *App) receiptKinds(ctx context.Context, companyID int64) (map[int64]map[stock.ItemKind]bool, error) {
+	docs, err := a.Store.ListStockDocs(ctx, companyID)
+	if err != nil {
+		return nil, err
+	}
+	out := map[int64]map[stock.ItemKind]bool{}
+	var cfg *StockConfig
+	for _, d := range docs {
+		if d.Kind != stock.Receipt || d.Return || d.LinkKind != "purchase" || d.LinkID == 0 {
+			continue
+		}
+		if cfg == nil {
+			c, err := a.loadStock(ctx, companyID)
+			if err != nil {
+				return nil, err
+			}
+			cfg = &c
+		}
+		for _, l := range d.Lines {
+			si, ok := cfg.item(l.ItemID)
+			if !ok {
+				si.Kind = stock.Goods
+			}
+			if si.Kind == stock.Product {
+				continue
+			}
+			if out[d.LinkID] == nil {
+				out[d.LinkID] = map[stock.ItemKind]bool{}
+			}
+			out[d.LinkID][si.Kind] = true
+		}
+	}
+	return out, nil
 }
 
 // postingDoc vráti druh dokladu podľa kľúča.

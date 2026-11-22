@@ -163,8 +163,9 @@ func (a *App) checkLink(ctx context.Context, companyID int64, d *cash.Document) 
 		if err != nil {
 			return err
 		}
-		if d.Kind != cash.Out {
-			return bad("Prijatú faktúru uhrádza výdavkový doklad")
+		rest := p.Remaining()
+		if (rest.Sign() < 0) != (d.Kind == cash.In) {
+			return bad("Prijatú faktúru uhrádza výdavkový doklad, dobropis dodávateľa príjmový")
 		}
 		if p.Status != purchase.StatusBooked {
 			return bad("Prijatá faktúra " + p.Number + " je už uhradená")
@@ -172,8 +173,9 @@ func (a *App) checkLink(ctx context.Context, companyID int64, d *cash.Document) 
 		if cur := currencyCode(p.Currency); cur != d.Currency {
 			return bad("Prijatá faktúra " + p.Number + " je v mene " + cur + " — pokladňa je v " + d.Currency)
 		}
-		if !p.Summary.Total.Equal(d.Amount) {
-			return bad(fmt.Sprintf("Suma sa musí rovnať sume dokladu %s (%s €)", p.Number, p.Summary.Total.Display()))
+		// pokladňou sa dá uhradiť aj časť faktúry, nie viac ako zostatok
+		if d.Amount.Cmp(rest.Abs()) > 0 {
+			return bad(fmt.Sprintf("Suma je vyššia ako zostatok dokladu %s (%s €)", p.Number, rest.Abs().Display()))
 		}
 		d.LinkNumber = p.Number
 	case cash.LinkClosing:
@@ -334,7 +336,11 @@ func (a *App) CreateCash(ctx context.Context, companyID int64, d cash.Document) 
 		}
 		_, err = a.AddPayment(ctx, companyID, d.LinkID, invoice.Payment{Date: d.Date, Amount: amount, Source: invoice.PaymentCash, Ref: d.ID}, false)
 	case "purchase":
-		_, err = a.MarkPurchasePaid(ctx, companyID, d.LinkID, d.Date)
+		amount := d.Amount
+		if d.Kind == cash.In {
+			amount = amount.Neg() // príjem: dodávateľ vracia peniaze k dobropisu
+		}
+		_, err = a.AddPurchasePayment(ctx, companyID, d.LinkID, invoice.Payment{Date: d.Date, Amount: amount, Source: invoice.PaymentCash, Ref: d.ID})
 	}
 	return d, err
 }
@@ -410,7 +416,7 @@ func (a *App) cancelCash(ctx context.Context, companyID, id int64, fromClosing b
 	case "invoice":
 		_, err = a.RemovePayment(ctx, companyID, d.LinkID, invoice.PaymentCash, d.ID)
 	case "purchase":
-		_, err = a.UnpayPurchase(ctx, companyID, d.LinkID)
+		_, err = a.RemovePurchasePayment(ctx, companyID, d.LinkID, invoice.PaymentCash, d.ID)
 	}
 	if err != nil && !errors.Is(err, invoice.ErrBadTransition) && !errors.Is(err, store.ErrNotFound) {
 		return d, err

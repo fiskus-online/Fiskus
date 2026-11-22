@@ -35,6 +35,7 @@ type Params struct {
 	Brackets                   []Bracket // § 15 písm. a) — zamestnanie, podnikanie nad hranicou príjmov
 	FlatRate                   int64     // § 15 písm. a) bod 1 — podnikanie s príjmami do FlatLimit
 	FlatLimit                  money.Dec
+	MicroLimit                 money.Dec // § 2 písm. w) — mikrodaňovník s príjmami z § 6 ods. 1 a 2 najviac do tejto sumy
 	ExpensePct                 int64     // paušálne výdavky § 6 ods. 10 (percento príjmov)
 	ExpenseMax                 money.Dec // paušálne výdavky najviac (ročne)
 	MinTax                     money.Dec // daň do tejto sumy sa nevyrubí
@@ -58,7 +59,7 @@ var years = map[int]Params{
 	2025: {
 		Year: 2025, NCZD: m("5753.79"), NCZDLimit: m("25426.27"), NCZDConst: m("12110.36"), NCZDDiv: 4, DDSMax: m("180"),
 		Brackets: []Bracket{{m("48441.43"), 19}, {money.Zero, 25}},
-		FlatRate: 15, FlatLimit: m("100000"), ExpensePct: 60, ExpenseMax: m("20000"),
+		FlatRate: 15, FlatLimit: m("100000"), MicroLimit: m("60000"), ExpensePct: 60, ExpenseMax: m("20000"),
 		MinTax: m("17"), NoTaxIncome: m("2876.90"), Form: "DPFOBv25",
 		SpouseFull: m("5260.61"), SpouseLimit: m("48441.43"), SpouseConst: m("17370.97"), SpouseDiv: 4,
 		BonusYoung: m("100"), BonusOld: m("50"), BonusLimit: m("25740"), // 1,5 × 12 × 1 430 € (priemerná mzda 2023)
@@ -66,11 +67,18 @@ var years = map[int]Params{
 	2026: {
 		Year: 2026, NCZD: m("5966.73"), NCZDLimit: m("26083.13"), NCZDConst: m("14661.11"), NCZDDiv: 3, DDSMax: m("180"),
 		Brackets: []Bracket{{m("43983.32"), 19}, {m("60349.21"), 25}, {m("75010.32"), 30}, {money.Zero, 35}},
-		FlatRate: 15, FlatLimit: m("100000"), ExpensePct: 60, ExpenseMax: m("20000"),
+		FlatRate: 15, FlatLimit: m("100000"), MicroLimit: m("60000"), ExpensePct: 60, ExpenseMax: m("20000"),
 		MinTax: m("17"), NoTaxIncome: m("2983.37"), Form: "DPFOBv25",
 		SpouseFull: m("5455.30"), SpouseLimit: m("43983.32"), SpouseConst: m("20116.40"), SpouseDiv: 3,
 		BonusYoung: m("100"), BonusOld: m("50"), BonusLimit: m("27432"), // 1,5 × 12 × 1 524 € (priemerná mzda 2024)
 	},
+}
+
+// Micro vráti true, ak je daňovník mikrodaňovníkom: zdaniteľné príjmy
+// z podnikania (§ 6 ods. 1 a 2) neprevyšujú hranicu a nevylučuje ho iná
+// podmienka § 2 písm. w), ktorú posúdi sám (notMicro).
+func Micro(p Params, income money.Dec, notMicro bool) bool {
+	return !notMicro && income.Cmp(p.MicroLimit) <= 0
 }
 
 // ErrYear — pre rok nie sú v programe zákonné hodnoty.
@@ -140,9 +148,12 @@ type Input struct {
 	NGOName   string `json:"ngoName"`
 	Volunteer bool   `json:"volunteer"` // dobrovoľník — 3 %
 	// rodina a straty
-	Children    []Child   `json:"children"`    // vyživované deti (r. 33, najviac 4 vo formulári)
-	Spouse      *Spouse   `json:"spouse"`      // manžel/ka (r. 31, 32); nil = neuplatňuje
-	Losses      []Loss    `json:"losses"`      // straty z predchádzajúcich 5 rokov
+	Children []Child `json:"children"` // vyživované deti (r. 33, najviac 4 vo formulári)
+	Spouse   *Spouse `json:"spouse"`   // manžel/ka (r. 31, 32); nil = neuplatňuje
+	Losses   []Loss  `json:"losses"`   // straty z predchádzajúcich 5 rokov
+	// NotMicro: daňovník nie je mikrodaňovníkom napriek príjmom do hranice
+	// (§ 2 písm. w) — napr. kontrolované transakcie, likvidácia, konkurz).
+	NotMicro    bool      `json:"notMicro"`
 	EmpBonus    money.Dec `json:"empBonus"`    // bonus vyplatený zamestnávateľom (r. 119)
 	Attachments int       `json:"attachments"` // počet príloh (r. 154)
 	// vrátenie preplatku (a vyplatenie bonusu) na účet
@@ -240,8 +251,9 @@ func Compute(in Input) (Result, error) {
 	if diff.Sign() < 0 {
 		r["46"] = diff
 	}
-	// straty z predchádzajúcich rokov (r. 47 – 54a); mikrodaňovník do 100 000 € príjmov
-	lost := deductLosses(r, in.Losses, in.Year, inc.Cmp(p.FlatLimit) <= 0)
+	// straty z predchádzajúcich rokov (r. 47 – 54a); mikrodaňovník (§ 2 písm. w)
+	// má príjmy z podnikania do MicroLimit — iná hranica ako pri sadzbe 15 %
+	lost := deductLosses(r, in.Losses, in.Year, Micro(p, inc, in.NotMicro))
 	r["55"] = r["45"].Sub(lost)
 	r["57"] = r["55"]
 
