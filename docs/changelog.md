@@ -13,6 +13,9 @@ etapách je v [pláne vývoja](./ROADMAP.md).
 
 ## 0.10.10
 
+- **Oprava: predkontácia nákupu zásob.** Prijatá faktúra s príjemkou
+  tovaru sa navrhne na 131 (FP-TOVAR), s príjemkou materiálu na 111 (nová
+  FP-MATERIAL-SKLAD); doteraz vždy 501, hoci príjemka účtovala 132/131.
 - **Uzávierka roka aj v podvojnom účtovníctve.** V Súvahe a Výsledovke
   pri minulom roku: kontroly, uzamknutie dokladov aj zápisov hlavnej
   knihy, súhrn výnosov, nákladov a výsledku hospodárenia a prenos
