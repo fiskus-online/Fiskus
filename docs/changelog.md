@@ -13,6 +13,8 @@ etapách je v [pláne vývoja](./ROADMAP.md).
 
 ## 0.10.10
 
+- **Server: obmedzenie pokusov o prihlásenie** priebežne maže staré
+  záznamy, takže pokusy s množstvom rôznych e-mailov nezväčšujú pamäť.
 - **Uzávierka roka aj v podvojnom účtovníctve.** V Súvahe a Výsledovke
   pri minulom roku: kontroly, uzamknutie dokladov aj zápisov hlavnej
   knihy, súhrn výnosov, nákladov a výsledku hospodárenia a prenos
