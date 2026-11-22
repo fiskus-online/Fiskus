@@ -13,6 +13,12 @@ etapách je v [pláne vývoja](./ROADMAP.md).
 
 ## 0.10.10
 
+- **Oprava: zmazanie firmy.** Nová firma mohla po zmazaní poslednej
+  založenej firmy dostať jej číslo (ID) a s ním zdediť jej audit
+  a nastavenia, ktoré zostali (hlavná kniha, uzávierky, podané priznania
+  DPH, mzdové mesiace). Číslo zmazanej firmy sa už nepoužije znova
+  a zmažú sa všetky jej nastavenia po rokoch; nastavenia inej firmy,
+  ktorých rok sa zhoduje s číslom firmy, ostanú.
 - **Oprava: odpočet daňovej straty v priznaní FO.** Mikrodaňovník je
   podnikateľ s príjmami do 60 000 € (nie do 100 000 € ako pri sadzbe
   15 %); pri príjmoch nad 60 000 € sa strata odpočíta najviac do

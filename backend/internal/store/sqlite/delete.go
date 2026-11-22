@@ -52,9 +52,30 @@ func (s *Store) DeleteCompany(ctx context.Context, id int64) error {
 		}
 	}
 	cid := strconv.FormatInt(id, 10)
-	// „x.<id>“ a „dpfo.<id>.<rok>“ (priznanie po rokoch)
-	if _, err := tx.ExecContext(ctx, "DELETE FROM settings WHERE key LIKE ? OR key LIKE ?", "%."+cid, "dpfo."+cid+".%"); err != nil {
+	// „x.<id>“ a „x.<id>.<rok|obdobie>“ — kandidáti z SQL, presne podľa SettingOfCompany
+	krows, err := tx.QueryContext(ctx, "SELECT key FROM settings WHERE key LIKE ? OR key LIKE ?", "%."+cid, "%."+cid+".%")
+	if err != nil {
 		return err
+	}
+	var keys []string
+	for krows.Next() {
+		var k string
+		if err := krows.Scan(&k); err != nil {
+			krows.Close()
+			return err
+		}
+		if store.SettingOfCompany(k, id) {
+			keys = append(keys, k)
+		}
+	}
+	krows.Close()
+	if err := krows.Err(); err != nil {
+		return err
+	}
+	for _, k := range keys {
+		if _, err := tx.ExecContext(ctx, "DELETE FROM settings WHERE key = ?", k); err != nil {
+			return err
+		}
 	}
 	if _, err := tx.ExecContext(ctx, "DELETE FROM companies WHERE id = ?", id); err != nil {
 		return err
