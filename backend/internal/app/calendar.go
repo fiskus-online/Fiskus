@@ -112,7 +112,7 @@ func (a *App) Calendar(ctx context.Context, companyID int64, from, to invoice.Da
 			if p.Status != purchase.StatusBooked || p.DueDate.IsZero() || p.CreditNote() {
 				continue
 			}
-			amt := p.Summary.Total
+			amt := p.Remaining()
 			who := p.Supplier.Name
 			num := p.SupplierNumber
 			if num == "" {
