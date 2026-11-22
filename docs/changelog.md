@@ -13,6 +13,9 @@ etapách je v [pláne vývoja](./ROADMAP.md).
 
 ## 0.10.10
 
+- **Oprava: predkontácia nákupu zásob.** Prijatá faktúra s príjemkou
+  tovaru sa navrhne na 131 (FP-TOVAR), s príjemkou materiálu na 111 (nová
+  FP-MATERIAL-SKLAD); doteraz vždy 501, hoci príjemka účtovala 132/131.
 - **Čiastočné úhrady prijatých faktúr.** Spárovaná platba nižšia ako
   faktúra sa eviduje ako úhrada (doteraz označila celú faktúru ako
   uhradenú). Kniha záväzkov k dňu, platobný príkaz a kalendár počítajú so
