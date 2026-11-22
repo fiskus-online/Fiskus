@@ -175,6 +175,8 @@ func TestValidatePeriods(t *testing.T) {
 		{"dvakrát sadzba", []Period{{From: "2025-01-01", Rates: []Rate{23, 23}}}, false},
 		{"sadzba mimo", []Period{{From: "2025-01-01", Rates: []Rate{120}}}, false},
 		{"zlý dátum", []Period{{From: "2025-13-01", Rates: []Rate{23}}}, false},
+		{"medzera medzi obdobiami", []Period{{From: "2023-01-01", To: "2024-12-31", Rates: []Rate{20, 0}}, {From: "2026-01-01", Rates: []Rate{23, 0}}}, false},
+		{"nadväzuje cez prestupný rok", []Period{{From: "2023-01-01", To: "2024-02-29", Rates: []Rate{20, 0}}, {From: "2024-03-01", Rates: []Rate{23, 0}}}, true},
 		{"nová sadzba", append(append([]Period{}, DefaultPeriods[0], Period{From: "2025-01-01", To: "2026-12-31", Rates: []Rate{23, 19, 5, 0}}),
 			Period{From: "2027-01-01", Rates: []Rate{21, 19, 5, 0}}), true},
 	}

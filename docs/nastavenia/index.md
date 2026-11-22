@@ -53,6 +53,8 @@ Obnova sa naplánuje a prebehne pri ďalšom spustení.
 Hodnoty, ktoré sa menia so zákonom, nie sú natvrdo v programe: obdobia
 sadzieb DPH, sadzby ECB, prirážky úroku z omeškania, paušálna náhrada, dni
 pracovného pokoja. Nová verzia doplní nové riadky a vaše úpravy nechá.
+Obdobia sadzieb DPH musia na seba nadväzovať bez medzery — každé začína
+deň po konci predchádzajúceho, aby mal každý dátum dodania platné sadzby.
 
 ![Legislatíva: sadzby DPH, úroky z omeškania, sadzby ECB](../obrazky/legislativa.webp)
 *Legislatíva: sadzby DPH, úroky z omeškania, sadzby ECB*
