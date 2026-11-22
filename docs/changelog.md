@@ -13,6 +13,11 @@ etapách je v [pláne vývoja](./ROADMAP.md).
 
 ## 0.10.10
 
+- **Oprava: odpočet daňovej straty v priznaní FO.** Mikrodaňovník je
+  podnikateľ s príjmami do 60 000 € (nie do 100 000 € ako pri sadzbe
+  15 %); pri príjmoch nad 60 000 € sa strata odpočíta najviac do
+  polovice základu. Pribudla voľba *Nie som mikrodaňovník* pre ostatné
+  vylučujúce podmienky.
 - **Uzávierka roka aj v podvojnom účtovníctve.** V Súvahe a Výsledovke
   pri minulom roku: kontroly, uzamknutie dokladov aj zápisov hlavnej
   knihy, súhrn výnosov, nákladov a výsledku hospodárenia a prenos

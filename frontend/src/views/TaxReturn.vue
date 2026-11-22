@@ -243,7 +243,8 @@ const err = (k) => errors.value[k]
 
           <fieldset class="sheet form-section">
             <legend>Daňové straty z minulých rokov</legend>
-            <p class="lead">Strata z priznania za posledných 5 rokov. Fiškus ju odpočíta od základu dane od najstaršej.</p>
+            <p class="lead">Strata z priznania za posledných 5 rokov. Fiškus ju odpočíta od základu dane od najstaršej.
+              Mikrodaňovník (príjmy z podnikania do 60&nbsp;000&nbsp;€) odpočíta stratu až do výšky základu, ostatní najviac 50 % základu.</p>
             <table class="losses">
               <thead><tr><th>Rok</th><th>Vykázaná strata</th><th>Už odpočítané</th></tr></thead>
               <tbody>
@@ -258,6 +259,8 @@ const err = (k) => errors.value[k]
                 </tr>
               </tbody>
             </table>
+            <label class="check"><Checkbox v-model="form.notMicro" binary :disabled="!canWrite" />
+              <span>Nie som mikrodaňovník, hoci mám príjmy do 60&nbsp;000&nbsp;€ (napr. kontrolované transakcie so závislou osobou, likvidácia, konkurz)</span></label>
           </fieldset>
 
           <fieldset class="sheet form-section">
