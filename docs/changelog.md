@@ -13,6 +13,9 @@ etapách je v [pláne vývoja](./ROADMAP.md).
 
 ## 0.10.10
 
+- **Oprava: hlavná kniha roka bez dokladov.** Obrazovka Účtovný denník
+  a hlavná kniha spadla v roku, ktorý ešte nemá žiadny doklad (napr.
+  začiatkom januára).
 - **Uzávierka roka aj v podvojnom účtovníctve.** V Súvahe a Výsledovke
   pri minulom roku: kontroly, uzamknutie dokladov aj zápisov hlavnej
   knihy, súhrn výnosov, nákladov a výsledku hospodárenia a prenos
