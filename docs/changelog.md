@@ -13,6 +13,8 @@ etapách je v [pláne vývoja](./ROADMAP.md).
 
 ## 0.10.10
 
+- **Server: obmedzenie pokusov o prihlásenie** priebežne maže staré
+  záznamy, takže pokusy s množstvom rôznych e-mailov nezväčšujú pamäť.
 - **Kontrola: obdobia sadzieb DPH bez medzery.** V Legislatíve sa nedá
   uložiť číselník, v ktorom by dátum medzi dvoma obdobiami nemal platné
   sadzby (doteraz by dostal sadzby posledného obdobia).

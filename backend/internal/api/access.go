@@ -124,8 +124,9 @@ func clearCookie(w http.ResponseWriter, r *http.Request) {
 // ---- obmedzenie pokusov o prihlásenie ----
 
 type limiter struct {
-	mu   sync.Mutex
-	hits map[string][]time.Time
+	mu    sync.Mutex
+	hits  map[string][]time.Time
+	swept time.Time // posledné čistenie starých kľúčov
 }
 
 const (
@@ -137,17 +138,24 @@ const (
 func (l *limiter) allow(key string, now time.Time) bool {
 	l.mu.Lock()
 	defer l.mu.Unlock()
-	if l.hits == nil {
-		l.hits = map[string][]time.Time{}
+	recent := l.recent(key, now)
+	if len(recent) == 0 {
+		delete(l.hits, key)
+	} else {
+		l.hits[key] = recent
 	}
-	recent := l.hits[key][:0]
+	return len(recent) < loginAttempts
+}
+
+// recent vráti pokusy kľúča v okne (volá sa so zámkom).
+func (l *limiter) recent(key string, now time.Time) []time.Time {
+	var out []time.Time
 	for _, t := range l.hits[key] {
 		if now.Sub(t) < loginWindow {
-			recent = append(recent, t)
+			out = append(out, t)
 		}
 	}
-	l.hits[key] = recent
-	return len(recent) < loginAttempts
+	return out
 }
 
 func (l *limiter) fail(key string, now time.Time) {
@@ -157,6 +165,18 @@ func (l *limiter) fail(key string, now time.Time) {
 		l.hits = map[string][]time.Time{}
 	}
 	l.hits[key] = append(l.hits[key], now)
+	// pokusy s množstvom rôznych e-mailov nesmú mapu nafúknuť: raz za
+	// okno zmažeme kľúče bez pokusu v okne
+	if now.Sub(l.swept) >= loginWindow {
+		l.swept = now
+		for k := range l.hits {
+			if r := l.recent(k, now); len(r) == 0 {
+				delete(l.hits, k)
+			} else {
+				l.hits[k] = r
+			}
+		}
+	}
 }
 
 func (l *limiter) reset(key string) {
