@@ -2,7 +2,7 @@
 title: Podvojné účtovníctvo
 slug: podvojne
 sidebar_position: 2
-description: Účtový rozvrh, predkontácie, automatické účtovanie, hlavná kniha a závierka mikro účtovnej jednotky.
+description: Účtový rozvrh, predkontácie, automatické účtovanie, hlavná kniha a závierka mikro a malej účtovnej jednotky.
 tags: [účtovníctvo, podvojné]
 ---
 
@@ -52,9 +52,21 @@ dajú ručné zápisy a interné doklady.
 - **Účtovný denník** — zápisy v časovom poradí.
 - **Hlavná kniha** — obratová predvaha, obraty a zostatky účtov.
 - **Kurzové rozdiely** pri úhrade v cudzej mene (aj pri čiastočných úhradách z eurového účtu) a k 31. 12.
-- **Závierka mikro účtovnej jednotky** — súvaha (Úč MÚJ 1-01) a výkaz
-  ziskov a strát (Úč MÚJ 2-01); počiatočné stavy z konečných stavov
-  minulého roka.
+- **Účtovná závierka** — súvaha a výkaz ziskov a strát mikro účtovnej
+  jednotky (Úč MÚJ 1-01 a 2-01) alebo malej účtovnej jednotky (Úč POD
+  1-01 a 2-01); počiatočné stavy z konečných stavov minulého roka.
+
+**Vzor závierky** zvolíte nad súvahou pre každý rok zvlášť — veľkosť
+účtovnej jednotky (§ 2 ods. 5 zákona o účtovníctve) určujete sami.
+Predvolená je mikro účtovná jednotka. Riadky malej účtovnej jednotky sú
+podľa šablóny registra účtovných závierok (súvaha r. 01 – 145, výkaz
+ziskov a strát r. 01 – 61; výsledok v r. 100 súvahy = r. 61 výkazu).
+Fiškus nerozlišuje položky voči prepojeným účtovným jednotkám a v rámci
+podielovej účasti ani dlhodobé pohľadávky a záväzky — zostatky sú
+v riadkoch „ostatné“ a krátkodobé; výsledok minulého roka, o ktorom
+ešte nerozhodli (431), je v r. 98 alebo 99. Čistý obrat (r. 01 výkazu)
+sú tržby z predaja výrobkov, tovaru a služieb (601, 602, 604, 606, 607).
+Prejdite riadky s účtovníkom.
 
 ### Uzávierka roka
 

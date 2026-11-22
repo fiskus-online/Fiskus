@@ -120,6 +120,29 @@ func (s *Server) ledgerStatements(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, st)
 }
 
+func (s *Server) setStatementForm(w http.ResponseWriter, r *http.Request) {
+	cid, ok := s.company(w, r)
+	if !ok {
+		return
+	}
+	var body struct {
+		Form string `json:"form"`
+	}
+	if !decode(w, r, &body) {
+		return
+	}
+	if err := s.App.SetStatementForm(r.Context(), cid, pathYear(r), ledger.Form(body.Form)); err != nil {
+		fail(w, err)
+		return
+	}
+	st, err := s.App.LedgerStatementsFor(r.Context(), cid, pathYear(r))
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, st)
+}
+
 func (s *Server) openingProposal(w http.ResponseWriter, r *http.Request) {
 	cid, ok := s.company(w, r)
 	if !ok {

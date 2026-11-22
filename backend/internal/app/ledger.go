@@ -1026,8 +1026,45 @@ func (a *App) LedgerStatementsFor(ctx context.Context, companyID int64, year int
 	if err != nil {
 		return LedgerStatements{}, err
 	}
-	return LedgerStatements{Year: cur.Year, Statements: ledger.BuildStatements(cur.Accounts, prev.Accounts),
+	form := a.statementForm(ctx, companyID, cur.Year)
+	return LedgerStatements{Year: cur.Year, Statements: ledger.BuildStatementsForm(form, cur.Accounts, prev.Accounts),
 		PreviousEmpty: len(prev.Accounts) == 0, Unposted: cur.Unposted, Balanced: cur.Totals.Balanced}, nil
+}
+
+func statementFormKey(companyID int64, year int) string {
+	return fmt.Sprintf("ledger.form.%d.%d", companyID, year)
+}
+
+// statementForm vráti vzor závierky roka (predvolený mikro účtovná jednotka).
+func (a *App) statementForm(ctx context.Context, companyID int64, year int) ledger.Form {
+	raw, err := a.Store.GetSetting(ctx, statementFormKey(companyID, year))
+	if err != nil || !ledger.ValidForm(ledger.Form(raw)) {
+		return ledger.FormMicro
+	}
+	return ledger.Form(raw)
+}
+
+// SetStatementForm zvolí vzor účtovnej závierky roka: mikro (Úč MÚJ) alebo
+// malá účtovná jednotka (Úč POD). Veľkosť účtovnej jednotky (§ 2 ods. 5
+// zákona o účtovníctve) určuje účtovná jednotka sama.
+func (a *App) SetStatementForm(ctx context.Context, companyID int64, year int, form ledger.Form) error {
+	if err := a.Require(ctx, companyID, auth.PermLedgerWrite); err != nil {
+		return err
+	}
+	if year < 2001 || year > 2100 {
+		return mfaFieldErr("year", "Neplatný rok")
+	}
+	if !ledger.ValidForm(form) {
+		return mfaFieldErr("form", "Neznámy vzor závierky")
+	}
+	before := a.statementForm(ctx, companyID, year)
+	if err := a.Store.SetSetting(ctx, statementFormKey(companyID, year), string(form)); err != nil {
+		return err
+	}
+	name := map[ledger.Form]string{ledger.FormMicro: "mikro účtovná jednotka (Úč MÚJ)", ledger.FormSmall: "malá účtovná jednotka (Úč POD)"}
+	a.record(ctx, companyID, audit.CatLedger, "update", "ledger", int64(year),
+		fmt.Sprintf("Vzor účtovnej závierky %d: %s", year, name[form]), before, form)
+	return nil
 }
 
 // OpeningProposal navrhne počiatočné stavy roka z konečných stavov

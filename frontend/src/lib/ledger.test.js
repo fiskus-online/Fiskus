@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { accountLines, apiLines, editLines, filterPostings, filterTurnovers, openingLines, postingRows, sideOf } from './ledger.js'
+import { accountLines, apiLines, editLines, filterPostings, filterTurnovers, openingLines, postingRows, sideOf, formMeta, statementForms } from './ledger.js'
 
 const postings = [
   { key: 'sale:1', date: '2026-10-05', doc: 'sale', number: 'FA001', partner: 'Kováč s.r.o.', text: 'Vydaná faktúra', template: 'FV-SLUZBY', amount: '492.00',
@@ -42,5 +42,14 @@ describe('hlavná kniha', () => {
     expect(editLines([])).toHaveLength(2)
     expect(apiLines([{ account: '221', debit: '1 000,50', credit: '' }, { account: '', debit: '', credit: '' }])).toEqual([{ account: '221', debit: '1000.50', credit: '0' }])
     expect(openingLines({ '411': '-1000.00', '221': '1000.00' })).toEqual([{ account: '221', debit: '1000.00', credit: '' }, { account: '411', debit: '', credit: '1000.00' }])
+  })
+})
+
+describe('formMeta', () => {
+  it('konečné riadky podľa vzoru', () => {
+    expect(formMeta('pod')).toMatchObject({ liabilities: '79', income: '61' })
+    expect(formMeta('muj')).toMatchObject({ liabilities: '24', income: '38' })
+    expect(formMeta(undefined).liabilities).toBe('24')
+    expect(statementForms.map((f) => f.value)).toEqual(['muj', 'pod'])
   })
 })

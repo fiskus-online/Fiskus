@@ -13,6 +13,10 @@ etapách je v [pláne vývoja](./ROADMAP.md).
 
 ## 0.10.10
 
+- **Účtovná závierka malej účtovnej jednotky (Úč POD).** Nad súvahou sa
+  pre každý rok zvolí vzor: mikro (Úč MÚJ) alebo malá účtovná jednotka —
+  súvaha r. 01 – 145 a výkaz ziskov a strát r. 01 – 61 podľa šablóny
+  registra účtovných závierok, s tlačou a exportom.
 - **Oprava: odpočet daňovej straty v priznaní FO.** Mikrodaňovník je
   podnikateľ s príjmami do 60 000 € (nie do 100 000 € ako pri sadzbe
   15 %); pri príjmoch nad 60 000 € sa strata odpočíta najviac do

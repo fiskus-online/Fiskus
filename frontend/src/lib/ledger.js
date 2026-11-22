@@ -78,3 +78,16 @@ export function openingLines(opening) {
   if (!keys.length) return editLines([])
   return keys.map((k) => ({ account: k, ...sideOf(opening[k]) }))
 }
+
+/** Vzory účtovnej závierky v podvojnom účtovníctve. */
+export const statementForms = [
+  { value: 'muj', label: 'Mikro účtovná jednotka (Úč MÚJ)' },
+  { value: 'pod', label: 'Malá účtovná jednotka (Úč POD)' },
+]
+
+/** Riadky s konečnou sumou (dvojité podčiarknutie) a popis vzoru. */
+export function formMeta(form) {
+  return form === 'pod'
+    ? { assets: '01', liabilities: '79', income: '61', text: 'Malá účtovná jednotka, vzory Úč POD 1-01 a 2-01, v celých eurách.' }
+    : { assets: '01', liabilities: '24', income: '38', text: 'Mikro účtovná jednotka, vzory Úč MÚJ 1-01 a 2-01, v celých eurách.' }
+}
