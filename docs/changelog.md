@@ -19,6 +19,11 @@ etapách je v [pláne vývoja](./ROADMAP.md).
   zostatkom; pri faktúre v cudzej mene sa každá platba odpíše z účtu 321
   pomernou časťou s vlastným kurzovým rozdielom. Pokladničným dokladom sa
   dá uhradiť časť faktúry a dobropis dodávateľa príjmom.
+- **Oprava: odpočet daňovej straty v priznaní FO.** Mikrodaňovník je
+  podnikateľ s príjmami do 60 000 € (nie do 100 000 € ako pri sadzbe
+  15 %); pri príjmoch nad 60 000 € sa strata odpočíta najviac do
+  polovice základu. Pribudla voľba *Nie som mikrodaňovník* pre ostatné
+  vylučujúce podmienky.
 - **Uzávierka roka aj v podvojnom účtovníctve.** V Súvahe a Výsledovke
   pri minulom roku: kontroly, uzamknutie dokladov aj zápisov hlavnej
   knihy, súhrn výnosov, nákladov a výsledku hospodárenia a prenos
