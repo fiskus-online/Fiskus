@@ -96,12 +96,14 @@ func Payables(purs []purchase.Purchase, at invoice.Date) []OpenItem {
 		if p.ReceivedDate.After(at) {
 			continue
 		}
-		if p.Status == purchase.StatusPaid && (p.PaidDate.IsZero() || !p.PaidDate.After(at)) {
+		paid := p.PaidAt(at)
+		rem := p.Summary.Total.Sub(paid)
+		if rem.IsZero() {
 			continue
 		}
 		it := OpenItem{Kind: "purchase", ID: p.ID, Number: p.Number, Partner: p.Supplier.Name, ICO: p.Supplier.ICO,
-			IssueDate: p.ReceivedDate, DueDate: p.DueDate, Currency: currency(p.Currency), Total: p.Summary.Total, Paid: money.Zero,
-			Remaining: p.Summary.Total, RemainEUR: p.TotalEUR()}
+			IssueDate: p.ReceivedDate, DueDate: p.DueDate, Currency: currency(p.Currency), Total: p.Summary.Total, Paid: paid,
+			Remaining: rem, RemainEUR: eur(rem, p.Summary.Total, p.TotalEUR(), p.Foreign())}
 		if !p.DueDate.IsZero() && p.DueDate.Before(at) {
 			it.DaysLate = p.DueDate.DaysUntil(at)
 		}

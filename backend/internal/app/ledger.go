@@ -685,11 +685,17 @@ func (a *App) ledgerSources(ctx context.Context, companyID int64, year int, p *p
 				if pu := getPur(t.Match.ID); pu != nil && pu.Customs != nil {
 					post.Template = "B-COLNY"
 				}
-				if pu := getPur(t.Match.ID); pu != nil && pu.Foreign() && single && pu.Status == purchase.StatusPaid {
-					if v, ok := revalued["purchase:"+strconv.FormatInt(pu.ID, 10)]; ok {
+				if pu := getPur(t.Match.ID); pu != nil && pu.Foreign() {
+					rv, hasRV := revalued["purchase:"+strconv.FormatInt(pu.ID, 10)]
+					if v, ok := fxPurchaseBook(pu, t.ID, year, rv, hasRV); ok {
 						p.setFX(key, v)
-					} else if tx, ok := pu.Tax(); ok {
-						p.setFX(key, tx.Summary.Total)
+					} else if single && pu.Status == purchase.StatusPaid {
+						// úhrada bez evidencie platby v mene faktúry: celá faktúra
+						if hasRV {
+							p.setFX(key, rv)
+						} else if tx, ok := pu.Tax(); ok {
+							p.setFX(key, tx.Summary.Total)
+						}
 					}
 				}
 			}

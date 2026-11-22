@@ -40,21 +40,28 @@ type Summary struct {
 
 // Purchase je prijatá faktúra.
 type Purchase struct {
-	ID             int64                 `json:"id"`
-	CompanyID      int64                 `json:"companyId"`
-	Number         string                `json:"number"`         // interné poradové číslo (PF…)
-	SupplierNumber string                `json:"supplierNumber"` // číslo faktúry dodávateľa
-	VariableSymbol string                `json:"variableSymbol"`
-	Status         Status                `json:"status"`
-	ContactID      int64                 `json:"contactId"`
-	Supplier       invoice.Party         `json:"supplier"`
-	SupplierIBAN   string                `json:"supplierIban"`
-	IssueDate      invoice.Date          `json:"issueDate"`    // dátum vyhotovenia
-	DeliveryDate   invoice.Date          `json:"deliveryDate"` // dátum dodania
-	ReceivedDate   invoice.Date          `json:"receivedDate"` // dátum doručenia — obdobie odpočtu
-	DueDate        invoice.Date          `json:"dueDate"`
-	PaidDate       invoice.Date          `json:"paidDate"`
-	PaymentMethod  invoice.PaymentMethod `json:"paymentMethod"`
+	ID             int64         `json:"id"`
+	CompanyID      int64         `json:"companyId"`
+	Number         string        `json:"number"`         // interné poradové číslo (PF…)
+	SupplierNumber string        `json:"supplierNumber"` // číslo faktúry dodávateľa
+	VariableSymbol string        `json:"variableSymbol"`
+	Status         Status        `json:"status"`
+	ContactID      int64         `json:"contactId"`
+	Supplier       invoice.Party `json:"supplier"`
+	SupplierIBAN   string        `json:"supplierIban"`
+	IssueDate      invoice.Date  `json:"issueDate"`    // dátum vyhotovenia
+	DeliveryDate   invoice.Date  `json:"deliveryDate"` // dátum dodania
+	ReceivedDate   invoice.Date  `json:"receivedDate"` // dátum doručenia — obdobie odpočtu
+	DueDate        invoice.Date  `json:"dueDate"`
+	PaidDate       invoice.Date  `json:"paidDate"` // dátum úhrady celej faktúry (poslednej platby)
+	// Payments sú úhrady (aj čiastočné). Faktúra uhradená pred evidenciou
+	// úhrad ich nemá — je uhradená celá.
+	Payments []invoice.Payment `json:"payments,omitempty"`
+	// PaidAmount, Balance a BalanceEUR (uhradené, zostáva v mene dokladu a v eurách) dopĺňa program.
+	PaidAmount    money.Dec             `json:"paidAmount"`
+	Balance       money.Dec             `json:"balance"`
+	BalanceEUR    money.Dec             `json:"balanceEur"`
+	PaymentMethod invoice.PaymentMethod `json:"paymentMethod"`
 	// ReverseCharge: tuzemské prenesenie daňovej povinnosti (§ 69 ods. 12) —
 	// dodávateľ fakturuje bez DPH, daň priznávame my (a zároveň ju odpočítavame).
 	ReverseCharge bool `json:"reverseCharge"`
@@ -260,6 +267,7 @@ func (p *Purchase) Normalize() []Warning {
 		p.Local = &local
 	}
 	p.Deducted = p.Deductible()
+	p.SyncPaid()
 	return warns
 }
 
@@ -399,21 +407,22 @@ func (p *Purchase) Validate() error {
 // ErrPaid — uhradená faktúra sa nedá meniť ani zmazať.
 var ErrPaid = errors.New("uhradená prijatá faktúra sa nedá meniť — najprv zrušte úhradu")
 
-// MarkPaid označí faktúru ako uhradenú.
+// MarkPaid označí faktúru ako uhradenú: zvyšok sa pripíše ako ručná úhrada.
 func (p *Purchase) MarkPaid(on invoice.Date) error {
 	if p.Status != StatusBooked {
 		return invoice.ErrBadTransition
 	}
-	p.Status, p.PaidDate = StatusPaid, on
-	return nil
+	return p.AddPayment(invoice.Payment{Date: on, Amount: p.Remaining(), Source: invoice.PaymentManual})
 }
 
-// Unpay zruší označenie úhrady (napr. omylom označená).
+// Unpay zruší všetky úhrady (napr. omylom označená faktúra).
 func (p *Purchase) Unpay() error {
-	if p.Status != StatusPaid {
+	if p.Status != StatusPaid && len(p.Payments) == 0 {
 		return invoice.ErrBadTransition
 	}
+	p.Payments = nil
 	p.Status, p.PaidDate = StatusBooked, invoice.Date{}
+	p.SyncPaid()
 	return nil
 }
 

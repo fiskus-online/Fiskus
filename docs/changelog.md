@@ -13,6 +13,12 @@ etapách je v [pláne vývoja](./ROADMAP.md).
 
 ## 0.10.10
 
+- **Čiastočné úhrady prijatých faktúr.** Spárovaná platba nižšia ako
+  faktúra sa eviduje ako úhrada (doteraz označila celú faktúru ako
+  uhradenú). Kniha záväzkov k dňu, platobný príkaz a kalendár počítajú so
+  zostatkom; pri faktúre v cudzej mene sa každá platba odpíše z účtu 321
+  pomernou časťou s vlastným kurzovým rozdielom. Pokladničným dokladom sa
+  dá uhradiť časť faktúry a dobropis dodávateľa príjmom.
 - **Oprava: odpočet daňovej straty v priznaní FO.** Mikrodaňovník je
   podnikateľ s príjmami do 60 000 € (nie do 100 000 € ako pri sadzbe
   15 %); pri príjmoch nad 60 000 € sa strata odpočíta najviac do
