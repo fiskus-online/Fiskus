@@ -16,6 +16,25 @@ etapách je v [pláne vývoja](./ROADMAP.md).
 - **Oprava: hlavná kniha roka bez dokladov.** Obrazovka Účtovný denník
   a hlavná kniha spadla v roku, ktorý ešte nemá žiadny doklad (napr.
   začiatkom januára).
+- **Server: obmedzenie pokusov o prihlásenie** priebežne maže staré
+  záznamy, takže pokusy s množstvom rôznych e-mailov nezväčšujú pamäť.
+- **Kontrola: obdobia sadzieb DPH bez medzery.** V Legislatíve sa nedá
+  uložiť číselník, v ktorom by dátum medzi dvoma obdobiami nemal platné
+  sadzby (doteraz by dostal sadzby posledného obdobia).
+- **Oprava: predkontácia nákupu zásob.** Prijatá faktúra s príjemkou
+  tovaru sa navrhne na 131 (FP-TOVAR), s príjemkou materiálu na 111 (nová
+  FP-MATERIAL-SKLAD); doteraz vždy 501, hoci príjemka účtovala 132/131.
+- **Čiastočné úhrady prijatých faktúr.** Spárovaná platba nižšia ako
+  faktúra sa eviduje ako úhrada (doteraz označila celú faktúru ako
+  uhradenú). Kniha záväzkov k dňu, platobný príkaz a kalendár počítajú so
+  zostatkom; pri faktúre v cudzej mene sa každá platba odpíše z účtu 321
+  pomernou časťou s vlastným kurzovým rozdielom. Pokladničným dokladom sa
+  dá uhradiť časť faktúry a dobropis dodávateľa príjmom.
+- **Oprava: odpočet daňovej straty v priznaní FO.** Mikrodaňovník je
+  podnikateľ s príjmami do 60 000 € (nie do 100 000 € ako pri sadzbe
+  15 %); pri príjmoch nad 60 000 € sa strata odpočíta najviac do
+  polovice základu. Pribudla voľba *Nie som mikrodaňovník* pre ostatné
+  vylučujúce podmienky.
 - **Uzávierka roka aj v podvojnom účtovníctve.** V Súvahe a Výsledovke
   pri minulom roku: kontroly, uzamknutie dokladov aj zápisov hlavnej
   knihy, súhrn výnosov, nákladov a výsledku hospodárenia a prenos

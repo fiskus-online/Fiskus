@@ -113,8 +113,12 @@ postihnutie). Zadáte vlastný príjem manžela/ky a počet mesiacov.
 
 **Straty.** Stratu z priznaní za posledných 5 rokov zadáte s tým, čo ste
 z nej už odpočítali. Fiškus ju odpočíta od najstaršej — mikrodaňovník
-(príjmy do 100 000 €) až do výšky základu, inak najviac polovicu;
-stratu za rok 2020 najviac do polovice základu.
+(§ 2 písm. w) ZDP: príjmy z podnikania do 60 000 €) až do výšky základu,
+inak najviac polovicu; stratu za rok 2020 najviac do polovice základu.
+Hranica mikrodaňovníka nie je tá istá ako hranica 100 000 € pre sadzbu
+15 %. Ak vás zo statusu mikrodaňovníka vylučuje iná podmienka zákona
+(napr. kontrolované transakcie so závislou osobou, likvidácia, konkurz),
+označte *Nie som mikrodaňovník*.
 
 **Stiahnuť XML pre eDane** vytvorí súbor v štruktúre formulára DPFOB.
 Načítate ho vo formulári na portáli finančnej správy (Načítať zo súboru)

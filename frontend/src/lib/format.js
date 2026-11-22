@@ -69,8 +69,10 @@ export const STATUS = {
 
 /** Stav prijatej faktúry vrátane omeškania. */
 export function purchaseStatusOf(row) {
-  if (row.overdue) return statusOf(row)
-  return row.status === 'paid' ? { label: 'Uhradená', tone: 'paid' } : { label: 'Neuhradená', tone: 'issued' }
+  // čiastočne uhradená prijatá faktúra má stav „booked“ ako vydaná „issued“
+  if (row.overdue) return statusOf({ ...row, status: row.status === 'booked' ? 'issued' : row.status })
+  if (row.status === 'paid') return { label: 'Uhradená', tone: 'paid' }
+  return statusOf({ ...row, status: 'issued' }).label === 'Čiastočne uhradená' ? { label: 'Čiastočne uhradená', tone: 'issued' } : { label: 'Neuhradená', tone: 'issued' }
 }
 
 /** Stav riadku zoznamu vrátane omeškania. */

@@ -29,6 +29,13 @@ po sadzbách, tak ako sú na doklade. Pri každej určíte:
 Fiškus upozorní na duplicitu (rovnaký dodávateľ a číslo), eviduje úhrady
 a k faktúre sa dá pripojiť súbor (PDF, fotka).
 
+**Úhrady.** Prijatú faktúru uhradíte spárovaním bankového pohybu,
+výdavkovým pokladničným dokladom alebo tlačidlom *Označiť ako uhradenú*.
+Platba môže byť aj čiastočná — v súhrne dokladu je zoznam úhrad a zostatok,
+faktúra má stav *Čiastočne uhradená* a tlačidlo *Uhradiť zvyšok*. Kniha
+záväzkov, platobný príkaz aj kalendár počítajú so zostatkom. Faktúru
+s úhradou nemožno zmazať a jej sumu nemožno znížiť pod úhrady.
+
 :::tip[Vyťaženie z PDF alebo fotky]
 S kľúčom Claude API (Nastavenia → Prístup pre AI) Fiškus prečíta dodávateľa,
 čísla a rekapituláciu DPH z PDF alebo fotky. **AI iba navrhuje** —
