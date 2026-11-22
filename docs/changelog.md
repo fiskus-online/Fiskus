@@ -13,6 +13,10 @@ etapách je v [pláne vývoja](./ROADMAP.md).
 
 ## 0.10.10
 
+- **Uzávierkové zápisy v podvojnom účtovníctve:** uzavretie nákladov
+  a výnosov na 710, prevod výsledku a uzavretie súvahových účtov na 702
+  k 31. 12. a otvorenie cez 701 k 1. 1. — v paneli Uzávierka roka, s tlačou
+  a exportom.
 - **Uzávierka roka aj v podvojnom účtovníctve.** V Súvahe a Výsledovke
   pri minulom roku: kontroly, uzamknutie dokladov aj zápisov hlavnej
   knihy, súhrn výnosov, nákladov a výsledku hospodárenia a prenos

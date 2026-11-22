@@ -52,6 +52,24 @@ func TestYearCloseDouble(t *testing.T) {
 	if !book.Opening["311"].Equal(m.MustParse("492")) || !book.Opening["431"].Equal(m.MustParse("-400")) {
 		t.Fatalf("počiatočné stavy 2027: %+v", book.Opening)
 	}
+	// uzávierkové zápisy (710, 702) a otváracie zápisy 2027 (701)
+	lc, err := a.LedgerClosingEntries(ctx, c.ID, 2026)
+	if err != nil || !lc.Closed || !lc.Result.Equal(m.MustParse("400")) || len(lc.Closing) != 3 || len(lc.Opening) != 1 {
+		t.Fatalf("uzávierkové zápisy: %+v %v", lc, err)
+	}
+	want := []string{
+		"602 MD 400.00, 710 D 400.00",
+		"710 MD 400.00, 702 D 400.00",
+		"311 D 492.00, 343 MD 92.00, 702 MD 400.00",
+	}
+	for i, e := range lc.Closing {
+		if got := lineStr(e.Lines); got != want[i] || e.Lines[0].Name == "" {
+			t.Errorf("zápis %d %q: %s", i, e.Text, got)
+		}
+	}
+	if got := lineStr(lc.Opening[0].Lines); got != "311 MD 492.00, 343 D 92.00, 431 D 400.00, 701 D 492.00, 701 MD 492.00" {
+		t.Errorf("otvorenie: %s", got)
+	}
 	// uzamknutý rok: zápisy hlavnej knihy aj doklady
 	if _, err := a.SaveInternal(ctx, c.ID, 2026, InternalDoc{Date: invoice.MustDate("2026-12-31"), Text: "Oprava",
 		Lines: []ledger.Line{{Account: "518", Debit: m.MustParse("10")}, {Account: "321", Credit: m.MustParse("10")}}}); !fieldErr(err, "date") {

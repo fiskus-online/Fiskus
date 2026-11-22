@@ -11,8 +11,10 @@ import Dialog from 'primevue/dialog'
 import InputText from 'primevue/inputtext'
 import { api } from '../lib/api.js'
 import { can, session } from '../lib/session.js'
-import { formatDate, formatMoney } from '../lib/format.js'
-import { closeSummary, eventLabel } from '../lib/yearclose.js'
+import { formatAmount, formatDate, formatMoney } from '../lib/format.js'
+import { closeSummary, closingRows, eventLabel, filterClosing } from '../lib/yearclose.js'
+import { closingEntryColumns } from '../lib/columns.js'
+import ExportButton from './ExportButton.vue'
 
 const props = defineProps({ year: { type: Number, required: true }, double: { type: Boolean, default: false } })
 const emit = defineEmits(['changed'])
@@ -60,6 +62,21 @@ function close() {
   })
 }
 
+// uzávierkové zápisy 710/702 a otváracie 701 (podvojné účtovníctvo)
+const entries = ref(null)
+const entriesOpen = ref(false)
+const entriesQ = ref('')
+const entryRows = computed(() => filterClosing(closingRows(entries.value), entriesQ.value))
+async function showEntries() {
+  try {
+    entries.value = await api.ledgerClosingEntries(session.companyId, props.year)
+    entriesQ.value = ''
+    entriesOpen.value = true
+  } catch (e) {
+    toast.add({ severity: 'error', summary: 'Uzávierkové zápisy', detail: e.message, life: 5000 })
+  }
+}
+
 const reopening = ref(false)
 const reason = ref('')
 const reasonErr = ref('')
@@ -86,6 +103,7 @@ async function reopen() {
       <h2 id="yc-title">Uzávierka roka {{ year }}</h2>
       <span class="state">{{ summary }}</span>
       <div class="spacer" />
+      <Button v-if="double" label="Uzávierkové zápisy" icon="pi pi-list" size="small" severity="secondary" text @click="showEntries" />
       <template v-if="canWrite">
         <Button v-if="closed" label="Otvoriť rok…" icon="pi pi-lock-open" size="small" severity="secondary" text @click="reopening = true" />
         <Button v-else label="Uzavrieť rok" icon="pi pi-lock" size="small" :disabled="!info.canClose" :loading="busy" @click="close" />
@@ -119,6 +137,33 @@ async function reopen() {
         <li v-for="(h, i) in info.close.history" :key="i">{{ formatDate(String(h.at).slice(0, 10)) }} · {{ eventLabel(h) }} · {{ h.by }}<template v-if="h.reason"> — {{ h.reason }}</template></li>
       </ul>
     </details>
+
+    <Dialog v-model:visible="entriesOpen" :header="`Uzávierkové zápisy ${year}`" modal :style="{ width: '56rem' }" :breakpoints="{ '760px': '100vw' }">
+      <p class="dlg">
+        Uzavretie účtovných kníh: náklady a výnosy na 710 – Účet ziskov a strát, výsledok a súvahové účty na 702 – Konečný účet súvahový,
+        v ďalšom roku otvorenie cez 701 – Začiatočný účet súvahový. Do obratov sa nezapočítavajú, výkazy sú zo zostatkov pred uzavretím.
+        <b v-if="entries && !entries.closed">Rok ešte nie je uzavretý — zápisy sú návrh podľa súčasných zostatkov.</b>
+      </p>
+      <div class="ent-bar">
+        <InputText v-model="entriesQ" size="small" placeholder="Hľadať účet, názov, sumu" aria-label="Hľadať v zápisoch" />
+        <ExportButton :name="`uzavierkove-zapisy-${year}`" :columns="closingEntryColumns" :rows="entryRows" />
+      </div>
+      <div class="ent-wrap">
+        <table class="ent">
+          <thead><tr><th>Dátum</th><th>Zápis</th><th>Účet</th><th class="num">MD</th><th class="num">D</th></tr></thead>
+          <tbody>
+            <tr v-for="r in entryRows" :key="r.key" :class="{ first: r.first }">
+              <td>{{ r.first ? formatDate(r.date) : '' }}</td>
+              <td>{{ r.first ? r.text : '' }}</td>
+              <td><b>{{ r.account }}</b> <span class="an">{{ r.name }}</span></td>
+              <td class="num">{{ r.debit ? formatAmount(r.debit) : '' }}</td>
+              <td class="num">{{ r.credit ? formatAmount(r.credit) : '' }}</td>
+            </tr>
+            <tr v-if="!entryRows.length"><td colspan="5" class="empty">Žiadne zápisy — účty nemajú zostatky.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </Dialog>
 
     <Dialog v-model:visible="reopening" :header="`Otvoriť rok ${year}`" modal :style="{ width: '28rem' }" :breakpoints="{ '480px': '96vw' }">
       <p class="dlg">Otvorený rok sa dá znova meniť. Dôvod sa zapíše do auditu; po oprave rok znova uzavrite — stavy účtov sa prenesú nanovo.</p>
@@ -252,6 +297,57 @@ async function reopen() {
 }
 .err {
   color: var(--tone-overdue);
+}
+.ent-bar {
+  display: flex;
+  gap: 8px;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.ent-bar .p-inputtext {
+  flex: 1;
+  max-width: 20rem;
+  min-width: 0;
+}
+.ent-wrap {
+  overflow-x: auto;
+}
+.ent {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--fs-sm);
+  font-variant-numeric: tabular-nums;
+}
+.ent th {
+  text-align: left;
+  font-weight: 600;
+  color: var(--ink-soft);
+  border-bottom: 1px solid var(--rule);
+  padding: 4px 6px;
+}
+.ent td {
+  padding: 3px 6px;
+  vertical-align: top;
+}
+.ent tr.first td {
+  border-top: 1px solid var(--rule);
+}
+.ent .num {
+  text-align: right;
+  white-space: nowrap;
+}
+.ent .an {
+  color: var(--ink-soft);
+}
+.ent .empty {
+  color: var(--ink-soft);
+  text-align: center;
+}
+@media (max-width: 600px) {
+  .ent th:first-child,
+  .ent td:first-child {
+    display: none;
+  }
 }
 @media print {
   .yc {

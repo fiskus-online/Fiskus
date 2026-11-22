@@ -57,6 +57,16 @@ export const invoiceColumns = [
   t('Poznámka', (r) => plain(r.note), 30),
 ]
 
+/** Uzávierkové (710, 702) a otváracie (701) zápisy. */
+export const closingEntryColumns = [
+  date('Dátum', (r) => r.date),
+  t('Zápis', (r) => r.text, 44),
+  t('Účet', (r) => r.account, 8),
+  t('Názov účtu', (r) => r.name, 32),
+  money('MD', (r) => r.debit),
+  money('D', (r) => r.credit),
+]
+
 export const purchaseColumns = [
   t('Číslo', (r) => r.number, 12),
   t('Číslo dodávateľa', (r) => r.supplierNumber, 16),
