@@ -479,6 +479,8 @@ func (s *Server) Handler() http.Handler {
 	need("POST /api/companies/{cid}/ledger/opening/import", auth.PermLedgerWrite, s.importOpening)
 	need("GET /api/companies/{cid}/ledger/{year}/statements", auth.PermLedgerRead, s.ledgerStatements)
 	need("PUT /api/companies/{cid}/ledger/{year}/statements/form", auth.PermLedgerWrite, s.setStatementForm)
+	need("GET /api/companies/{cid}/ledger/{year}/notes", auth.PermLedgerRead, s.ledgerNotes)
+	need("PUT /api/companies/{cid}/ledger/{year}/notes", auth.PermLedgerWrite, s.saveLedgerNotes)
 	need("GET /api/companies/{cid}/ledger/{year}/fx", auth.PermLedgerRead, s.fxRevaluation)
 	need("POST /api/companies/{cid}/ledger/{year}/fx", auth.PermLedgerWrite, s.postFXRevaluation)
 	need("PUT /api/companies/{cid}/ledger/{year}/fx/statement", auth.PermLedgerWrite, s.setFXStatement)

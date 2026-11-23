@@ -17,6 +17,10 @@ etapách je v [pláne vývoja](./ROADMAP.md).
   súvahe aj v kontrolách uzávierky roka — s počtom príjemok bez pripojenej
   prijatej faktúry. Ukážkové dáta majú k príjemkám tovaru prijaté faktúry,
   takže zásoby v súvahe už nevychádzajú záporné.
+- **Poznámky k účtovnej závierke malej účtovnej jednotky (Úč POD 3-01).**
+  Nová karta *Poznámky* v hlavnej knihe: text po článkoch, návrh zásad
+  oceňovania podľa nastavení programu, prehľad súvahy a výkazu ziskov
+  a strát s minulým rokom a tlač do PDF; prázdne časti sa vynechajú.
 - **Účtová osnova podľa platnej rámcovej osnovy.** Účet 553 je *Tvorba
   a zúčtovanie opravných položiek k dlhodobému majetku* (doteraz ostatné
   rezervy), 557 *Zúčtovanie oprávky k opravnej položke k nadobudnutému
