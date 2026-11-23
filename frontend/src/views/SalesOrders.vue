@@ -1,6 +1,7 @@
 <script setup>
 // Prijaté objednávky od zákazníkov: stav, termín dodania, odberateľ, suma.
 // Súčty v hlavičke sú súčtom už vypočítaných súm zo servera.
+import { withoutAll } from '../lib/filters.js'
 import { computed, onBeforeUnmount, onMounted, ref, shallowRef } from 'vue'
 import { useRouter } from 'vue-router'
 import { AgGridVue } from 'ag-grid-vue3'
@@ -20,7 +21,7 @@ import ExportButton from '../components/ExportButton.vue'
 
 const router = useRouter()
 const today = toISODate(new Date())
-const view = ref('active')
+const view = ref(['active']) // zaškrtnuté stavy (prázdne = všetky)
 const search = ref('')
 const searchEl = ref(null)
 const rows = shallowRef([])
@@ -59,7 +60,7 @@ const ledger = computed(() => {
   }
 })
 function showLate() {
-  view.value = 'active'
+  view.value = ['active']
   lateOnly.value = !lateOnly.value
 }
 
@@ -144,7 +145,7 @@ onBeforeUnmount(() => {
     </header>
 
     <section class="ledger" aria-label="Prehľad objednávok">
-      <button class="figure figure-link" :disabled="!ledger.openCount" @click="view = 'active'; lateOnly = false">
+      <button class="figure figure-link" :disabled="!ledger.openCount" @click="view = ['active']; lateOnly = false">
         <span class="label">Na dodanie ({{ ledger.openCount }})</span>
         <span class="value">{{ formatMoney(ledger.openTotal) }}</span>
       </button>
@@ -159,7 +160,7 @@ onBeforeUnmount(() => {
     </section>
 
     <div class="toolbar">
-      <SelectButton v-model="view" :options="salesOrderViews" option-label="label" option-value="value" :allow-empty="false" size="small" aria-label="Zobraziť"
+      <SelectButton v-model="view" :options="withoutAll(salesOrderViews)" option-label="label" option-value="value" multiple size="small" aria-label="Zobraziť"
         @update:model-value="lateOnly = false" />
       <IconField class="search">
         <InputIcon class="pi pi-search" />
@@ -334,7 +335,7 @@ onBeforeUnmount(() => {
     white-space: nowrap;
   }
   .search {
-    flex: 1;
+    flex: 1 1 10rem; /* pod 10rem sa hľadanie zalomí pod filtre */
     width: auto;
     min-width: 0;
     margin-left: 0;

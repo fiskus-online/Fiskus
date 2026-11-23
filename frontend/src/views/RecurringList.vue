@@ -1,5 +1,6 @@
 <script setup>
 // Pravidelná fakturácia: šablóny, z ktorých Fiškus sám vytvára faktúry.
+import { anyPicked, withoutAll } from '../lib/filters.js'
 import { computed, onBeforeUnmount, onMounted, ref, shallowRef } from 'vue'
 import { useRouter } from 'vue-router'
 import { AgGridVue } from 'ag-grid-vue3'
@@ -19,7 +20,7 @@ import ExportButton from '../components/ExportButton.vue'
 import { attention } from '../lib/attention.js'
 
 const router = useRouter()
-const view = ref('all')
+const view = ref([]) // zaškrtnuté stavy (prázdne = všetky)
 const views = [
   { label: 'Všetky', value: 'all' },
   { label: 'Aktívne', value: 'active' },
@@ -60,8 +61,7 @@ const isActive = (r) => r.active && !!r.nextDate
 const visibleRows = computed(() => {
   const terms = searchTerms(search.value)
   return rows.value.filter((r) => {
-    if (view.value === 'active' && !isActive(r)) return false
-    if (view.value === 'inactive' && isActive(r)) return false
+    if (!anyPicked(view.value, (v) => (v === 'active') === isActive(r))) return false
     const c = r.customer ?? {}
     return matches(terms, [r.name, c.name, c.ico, c.city, intervalLabel(r.interval), recurringStatusOf(r).label, r.summary?.total,
       ...(r.lines ?? []).map((l) => l.description)])
@@ -186,7 +186,7 @@ onBeforeUnmount(() => {
     </p>
 
     <div class="toolbar">
-      <SelectButton v-model="view" :options="views" option-label="label" option-value="value" :allow-empty="false" size="small" aria-label="Zobraziť" />
+      <SelectButton v-model="view" :options="withoutAll(views)" option-label="label" option-value="value" multiple size="small" aria-label="Zobraziť" />
       <IconField class="search">
         <InputIcon class="pi pi-search" />
         <InputText ref="searchEl" v-model="search" placeholder="Hľadať názov, odberateľa, položku" size="small" aria-label="Hľadať" />
@@ -441,7 +441,7 @@ onBeforeUnmount(() => {
     white-space: nowrap;
   }
   .search {
-    flex: 1;
+    flex: 1 1 10rem; /* pod 10rem sa hľadanie zalomí pod filtre */
     width: auto;
     min-width: 0;
     margin-left: 0;

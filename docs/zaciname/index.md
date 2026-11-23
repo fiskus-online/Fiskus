@@ -46,6 +46,12 @@ vľavo hore.
 Každý zoznam má hľadanie (bez diakritiky, viac slov naraz — „nitra 2026“)
 a export do Excelu a CSV. Exportuje sa presne to, čo vidíte po filtri.
 
+Filtre zoznamov sa zaškrtávajú — dá sa vybrať viac volieb naraz, napr.
+faktúry *Koncepty* a *Po splatnosti*, v banke *Nespárované* a *Nepárované*,
+v pohyboch domácnosti dva účty a tri kategórie. Nič nezaškrtnuté znamená
+všetko; kliknutím na zaškrtnutú voľbu ju zrušíte. Ukazovatele nad zoznamom
+(napr. *Po splatnosti*) zaškrtnú iba svoju voľbu.
+
 Tlačidlo **Tlač / Export** ponúka aj **tlačovú zostavu**: zostavu zo zoznamu
 po filtri a hľadaní vytlačíte, uložíte ako PDF (v dialógu tlače
 „Uložiť ako PDF“) alebo stiahnete ako Excel s nadpisom a súčtami. Nastavíte

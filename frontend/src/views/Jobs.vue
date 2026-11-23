@@ -1,6 +1,8 @@
 <script setup>
 // Zákazky (jednoduché CRM): stav, termín a ekonomika z prepojených dokladov.
 // Súčty v hlavičke sú súčtom už vypočítaných súm zo servera.
+import { inPicked, withoutAll } from '../lib/filters.js'
+import MultiSelect from 'primevue/multiselect'
 import { computed, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { AgGridVue } from 'ag-grid-vue3'
@@ -23,7 +25,7 @@ import JobStats from '../components/JobStats.vue'
 import JobVehicles from '../components/JobVehicles.vue'
 
 const router = useRouter()
-const view = ref('open')
+const view = ref(['open']) // zaškrtnuté stavy (prázdne = všetky)
 // zobrazenie: zoznam, nástenka podľa stavu alebo ziskovosť podľa zákazníka (pamätá sa v prehliadači)
 const modes = [
   { value: 'list', label: 'Zoznam', icon: 'pi pi-list' },
@@ -68,10 +70,10 @@ onMounted(load)
 // vozidlá iba pri autoservise (alebo keď je to práve zvolené zobrazenie)
 const shownModes = computed(() => modes.filter((m) => m.value !== 'vehicles' || mode.value === 'vehicles' || rows.value.some((r) => r.kind === 'auto')))
 // druh zákazky: filter sa ukáže, keď firma používa iné ako všeobecné zákazky
-const kind = ref(null)
+const kind = ref([]) // zaškrtnuté druhy zákaziek (prázdne = všetky)
 const usedKinds = computed(() => jobKinds.filter((k) => rows.value.some((r) => (r.kind ?? '') === k.value)))
 const showKinds = computed(() => usedKinds.value.some((k) => k.value !== ''))
-const fits = (r, terms) => (kind.value === null || (r.kind ?? '') === kind.value) &&
+const fits = (r, terms) => inPicked(kind.value, r.kind ?? '') &&
   matches(terms, [r.number, r.name, r.customer, r.note, jobStatusOf(r).label, r.budget, kindSearchText(r), jobKindLabel(r.kind)])
 const boardRows = computed(() => {
   const terms = searchTerms(search.value)
@@ -206,11 +208,11 @@ onBeforeUnmount(() => {
     <JobVehicles v-else-if="mode === 'vehicles'" />
     <template v-else>
     <section class="ledger" aria-label="Prehľad zákaziek">
-      <button class="figure figure-link" :disabled="!ledger.openCount" @click="view = 'open'">
+      <button class="figure figure-link" :disabled="!ledger.openCount" @click="view = ['open']">
         <span class="label">Bežiace ({{ ledger.openCount }}), plánovaná cena</span>
         <span class="value">{{ formatMoney(ledger.pipeline) }}</span>
       </button>
-      <button class="figure figure-link" :disabled="!ledger.lateCount" @click="view = 'late'">
+      <button class="figure figure-link" :disabled="!ledger.lateCount" @click="view = ['late']">
         <span class="label">Po termíne</span>
         <span class="value" :class="{ late: ledger.lateCount }">{{ ledger.lateCount }}</span>
       </button>
@@ -225,13 +227,13 @@ onBeforeUnmount(() => {
     </section>
 
     <div class="toolbar">
-      <SelectButton v-if="mode === 'list'" v-model="view" :options="jobViews" option-label="label" option-value="value" :allow-empty="false" size="small" aria-label="Zobraziť" />
+      <SelectButton v-if="mode === 'list'" v-model="view" :options="withoutAll(jobViews)" option-label="label" option-value="value" multiple size="small" aria-label="Zobraziť" />
       <IconField class="search">
         <InputIcon class="pi pi-search" />
         <InputText ref="searchEl" v-model="search" :placeholder="showKinds ? 'Hľadať číslo, názov, zákazníka, EČV' : 'Hľadať číslo, názov, zákazníka'" size="small" aria-label="Hľadať" />
       </IconField>
-      <Select v-if="showKinds" v-model="kind" :options="usedKinds" option-label="label" option-value="value" show-clear placeholder="Všetky druhy" size="small"
-        class="kindsel" aria-label="Druh zákazky" />
+      <MultiSelect v-if="showKinds" v-model="kind" :options="usedKinds" option-label="label" option-value="value" show-clear placeholder="Všetky druhy" size="small"
+        :max-selected-labels="2" selected-items-label="{0} druhy" class="kindsel" aria-label="Druh zákazky" />
       <ExportButton name="Zákazky" :columns="crmJobColumns" :rows="() => (mode === 'board' ? boardRows : gridRows(gridApi, visibleRows))" />
     </div>
 
@@ -435,7 +437,7 @@ onBeforeUnmount(() => {
     white-space: nowrap;
   }
   .search {
-    flex: 1;
+    flex: 1 1 10rem; /* pod 10rem sa hľadanie zalomí pod filtre */
     width: auto;
     min-width: 0;
     margin-left: 0;

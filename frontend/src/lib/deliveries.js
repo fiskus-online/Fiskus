@@ -1,3 +1,4 @@
+import { anyPicked } from './filters.js'
 // Dodacie listy: stavy, filtre, formulár a výber na zbernú faktúru.
 // Sumy počíta server.
 
@@ -23,8 +24,13 @@ export function deliveryStatusOf(n) {
   return { label: s.label, tone: s.tone }
 }
 
-/** Patrí dodací list do zobrazenia? */
+/** Zhoduje sa s niektorým zo zaškrtnutých zobrazení (prázdne = všetky). */
 export function matchesDeliveryView(n, view) {
+  return anyPicked(view, (v) => matchesDeliveryViewOne(n, v))
+}
+
+/** Patrí dodací list do zobrazenia? */
+function matchesDeliveryViewOne(n, view) {
   return view === 'all' || n.status === view
 }
 

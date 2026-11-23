@@ -1,6 +1,7 @@
 <script setup>
 // E-maily: zoznam odoslaných správ (hľadanie, export). Nastavenie servera
 // SMTP a textov je v Nastaveniach → E-mail (components/EmailSettings.vue).
+import { withoutAll } from '../lib/filters.js'
 import { computed, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
@@ -32,7 +33,7 @@ if (route.query.nastavenie) router.replace('/nastavenia/e-mail')
 const thisYear = new Date().getFullYear()
 const years = [thisYear, thisYear - 1, thisYear - 2].map((y) => ({ label: String(y), value: y }))
 const year = ref(thisYear)
-const view = ref('all')
+const view = ref([]) // zaškrtnuté (prázdne = všetky)
 const search = ref('')
 const searchEl = ref(null)
 const rows = shallowRef([])
@@ -122,7 +123,7 @@ onBeforeUnmount(() => {
 
     <template v-if="tab === 'list'">
       <div class="toolbar">
-        <SelectButton v-model="view" :options="emailViews" option-label="label" option-value="value" :allow-empty="false" size="small" aria-label="Zobraziť" />
+        <SelectButton v-model="view" :options="withoutAll(emailViews)" option-label="label" option-value="value" multiple size="small" aria-label="Zobraziť" />
         <span v-if="failedCount" class="failed">{{ failedCount }} neodoslaných</span>
         <IconField class="search">
           <InputIcon class="pi pi-search" />

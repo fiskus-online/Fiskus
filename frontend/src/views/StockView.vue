@@ -1,6 +1,8 @@
 <script setup>
 // Sklad: zásoby na kartách (vážený aritmetický priemer), skladové doklady
 // a nastavenie skladov a skladových položiek. Ocenenie počíta server.
+import MultiSelect from 'primevue/multiselect'
+import { withoutAll } from '../lib/filters.js'
 import { computed, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import Button from 'primevue/button'
@@ -42,7 +44,7 @@ const tab = ref(tabs.some((t) => t.value === route.query.tab) ? route.query.tab 
 const search = ref('')
 const warehouse = ref('all')
 const low = ref(false)
-const kind = ref('all')
+const kind = ref([]) // zaškrtnuté druhy dokladov (prázdne = všetky)
 
 async function load() {
   try {
@@ -59,7 +61,7 @@ const warehouseOptions = computed(() => [{ value: 'all', label: 'Všetky sklady'
 const kindOptions = [{ value: 'all', label: 'Všetky doklady' }, { value: 'receipt', label: 'Príjemky' }, { value: 'issue', label: 'Výdajky' }, { value: 'count', label: 'Inventúrne rozdiely' }, { value: 'transfer', label: 'Presuny' }]
 const wh = computed(() => (warehouse.value === 'all' ? '' : warehouse.value))
 const cards = computed(() => (v.value ? filterCards(v.value.cards, { search: search.value, warehouse: wh.value, low: low.value }) : []))
-const docs = computed(() => (v.value ? filterDocs(v.value.docs, { search: search.value, kind: kind.value === 'all' ? '' : kind.value, warehouse: wh.value }) : []))
+const docs = computed(() => (v.value ? filterDocs(v.value.docs, { search: search.value, kind: kind.value, warehouse: wh.value }) : []))
 const exportDocs = () => docRows(docs.value)
 const autoTag = (d) => ({ job: 'zo zákazky', order: 'z e-shopu', delivery: 'z dodacieho listu' })[d.linkKind] ?? 'z faktúry'
 const lowCount = computed(() => (v.value?.cards ?? []).filter((c) => c.low).length)
@@ -310,7 +312,8 @@ async function revokeFeed() {
           </IconField>
           <Select v-if="multi" v-model="warehouse" :options="warehouseOptions" option-label="label" option-value="value" size="small" class="sel" aria-label="Sklad" />
           <label v-if="tab === 'cards'" class="check"><Checkbox v-model="low" binary /> <span>iba pod minimom</span></label>
-          <Select v-else v-model="kind" :options="kindOptions" option-label="label" option-value="value" size="small" class="sel" aria-label="Druh dokladu" />
+          <MultiSelect v-else v-model="kind" :options="withoutAll(kindOptions)" option-label="label" option-value="value" size="small" class="sel"
+            placeholder="Všetky doklady" :max-selected-labels="2" selected-items-label="{0} druhy" :show-toggle-all="false" show-clear aria-label="Druh dokladu" />
           <div class="spacer" />
           <ExportButton v-if="tab === 'cards'" name="Skladové zásoby" :columns="stockCardColumns" :rows="cards" />
           <ExportButton v-else name="Skladové doklady" :columns="stockDocColumns" :rows="exportDocs" />

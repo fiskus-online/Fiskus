@@ -1,4 +1,5 @@
 // Sklad: zobrazenie kariet a dokladov, filtre. Ocenenie počíta server.
+import { inPicked } from './filters.js'
 import { matches, searchTerms } from './search.js'
 
 export const kindLabels = { receipt: 'Príjemka', issue: 'Výdajka', count: 'Inventúrny rozdiel', transfer: 'Presun' }
@@ -21,7 +22,7 @@ export function filterDocs(docs, { search = '', kind = '', warehouse = '' } = {}
   return docs
     .filter(
       (d) =>
-        (!kind || d.kind === kind) &&
+        inPicked(kind, d.kind) &&
         (!warehouse || d.warehouse === warehouse) &&
         matches(terms, [d.number, d.partner, d.note, d.linkNumber, d.to, docLabel(d), ...d.lines.map((l) => l.name)]),
     )

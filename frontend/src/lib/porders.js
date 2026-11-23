@@ -1,3 +1,4 @@
+import { anyPicked } from './filters.js'
 // Objednávky dodávateľom: stavy, filtre a formulár. Sumy počíta server.
 
 /** Stavy (tone = farba štítku ako pri dokladoch). */
@@ -31,8 +32,13 @@ export function porderStatusOf(o, today = '') {
   return { label: s.label, tone: s.tone }
 }
 
-/** Patrí objednávka do zobrazenia? */
+/** Zhoduje sa s niektorým zo zaškrtnutých zobrazení (prázdne = všetky). */
 export function matchesPorderView(o, view) {
+  return anyPicked(view, (v) => matchesPorderViewOne(o, v))
+}
+
+/** Patrí objednávka do zobrazenia? */
+function matchesPorderViewOne(o, view) {
   if (view === 'open') return open(o.status)
   if (view === 'all') return true
   return o.status === view

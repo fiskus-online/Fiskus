@@ -13,6 +13,11 @@ etapách je v [pláne vývoja](./ROADMAP.md).
 
 ## 0.10.11
 
+- **Filtre zoznamov so zaškrtávaním viacerých volieb.** Pohyby domácnosti
+  (účty, druhy, kategórie, mesiace), banka, pokladňa, vydané a prijaté
+  faktúry, ponuky, objednávky, dodacie listy, zákazky, pravidelná
+  fakturácia, e-maily, sklad, kniha jázd a účtovný denník — nič
+  nezaškrtnuté znamená všetko.
 - **Účtová osnova podľa platnej rámcovej osnovy.** Účet 553 je *Tvorba
   a zúčtovanie opravných položiek k dlhodobému majetku* (doteraz ostatné
   rezervy), 557 *Zúčtovanie oprávky k opravnej položke k nadobudnutému

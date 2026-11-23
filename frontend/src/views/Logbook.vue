@@ -106,8 +106,7 @@ onMounted(async () => {
 
 // ---- jazdy ----
 const search = ref('')
-const kind = ref('all')
-const kindFilter = [{ value: 'all', label: 'Všetky' }, ...tripKinds]
+const kind = ref([]) // zaškrtnuté druhy jázd (prázdne = všetky)
 const costs = computed(() => new Map((report.value?.trips ?? []).map((c) => [c.tripId, c])))
 const tripRows = computed(() => filterTrips(trips.value, search.value, kind.value).map((t) => ({ ...t, cost: costs.value.get(t.id) })).reverse())
 const tripCols = [
@@ -428,7 +427,7 @@ onBeforeUnmount(() => {
       <div class="toolbar">
         <SelectButton v-model="tab" :options="tabs" option-label="label" option-value="value" :allow-empty="false" size="small" aria-label="Zobraziť" />
         <template v-if="tab !== 'report'">
-          <SelectButton v-if="tab === 'trips'" v-model="kind" :options="kindFilter" option-label="label" option-value="value" :allow-empty="false" size="small" aria-label="Druh jazdy" />
+          <SelectButton v-if="tab === 'trips'" v-model="kind" :options="tripKinds" option-label="label" option-value="value" multiple size="small" aria-label="Druh jazdy" />
           <IconField class="search">
             <InputIcon class="pi pi-search" />
             <InputText v-model="search" :placeholder="tab === 'trips' ? 'Hľadať trasu, účel, vodiča, dátum' : 'Hľadať stanicu, doklad, dátum'" size="small" aria-label="Hľadať" />
