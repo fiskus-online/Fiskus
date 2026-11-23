@@ -59,8 +59,10 @@ func scanPurchase(r interface{ Scan(...any) error }) (purchase.Purchase, error) 
 			return p, fmt.Errorf("údaje odpočtu: %w", err)
 		}
 		p.DeductPercent, p.VehicleID, p.CorrectsNumber, p.Mixed, p.Coef = x.DeductPercent, x.VehicleID, x.CorrectsNumber, x.Mixed, x.Coef
+		p.Payments = x.Payments
 	}
 	p.Deducted = p.Deductible()
+	p.SyncPaid()
 	return p, nil
 }
 
@@ -71,6 +73,8 @@ type purchaseExtra struct {
 	CorrectsNumber string `json:"correctsNumber,omitempty"`
 	Mixed          bool   `json:"mixed,omitempty"`
 	Coef           int    `json:"coef,omitempty"`
+	// Payments sú úhrady (aj čiastočné).
+	Payments []invoice.Payment `json:"payments,omitempty"`
 }
 
 // purchaseFX je mena, kurz a sumy v eurách prijatej faktúry v cudzej mene.
@@ -145,7 +149,7 @@ func (s *Store) SavePurchase(ctx context.Context, companyID int64, p *purchase.P
 		}
 		fxJSON = string(b)
 	}
-	extra, err := json.Marshal(purchaseExtra{p.DeductPercent, p.VehicleID, p.CorrectsNumber, p.Mixed, p.Coef})
+	extra, err := json.Marshal(purchaseExtra{p.DeductPercent, p.VehicleID, p.CorrectsNumber, p.Mixed, p.Coef, p.Payments})
 	if err != nil {
 		return err
 	}

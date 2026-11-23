@@ -14,6 +14,7 @@ import (
 	"github.com/fiskus-online/fiskus/backend/internal/journal"
 	"github.com/fiskus-online/fiskus/backend/internal/ledger"
 	"github.com/fiskus-online/fiskus/backend/internal/money"
+	"github.com/fiskus-online/fiskus/backend/internal/purchase"
 	"github.com/fiskus-online/fiskus/backend/internal/store"
 )
 
@@ -261,9 +262,25 @@ func fxPaymentBook(inv *invoice.Invoice, txID int64, year int, rv money.Dec, has
 	if !ok {
 		return money.Zero, false
 	}
-	pays := make([]invoice.Payment, 0, len(inv.Payments))
+	return fxAllocate(inv.Payments, inv.Summary.Total, sum.Total, txID, year, rv, hasRV)
+}
+
+// fxPurchaseBook je fxPaymentBook pre prijatú faktúru: akou sumou v eurách
+// sa platba odpíše z účtu dodávateľa (321).
+func fxPurchaseBook(p *purchase.Purchase, txID int64, year int, rv money.Dec, hasRV bool) (money.Dec, bool) {
+	t, ok := p.Tax()
+	if !ok {
+		return money.Zero, false
+	}
+	return fxAllocate(p.Payments, p.Summary.Total, t.Summary.Total, txID, year, rv, hasRV)
+}
+
+// fxAllocate rozdelí sumu dokladu v eurách (bookTotal) medzi úhrady podľa
+// uhradenej sumy v mene dokladu (docTotal) a vráti časť platby txID.
+func fxAllocate(payments []invoice.Payment, docTotal, bookTotal money.Dec, txID int64, year int, rv money.Dec, hasRV bool) (money.Dec, bool) {
+	pays := make([]invoice.Payment, 0, len(payments))
 	found := false
-	for _, p := range inv.Payments {
+	for _, p := range payments {
 		if p.Source == invoice.PaymentBank && p.Ref == txID {
 			found = true
 		}
@@ -278,7 +295,7 @@ func fxPaymentBook(inv *invoice.Invoice, txID int64, year int, rv money.Dec, has
 		}
 		return pays[i].Ref < pays[j].Ref
 	})
-	base, foreign := sum.Total, inv.Summary.Total
+	base, foreign := bookTotal, docTotal
 	if hasRV {
 		cut := invoice.MustDate(fmt.Sprintf("%d-12-31", year-1))
 		kept := pays[:0]

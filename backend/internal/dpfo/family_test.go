@@ -132,6 +132,12 @@ func TestLosses(t *testing.T) {
 			Losses: []Loss{{Year: 2023, Amount: m("1000")}}}, "", "1000", "17000", ""},
 		{"nad 100 000 € príjmov: spolu najviac 50 %", Input{Year: 2025, Income: m("150000"), Expenses: m("50000"),
 			Losses: []Loss{{Year: 2022, Amount: m("80000")}, {Year: 2023, Amount: m("30000")}}}, "", "", "50000", ""},
+		{"príjmy 80 000 €: sadzba 15 %, ale nie mikrodaňovník — najviac 50 %", Input{Year: 2025, Income: m("80000"), Expenses: m("30000"),
+			Losses: []Loss{{Year: 2023, Amount: m("50000")}}}, "", "25000", "25000", ""},
+		{"príjmy presne 60 000 € — mikrodaňovník", Input{Year: 2025, Income: m("60000"), Expenses: m("10000"),
+			Losses: []Loss{{Year: 2023, Amount: m("50000")}}}, "", "50000", "", ""},
+		{"príjmy do hranice, ale vylučujúca podmienka — najviac 50 %", Input{Year: 2025, Income: m("30000"), Expenses: m("12000"), NotMicro: true,
+			Losses: []Loss{{Year: 2023, Amount: m("15000")}}}, "", "9000", "9000", ""},
 		{"strata staršia ako 5 rokov sa nepočíta", Input{Year: 2025, Income: m("30000"), Expenses: m("12000"),
 			Losses: []Loss{{Year: 2019, Amount: m("5000")}}}, "", "", "18000", ""},
 	}

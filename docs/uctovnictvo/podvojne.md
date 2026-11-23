@@ -29,10 +29,17 @@ vyrovnaný (MD = D).
 | Doklad | Napríklad |
 |---|---|
 | vydaná faktúra | 311 / 602 (služby) alebo 604 (tovar) a 343 |
-| prijatá faktúra | 501 a 343 / 321 |
+| prijatá faktúra | 518 (služby), 501 a 343 / 321; zásoby s príjemkou 131 (tovar) alebo 111 (materiál) |
 | bankový pohyb | 221 / 311 |
 | pokladničný doklad | 211 / … |
 | skladový doklad | 132 / 131, 504 / 132 — pozri [ocenenie zásob](../sklad/ocenenie.md) |
+
+Pri prijatej faktúre s druhom výdavku *Zásoby* rozhoduje príjemka, ktorá
+je k faktúre pripojená: tovar sa obstaráva na 131, materiál na sklad na 111
+(príjemka ich preúčtuje na 132 a 112, takže obstarávacie účty nemajú
+zostatok). Bez príjemky ide materiál priamo do spotreby na 501. Ak sú na
+príjemkách tovar aj materiál, Fiškus predkontáciu nenavrhne a faktúru
+zaúčtujete ručne.
 
 Každý zápis sa dá zmeniť (iná predkontácia, stredisko, zákazka) a pridať sa
 dajú ručné zápisy a interné doklady.

@@ -88,6 +88,9 @@ export const purchaseColumns = [
   money('Spolu €', (r) => purchaseEUR(r)?.total),
   t('Prenesenie DPH', (r) => yes(r.reverseCharge), 8),
   t('Bez odpočtu', (r) => yes(r.noDeduction), 8),
+  money('Uhradené v mene', (r) => r.paidAmount),
+  money('Zostáva v mene', (r) => r.balance),
+  money('Zostáva €', (r) => r.balanceEur),
   t('Stav', (r) => purchaseStatusOf(r).label, 18),
   t('Druh výdavku', (r) => codes.expenseKinds?.find((k) => k.code === (r.expense || 'services'))?.label ?? '', 18),
 ]
