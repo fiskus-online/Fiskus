@@ -229,6 +229,7 @@ func sums(rules []rule, rows map[string]*StatementRow) {
 
 // Statements je súvaha a výkaz ziskov a strát.
 type Statements struct {
+	Form        Form           `json:"form"`
 	Assets      []StatementRow `json:"assets"`
 	Liabilities []StatementRow `json:"liabilities"`
 	Income      []StatementRow `json:"income"`
@@ -238,8 +239,31 @@ type Statements struct {
 	Difference money.Dec `json:"difference"`
 }
 
+// Form je vzor účtovnej závierky.
+type Form string
+
+const (
+	FormMicro Form = "muj" // mikro účtovná jednotka (Úč MÚJ)
+	FormSmall Form = "pod" // malá účtovná jednotka (Úč POD)
+)
+
+// formSpec sú riadky vzoru a väzby medzi nimi.
+type formSpec struct {
+	assets, liabilities, income []rule
+	totalAssets, totalLiab      string // SPOLU MAJETOK, SPOLU VLASTNÉ IMANIE A ZÁVÄZKY
+	resultLiab, resultIncome    string // výsledok po zdanení v súvahe = riadok VZaS
+}
+
+var forms = map[Form]formSpec{
+	FormMicro: {balanceAssets, balanceLiabilities, incomeRules, "01", "24", "33", "38"},
+	FormSmall: {podAssets, podLiabilities, podIncome, "01", "79", "100", "61"},
+}
+
+// ValidForm vráti true pre známy vzor.
+func ValidForm(f Form) bool { _, ok := forms[f]; return ok }
+
 // statement zostaví výkazy z konečných stavov účtov jedného obdobia.
-func statement(accounts []Turnover) (assets, liab, income map[string]*StatementRow, unmapped []Turnover) {
+func statement(spec formSpec, accounts []Turnover) (assets, liab, income map[string]*StatementRow, unmapped []Turnover) {
 	bal := map[string]money.Dec{}
 	for _, t := range accounts {
 		if !t.Closing.IsZero() {
@@ -247,21 +271,21 @@ func statement(accounts []Turnover) (assets, liab, income map[string]*StatementR
 		}
 	}
 	used := map[string]bool{}
-	income = fill(incomeRules, bal, creditSide, used)
-	// náklady (riadky 09 – 17, 28 – 33, 36, 37) sú kladné pri zostatku MD
-	for _, r := range incomeRules {
+	income = fill(spec.income, bal, creditSide, used)
+	// nákladové riadky sú kladné pri zostatku MD
+	for _, r := range spec.income {
 		if len(r.items) > 0 && (r.items[0][0] == '5') {
 			row := income[r.code]
 			row.Brutto, row.Netto = row.Brutto.Neg(), row.Netto.Neg()
 		}
 	}
-	sums(incomeRules, income)
-	assets = fill(balanceAssets, bal, debitSide, used)
-	sums(balanceAssets, assets)
-	liab = fill(balanceLiabilities, bal, creditSide, used)
-	vh := income["38"].Netto
-	liab["33"].Brutto, liab["33"].Netto, liab["33"].Accounts = vh, vh, "VZaS r. 38"
-	sums(balanceLiabilities, liab)
+	sums(spec.income, income)
+	assets = fill(spec.assets, bal, debitSide, used)
+	sums(spec.assets, assets)
+	liab = fill(spec.liabilities, bal, creditSide, used)
+	vh := income[spec.resultIncome].Netto
+	liab[spec.resultLiab].Brutto, liab[spec.resultLiab].Netto, liab[spec.resultLiab].Accounts = vh, vh, "VZaS r. "+spec.resultIncome
+	sums(spec.liabilities, liab)
 	for _, t := range accounts {
 		if _, ok := bal[t.Account]; ok && !used[t.Account] && t.Account[0] <= '6' {
 			unmapped = append(unmapped, t)
@@ -270,11 +294,21 @@ func statement(accounts []Turnover) (assets, liab, income map[string]*StatementR
 	return
 }
 
-// BuildStatements zostaví súvahu a výkaz ziskov a strát z konečných stavov
-// účtov bežného a predchádzajúceho obdobia.
+// BuildStatements zostaví súvahu a výkaz ziskov a strát mikro účtovnej
+// jednotky z konečných stavov účtov bežného a predchádzajúceho obdobia.
 func BuildStatements(current, previous []Turnover) Statements {
-	a, l, i, un := statement(current)
-	pa, pl, pi, _ := statement(previous)
+	return BuildStatementsForm(FormMicro, current, previous)
+}
+
+// BuildStatementsForm zostaví výkazy podľa vzoru (mikro alebo malá
+// účtovná jednotka); neznámy vzor = mikro.
+func BuildStatementsForm(form Form, current, previous []Turnover) Statements {
+	spec, ok := forms[form]
+	if !ok {
+		form, spec = FormMicro, forms[FormMicro]
+	}
+	a, l, i, un := statement(spec, current)
+	pa, pl, pi, _ := statement(spec, previous)
 	rows := func(rules []rule, cur, prev map[string]*StatementRow) []StatementRow {
 		out := make([]StatementRow, 0, len(rules))
 		for _, r := range rules {
@@ -289,11 +323,12 @@ func BuildStatements(current, previous []Turnover) Statements {
 	}
 	sort.Slice(un, func(x, y int) bool { return un[x].Account < un[y].Account })
 	return Statements{
-		Assets:      rows(balanceAssets, a, pa),
-		Liabilities: rows(balanceLiabilities, l, pl),
-		Income:      rows(incomeRules, i, pi),
+		Form:        form,
+		Assets:      rows(spec.assets, a, pa),
+		Liabilities: rows(spec.liabilities, l, pl),
+		Income:      rows(spec.income, i, pi),
 		Unmapped:    un,
-		Difference:  a["01"].Netto.Sub(l["24"].Netto),
+		Difference:  a[spec.totalAssets].Netto.Sub(l[spec.totalLiab].Netto),
 	}
 }
 

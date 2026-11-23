@@ -65,6 +65,10 @@ it('stav prijatej faktúry', async () => {
   expect(purchaseStatusOf({ status: 'booked' }).label).toBe('Neuhradená')
   expect(purchaseStatusOf({ status: 'paid' }).tone).toBe('paid')
   expect(purchaseStatusOf({ status: 'booked', overdue: true, daysOverdue: 2 }).label).toBe('Po splatnosti 2 dni')
+  expect(purchaseStatusOf({ status: 'booked', paidAmount: '200.00' }).label).toBe('Čiastočne uhradená')
+  expect(purchaseStatusOf({ status: 'booked', paidAmount: '0.00' }).label).toBe('Neuhradená')
+  expect(purchaseStatusOf({ status: 'booked', paidAmount: '200.00', overdue: true, daysOverdue: 5 }).label).toBe('Po splatnosti 5 dní, čiastočne uhradená')
+  expect(purchaseStatusOf({ status: 'paid', paidAmount: '615.00' }).label).toBe('Uhradená')
 })
 
 describe('statusOf', () => {

@@ -2134,6 +2134,16 @@ func Run(t *testing.T, newStore Factory) {
 		if g, err := s.GetPurchase(ctx, a.ID, car.ID); err != nil || !reflect.DeepEqual(g, *car) || g.Deducted.IsZero() {
 			t.Fatalf("údaje odpočtu sa líšia:\n got %+v\nwant %+v", g, *car)
 		}
+		// čiastočné úhrady
+		if err := car.AddPayment(invoice.Payment{Date: invoice.MustDate("2026-10-20"), Amount: m.MustParse("10"), Source: invoice.PaymentBank, Ref: 77, EUR: m.MustParse("9.5")}); err != nil {
+			t.Fatal(err)
+		}
+		if err := s.SavePurchase(ctx, a.ID, car); err != nil {
+			t.Fatal(err)
+		}
+		if g, err := s.GetPurchase(ctx, a.ID, car.ID); err != nil || !reflect.DeepEqual(g.Payments, car.Payments) || !g.PaidAmount.Equal(m.MustParse("10")) || !g.Balance.Equal(car.Balance) {
+			t.Fatalf("úhrady sa líšia:\n got %+v %s %s\nwant %+v", g.Payments, g.PaidAmount, g.Balance, car.Payments)
+		}
 		_ = s.DeletePurchase(ctx, a.ID, car.ID)
 		// oddelenie firiem
 		if l, _ := s.ListPurchases(ctx, b.ID, store.PurchaseFilter{}); len(l) != 0 {

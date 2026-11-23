@@ -60,7 +60,7 @@ func (a *App) PaymentCandidates(ctx context.Context, companyID int64) ([]Payment
 		}
 		c := PaymentCandidate{
 			ID: p.ID, Number: p.Number, SupplierNumber: p.SupplierNumber, Supplier: p.Supplier.Name,
-			IBAN: formatIBAN(iban), VariableSymbol: p.VariableSymbol, Amount: p.Summary.Total,
+			IBAN: formatIBAN(iban), VariableSymbol: p.VariableSymbol, Amount: p.Remaining(),
 			Currency: p.Currency, DueDate: p.DueDate, Overdue: p.Overdue(today),
 		}
 		c.Problem = paymentProblem(c, p.PaymentMethod)

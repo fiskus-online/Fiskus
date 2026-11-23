@@ -2,7 +2,7 @@
 title: Podvojné účtovníctvo
 slug: podvojne
 sidebar_position: 2
-description: Účtový rozvrh, predkontácie, automatické účtovanie, hlavná kniha a závierka mikro účtovnej jednotky.
+description: Účtový rozvrh, predkontácie, automatické účtovanie, hlavná kniha a závierka mikro a malej účtovnej jednotky.
 tags: [účtovníctvo, podvojné]
 ---
 
@@ -29,10 +29,17 @@ vyrovnaný (MD = D).
 | Doklad | Napríklad |
 |---|---|
 | vydaná faktúra | 311 / 602 (služby) alebo 604 (tovar) a 343 |
-| prijatá faktúra | 501 a 343 / 321 |
+| prijatá faktúra | 518 (služby), 501 a 343 / 321; zásoby s príjemkou 131 (tovar) alebo 111 (materiál) |
 | bankový pohyb | 221 / 311 |
 | pokladničný doklad | 211 / … |
 | skladový doklad | 132 / 131, 504 / 132 — pozri [ocenenie zásob](../sklad/ocenenie.md) |
+
+Pri prijatej faktúre s druhom výdavku *Zásoby* rozhoduje príjemka, ktorá
+je k faktúre pripojená: tovar sa obstaráva na 131, materiál na sklad na 111
+(príjemka ich preúčtuje na 132 a 112, takže obstarávacie účty nemajú
+zostatok). Bez príjemky ide materiál priamo do spotreby na 501. Ak sú na
+príjemkách tovar aj materiál, Fiškus predkontáciu nenavrhne a faktúru
+zaúčtujete ručne.
 
 Každý zápis sa dá zmeniť (iná predkontácia, stredisko, zákazka) a pridať sa
 dajú ručné zápisy a interné doklady.
@@ -52,9 +59,21 @@ dajú ručné zápisy a interné doklady.
 - **Účtovný denník** — zápisy v časovom poradí.
 - **Hlavná kniha** — obratová predvaha, obraty a zostatky účtov.
 - **Kurzové rozdiely** pri úhrade v cudzej mene (aj pri čiastočných úhradách z eurového účtu) a k 31. 12.
-- **Závierka mikro účtovnej jednotky** — súvaha (Úč MÚJ 1-01) a výkaz
-  ziskov a strát (Úč MÚJ 2-01); počiatočné stavy z konečných stavov
-  minulého roka.
+- **Účtovná závierka** — súvaha a výkaz ziskov a strát mikro účtovnej
+  jednotky (Úč MÚJ 1-01 a 2-01) alebo malej účtovnej jednotky (Úč POD
+  1-01 a 2-01); počiatočné stavy z konečných stavov minulého roka.
+
+**Vzor závierky** zvolíte nad súvahou pre každý rok zvlášť — veľkosť
+účtovnej jednotky (§ 2 ods. 5 zákona o účtovníctve) určujete sami.
+Predvolená je mikro účtovná jednotka. Riadky malej účtovnej jednotky sú
+podľa šablóny registra účtovných závierok (súvaha r. 01 – 145, výkaz
+ziskov a strát r. 01 – 61; výsledok v r. 100 súvahy = r. 61 výkazu).
+Fiškus nerozlišuje položky voči prepojeným účtovným jednotkám a v rámci
+podielovej účasti ani dlhodobé pohľadávky a záväzky — zostatky sú
+v riadkoch „ostatné“ a krátkodobé; výsledok minulého roka, o ktorom
+ešte nerozhodli (431), je v r. 98 alebo 99. Čistý obrat (r. 01 výkazu)
+sú tržby z predaja výrobkov, tovaru a služieb (601, 602, 604, 606, 607).
+Prejdite riadky s účtovníkom.
 
 ### Uzávierka roka
 
@@ -80,6 +99,22 @@ Po uzavretí:
 Rok sa dá znova otvoriť s uvedením dôvodu (zapíše sa do auditu); po
 oprave ho znova uzavrite. Pred kurzovými rozdielmi a účtovnými odpismi
 za rok rok neuzavierajte — po uzavretí sa už nedajú zaúčtovať.
+
+**Uzávierkové zápisy** v paneli ukážu uzavretie účtovných kníh podľa
+postupov účtovania (účtová trieda 7):
+
+| Zápis | Dátum | Účty |
+|---|---|---|
+| uzavretie nákladov | 31. 12. | 710 MD / 5xx D |
+| uzavretie výnosov | 31. 12. | 6xx MD / 710 D |
+| prevod výsledku | 31. 12. | zisk 710 / 702, strata 702 / 710 |
+| uzavretie súvahových účtov | 31. 12. | aktíva 702 / účet, pasíva účet / 702 |
+| otvorenie | 1. 1. | aktíva účet / 701, pasíva 701 / účet, výsledok na 431 |
+
+Po zápisoch majú všetky účty vrátane 702 a 710 nulový zostatok. Do
+obratov roka sa nezapočítavajú — súvaha a výkaz ziskov a strát sú zo
+zostatkov pred uzavretím. Kým rok nie je uzavretý, zápisy sú návrh podľa
+súčasných zostatkov. Dajú sa vytlačiť a exportovať do Excelu aj CSV.
 
 ### Kurzové rozdiely k 31. 12.
 

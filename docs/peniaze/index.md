@@ -22,15 +22,19 @@ tags: [banka, pokladňa]
 Po načítaní Fiškus **spáruje platby s faktúrami** podľa variabilného symbolu
 a sumy. Čo si nie je istý, ponúkne ako návrh; zvyšok spárujete ručne alebo
 necháte ako nepárovaný pohyb (poplatky, vklady), ktorý sa v peňažnom
-denníku zapíše ručne. Čiastočné úhrady sa sčítajú.
+denníku zapíše ručne. Čiastočné úhrady sa sčítajú — pri vydaných aj
+prijatých faktúrach. Faktúra s časťou úhrady má stav *Čiastočne uhradená*,
+v zozname a v kniche záväzkov sa počíta iba zostatok a pri ďalšej platbe sa
+ponúkne zostatok.
 
 **Faktúra v cudzej mene z eurového účtu.** Pri ručnom párovaní eurovej
 platby sa v zozname „Iný doklad“ ponúknu aj faktúry v cudzej mene (hľadať sa
 dá aj podľa meny, napr. CZK). Fiškus sa opýta, koľko v mene faktúry platba
 uhrádza — predvolený je celý zostatok, pri menšej sume ostane faktúra
 čiastočne uhradená a čaká na ďalšiu platbu. V podvojnom účtovníctve sa pri
-každej platbe odpíše z účtu 311 pomerná časť sumy faktúry v eurách
-(posledná platba zvyšok) a rozdiel je kurzový zisk (663) alebo strata (563).
+každej platbe odpíše z účtu 311 (pri prijatej faktúre 321) pomerná časť
+sumy faktúry v eurách (posledná platba zvyšok) a rozdiel je kurzový zisk
+(663) alebo strata (563).
 
 ![Eurová platba k faktúre v CZK: koľko korún uhrádza](../obrazky/banka-cudzia-mena.webp)
 *Eurová platba k faktúre v CZK: koľko korún uhrádza*

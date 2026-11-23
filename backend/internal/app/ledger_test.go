@@ -1,6 +1,8 @@
 package app
 
 import (
+	"encoding/json"
+	"strings"
 	"testing"
 
 	"github.com/fiskus-online/fiskus/backend/internal/bank"
@@ -427,5 +429,19 @@ func TestFXRevaluation(t *testing.T) {
 		if ps.Doc == chart.DocBank && lineStr(ps.Lines) != "221 MD 20.00, 311 D 19.68, 663 D 0.32" {
 			t.Errorf("úhrada bez prepočtu: %s", lineStr(ps.Lines))
 		}
+	}
+}
+
+// Rok bez dokladov (napr. 1. januára) vráti prázdny zoznam zápisov, nie
+// null — obrazovka hlavnej knihy ho filtruje.
+func TestLedgerEmptyYear(t *testing.T) {
+	a, c := newApp(t, edition.Desktop)
+	book, err := a.Ledger(ctx, c.ID, 2030)
+	if err != nil {
+		t.Fatal(err)
+	}
+	b, _ := json.Marshal(book)
+	if book.Postings == nil || !strings.Contains(string(b), `"postings":[]`) {
+		t.Fatalf("zápisy: %s", b[:min(len(b), 200)])
 	}
 }

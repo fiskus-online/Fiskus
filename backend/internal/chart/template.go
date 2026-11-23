@@ -241,6 +241,9 @@ var DefaultTemplates = []Template{
 	{Code: "FP-MATERIAL", Name: "Prijatá faktúra – materiál do spotreby", Doc: DocPurchase, Lines: []TemplateLine{
 		{Debit, "501", PartBase}, {Debit, "501", PartVATNon}, {Debit, "343", PartVAT}, {Credit, "321", PartTotal},
 		{Debit, "343", PartSelf}, {Credit, "343", PartSelf}}},
+	{Code: "FP-MATERIAL-SKLAD", Name: "Prijatá faktúra – materiál na sklad", Doc: DocPurchase, Lines: []TemplateLine{
+		{Debit, "111", PartBase}, {Debit, "111", PartVATNon}, {Debit, "343", PartVAT}, {Credit, "321", PartTotal},
+		{Debit, "343", PartSelf}, {Credit, "343", PartSelf}}},
 	{Code: "FP-TOVAR", Name: "Prijatá faktúra – tovar na sklad", Doc: DocPurchase, Lines: []TemplateLine{
 		{Debit, "131", PartBase}, {Debit, "131", PartVATNon}, {Debit, "343", PartVAT}, {Credit, "321", PartTotal},
 		{Debit, "343", PartSelf}, {Credit, "343", PartSelf}}},
