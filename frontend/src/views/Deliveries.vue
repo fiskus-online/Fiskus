@@ -2,6 +2,7 @@
 // Dodacie listy: stav, odberateľ, suma; vybrané vydané dodacie listy
 // jedného odberateľa sa dajú dať na zbernú faktúru. Súčty v hlavičke sú
 // súčtom už vypočítaných súm zo servera.
+import { withoutAll } from '../lib/filters.js'
 import { computed, onBeforeUnmount, onMounted, ref, shallowRef } from 'vue'
 import { useRouter } from 'vue-router'
 import { useToast } from 'primevue/usetoast'
@@ -22,7 +23,7 @@ import ExportButton from '../components/ExportButton.vue'
 
 const router = useRouter()
 const toast = useToast()
-const view = ref('issued')
+const view = ref(['issued']) // zaškrtnuté stavy (prázdne = všetky)
 const search = ref('')
 const searchEl = ref(null)
 const rows = shallowRef([])
@@ -157,7 +158,7 @@ onBeforeUnmount(() => {
     </header>
 
     <section class="ledger" aria-label="Prehľad dodacích listov">
-      <button class="figure figure-link" :disabled="!ledger.openCount" @click="view = 'issued'">
+      <button class="figure figure-link" :disabled="!ledger.openCount" @click="view = ['issued']">
         <span class="label">Na fakturáciu ({{ ledger.openCount }})</span>
         <span class="value">{{ formatMoney(ledger.openTotal) }}</span>
       </button>
@@ -165,14 +166,14 @@ onBeforeUnmount(() => {
         <span class="label">Odberateľov</span>
         <span class="value">{{ ledger.customers }}</span>
       </div>
-      <button class="figure figure-link" :disabled="!ledger.drafts" @click="view = 'draft'">
+      <button class="figure figure-link" :disabled="!ledger.drafts" @click="view = ['draft']">
         <span class="label">Koncepty</span>
         <span class="value">{{ ledger.drafts }}</span>
       </button>
     </section>
 
     <div class="toolbar">
-      <SelectButton v-model="view" :options="deliveryViews" option-label="label" option-value="value" :allow-empty="false" size="small" aria-label="Zobraziť" />
+      <SelectButton v-model="view" :options="withoutAll(deliveryViews)" option-label="label" option-value="value" multiple size="small" aria-label="Zobraziť" />
       <IconField class="search">
         <InputIcon class="pi pi-search" />
         <InputText ref="searchEl" v-model="search" placeholder="Hľadať číslo, odberateľa, položku" size="small" aria-label="Hľadať" />
@@ -376,7 +377,7 @@ onBeforeUnmount(() => {
     white-space: nowrap;
   }
   .search {
-    flex: 1;
+    flex: 1 1 10rem; /* pod 10rem sa hľadanie zalomí pod filtre */
     width: auto;
     min-width: 0;
     margin-left: 0;

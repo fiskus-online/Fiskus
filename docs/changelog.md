@@ -13,6 +13,11 @@ etapách je v [pláne vývoja](./ROADMAP.md).
 
 ## 0.10.11
 
+- **Filtre zoznamov so zaškrtávaním viacerých volieb.** Pohyby domácnosti
+  (účty, druhy, kategórie, mesiace), banka, pokladňa, vydané a prijaté
+  faktúry, ponuky, objednávky, dodacie listy, zákazky, pravidelná
+  fakturácia, e-maily, sklad, kniha jázd a účtovný denník — nič
+  nezaškrtnuté znamená všetko.
 - **Upozornenie na zostatok obstarávacích účtov zásob (111, 131)** pri
   súvahe aj v kontrolách uzávierky roka — s počtom príjemok bez pripojenej
   prijatej faktúry. Ukážkové dáta majú k príjemkám tovaru prijaté faktúry,

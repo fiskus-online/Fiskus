@@ -1,6 +1,7 @@
 // Domácnosť (domáce účtovníctvo): číselníky, filtre a formulár pohybu.
 // Zostatky, súčty po mesiacoch a čerpanie rozpočtu počíta server
 // (internal/household), tu sa iba zobrazujú.
+import { anyPicked, inPicked } from './filters.js'
 import { fold, matches, searchTerms } from './search.js'
 import { formatDate, formatMoney, toISODate } from './format.js'
 
@@ -131,10 +132,11 @@ export function entryCategory(e, accounts) {
 export function filterEntries(rows, f, accounts = []) {
   const terms = searchTerms(f.search)
   return rows.filter((e) => {
-    if (f.accountId && e.accountId !== f.accountId && e.toAccountId !== f.accountId) return false
-    if (f.category && e.category !== f.category && !(e.split ?? []).some((x) => x.category === f.category)) return false
-    if (f.type && entryType(e) !== f.type) return false
-    if (f.month && Number(String(e.date).slice(5, 7)) !== f.month) return false
+    // každý filter môže mať viac zaškrtnutých volieb (prázdny = všetko)
+    if (!anyPicked(f.accountId, (a) => e.accountId === a || e.toAccountId === a)) return false
+    if (!anyPicked(f.category, (c) => e.category === c || (e.split ?? []).some((x) => x.category === c))) return false
+    if (!inPicked(f.type, entryType(e))) return false
+    if (!inPicked(f.month, Number(String(e.date).slice(5, 7)))) return false
     return matches(terms, [formatDate(e.date), e.date, entryCategory(e, accounts), e.payee, e.note, accountName(accounts, e.accountId), e.amount,
       ...(e.split ?? []).flatMap((x) => [x.note, x.category])])
   })

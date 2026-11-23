@@ -17,6 +17,9 @@ describe('účtovný denník', () => {
     expect(filterPostings(postings, { filter: 'manual' })).toHaveLength(1)
     expect(filterPostings(postings, { filter: 'bank' })).toHaveLength(2)
     expect(filterPostings(postings, { month: 10 })).toHaveLength(1)
+    // viac zaškrtnutých volieb: nezaúčtované alebo ručne zaúčtované
+    expect(filterPostings(postings, { filter: ['problem', 'manual'] })).toHaveLength(2)
+    expect(filterPostings(postings, { filter: [] })).toHaveLength(postings.length)
   })
   it('export po riadkoch', () => {
     const rows = postingRows(postings)

@@ -48,6 +48,11 @@ describe('domácnosť', () => {
     [{ category: 'Potraviny' }, [1]],
     [{ month: 9 }, [3]],
     [{ search: 'peňaženka' }, [2, 4]],
+    [{ accountId: [1, 2] }, [1, 2, 3, 4]], // viac účtov
+    [{ type: ['income', 'transfer'] }, [2, 3]],
+    [{ category: ['Potraviny', 'Mzda'] }, [1, 3]],
+    [{ month: [9, 10] }, [1, 2, 3, 4]],
+    [{ accountId: [], type: [] }, [1, 2, 3, 4]], // nič nezaškrtnuté = všetko
   ])('filter %o', (f, ids) => {
     expect(filterEntries(rows, f, accounts).map((r) => r.id)).toEqual(ids)
   })

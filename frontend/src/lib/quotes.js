@@ -1,3 +1,4 @@
+import { anyPicked } from './filters.js'
 // Cenové ponuky: stavy a povolené akcie. Ponuka nie je daňový doklad.
 
 const STATES = {
@@ -63,7 +64,12 @@ export const quoteViews = [
   { label: 'Odmietnuté a po platnosti', value: 'lost' },
 ]
 
+/** Zhoduje sa s niektorým zo zaškrtnutých zobrazení (prázdne = všetky). */
 export function matchesQuoteView(q, view) {
+  return anyPicked(view, (v) => matchesQuoteViewOne(q, v))
+}
+
+function matchesQuoteViewOne(q, view) {
   switch (view) {
     case 'draft': return q.status === 'draft'
     case 'open': return q.status === 'issued' && !q.expired

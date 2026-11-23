@@ -1,5 +1,6 @@
 <script setup>
 // Pokladňa: príjmové a výdavkové pokladničné doklady, zostatok, úhrada faktúr v hotovosti.
+import { inPicked, withoutAll } from '../lib/filters.js'
 import { computed, onMounted, ref, shallowRef, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import Dialog from 'primevue/dialog'
@@ -39,7 +40,7 @@ const closingsOpen = ref(route.query.uzavierky !== undefined)
 const thisYear = new Date().getFullYear()
 const years = [thisYear, thisYear - 1, thisYear - 2].map((y) => ({ label: String(y), value: y }))
 const year = ref(thisYear)
-const view = ref('all')
+const view = ref([]) // zaškrtnuté druhy (prázdne = všetky)
 const views = [
   { label: 'Všetky', value: 'all' },
   { label: 'Príjmy', value: 'in' },
@@ -118,7 +119,7 @@ const curOptions = computed(() => currencyOptions(codes.currencies))
 const visibleRows = computed(() => {
   const terms = searchTerms(search.value)
   return book.value.documents.filter(
-    (d) => (view.value === 'all' || d.kind === view.value) && matches(terms, [d.number, d.partner, d.purpose, d.linkNumber, d.amount, d.note]),
+    (d) => inPicked(view.value, d.kind) && matches(terms, [d.number, d.partner, d.purpose, d.linkNumber, d.amount, d.note]),
   )
 })
 
@@ -348,7 +349,7 @@ const docLink = (kind, id) => (kind === 'closing' ? '/pokladna?uzavierky' : kind
     </section>
 
     <div class="toolbar">
-      <SelectButton v-model="view" :options="views" option-label="label" option-value="value" :allow-empty="false" size="small" aria-label="Zobraziť" />
+      <SelectButton v-model="view" :options="withoutAll(views)" option-label="label" option-value="value" multiple size="small" aria-label="Zobraziť" />
       <IconField class="search">
         <InputIcon class="pi pi-search" />
         <InputText v-model="search" placeholder="Hľadať číslo, partnera, účel, sumu" size="small" aria-label="Hľadať" />
@@ -840,7 +841,7 @@ const docLink = (kind, id) => (kind === 'closing' ? '/pokladna?uzavierky' : kind
     font-size: var(--fs-lg);
   }
   .search {
-    flex: 1;
+    flex: 1 1 10rem; /* pod 10rem sa hľadanie zalomí pod filtre */
     width: auto;
     min-width: 0;
     margin-left: 0;

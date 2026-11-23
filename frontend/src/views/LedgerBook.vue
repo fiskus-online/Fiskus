@@ -2,6 +2,8 @@
 // Účtovný denník a hlavná kniha (podvojné účtovníctvo). Doklady zaúčtuje
 // server podľa predkontácií; tu sa predkontácia mení, zápis zadáva ručne,
 // pridávajú interné doklady a počiatočné stavy.
+import MultiSelect from 'primevue/multiselect'
+import { withoutAll } from '../lib/filters.js'
 import { computed, onMounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import Button from 'primevue/button'
@@ -76,7 +78,7 @@ const accounts = ref([])
 const centers = ref([])
 const jobs = ref([])
 const search = ref('')
-const filter = ref('all')
+const filter = ref([]) // zaškrtnuté filtre zápisov (prázdne = všetky)
 const month = ref(0)
 const months = [{ value: 0, label: 'Celý rok' }, ...['január', 'február', 'marec', 'apríl', 'máj', 'jún', 'júl', 'august', 'september', 'október', 'november', 'december'].map((label, i) => ({ value: i + 1, label }))]
 const level = ref('synthetic')
@@ -377,7 +379,7 @@ function removeInternal() {
           <span class="value" :class="{ bad: book.unposted }">
             {{ book.unposted }}
             <Button v-if="book.unposted && !(tab === 'journal' && filter === 'problem')" label="Zobraziť" text size="small" class="show"
-              @click="((tab = 'journal'), (filter = 'problem'))" />
+              @click="((tab = 'journal'), (filter = ['problem']))" />
           </span>
         </div>
       </section>
@@ -388,7 +390,8 @@ function removeInternal() {
           <InputText v-model="search" :placeholder="tab === 'journal' ? 'Hľadať doklad, partnera, účet' : 'Hľadať účet'" size="small" aria-label="Hľadať" />
         </IconField>
         <template v-if="tab === 'journal'">
-          <Select v-model="filter" :options="postingFilters" option-label="label" option-value="value" size="small" class="sel" aria-label="Filter" />
+          <MultiSelect v-model="filter" :options="withoutAll(postingFilters)" option-label="label" option-value="value" size="small" class="sel"
+            placeholder="Všetky doklady" :max-selected-labels="1" selected-items-label="{0} filtre" show-clear aria-label="Filter" />
           <Select v-model="month" :options="months" option-label="label" option-value="value" size="small" class="sel-month" aria-label="Mesiac" />
         </template>
         <SelectButton v-else v-model="level" :options="levels" option-label="label" option-value="value" :allow-empty="false" size="small" aria-label="Úroveň účtov" />

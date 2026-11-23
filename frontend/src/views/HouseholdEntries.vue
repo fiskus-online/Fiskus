@@ -12,6 +12,8 @@ import InputText from 'primevue/inputtext'
 import IconField from 'primevue/iconfield'
 import InputIcon from 'primevue/inputicon'
 import Select from 'primevue/select'
+import MultiSelect from 'primevue/multiselect'
+import { onlyPicked } from '../lib/filters.js'
 import Checkbox from 'primevue/checkbox'
 import { api } from '../lib/api.js'
 import { can, session } from '../lib/session.js'
@@ -33,7 +35,8 @@ const canWrite = computed(() => can('ledger.write'))
 const now = new Date()
 const year = ref(Number(route.query.rok) || now.getFullYear())
 const years = [0, 1, 2, 3].map((d) => ({ label: String(now.getFullYear() - d), value: now.getFullYear() - d }))
-const filter = ref({ accountId: Number(route.query.ucet) || null, type: null, category: route.query.kategoria || null, month: null, search: '' })
+// filtre s viacerými voľbami (prázdny výber = všetko)
+const filter = ref({ accountId: route.query.ucet ? [Number(route.query.ucet)] : [], type: [], category: route.query.kategoria ? [route.query.kategoria] : [], month: [], search: '' })
 
 const rows = shallowRef([])
 const accounts = ref([])
@@ -70,9 +73,9 @@ const totals = computed(() => listTotals(visible.value))
 const payees = computed(() => [...new Set(rows.value.map((e) => e.payee).filter(Boolean))])
 const categoryOptions = computed(() => categories.value.map((c) => ({ label: c.name, value: c.name })))
 const monthOptions = monthNames.map((m, i) => ({ label: m, value: i + 1 }))
-const filtered = computed(() => !!(filter.value.accountId || filter.value.type || filter.value.category || filter.value.month || filter.value.search))
+const filtered = computed(() => !!(filter.value.accountId.length || filter.value.type.length || filter.value.category.length || filter.value.month.length || filter.value.search))
 function resetFilter() {
-  filter.value = { accountId: null, type: null, category: null, month: null, search: '' }
+  filter.value = { accountId: [], type: [], category: [], month: [], search: '' }
 }
 
 const columnDefs = computed(() => [
@@ -143,7 +146,7 @@ function bulkDelete() {
 const editing = ref(null)
 function add(type) {
   const e = newEntry(type, accounts.value)
-  if (filter.value.accountId) e.accountId = filter.value.accountId
+  if (onlyPicked(filter.value.accountId)) e.accountId = onlyPicked(filter.value.accountId)
   editing.value = e
 }
 
@@ -154,7 +157,7 @@ const importBusy = ref(false)
 const fileInput = ref(null)
 const bankAccounts = computed(() => accounts.value.filter((a) => !a.closed && a.kind !== 'cash'))
 function openImport() {
-  importAccount.value = filter.value.accountId || bankAccounts.value[0]?.id || null
+  importAccount.value = onlyPicked(filter.value.accountId) || bankAccounts.value[0]?.id || null
   importOpen.value = true
 }
 async function importFile(ev) {
@@ -220,7 +223,7 @@ const picked = ref([])
 async function openDraws() {
   drawsOpen.value = true
   drawsBusy.value = true
-  drawAccount.value = filter.value.accountId || accounts.value.find((a) => !a.closed)?.id || null
+  drawAccount.value = onlyPicked(filter.value.accountId) || accounts.value.find((a) => !a.closed)?.id || null
   try {
     draws.value = await api.hhDraws(session.companyId, year.value)
     picked.value = draws.value.filter((d) => !d.imported).map((d) => d.companyId + ':' + d.key)
@@ -270,10 +273,14 @@ async function importDraws() {
     </header>
 
     <div class="toolbar">
-      <Select v-model="filter.accountId" :options="accounts" option-label="name" option-value="id" size="small" show-clear placeholder="Všetky účty" aria-label="Účet" />
-      <Select v-model="filter.type" :options="entryTypes" option-label="label" option-value="value" size="small" show-clear placeholder="Všetky druhy" aria-label="Druh" />
-      <Select v-model="filter.category" :options="categoryOptions" option-label="label" option-value="value" size="small" filter show-clear placeholder="Všetky kategórie" aria-label="Kategória" />
-      <Select v-model="filter.month" :options="monthOptions" option-label="label" option-value="value" size="small" show-clear placeholder="Celý rok" aria-label="Mesiac" />
+      <MultiSelect v-model="filter.accountId" :options="accounts" option-label="name" option-value="id" size="small" placeholder="Všetky účty"
+        :max-selected-labels="2" selected-items-label="{0} účty" show-clear aria-label="Účty" class="flt" />
+      <MultiSelect v-model="filter.type" :options="entryTypes" option-label="label" option-value="value" size="small" placeholder="Všetky druhy"
+        :max-selected-labels="2" selected-items-label="{0} druhy" :show-toggle-all="false" show-clear aria-label="Druhy" class="flt" />
+      <MultiSelect v-model="filter.category" :options="categoryOptions" option-label="label" option-value="value" size="small" filter placeholder="Všetky kategórie"
+        :max-selected-labels="2" selected-items-label="{0} kategórie" show-clear aria-label="Kategórie" class="flt" />
+      <MultiSelect v-model="filter.month" :options="monthOptions" option-label="label" option-value="value" size="small" placeholder="Celý rok"
+        :max-selected-labels="2" selected-items-label="{0} mesiace" show-clear aria-label="Mesiace" class="flt" />
       <Button v-if="filtered" label="Zrušiť filter" icon="pi pi-filter-slash" text size="small" @click="resetFilter" />
       <IconField class="search">
         <InputIcon class="pi pi-search" />
@@ -375,6 +382,10 @@ async function importDraws() {
 </template>
 
 <style scoped>
+.flt {
+  min-width: 9rem;
+  max-width: 14rem;
+}
 .page {
   display: flex;
   flex-direction: column;

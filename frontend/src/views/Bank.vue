@@ -1,5 +1,6 @@
 <script setup>
 // Banka: import výpisov (camt.053, GPC, CSV, Excel) a párovanie platieb s faktúrami.
+import { inPicked, withoutAll } from '../lib/filters.js'
 import { computed, onMounted, ref, shallowRef, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { AgGridVue } from 'ag-grid-vue3'
@@ -28,7 +29,7 @@ const canWrite = computed(() => can('bank.write'))
 const thisYear = new Date().getFullYear()
 const years = [thisYear, thisYear - 1, thisYear - 2].map((y) => ({ label: String(y), value: y }))
 const year = ref(thisYear)
-const view = ref('all')
+const view = ref([]) // zaškrtnuté stavy (prázdne = všetky)
 const views = [
   { label: 'Všetky', value: 'all' },
   { label: 'Nespárované', value: 'open' },
@@ -78,7 +79,7 @@ async function syncAllFio() {
         const r = await api.syncFio(session.companyId, a.id)
         toast.add({ severity: 'success', summary: `Stiahnuté z Fio (${a.label})`, detail: importSummary(r), life: 6000 })
         for (const w of r.warnings || []) toast.add({ severity: 'warn', summary: 'Upozornenie', detail: w, life: 8000 })
-        if (r.open) view.value = 'open'
+        if (r.open) view.value = ['open']
       } catch (e) {
         const f = e.fields?.find((x) => x.field === 'fio')
         toast.add({ severity: 'error', summary: `Sťahovanie z Fio zlyhalo (${a.label})`, detail: f?.message || e.message, life: 8000 })
@@ -94,7 +95,7 @@ const visibleRows = computed(() => {
   const terms = searchTerms(search.value)
   return rows.value.filter(
     (r) =>
-      (view.value === 'all' || r.status === view.value) &&
+      inPicked(view.value, r.status) &&
       matches(terms, [r.counterName, r.counterIban, r.vs, r.ss, r.ks, r.message, r.amount, r.match?.number, r.note]),
   )
 })
@@ -162,7 +163,7 @@ async function onFile(e) {
     const r = await api.importBank(session.companyId, file)
     toast.add({ severity: 'success', summary: `Výpis ${file.name} načítaný${r.format ? ` (${r.format})` : ""}`, detail: importSummary(r), life: 6000 })
     for (const w of r.warnings) toast.add({ severity: 'warn', summary: 'Upozornenie', detail: w, life: 8000 })
-    if (r.open) view.value = 'open'
+    if (r.open) view.value = ['open']
     await load()
   } catch (err) {
     toast.add({ severity: 'error', summary: 'Výpis nemožno načítať', detail: err.message, life: 8000 })
@@ -269,14 +270,14 @@ const kindLabel = (k) => (k === 'purchase' ? 'prijatá' : 'vydaná')
         <span class="label">Výdavky {{ year }}</span>
         <span class="value">{{ formatMoney(ledger.out) }}</span>
       </div>
-      <button class="figure figure-alert" :class="{ none: !ledger.open }" :disabled="!ledger.open" @click="view = 'open'">
+      <button class="figure figure-alert" :class="{ none: !ledger.open }" :disabled="!ledger.open" @click="view = ['open']">
         <span class="label">Na spárovanie</span>
         <span class="value">{{ ledger.open }}</span>
       </button>
     </section>
 
     <div class="toolbar">
-      <SelectButton v-model="view" :options="views" option-label="label" option-value="value" :allow-empty="false" size="small" aria-label="Zobraziť" />
+      <SelectButton v-model="view" :options="withoutAll(views)" option-label="label" option-value="value" multiple size="small" aria-label="Zobraziť" />
       <IconField class="search">
         <InputIcon class="pi pi-search" />
         <InputText v-model="search" placeholder="Hľadať protistranu, VS, správu, sumu" size="small" aria-label="Hľadať" />
@@ -656,7 +657,7 @@ const kindLabel = (k) => (k === 'purchase' ? 'prijatá' : 'vydaná')
     white-space: nowrap;
   }
   .search {
-    flex: 1;
+    flex: 1 1 10rem; /* pod 10rem sa hľadanie zalomí pod filtre */
     width: auto;
     min-width: 0;
     margin-left: 0;

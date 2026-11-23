@@ -1,5 +1,6 @@
 // Účtovný denník a hlavná kniha: zobrazenie, filtre a riadky na úpravu.
 // Zápisy a obraty počíta server; tu sa len triedi a zobrazuje.
+import { anyPicked } from './filters.js'
 import { matches, searchTerms } from './search.js'
 import { accountDisplay, docLabels } from './chart.js'
 
@@ -15,9 +16,8 @@ export const postingFilters = [
 export function filterPostings(list, { search = '', filter = 'all', month = 0 } = {}) {
   const terms = searchTerms(search)
   return list.filter((p) => {
-    if (filter === 'problem' && !p.problem) return false
-    if (filter === 'manual' && !p.manual) return false
-    if (docLabels[filter] && p.doc !== filter) return false
+    // filter môže mať viac zaškrtnutých volieb (prázdny alebo „all“ = všetko)
+    if (!anyPicked(filter, (f) => (f === 'problem' && p.problem) || (f === 'manual' && p.manual) || p.doc === f)) return false
     if (month && Number(p.date.slice(5, 7)) !== month) return false
     const accs = p.lines.flatMap((l) => [l.account, accountDisplay(l.account), l.name])
     return matches(terms, [p.number, p.partner, p.text, p.template, p.note, p.amount, p.center, p.job, docLabels[p.doc], ...accs])

@@ -1,4 +1,5 @@
 <script setup>
+import { anyPicked, withoutAll } from '../lib/filters.js'
 import { computed, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { AgGridVue } from 'ag-grid-vue3'
@@ -110,7 +111,7 @@ async function readDocument(e) {
 const thisYear = new Date().getFullYear()
 const years = [thisYear, thisYear - 1, thisYear - 2].map((y) => ({ label: String(y), value: y }))
 const year = ref(thisYear)
-const view = ref('all')
+const view = ref([]) // zaškrtnuté stavy (prázdne = všetky)
 const views = [
   { label: 'Všetky', value: 'all' },
   { label: 'Neuhradené', value: 'unpaid' },
@@ -139,9 +140,7 @@ onMounted(load)
 const visibleRows = computed(() => {
   const terms = searchTerms(search.value)
   return rows.value.filter((r) => {
-    if (view.value === 'unpaid' && r.status !== 'booked') return false
-    if (view.value === 'overdue' && !r.overdue) return false
-    if (view.value === 'paid' && r.status !== 'paid') return false
+    if (!anyPicked(view.value, (v) => (v === 'unpaid' && r.status === 'booked') || (v === 'overdue' && r.overdue) || (v === 'paid' && r.status === 'paid'))) return false
     const s = r.supplier ?? {}
     return matches(terms, [r.number, r.supplierNumber, r.variableSymbol, s.name, s.ico, s.icdph, s.city, r.description, r.note, r.summary?.total, r.currency])
   })
@@ -273,14 +272,14 @@ onBeforeUnmount(() => {
         <span class="label">Na úhradu ({{ ledger.unpaidCount }})</span>
         <span class="value">{{ formatMoney(ledger.unpaid) }}</span>
       </div>
-      <button class="figure figure-alert" :class="{ none: !ledger.overdueCount }" :disabled="!ledger.overdueCount" @click="view = 'overdue'">
+      <button class="figure figure-alert" :class="{ none: !ledger.overdueCount }" :disabled="!ledger.overdueCount" @click="view = ['overdue']">
         <span class="label">Po splatnosti ({{ ledger.overdueCount }})</span>
         <span class="value">{{ formatMoney(ledger.overdue) }}</span>
       </button>
     </section>
 
     <div class="toolbar">
-      <SelectButton v-model="view" :options="views" option-label="label" option-value="value" :allow-empty="false" size="small" aria-label="Zobraziť" />
+      <SelectButton v-model="view" :options="withoutAll(views)" option-label="label" option-value="value" multiple size="small" aria-label="Zobraziť" />
       <IconField class="search">
         <InputIcon class="pi pi-search" />
         <InputText v-model="search" placeholder="Hľadať číslo, dodávateľa, IČO, predmet, sumu" size="small" aria-label="Hľadať" />
@@ -540,7 +539,7 @@ onBeforeUnmount(() => {
     white-space: nowrap;
   }
   .search {
-    flex: 1;
+    flex: 1 1 10rem; /* pod 10rem sa hľadanie zalomí pod filtre */
     width: auto;
     min-width: 0;
     margin-left: 0;

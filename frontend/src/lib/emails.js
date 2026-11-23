@@ -1,4 +1,5 @@
 // E-maily: druhy dokladov, stav odoslania, hľadanie a nastavenie servera SMTP.
+import { anyPicked } from './filters.js'
 import { fold, matches, searchTerms } from './search.js'
 
 export const docKinds = {
@@ -44,7 +45,7 @@ export function filterEmails(rows, view, search) {
   const terms = searchTerms(search)
   return rows.filter(
     (e) =>
-      (view !== 'failed' || !!e.error) &&
+      anyPicked(view, (v) => v !== 'failed' || !!e.error) &&
       matches(terms, [e.docNumber, docKindLabel(e.docKind), e.to, e.cc, e.subject, e.file, e.user, e.error, emailStatus(e).label]),
   )
 }

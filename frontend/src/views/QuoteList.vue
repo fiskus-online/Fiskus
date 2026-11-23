@@ -1,5 +1,6 @@
 <script setup>
 // Zoznam cenových ponúk. Ponuka nie je daňový doklad — súčty sú iba prehľad.
+import { withoutAll } from '../lib/filters.js'
 import { computed, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { AgGridVue } from 'ag-grid-vue3'
@@ -24,7 +25,7 @@ const router = useRouter()
 const thisYear = new Date().getFullYear()
 const years = [thisYear, thisYear - 1, thisYear - 2].map((y) => ({ label: String(y), value: y }))
 const year = ref(thisYear)
-const view = ref('all')
+const view = ref([]) // zaškrtnuté stavy (prázdne = všetky)
 const search = ref('')
 const searchEl = ref(null)
 
@@ -193,11 +194,11 @@ onBeforeUnmount(() => {
     </header>
 
     <section class="ledger" aria-label="Prehľad za rok">
-      <button class="figure figure-link" :disabled="!ledger.openCount" @click="view = 'open'">
+      <button class="figure figure-link" :disabled="!ledger.openCount" @click="view = ['open']">
         <span class="label">Odoslané, čakajú na odpoveď ({{ ledger.openCount }})</span>
         <span class="value">{{ formatMoney(ledger.open) }}</span>
       </button>
-      <button class="figure figure-link" :disabled="!ledger.waitingCount" @click="view = 'accepted'">
+      <button class="figure figure-link" :disabled="!ledger.waitingCount" @click="view = ['accepted']">
         <span class="label">Prijaté, na vyfakturovanie ({{ ledger.waitingCount }})</span>
         <span class="value">{{ formatMoney(ledger.waiting) }}</span>
       </button>
@@ -209,7 +210,7 @@ onBeforeUnmount(() => {
     </section>
 
     <div class="toolbar">
-      <SelectButton v-model="view" :options="quoteViews" option-label="label" option-value="value" :allow-empty="false" size="small" aria-label="Zobraziť" />
+      <SelectButton v-model="view" :options="withoutAll(quoteViews)" option-label="label" option-value="value" multiple size="small" aria-label="Zobraziť" />
       <IconField class="search">
         <InputIcon class="pi pi-search" />
         <InputText ref="searchEl" v-model="search" placeholder="Hľadať číslo, odberateľa, predmet, IČO, položku" size="small" aria-label="Hľadať" />
@@ -397,7 +398,7 @@ onBeforeUnmount(() => {
     white-space: nowrap;
   }
   .search {
-    flex: 1;
+    flex: 1 1 10rem; /* pod 10rem sa hľadanie zalomí pod filtre */
     width: auto;
     min-width: 0;
     margin-left: 0;

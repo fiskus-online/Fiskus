@@ -1,5 +1,6 @@
 // Kniha jázd: číselníky, popisy a hľadanie. Kilometre, náklady a náhrady
 // počíta server (internal/logbook), tu sa iba zobrazujú.
+import { inPicked } from './filters.js'
 import { matches, searchTerms } from './search.js'
 import { formatDate } from './format.js'
 
@@ -59,7 +60,7 @@ export const tripKinds = [
 export function filterTrips(trips, query, kind = 'all') {
   const terms = searchTerms(query)
   return trips.filter(
-    (t) => (kind === 'all' || t.kind === kind) && matches(terms, [formatDate(t.date), t.from, t.to, t.purpose, t.driver, t.note, String(t.km)]),
+    (t) => inPicked(kind, t.kind) && matches(terms, [formatDate(t.date), t.from, t.to, t.purpose, t.driver, t.note, String(t.km)]),
   )
 }
 

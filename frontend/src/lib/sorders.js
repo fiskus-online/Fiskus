@@ -1,5 +1,6 @@
 // Prijaté objednávky od zákazníkov: stavy, filtre, formulár a výber
 // množstiev na dodanie. Sumy, zvyšky a voľné množstvá počíta server.
+import { anyPicked } from './filters.js'
 import { partyOf } from './deliveries.js'
 
 export { partyOf }
@@ -33,8 +34,13 @@ export const isActive = (o) => o?.status === 'open' || o?.status === 'partial'
 /** Aktívna objednávka po požadovanom termíne dodania. */
 export const isLate = (o, today) => !!(today && isActive(o) && o.due && o.due < today)
 
-/** Patrí objednávka do zobrazenia? */
+/** Zhoduje sa s niektorým zo zaškrtnutých zobrazení (prázdne = všetky). */
 export function matchesSalesOrderView(o, view) {
+  return anyPicked(view, (v) => matchesSalesOrderViewOne(o, v))
+}
+
+/** Patrí objednávka do zobrazenia? */
+function matchesSalesOrderViewOne(o, view) {
   if (view === 'all') return true
   if (view === 'active') return isActive(o)
   return o.status === view

@@ -1,4 +1,5 @@
 <script setup>
+import { anyPicked, withoutAll } from '../lib/filters.js'
 import { computed, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { AgGridVue } from 'ag-grid-vue3'
@@ -24,7 +25,7 @@ const router = useRouter()
 const thisYear = new Date().getFullYear()
 const years = [thisYear, thisYear - 1, thisYear - 2].map((y) => ({ label: String(y), value: y }))
 const year = ref(thisYear)
-const view = ref('all')
+const view = ref([]) // zaškrtnuté stavy (prázdne = všetky)
 const views = [
   { label: 'Všetky', value: 'all' },
   { label: 'Koncepty', value: 'draft' },
@@ -53,8 +54,9 @@ async function load() {
 watch(year, load)
 onMounted(load)
 
-const matchesView = (r) => {
-  switch (view.value) {
+const matchesView = (r) => anyPicked(view.value, (v) => matchesOne(r, v))
+const matchesOne = (r, v) => {
+  switch (v) {
     case 'draft': return r.status === 'draft'
     case 'unpaid': return r.status === 'issued'
     case 'overdue': return r.overdue
@@ -237,7 +239,7 @@ onBeforeUnmount(() => {
         class="figure figure-alert"
         :class="{ none: !ledger.overdueCount }"
         :disabled="!ledger.overdueCount"
-        @click="view = 'overdue'"
+        @click="view = ['overdue']"
       >
         <span class="label">Po splatnosti ({{ ledger.overdueCount }})</span>
         <span class="value">{{ formatMoney(ledger.overdue) }}</span>
@@ -245,7 +247,7 @@ onBeforeUnmount(() => {
     </section>
 
     <div class="toolbar">
-      <SelectButton v-model="view" :options="views" option-label="label" option-value="value" :allow-empty="false" size="small" aria-label="Zobraziť" />
+      <SelectButton v-model="view" :options="withoutAll(views)" option-label="label" option-value="value" multiple size="small" aria-label="Zobraziť" />
       <IconField class="search">
         <InputIcon class="pi pi-search" />
         <InputText ref="searchEl" v-model="search" placeholder="Hľadať číslo, odberateľa, predmet, IČO, VS, sumu" size="small" aria-label="Hľadať" />
@@ -444,7 +446,7 @@ onBeforeUnmount(() => {
     white-space: nowrap;
   }
   .search {
-    flex: 1;
+    flex: 1 1 10rem; /* pod 10rem sa hľadanie zalomí pod filtre */
     width: auto;
     min-width: 0;
     margin-left: 0;

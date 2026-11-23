@@ -1,3 +1,4 @@
+import { anyPicked } from './filters.js'
 // Zákazky (CRM): stavy, filtre a formulár. Ekonomiku počíta server.
 
 /** Stavy v poradí priebehu (tone = farba štítku ako pri dokladoch). */
@@ -65,8 +66,13 @@ export function jobStatusOf(j) {
   return { label: s.label, tone: s.tone }
 }
 
-/** Patrí zákazka do zobrazenia? */
+/** Zhoduje sa s niektorým zo zaškrtnutých zobrazení (prázdne = všetky). */
 export function matchesJobView(j, view) {
+  return anyPicked(view, (v) => matchesJobViewOne(j, v))
+}
+
+/** Patrí zákazka do zobrazenia? */
+function matchesJobViewOne(j, view) {
   switch (view) {
     case 'open':
       return open(j.status)
