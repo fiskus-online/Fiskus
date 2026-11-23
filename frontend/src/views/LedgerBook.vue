@@ -22,6 +22,7 @@ import ExportButton from '../components/ExportButton.vue'
 import LedgerLines from '../components/LedgerLines.vue'
 import ImportWarnings from '../components/ImportWarnings.vue'
 import YearClosePanel from '../components/YearClosePanel.vue'
+import LedgerNotes from '../components/LedgerNotes.vue'
 import { api, ApiError } from '../lib/api.js'
 import { can, session } from '../lib/session.js'
 import { formatAmount, formatDate, formatMoney, fromISODate, toISODate } from '../lib/format.js'
@@ -43,8 +44,9 @@ const tabs = [
   { value: 'book', label: 'Hlavná kniha' },
   { value: 'balance', label: 'Súvaha' },
   { value: 'income', label: 'Výsledovka' },
+  { value: 'notes', label: 'Poznámky' },
 ]
-const heading = computed(() => ({ journal: 'Účtovný denník', book: 'Hlavná kniha', balance: 'Súvaha', income: 'Výkaz ziskov a strát' })[tab.value])
+const heading = computed(() => ({ journal: 'Účtovný denník', book: 'Hlavná kniha', balance: 'Súvaha', income: 'Výkaz ziskov a strát', notes: 'Poznámky k účtovnej závierke' })[tab.value])
 const statementTab = computed(() => tab.value === 'balance' || tab.value === 'income')
 const st = ref(null)
 async function loadStatements() {
@@ -382,7 +384,7 @@ function removeInternal() {
         </div>
       </section>
 
-      <div v-if="!statementTab" class="toolbar">
+      <div v-if="tab === 'journal' || tab === 'book'" class="toolbar">
         <IconField class="search">
           <InputIcon class="pi pi-search" />
           <InputText v-model="search" :placeholder="tab === 'journal' ? 'Hľadať doklad, partnera, účet' : 'Hľadať účet'" size="small" aria-label="Hľadať" />
@@ -404,6 +406,7 @@ function removeInternal() {
         <div v-if="st" class="st-notes">
           <p v-if="st.unposted" class="warn">{{ st.unposted }} dokladov nie je zaúčtovaných — závierka z nich nevychádza.</p>
           <p v-if="!st.balanced" class="warn">Hlavná kniha nie je vyrovnaná (MD ≠ D alebo počiatočné stavy).</p>
+          <p v-if="st.stockWarning" class="warn">{{ st.stockWarning }}. <router-link to="/sklad">Sklad</router-link></p>
           <p v-if="tab === 'balance' && Number(st.difference)" class="warn">Aktíva a pasíva sa líšia o {{ euro(st.difference) }} € (zaokrúhlenie alebo nevyrovnané počiatočné stavy).</p>
           <p v-if="st.unmapped.length" class="warn">
             Účty so zostatkom, ktoré nepatria do žiadneho riadku:
@@ -467,6 +470,8 @@ function removeInternal() {
           </table>
         </section>
       </template>
+
+      <LedgerNotes v-else-if="tab === 'notes'" :year="year" :can-write="canWrite" />
 
       <section v-else-if="tab === 'journal'" class="sheet journal">
         <div class="jhead" aria-hidden="true"><span>Účet</span><span class="num">MD</span><span class="num">D</span></div>
@@ -795,6 +800,12 @@ function removeInternal() {
 .head h1 {
   font-size: var(--fs-xl);
   margin: 0;
+}
+/* päť kariet sa na mobile zalomí do dvoch riadkov */
+.head :deep(.p-selectbutton) {
+  display: flex;
+  flex-wrap: wrap;
+  max-width: 100%;
 }
 .spacer {
   flex: 1;

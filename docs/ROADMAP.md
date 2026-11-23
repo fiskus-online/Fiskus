@@ -123,7 +123,8 @@ Všetky časti (podvojné účtovníctvo, sklad, majetok, EPO, mzdy) píšeme od
 - [x] Závierka mikro účtovnej jednotky z hlavnej knihy: súvaha (Úč MÚJ 1-01) a výkaz ziskov a strát (Úč MÚJ 2-01), počiatočné stavy z konečných stavov minulého roka
 - [x] Uzávierka roka v podvojnom účtovníctve: kontroly (zaúčtované doklady, vyrovnaná hlavná kniha), uzamknutie dokladov aj zápisov hlavnej knihy, súhrn výnosov, nákladov a VH, prenos počiatočných stavov do ďalšieho roka, otvorenie s dôvodom
 - [x] Závierka malej účtovnej jednotky (Úč POD 1-01 a 2-01) podľa šablóny RÚZ, vzor zvolený pre každý rok
-- [ ] Závierka ďalej: poznámky (Úč POD 3-01), uloženie do RÚZ
+- [x] Poznámky k účtovnej závierke malej účtovnej jednotky (Úč POD 3-01) s návrhom zásad a prehľadom čísel
+- [ ] Závierka ďalej: uloženie do RÚZ, poznámky mikro účtovnej jednotky
 - [ ] Daňové priznanie k dani z príjmov (typ A/B pre FO, PO)
 
 ## Etapa 3 — sklad a majetok

@@ -41,6 +41,14 @@ zostatok). Bez príjemky ide materiál priamo do spotreby na 501. Ak sú na
 príjemkách tovar aj materiál, Fiškus predkontáciu nenavrhne a faktúru
 zaúčtujete ručne.
 
+Ak majú obstarávacie účty 111 alebo 131 zostatok (napr. príjemka bez
+pripojenej prijatej faktúry — príjemka účtuje 132/131, faktúra bez príjemky
+ide na 501), Fiškus na to upozorní pri súvahe aj v kontrolách uzávierky
+roka a uvedie počet takých príjemok. Pripojte faktúru k príjemke; tovar,
+ku ktorému faktúra ešte neprišla, patrí na konci roka na 326
+(nevyfakturované dodávky), faktúra bez príjemky na 139 alebo 119 (na
+ceste).
+
 Každý zápis sa dá zmeniť (iná predkontácia, stredisko, zákazka) a pridať sa
 dajú ručné zápisy a interné doklady.
 
@@ -74,6 +82,17 @@ v riadkoch „ostatné“ a krátkodobé; výsledok minulého roka, o ktorom
 ešte nerozhodli (431), je v r. 98 alebo 99. Čistý obrat (r. 01 výkazu)
 sú tržby z predaja výrobkov, tovaru a služieb (601, 602, 604, 606, 607).
 Prejdite riadky s účtovníkom.
+
+**Poznámky k účtovnej závierke** (Úč POD 3-01) sú na karte *Poznámky*.
+Text píšete sami po článkoch (všeobecné údaje, orgány, účtovné zásady,
+doplnenie súvahy a výkazu, iné aktíva a pasíva, udalosti po závierke,
+ostatné). Fiškus doplní údaje o firme, právny základ zostavenia, návrh
+zásad oceňovania podľa nastavení programu (majetok, odpisy, spôsob
+oceňovania zásob, cudzia mena — dá sa prepísať) a prehľad hlavných
+riadkov súvahy a výkazu ziskov a strát s minulým rokom. Prázdnu časť do
+poznámok neuvedie. *Tlačiť / PDF* pripraví poznámky na tlač s označením
+„poznámky Úč POD 3-01“ a IČO. Poznámky sa dajú dopĺňať aj po uzavretí
+roka.
 
 ### Uzávierka roka
 

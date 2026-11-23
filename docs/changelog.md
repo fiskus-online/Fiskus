@@ -18,6 +18,14 @@ etapách je v [pláne vývoja](./ROADMAP.md).
   faktúry, ponuky, objednávky, dodacie listy, zákazky, pravidelná
   fakturácia, e-maily, sklad, kniha jázd a účtovný denník — nič
   nezaškrtnuté znamená všetko.
+- **Upozornenie na zostatok obstarávacích účtov zásob (111, 131)** pri
+  súvahe aj v kontrolách uzávierky roka — s počtom príjemok bez pripojenej
+  prijatej faktúry. Ukážkové dáta majú k príjemkám tovaru prijaté faktúry,
+  takže zásoby v súvahe už nevychádzajú záporné.
+- **Poznámky k účtovnej závierke malej účtovnej jednotky (Úč POD 3-01).**
+  Nová karta *Poznámky* v hlavnej knihe: text po článkoch, návrh zásad
+  oceňovania podľa nastavení programu, prehľad súvahy a výkazu ziskov
+  a strát s minulým rokom a tlač do PDF; prázdne časti sa vynechajú.
 - **Účtová osnova podľa platnej rámcovej osnovy.** Účet 553 je *Tvorba
   a zúčtovanie opravných položiek k dlhodobému majetku* (doteraz ostatné
   rezervy), 557 *Zúčtovanie oprávky k opravnej položke k nadobudnutému
