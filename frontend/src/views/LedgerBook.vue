@@ -26,7 +26,7 @@ import { formatAmount, formatDate, formatMoney, fromISODate, toISODate } from '.
 import { dimColumns, ledgerStatementColumns, postingColumns, turnoverColumns } from '../lib/columns.js'
 import { matches, searchTerms } from '../lib/search.js'
 import { accountDisplay, docLabels } from '../lib/chart.js'
-import { accountLines, apiLines, editLines, filterPostings, filterTurnovers, openingLines, parseAmount, postingFilters, postingRows, sideOf } from '../lib/ledger.js'
+import { accountLines, apiLines, editLines, filterPostings, filterTurnovers, openingLines, parseAmount, postingFilters, postingRows, sideOf, formMeta, statementForms } from '../lib/ledger.js'
 
 const toast = useToast()
 const confirm = useConfirm()
@@ -61,7 +61,14 @@ const statementRows = () =>
   tab.value === 'balance'
     ? [...st.value.assets.map((r) => ({ ...r, statement: 'Súvaha – aktíva' })), ...st.value.liabilities.map((r) => ({ ...r, statement: 'Súvaha – pasíva' }))]
     : st.value.income.map((r) => ({ ...r, statement: 'Výkaz ziskov a strát' }))
-const grandRows = ['01', '24']
+const meta = computed(() => formMeta(st.value?.form))
+async function setForm(form) {
+  try {
+    st.value = await api.setStatementForm(session.companyId, year.value, form)
+  } catch (e) {
+    toast.add({ severity: 'error', summary: 'Vzor závierky sa nezmenil', detail: e.message, life: 6000 })
+  }
+}
 const book = ref(null)
 const accounts = ref([])
 const centers = ref([])
@@ -399,8 +406,13 @@ function removeInternal() {
             Účty so zostatkom, ktoré nepatria do žiadneho riadku:
             {{ st.unmapped.map((u) => `${accountDisplay(u.account)} ${u.name} (${formatAmount(u.closing)})`).join(', ') }}
           </p>
+          <div class="form-pick">
+            <Select :model-value="st.form" :options="statementForms" option-label="label" option-value="value" size="small"
+              :disabled="!canWrite" aria-label="Vzor účtovnej závierky" @update:model-value="setForm" />
+          </div>
           <p class="hint">
-            Mikro účtovná jednotka, vzory Úč MÚJ 1-01 a 2-01, v celých eurách. Väzbu riadkov na účty nechajte overiť účtovníkovi.
+            {{ meta.text }} Väzbu riadkov na účty nechajte overiť účtovníkovi.
+            <template v-if="st.form === 'pod'">Položky voči prepojeným účtovným jednotkám a dlhodobé pohľadávky a záväzky Fiškus nerozlišuje — zostatky sú v riadkoch „ostatné“ a krátkodobé. </template>
             <template v-if="st.previousEmpty">Predchádzajúce obdobie nemá v programe zápisy.</template>
           </p>
           <div class="toolbar">
@@ -420,7 +432,7 @@ function removeInternal() {
                 <td>{{ r.label }}</td>
                 <td class="num bk">{{ cell(r, r.brutto) }}</td>
                 <td class="num bk">{{ cell(r, r.korekcia) }}</td>
-                <td class="num"><span :class="{ grand: grandRows.includes(r.code) }">{{ cell(r, r.netto) }}</span></td>
+                <td class="num"><span :class="{ grand: r.code === meta.assets }">{{ cell(r, r.netto) }}</span></td>
                 <td v-if="!st.previousEmpty" class="num">{{ r.sum || Number(r.previous) ? euro(r.previous) : '' }}</td>
               </tr>
             </tbody>
@@ -432,7 +444,7 @@ function removeInternal() {
               <tr v-for="r in st.liabilities" :key="r.code" :class="{ sum: r.sum }" :title="r.accounts">
                 <td class="code">{{ r.code }}</td>
                 <td>{{ r.label }}</td>
-                <td class="num"><span :class="{ grand: grandRows.includes(r.code) }">{{ cell(r, r.netto) }}</span></td>
+                <td class="num"><span :class="{ grand: r.code === meta.liabilities }">{{ cell(r, r.netto) }}</span></td>
                 <td v-if="!st.previousEmpty" class="num">{{ r.sum || Number(r.previous) ? euro(r.previous) : '' }}</td>
               </tr>
             </tbody>
@@ -445,7 +457,7 @@ function removeInternal() {
               <tr v-for="r in st.income" :key="r.code" :class="{ sum: r.sum }" :title="r.accounts">
                 <td class="code">{{ r.code }}</td>
                 <td>{{ r.label }}</td>
-                <td class="num"><span :class="{ grand: r.code === '38' }">{{ cell(r, r.netto) }}</span></td>
+                <td class="num"><span :class="{ grand: r.code === meta.income }">{{ cell(r, r.netto) }}</span></td>
                 <td v-if="!st.previousEmpty" class="num">{{ r.sum || Number(r.previous) ? euro(r.previous) : '' }}</td>
               </tr>
             </tbody>
@@ -1107,6 +1119,12 @@ function removeInternal() {
   border-bottom: 1px solid var(--rule-soft);
   padding-top: 3px;
   padding-bottom: 3px;
+}
+.form-pick {
+  margin: 4px 0;
+}
+.form-pick :deep(.p-select) {
+  max-width: 100%;
 }
 .hint {
   margin: 0;

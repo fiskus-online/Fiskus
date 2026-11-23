@@ -13,6 +13,10 @@ etapách je v [pláne vývoja](./ROADMAP.md).
 
 ## 0.10.10
 
+- **Účtovná závierka malej účtovnej jednotky (Úč POD).** Nad súvahou sa
+  pre každý rok zvolí vzor: mikro (Úč MÚJ) alebo malá účtovná jednotka —
+  súvaha r. 01 – 145 a výkaz ziskov a strát r. 01 – 61 podľa šablóny
+  registra účtovných závierok, s tlačou a exportom.
 - **Uzávierkové zápisy v podvojnom účtovníctve:** uzavretie nákladov
   a výnosov na 710, prevod výsledku a uzavretie súvahových účtov na 702
   k 31. 12. a otvorenie cez 701 k 1. 1. — v paneli Uzávierka roka, s tlačou
