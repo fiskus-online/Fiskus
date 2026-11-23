@@ -224,6 +224,7 @@ export const api = {
   postAccDepreciation: (cid, year) => request('POST', `/api/companies/${cid}/ledger/${year}/depreciation`, {}),
   ledgerStatements: (cid, year) => request('GET', `/api/companies/${cid}/ledger/${year}/statements`),
   openingProposal: (cid, year) => request('GET', `/api/companies/${cid}/ledger/${year}/opening-proposal`),
+  ledgerClosingEntries: (cid, year) => request('GET', `/api/companies/${cid}/ledger/${year}/closing-entries`),
   setLedgerOpening: (cid, year, lines) => request('PUT', `/api/companies/${cid}/ledger/${year}/opening`, { lines }),
   saveInternal: (cid, year, doc) =>
     doc.id ? request('PUT', `/api/companies/${cid}/ledger/${year}/internal/${doc.id}`, doc) : request('POST', `/api/companies/${cid}/ledger/${year}/internal`, doc),

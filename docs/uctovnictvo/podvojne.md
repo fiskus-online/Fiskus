@@ -88,6 +88,22 @@ Rok sa dá znova otvoriť s uvedením dôvodu (zapíše sa do auditu); po
 oprave ho znova uzavrite. Pred kurzovými rozdielmi a účtovnými odpismi
 za rok rok neuzavierajte — po uzavretí sa už nedajú zaúčtovať.
 
+**Uzávierkové zápisy** v paneli ukážu uzavretie účtovných kníh podľa
+postupov účtovania (účtová trieda 7):
+
+| Zápis | Dátum | Účty |
+|---|---|---|
+| uzavretie nákladov | 31. 12. | 710 MD / 5xx D |
+| uzavretie výnosov | 31. 12. | 6xx MD / 710 D |
+| prevod výsledku | 31. 12. | zisk 710 / 702, strata 702 / 710 |
+| uzavretie súvahových účtov | 31. 12. | aktíva 702 / účet, pasíva účet / 702 |
+| otvorenie | 1. 1. | aktíva účet / 701, pasíva 701 / účet, výsledok na 431 |
+
+Po zápisoch majú všetky účty vrátane 702 a 710 nulový zostatok. Do
+obratov roka sa nezapočítavajú — súvaha a výkaz ziskov a strát sú zo
+zostatkov pred uzavretím. Kým rok nie je uzavretý, zápisy sú návrh podľa
+súčasných zostatkov. Dajú sa vytlačiť a exportovať do Excelu aj CSV.
+
 ### Kurzové rozdiely k 31. 12.
 
 V **Súvahe** kliknite na **Kurzové rozdiely k 31. 12.** Fiškus prepočíta
