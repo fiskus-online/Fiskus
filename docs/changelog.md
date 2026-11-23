@@ -11,6 +11,16 @@ tags: [prehľad]
 Verzie sú značky v repozitári (`v0.2.0`). Podrobný zoznam funkcií po
 etapách je v [pláne vývoja](./ROADMAP.md).
 
+## 0.10.11
+
+- **Účtová osnova podľa platnej rámcovej osnovy.** Účet 553 je *Tvorba
+  a zúčtovanie opravných položiek k dlhodobému majetku* (doteraz ostatné
+  rezervy), 557 *Zúčtovanie oprávky k opravnej položke k nadobudnutému
+  majetku*; pribudli 133, 366, 555, 606, 655, 657 a 711. Zrušené účty
+  151 – 153, 552, 554 a 558 nová firma nedostane — existujúcim firmám
+  ostanú a závierka ich naďalej priradí. Nové účty sa existujúcim firmám
+  doplnia samy, názvy ich vlastných účtov sa nemenia.
+
 ## 0.10.10
 
 - **Oprava: zmazanie firmy.** Nová firma mohla po zmazaní poslednej
