@@ -1076,6 +1076,9 @@ type LedgerStatements struct {
 	// spoľahlivá iba pri úplne zaúčtovanom a vyrovnanom denníku).
 	Unposted int  `json:"unposted"`
 	Balanced bool `json:"balanced"`
+	// StockWarning: obstarávacie účty zásob 111 a 131 majú zostatok
+	// (príjemky bez prijatej faktúry) — zásoby v súvahe nesedia.
+	StockWarning string `json:"stockWarning,omitempty"`
 }
 
 // LedgerStatementsFor zostaví súvahu a výkaz ziskov a strát za rok.
@@ -1089,8 +1092,14 @@ func (a *App) LedgerStatementsFor(ctx context.Context, companyID int64, year int
 		return LedgerStatements{}, err
 	}
 	form := a.statementForm(ctx, companyID, cur.Year)
-	return LedgerStatements{Year: cur.Year, Statements: ledger.BuildStatementsForm(form, cur.Accounts, prev.Accounts),
-		PreviousEmpty: len(prev.Accounts) == 0, Unposted: cur.Unposted, Balanced: cur.Totals.Balanced}, nil
+	out := LedgerStatements{Year: cur.Year, Statements: ledger.BuildStatementsForm(form, cur.Accounts, prev.Accounts),
+		PreviousEmpty: len(prev.Accounts) == 0, Unposted: cur.Unposted, Balanced: cur.Totals.Balanced}
+	err = a.stockAcquisitionCheck(ctx, companyID, cur.Year, cur.Accounts, func(c YearCheck) {
+		if !c.OK {
+			out.StockWarning = c.Text
+		}
+	})
+	return out, err
 }
 
 func statementFormKey(companyID int64, year int) string {

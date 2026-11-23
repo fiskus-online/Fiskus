@@ -728,6 +728,30 @@ func seedDomesticRC(ctx context.Context, a *app.App, c store.Company) error {
 	return err
 }
 
+// demoStockPurchase vytvorí prijatú faktúru za tovar z príjemky.
+func demoStockPurchase(ctx context.Context, a *app.App, c store.Company, d stock.Doc) (int64, error) {
+	base := m.Zero
+	for _, l := range d.Lines {
+		base = base.Add(l.Quantity.Mul(l.UnitCost))
+	}
+	sup := invoice.Party{Name: d.Partner, ICO: ico("4855303"), ICDPH: icdph(2120455303), Country: "SK"}
+	if d.Partner != "Elektro veľkoobchod BB s.r.o." {
+		sup = invoice.Party{Name: d.Partner, ICO: ico("4855707"), ICDPH: icdph(2120455707), Country: "SK"}
+	}
+	p, _, err := a.SavePurchase(ctx, c.ID, purchase.Purchase{
+		SupplierNumber: fmt.Sprintf("T%s", strings.ReplaceAll(d.Date.String(), "-", "")),
+		Supplier:       sup,
+		IssueDate:      d.Date, ReceivedDate: d.Date, DueDate: d.Date.AddDays(14),
+		Description: "Tovar na sklad",
+		Expense:     purchase.ExpenseStock,
+		Rates:       []purchase.RateRow{{Rate: vat.Rate23, Base: base.RoundCents()}},
+	})
+	if err != nil {
+		return 0, fmt.Errorf("demo nákup tovaru: %w", err)
+	}
+	return p.ID, nil
+}
+
 // demoExpense priradí ukážkovým nákupom druh výdavku pre peňažný denník.
 func demoExpense(what string) purchase.ExpenseKind {
 	switch {
@@ -856,7 +880,7 @@ func seedStock(ctx context.Context, a *app.App, c store.Company, contactIDs []in
 			{ItemID: cable.ID, Quantity: m.MustParse("500"), UnitCost: m.MustParse("1.35")}, {ItemID: drive.ID, Quantity: m.MustParse("6"), UnitCost: m.MustParse("268")}}},
 		{Kind: stock.Receipt, Date: day(40), Warehouse: "HL", Partner: "Elektro veľkoobchod BB s.r.o.", Lines: []stock.Line{
 			{ItemID: drive.ID, Quantity: m.MustParse("4"), UnitCost: m.MustParse("279.90")}}},
-		{Kind: stock.Receipt, Date: day(75), Warehouse: "HL", Partner: "Sonepar Slovakia s.r.o.", Note: "Dokúpené pri výpadku veľkoobchodu", Lines: []stock.Line{
+		{Kind: stock.Receipt, Date: day(75), Warehouse: "HL", Partner: "ElektroSklad Zvolen s.r.o.", Note: "Dokúpené pri výpadku veľkoobchodu", Lines: []stock.Line{
 			{ItemID: cable.ID, Quantity: m.MustParse("100"), UnitCost: m.MustParse("1.49")}}},
 		{Kind: stock.Transfer, Date: day(30), Warehouse: "HL", To: "ZV", Note: "Zásoba na montáže", Lines: []stock.Line{
 			{ItemID: cable.ID, Quantity: m.MustParse("120")}}},
@@ -865,6 +889,14 @@ func seedStock(ctx context.Context, a *app.App, c store.Company, contactIDs []in
 		{Kind: stock.Count, Date: day(2), Warehouse: "HL", Partner: "Inventúra", Note: "Odpad pri strihaní", Lines: []stock.Line{
 			{ItemID: cable.ID, Quantity: m.MustParse("-3")}}},
 	} {
+		// príjemka tovaru má prijatú faktúru dodávateľa (zásoby spôsobom A:
+		// faktúra 131/321, príjemka 132/131 — obstarávací účet je na nule)
+		if d.Kind == stock.Receipt {
+			if d.LinkID, err = demoStockPurchase(ctx, a, c, d); err != nil {
+				return err
+			}
+			d.LinkKind = "purchase"
+		}
 		if _, err := a.SaveStockDoc(ctx, c.ID, d); err != nil {
 			return err
 		}

@@ -13,6 +13,10 @@ etapách je v [pláne vývoja](./ROADMAP.md).
 
 ## 0.10.11
 
+- **Upozornenie na zostatok obstarávacích účtov zásob (111, 131)** pri
+  súvahe aj v kontrolách uzávierky roka — s počtom príjemok bez pripojenej
+  prijatej faktúry. Ukážkové dáta majú k príjemkám tovaru prijaté faktúry,
+  takže zásoby v súvahe už nevychádzajú záporné.
 - **Účtová osnova podľa platnej rámcovej osnovy.** Účet 553 je *Tvorba
   a zúčtovanie opravných položiek k dlhodobému majetku* (doteraz ostatné
   rezervy), 557 *Zúčtovanie oprávky k opravnej položke k nadobudnutému

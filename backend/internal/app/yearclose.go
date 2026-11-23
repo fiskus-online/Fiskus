@@ -14,7 +14,9 @@ import (
 	"github.com/fiskus-online/fiskus/backend/internal/chart"
 	"github.com/fiskus-online/fiskus/backend/internal/invoice"
 	"github.com/fiskus-online/fiskus/backend/internal/journal"
+	"github.com/fiskus-online/fiskus/backend/internal/ledger"
 	"github.com/fiskus-online/fiskus/backend/internal/money"
+	"github.com/fiskus-online/fiskus/backend/internal/stock"
 	"github.com/fiskus-online/fiskus/backend/internal/store"
 )
 
@@ -28,20 +30,20 @@ import (
 
 // YearClose je uzávierka roka.
 type YearClose struct {
-	Year     int                  `json:"year"`
-	Closed   bool                 `json:"closed"`
-	ClosedAt time.Time            `json:"closedAt"`
-	ClosedBy string               `json:"closedBy"`
-	Income   money.Dec            `json:"income"`   // príjmy celkom (Úč FO 1-01 r. 4); podvojné: výnosy
-	Expenses money.Dec            `json:"expenses"` // výdavky celkom (r. 11); podvojné: náklady
-	Result   money.Dec            `json:"result"`   // rozdiel príjmov a výdavkov (r. 12); podvojné: výsledok hospodárenia
-	Double   bool                 `json:"double"`   // podvojné účtovníctvo
+	Year     int       `json:"year"`
+	Closed   bool      `json:"closed"`
+	ClosedAt time.Time `json:"closedAt"`
+	ClosedBy string    `json:"closedBy"`
+	Income   money.Dec `json:"income"`   // príjmy celkom (Úč FO 1-01 r. 4); podvojné: výnosy
+	Expenses money.Dec `json:"expenses"` // výdavky celkom (r. 11); podvojné: náklady
+	Result   money.Dec `json:"result"`   // rozdiel príjmov a výdavkov (r. 12); podvojné: výsledok hospodárenia
+	Double   bool      `json:"double"`   // podvojné účtovníctvo
 	// Opening: počiatočné stavy ďalšieho roka boli prenesené z uzávierky
 	// (false = rok už mal zadané vlastné počiatočné stavy, ostali).
-	Opening bool `json:"opening"`
-	Bank     map[string]money.Dec `json:"bank"`     // konečné stavy účtov (IBAN) → počiatočné stavy ďalšieho roka
-	Cash     map[string]money.Dec `json:"cash"`     // konečné stavy pokladníc (prenášajú sa samy z dokladov)
-	History  []YearCloseEvent     `json:"history"`
+	Opening bool                 `json:"opening"`
+	Bank    map[string]money.Dec `json:"bank"` // konečné stavy účtov (IBAN) → počiatočné stavy ďalšieho roka
+	Cash    map[string]money.Dec `json:"cash"` // konečné stavy pokladníc (prenášajú sa samy z dokladov)
+	History []YearCloseEvent     `json:"history"`
 }
 
 // YearCloseEvent je uzavretie alebo otvorenie roka.
@@ -242,6 +244,9 @@ func (a *App) doubleChecks(ctx context.Context, companyID int64, year int, add f
 	add(YearCheck{ID: "unmapped", OK: len(st.Unmapped) == 0, Link: "/hlavna-kniha",
 		Text: map[bool]string{true: "Všetky účty so zostatkom patria do súvahy alebo výkazu ziskov a strát",
 			false: fmt.Sprintf("%d účtov so zostatkom nepatrí do žiadneho riadku závierky", len(st.Unmapped))}[len(st.Unmapped) == 0]})
+	if err := a.stockAcquisitionCheck(ctx, companyID, year, book.Accounts, add); err != nil {
+		return err
+	}
 	prevOK := true
 	if prev, err := a.Ledger(ctx, companyID, year-1); err == nil && len(prev.Postings) > 0 {
 		prevOK = a.YearClosed(ctx, companyID, year-1)
@@ -416,4 +421,57 @@ func (a *App) ReopenYear(ctx context.Context, companyID int64, year int, reason 
 	}
 	a.record(ctx, companyID, audit.CatLedger, "reopen_year", "year", int64(year), fmt.Sprintf("Otvorený rok %d: %s", year, reason), nil, nil)
 	return a.YearCloseFor(ctx, companyID, year)
+}
+
+// stockAcquisitionCheck upozorní na zostatok obstarávacích účtov 111 a 131
+// (zásoby spôsobom A). Príjemka účtuje 112/111 a 132/131, prijatá faktúra
+// so zásobami 111 alebo 131 len vtedy, keď je príjemka k nej pripojená —
+// inak ide faktúra na 501 a obstarávací účet ostane so zostatkom (zásoby
+// v súvahe vychádzajú nesprávne, aj záporné).
+func (a *App) stockAcquisitionCheck(ctx context.Context, companyID int64, year int, accounts []ledger.Turnover, add func(YearCheck)) error {
+	bal := map[string]money.Dec{"111": money.Zero, "131": money.Zero}
+	for _, t := range accounts {
+		for acc := range bal {
+			if strings.HasPrefix(t.Account, acc) {
+				bal[acc] = bal[acc].Add(t.Closing)
+			}
+		}
+	}
+	if bal["111"].IsZero() && bal["131"].IsZero() {
+		add(YearCheck{ID: "stock", OK: true, Text: "Obstarávacie účty zásob 111 a 131 sú bez zostatku"})
+		return nil
+	}
+	docs, err := a.Store.ListStockDocs(ctx, companyID)
+	if err != nil {
+		return err
+	}
+	unlinked := 0
+	for _, d := range docs {
+		// príjemka z objednávky prijatú faktúru pripojenú nemá (faktúra ešte neprišla alebo ide mimo objednávky)
+		if d.Kind == stock.Receipt && !d.Return && d.Date.Year() == year && (d.LinkKind == "" || d.LinkKind == "porder") {
+			unlinked++
+		}
+	}
+	var parts []string
+	for _, acc := range []string{"111", "131"} {
+		if v := bal[acc]; !v.IsZero() {
+			parts = append(parts, fmt.Sprintf("%s: %s €", acc, v.Display()))
+		}
+	}
+	text := "Obstarávacie účty zásob majú zostatok (" + strings.Join(parts, ", ") + ")"
+	if unlinked > 0 {
+		word := "príjemok"
+		switch {
+		case unlinked == 1:
+			word = "príjemka"
+		case unlinked < 5:
+			word = "príjemky"
+		}
+		text += fmt.Sprintf(" — %d %s bez pripojenej prijatej faktúry. Pripojte faktúru k príjemke", unlinked, word)
+	} else {
+		text += " — skontrolujte predkontácie nákupu zásob"
+	}
+	text += "; tovar bez faktúry patrí na 326, faktúra bez príjemky na 139 alebo 119"
+	add(YearCheck{ID: "stock", OK: false, Link: "/sklad", Text: text})
+	return nil
 }

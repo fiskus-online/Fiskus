@@ -60,7 +60,7 @@ func TestSeed(t *testing.T) {
 			usd++
 		}
 	}
-	if len(purs) != 7 || usd != 1 {
+	if len(purs) != 10 || usd != 1 { // 7 nákupov a 3 faktúry k príjemkám tovaru
 		t.Fatalf("%d prijatých faktúr, v USD s kurzom %d", len(purs), usd)
 	}
 	txs, _ := a.Store.ListBankTransactions(context.Background(), c.ID, store.BankFilter{})
