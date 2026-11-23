@@ -13,6 +13,12 @@ etapách je v [pláne vývoja](./ROADMAP.md).
 
 ## 0.10.10
 
+- **Oprava: zmazanie firmy.** Nová firma mohla po zmazaní poslednej
+  založenej firmy dostať jej číslo (ID) a s ním zdediť jej audit
+  a nastavenia, ktoré zostali (hlavná kniha, uzávierky, podané priznania
+  DPH, mzdové mesiace). Číslo zmazanej firmy sa už nepoužije znova
+  a zmažú sa všetky jej nastavenia po rokoch; nastavenia inej firmy,
+  ktorých rok sa zhoduje s číslom firmy, ostanú.
 - **Účtovná závierka malej účtovnej jednotky (Úč POD).** Nad súvahou sa
   pre každý rok zvolí vzor: mikro (Úč MÚJ) alebo malá účtovná jednotka —
   súvaha r. 01 – 145 a výkaz ziskov a strát r. 01 – 61 podľa šablóny

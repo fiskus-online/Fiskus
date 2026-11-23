@@ -3,8 +3,6 @@ package memstore
 import (
 	"context"
 	"reflect"
-	"strconv"
-	"strings"
 
 	"github.com/fiskus-online/fiskus/backend/internal/store"
 )
@@ -80,10 +78,9 @@ func (s *Store) DeleteCompany(_ context.Context, id int64) error {
 			delete(s.seq, k)
 		}
 	}
-	suffix := "." + strconv.FormatInt(id, 10)
 	for k := range s.settings {
-		// „x.<id>“ a „dpfo.<id>.<rok>“ (priznanie po rokoch)
-		if strings.HasSuffix(k, suffix) || strings.HasPrefix(k, "dpfo"+suffix+".") {
+		// „x.<id>“ a „x.<id>.<rok|obdobie>“
+		if store.SettingOfCompany(k, id) {
 			delete(s.settings, k)
 		}
 	}

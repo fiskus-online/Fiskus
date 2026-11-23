@@ -312,6 +312,50 @@ func Run(t *testing.T, newStore Factory) {
 			t.Errorf("druhé zmazanie: %v", err)
 		}
 	})
+	t.Run("zmazaná firma: ID sa nepoužije znova, kľúče s rokom", func(t *testing.T) {
+		s := newStore(t)
+		a, _ := s.CreateCompany(ctx, store.Company{Name: "Alfa"})
+		b, _ := s.CreateCompany(ctx, store.Company{Name: "Beta"}) // posledná založená
+		owned := []string{                                        // nastavenia firmy B s rokom alebo obdobím za ID
+			fmt.Sprintf("ledger.%d.2026", b.ID), fmt.Sprintf("ledger.form.%d.2026", b.ID), fmt.Sprintf("yearclose.%d.2026", b.ID),
+			fmt.Sprintf("journal.opening.%d.2026", b.ID), fmt.Sprintf("vat.filed.%d.2026-10", b.ID),
+			fmt.Sprintf("payroll.month.%d.2026-10", b.ID), fmt.Sprintf("household.assets.%d", b.ID),
+		}
+		// kľúč firmy A, ktorého rok sa náhodou zhoduje s ID firmy B, ostane
+		other := []string{fmt.Sprintf("ledger.%d.%d", a.ID, b.ID), fmt.Sprintf("dpfo.%d.%d", a.ID, b.ID), fmt.Sprintf("stock.%d", a.ID)}
+		for _, k := range append(append([]string{}, owned...), other...) {
+			if err := s.SetSetting(ctx, k, "{}"); err != nil {
+				t.Fatal(err)
+			}
+		}
+		if err := s.AppendAudit(ctx, &audit.Entry{Time: time.Now(), CompanyID: b.ID, Channel: "ui", Category: audit.CatSettings, Action: "delete", Summary: "zmazaná firma Beta"}); err != nil {
+			t.Fatal(err)
+		}
+		if err := s.DeleteCompany(ctx, b.ID); err != nil {
+			t.Fatal(err)
+		}
+		for _, k := range owned {
+			if _, err := s.GetSetting(ctx, k); !errors.Is(err, store.ErrNotFound) {
+				t.Errorf("nastavenie zmazanej firmy %s ostalo: %v", k, err)
+			}
+		}
+		for _, k := range other {
+			if _, err := s.GetSetting(ctx, k); err != nil {
+				t.Errorf("nastavenie inej firmy %s zmizlo: %v", k, err)
+			}
+		}
+		// nová firma nesmie dostať ID zmazanej (zdedila by jej audit a nastavenia)
+		c, err := s.CreateCompany(ctx, store.Company{Name: "Gama"})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if c.ID == b.ID || c.ID == a.ID {
+			t.Fatalf("nová firma dostala ID %d zmazanej alebo existujúcej firmy", c.ID)
+		}
+		if l, _, _ := s.ListAudit(ctx, audit.Filter{CompanyIDs: []int64{c.ID}}); len(l) != 0 {
+			t.Errorf("nová firma vidí audit zmazanej: %+v", l)
+		}
+	})
 	t.Run("úprava firmy", func(t *testing.T) {
 		s := newStore(t)
 		c, _ := s.CreateCompany(ctx, store.Company{Name: "Alfa", DefaultDueDays: 14})

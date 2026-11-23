@@ -305,9 +305,12 @@ func (s *Store) CreateCompany(ctx context.Context, c store.Company) (store.Compa
 		return c, err
 	}
 	res, err := s.db.ExecContext(ctx,
-		`INSERT INTO companies (name, street, city, zip, ico, dic, icdph, iban, email, phone, vat_payer, default_due_days,
+		// ID nikdy nepoužije znova (ani po zmazaní poslednej firmy): nová firma
+		// by zdedila nemenný audit zmazanej. Preto nad maximom firiem aj auditu.
+		`INSERT INTO companies (id, name, street, city, zip, ico, dic, icdph, iban, email, phone, vat_payer, default_due_days,
 		 units_json, number_formats_json, tax_office, vat_period, bookkeeping, setup_done, migrated_from, migrated_at)
-		 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		 VALUES ((SELECT COALESCE(MAX(m), 0) + 1 FROM (SELECT MAX(id) AS m FROM companies UNION ALL SELECT MAX(company_id) FROM audit_log)),
+		 ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		c.Name, c.Street, c.City, c.Zip, c.ICO, c.DIC, c.ICDPH, c.IBAN, c.Email, c.Phone, c.VATPayer, c.DefaultDueDays,
 		units, formats, c.TaxOffice, c.VATPeriod, c.Bookkeeping, c.SetupDone, c.MigratedFrom, c.MigratedAt)
 	if err != nil {
