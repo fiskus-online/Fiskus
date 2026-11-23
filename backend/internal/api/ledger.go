@@ -143,6 +143,36 @@ func (s *Server) setStatementForm(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, st)
 }
 
+func (s *Server) ledgerNotes(w http.ResponseWriter, r *http.Request) {
+	cid, ok := s.company(w, r)
+	if !ok {
+		return
+	}
+	out, err := s.App.LedgerNotesFor(r.Context(), cid, pathYear(r))
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, out)
+}
+
+func (s *Server) saveLedgerNotes(w http.ResponseWriter, r *http.Request) {
+	cid, ok := s.company(w, r)
+	if !ok {
+		return
+	}
+	var in app.NotesInput
+	if !decode(w, r, &in) {
+		return
+	}
+	out, err := s.App.SaveLedgerNotes(r.Context(), cid, pathYear(r), in)
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, out)
+}
+
 func (s *Server) openingProposal(w http.ResponseWriter, r *http.Request) {
 	cid, ok := s.company(w, r)
 	if !ok {
