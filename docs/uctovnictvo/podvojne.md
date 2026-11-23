@@ -75,6 +75,17 @@ ešte nerozhodli (431), je v r. 98 alebo 99. Čistý obrat (r. 01 výkazu)
 sú tržby z predaja výrobkov, tovaru a služieb (601, 602, 604, 606, 607).
 Prejdite riadky s účtovníkom.
 
+**Poznámky k účtovnej závierke** (Úč POD 3-01) sú na karte *Poznámky*.
+Text píšete sami po článkoch (všeobecné údaje, orgány, účtovné zásady,
+doplnenie súvahy a výkazu, iné aktíva a pasíva, udalosti po závierke,
+ostatné). Fiškus doplní údaje o firme, právny základ zostavenia, návrh
+zásad oceňovania podľa nastavení programu (majetok, odpisy, spôsob
+oceňovania zásob, cudzia mena — dá sa prepísať) a prehľad hlavných
+riadkov súvahy a výkazu ziskov a strát s minulým rokom. Prázdnu časť do
+poznámok neuvedie. *Tlačiť / PDF* pripraví poznámky na tlač s označením
+„poznámky Úč POD 3-01“ a IČO. Poznámky sa dajú dopĺňať aj po uzavretí
+roka.
+
 ### Uzávierka roka
 
 Na karte **Súvaha** alebo **Výsledovka** pri minulom roku je panel

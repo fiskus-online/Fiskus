@@ -70,6 +70,7 @@ import HouseholdObligations from './views/HouseholdObligations.vue'
 import Employees from './views/Employees.vue'
 import Payroll from './views/Payroll.vue'
 import PayrollPrint from './views/PayrollPrint.vue'
+import LedgerNotesPrint from './views/LedgerNotesPrint.vue'
 
 // Moduly z etapového plánu — zatiaľ prázdne stránky s popisom.
 export const modules = [
@@ -232,6 +233,7 @@ export const router = createRouter({
     { path: '/dennik', component: JournalBook, meta: { title: 'Peňažný denník', perm: 'ledger.read' } },
     { path: '/sklad', component: StockView, meta: { title: 'Sklad', perm: 'purchases.read' } },
     { path: '/hlavna-kniha', component: LedgerBook, meta: { title: 'Účtovný denník a hlavná kniha', perm: 'ledger.read' } },
+    { path: '/hlavna-kniha/poznamky', component: LedgerNotesPrint, meta: { title: 'Poznámky k účtovnej závierke', bare: true, perm: 'ledger.read' } },
     { path: '/uctovy-rozvrh', component: ChartOfAccounts, meta: { title: 'Účtový rozvrh', perm: 'ledger.read' } },
     { path: '/mzdy', component: Payroll, meta: { title: 'Mzdy', perm: 'ledger.read' } },
     { path: '/mzdy/tlac', component: PayrollPrint, meta: { title: 'Výplatné pásky', bare: true, perm: 'ledger.read' } },
