@@ -403,6 +403,7 @@ function removeInternal() {
         <div v-if="st" class="st-notes">
           <p v-if="st.unposted" class="warn">{{ st.unposted }} dokladov nie je zaúčtovaných — závierka z nich nevychádza.</p>
           <p v-if="!st.balanced" class="warn">Hlavná kniha nie je vyrovnaná (MD ≠ D alebo počiatočné stavy).</p>
+          <p v-if="st.stockWarning" class="warn">{{ st.stockWarning }}. <router-link to="/sklad">Sklad</router-link></p>
           <p v-if="tab === 'balance' && Number(st.difference)" class="warn">Aktíva a pasíva sa líšia o {{ euro(st.difference) }} € (zaokrúhlenie alebo nevyrovnané počiatočné stavy).</p>
           <p v-if="st.unmapped.length" class="warn">
             Účty so zostatkom, ktoré nepatria do žiadneho riadku:

@@ -41,6 +41,14 @@ zostatok). Bez príjemky ide materiál priamo do spotreby na 501. Ak sú na
 príjemkách tovar aj materiál, Fiškus predkontáciu nenavrhne a faktúru
 zaúčtujete ručne.
 
+Ak majú obstarávacie účty 111 alebo 131 zostatok (napr. príjemka bez
+pripojenej prijatej faktúry — príjemka účtuje 132/131, faktúra bez príjemky
+ide na 501), Fiškus na to upozorní pri súvahe aj v kontrolách uzávierky
+roka a uvedie počet takých príjemok. Pripojte faktúru k príjemke; tovar,
+ku ktorému faktúra ešte neprišla, patrí na konci roka na 326
+(nevyfakturované dodávky), faktúra bez príjemky na 139 alebo 119 (na
+ceste).
+
 Každý zápis sa dá zmeniť (iná predkontácia, stredisko, zákazka) a pridať sa
 dajú ručné zápisy a interné doklady.
 

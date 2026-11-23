@@ -13,6 +13,10 @@ etapách je v [pláne vývoja](./ROADMAP.md).
 
 ## 0.10.11
 
+- **Upozornenie na zostatok obstarávacích účtov zásob (111, 131)** pri
+  súvahe aj v kontrolách uzávierky roka — s počtom príjemok bez pripojenej
+  prijatej faktúry. Ukážkové dáta majú k príjemkám tovaru prijaté faktúry,
+  takže zásoby v súvahe už nevychádzajú záporné.
 - **Poznámky k účtovnej závierke malej účtovnej jednotky (Úč POD 3-01).**
   Nová karta *Poznámky* v hlavnej knihe: text po článkoch, návrh zásad
   oceňovania podľa nastavení programu, prehľad súvahy a výkazu ziskov
