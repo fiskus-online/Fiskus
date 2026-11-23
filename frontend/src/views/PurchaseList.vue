@@ -155,9 +155,10 @@ const ledger = computed(() => {
   const deductible = rows.value.filter((r) => !r.noDeduction)
   return {
     total: sum(rows.value, 'total'),
-    unpaid: sum(unpaid, 'total'),
+    // zostatky po čiastočných úhradách v eurách zo servera
+    unpaid: unpaid.reduce((a, r) => a + Number(r.balanceEur ?? 0), 0),
     unpaidCount: unpaid.length,
-    overdue: sum(overdue, 'total'),
+    overdue: overdue.reduce((a, r) => a + Number(r.balanceEur ?? 0), 0),
     overdueCount: overdue.length,
     vat: sum(deductible, 'vat'),
   }

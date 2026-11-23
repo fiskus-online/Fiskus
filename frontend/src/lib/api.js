@@ -225,6 +225,7 @@ export const api = {
   ledgerStatements: (cid, year) => request('GET', `/api/companies/${cid}/ledger/${year}/statements`),
   setStatementForm: (cid, year, form) => request('PUT', `/api/companies/${cid}/ledger/${year}/statements/form`, { form }),
   openingProposal: (cid, year) => request('GET', `/api/companies/${cid}/ledger/${year}/opening-proposal`),
+  ledgerClosingEntries: (cid, year) => request('GET', `/api/companies/${cid}/ledger/${year}/closing-entries`),
   setLedgerOpening: (cid, year, lines) => request('PUT', `/api/companies/${cid}/ledger/${year}/opening`, { lines }),
   saveInternal: (cid, year, doc) =>
     doc.id ? request('PUT', `/api/companies/${cid}/ledger/${year}/internal/${doc.id}`, doc) : request('POST', `/api/companies/${cid}/ledger/${year}/internal`, doc),

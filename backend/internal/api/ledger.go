@@ -156,6 +156,19 @@ func (s *Server) openingProposal(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, lines)
 }
 
+func (s *Server) ledgerClosingEntries(w http.ResponseWriter, r *http.Request) {
+	cid, ok := s.company(w, r)
+	if !ok {
+		return
+	}
+	out, err := s.App.LedgerClosingEntries(r.Context(), cid, pathYear(r))
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, out)
+}
+
 func (s *Server) setMoneyAccounts(w http.ResponseWriter, r *http.Request) {
 	cid, ok := s.company(w, r)
 	if !ok {
