@@ -13,6 +13,9 @@ etapách je v [pláne vývoja](./ROADMAP.md).
 
 ## 0.10.10
 
+- **Oprava: hlavná kniha roka bez dokladov.** Obrazovka Účtovný denník
+  a hlavná kniha spadla v roku, ktorý ešte nemá žiadny doklad (napr.
+  začiatkom januára).
 - **Server: obmedzenie pokusov o prihlásenie** priebežne maže staré
   záznamy, takže pokusy s množstvom rôznych e-mailov nezväčšujú pamäť.
 - **Kontrola: obdobia sadzieb DPH bez medzery.** V Legislatíve sa nedá

@@ -250,6 +250,9 @@ func (a *App) Ledger(ctx context.Context, companyID int64, year int) (LedgerBook
 	for _, x := range cb.Jobs {
 		names["job:"+x.Code] = x.Name
 	}
+	if ps == nil {
+		ps = []ledger.Posting{} // rok bez dokladov (napr. 1. januára): prázdny zoznam, nie null
+	}
 	return LedgerBook{Year: year, Postings: ps, Accounts: accs, Synthetic: syn, Totals: tot, Unposted: unposted,
 		Opening: opening, Templates: refs, Internal: internal, DimTurnovers: ledger.DimBook(ps, names),
 		MoneySources: a.moneySources(ctx, companyID, company.IBAN, cb.Money)}, nil
