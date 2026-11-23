@@ -7,36 +7,32 @@ import (
 )
 
 // Každý účet rámcovej osnovy (triedy 0 – 6) patrí pri zostatku MD aj D
-// najviac do jedného riadku súvahy alebo výkazu Úč POD (žiadne dvojité
-// započítanie); nepriradené smú byť iba účty, ktoré vzor nemá.
-func TestPodMappingUnique(t *testing.T) {
-	allowed := map[string]bool{ // vnútorné zúčtovanie, zúčtovacie a závierkové účty bez riadku vo vzore
-		"395": true, "396": true, "431A": true,
-	}
-	for _, acc := range chart.Default().Accounts {
-		if acc.Number == "" || acc.Number[0] > '6' {
-			continue
-		}
-		for _, sign := range []string{"100", "-100"} {
-			hits := 0
-			for ti, rules := range [][]rule{podAssets, podLiabilities, podIncome} {
-				for _, r := range rules {
-					if ti == 2 && r.code == "01" {
-						continue // čistý obrat je informatívny riadok mimo súčtov
-					}
-					for _, it := range r.items {
-						it = trimCorr(it)
-						if matches(it, acc.Number, m(sign)) {
-							hits++
+// práve do jedného riadku súvahy alebo výkazu (žiadne dvojité započítanie
+// ani vynechaný účet) — v oboch vzoroch.
+func TestFormMappingUnique(t *testing.T) {
+	for _, form := range []Form{FormMicro, FormSmall} {
+		spec := forms[form]
+		for _, acc := range chart.Default().Accounts {
+			if acc.Number == "" || acc.Number[0] > '6' || acc.Number == "395" || acc.Number == "396" {
+				continue // vnútorné zúčtovanie vzor nemá
+			}
+			for _, sign := range []string{"100", "-100"} {
+				hits := 0
+				for ti, rules := range [][]rule{spec.assets, spec.liabilities, spec.income} {
+					for _, r := range rules {
+						if form == FormSmall && ti == 2 && r.code == "01" {
+							continue // čistý obrat je informatívny riadok mimo súčtov
+						}
+						for _, it := range r.items {
+							if matches(trimCorr(it), acc.Number, m(sign)) {
+								hits++
+							}
 						}
 					}
 				}
-			}
-			if hits > 1 {
-				t.Errorf("účet %s (%s) je v %d riadkoch", acc.Number, sign, hits)
-			}
-			if hits == 0 && !allowed[acc.Number] {
-				t.Errorf("účet %s (%s) %s nemá riadok", acc.Number, sign, acc.Name)
+				if hits != 1 {
+					t.Errorf("%s: účet %s (%s) %s je v %d riadkoch", form, acc.Number, sign, acc.Name, hits)
+				}
 			}
 		}
 	}
