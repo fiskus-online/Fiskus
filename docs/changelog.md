@@ -11,7 +11,7 @@ tags: [prehľad]
 Verzie sú značky v repozitári (`v0.2.0`). Podrobný zoznam funkcií po
 etapách je v [pláne vývoja](./ROADMAP.md).
 
-## 0.10.11
+## 0.10.12
 
 - **Prísnejšie kontroly uzávierky podvojného účtovníctva.** Rok sa
   neuzavrie bez zaúčtovaných účtovných odpisov, kurzových rozdielov k 31. 12.
@@ -20,6 +20,8 @@ etapách je v [pláne vývoja](./ROADMAP.md).
 - **Opakovaná uzávierka prepočíta prenesené počiatočné stavy.** Po otvorení
   a oprave roka sa počiatočné stavy ďalšieho roka, ktoré preniesla
   uzávierka, prenesú znova; ručne zadané stavy ostanú.
+## 0.10.11
+
 - **Filtre zoznamov so zaškrtávaním viacerých volieb.** Pohyby domácnosti
   (účty, druhy, kategórie, mesiace), banka, pokladňa, vydané a prijaté
   faktúry, ponuky, objednávky, dodacie listy, zákazky, pravidelná
