@@ -101,9 +101,15 @@ Na karte **Súvaha** alebo **Výsledovka** pri minulom roku je panel
 
 - rok skončil,
 - všetky doklady sú zaúčtované,
-- hlavná kniha je vyrovnaná (MD = D, počiatočné stavy sedia).
+- hlavná kniha je vyrovnaná (MD = D, počiatočné stavy sedia),
+- účtovné odpisy z registra majetku sú zaúčtované a doklad zodpovedá
+  registru,
+- kurzové rozdiely k 31. 12. sú zaúčtované a pre každú cudziu menu je kurz,
+- sklad je ocenený bez chýb (žiadny výdaj nad stav v roku).
 
-Upozorní aj na účty so zostatkom mimo riadkov závierky a na neuzavretý
+Upozorní aj na účty so zostatkom mimo riadkov závierky, na zostatok 111
+a 131, na upozornenia prepočtu cudzej meny, na počiatočné stavy, ktoré
+nenadväzujú na konečné stavy predchádzajúceho roka, a na neuzavretý
 predchádzajúci rok (uzávierku to neblokuje).
 
 Po uzavretí:
@@ -112,12 +118,12 @@ Po uzavretí:
   zaúčtovanie dokladov s dátumom v roku sa uzamknú;
 - uloží sa súhrn: výnosy, náklady a výsledok hospodárenia;
 - konečné stavy súvahových účtov sa prenesú ako **počiatočné stavy
-  ďalšieho roka** (výsledok hospodárenia na 431) — iba ak ďalší rok ešte
-  nemá počiatočné stavy zadané, inak ostanú.
+  ďalšieho roka** (výsledok hospodárenia na 431). Ak ste ich v ďalšom roku
+  zadali ručne, ostanú. Stavy prenesené uzávierkou sa pri opakovanom
+  uzavretí (po otvorení a oprave roka) prepočítajú.
 
 Rok sa dá znova otvoriť s uvedením dôvodu (zapíše sa do auditu); po
-oprave ho znova uzavrite. Pred kurzovými rozdielmi a účtovnými odpismi
-za rok rok neuzavierajte — po uzavretí sa už nedajú zaúčtovať.
+oprave ho znova uzavrite.
 
 **Uzávierkové zápisy** v paneli ukážu uzavretie účtovných kníh podľa
 postupov účtovania (účtová trieda 7):

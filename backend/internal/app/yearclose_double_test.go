@@ -1,6 +1,7 @@
 package app
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/fiskus-online/fiskus/backend/internal/edition"
@@ -85,11 +86,51 @@ func TestYearCloseDouble(t *testing.T) {
 			t.Fatal("vystavenie faktúry do uzavretého roka")
 		}
 	}
-	// otvorenie a opätovná uzávierka nechá zadané počiatočné stavy 2027
+	// otvorenie, oprava a opätovná uzávierka prenesú počiatočné stavy 2027 znova
 	if _, err := a.ReopenYear(ctx, c.ID, 2026, "chýbajúci náklad"); err != nil {
 		t.Fatal(err)
 	}
-	if info, err = a.CloseYear(ctx, c.ID, 2026); err != nil || info.Close.Opening {
+	if _, err := a.SaveInternal(ctx, c.ID, 2026, InternalDoc{Date: invoice.MustDate("2026-12-31"), Text: "Chýbajúci náklad",
+		Lines: []ledger.Line{{Account: "518", Debit: m.MustParse("100")}, {Account: "321", Credit: m.MustParse("100")}}}); err != nil {
+		t.Fatal(err)
+	}
+	if info, err = a.CloseYear(ctx, c.ID, 2026); err != nil || !info.Close.Opening || !info.Close.Result.Equal(m.MustParse("300")) {
 		t.Fatalf("druhá uzávierka: %+v %v", info.Close, err)
 	}
+	next, err := a.Ledger(ctx, c.ID, 2027)
+	if err != nil || !next.Opening["431"].Equal(m.MustParse("-300")) || !next.Opening["321"].Equal(m.MustParse("-100")) {
+		t.Fatalf("počiatočné stavy po opätovnej uzávierke: %v %v", next.Opening, err)
+	}
+	if ck := checkByID(t, a, c.ID, 2027, "opening"); !ck.OK {
+		t.Errorf("nadväznosť: %+v", ck)
+	}
+	// ručne zadané počiatočné stavy ostanú, kontrola nadväznosti upozorní
+	if err := a.SetLedgerOpening(ctx, c.ID, 2027, []ledger.Line{{Account: "311", Debit: m.MustParse("492")},
+		{Account: "343", Credit: m.MustParse("92")}, {Account: "431", Credit: m.MustParse("400")}}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := a.ReopenYear(ctx, c.ID, 2026, "kontrola stavov"); err != nil {
+		t.Fatal(err)
+	}
+	if info, err = a.CloseYear(ctx, c.ID, 2026); err != nil || info.Close.Opening {
+		t.Fatalf("tretia uzávierka: %+v %v", info.Close, err)
+	}
+	if ck := checkByID(t, a, c.ID, 2027, "opening"); ck.OK || ck.Blocking || !strings.Contains(ck.Text, "321") {
+		t.Errorf("nadväznosť ručných stavov: %+v", ck)
+	}
+}
+
+func checkByID(t *testing.T, a *App, cid int64, year int, id string) YearCheck {
+	t.Helper()
+	info, err := a.YearCloseFor(ctx, cid, year)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, c := range info.Checks {
+		if c.ID == id {
+			return c
+		}
+	}
+	t.Fatalf("kontrola %s chýba: %+v", id, info.Checks)
+	return YearCheck{}
 }

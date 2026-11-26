@@ -247,6 +247,9 @@ func (a *App) doubleChecks(ctx context.Context, companyID int64, year int, add f
 	if err := a.stockAcquisitionCheck(ctx, companyID, year, book.Accounts, add); err != nil {
 		return err
 	}
+	if err := a.integrityChecks(ctx, companyID, year, add); err != nil {
+		return err
+	}
 	prevOK := true
 	if prev, err := a.Ledger(ctx, companyID, year-1); err == nil && len(prev.Postings) > 0 {
 		prevOK = a.YearClosed(ctx, companyID, year-1)
@@ -278,17 +281,21 @@ func (a *App) closeDouble(ctx context.Context, companyID int64, year int, c *Yea
 	if err != nil {
 		return err
 	}
-	if len(next.Opening) > 0 {
-		return nil // vlastné počiatočné stavy ďalšieho roka ostanú
+	if len(next.Opening) > 0 && !next.OpeningAuto {
+		return nil // ručne zadané počiatočné stavy ďalšieho roka ostanú (kontrola nadväznosti ich porovná)
 	}
+	// prvé uzavretie alebo opakované po otvorení roka: stavy sa prenesú znova
 	lines, err := a.OpeningProposal(ctx, companyID, year+1)
-	if err != nil || len(lines) == 0 {
+	if err != nil {
 		return err
 	}
-	if err := a.SetLedgerOpening(ctx, companyID, year+1, lines); err != nil {
+	if len(lines) == 0 && len(next.Opening) == 0 {
+		return nil
+	}
+	if err := a.setLedgerOpening(ctx, companyID, year+1, lines, true); err != nil {
 		return err
 	}
-	c.Opening = true
+	c.Opening = len(lines) > 0
 	return nil
 }
 

@@ -37,7 +37,10 @@ type LedgerData struct {
 	Internal []InternalDoc            `json:"internal,omitempty"`
 	// Opening sú počiatočné stavy účtov (kladný = MD, záporný = D).
 	Opening map[string]money.Dec `json:"opening,omitempty"`
-	NextID  int64                `json:"nextId,omitempty"`
+	// OpeningAuto: počiatočné stavy preniesla uzávierka predchádzajúceho
+	// roka (pri jej opakovaní sa prepočítajú); ručne zadané ostanú.
+	OpeningAuto bool  `json:"openingAuto,omitempty"`
+	NextID      int64 `json:"nextId,omitempty"`
 	// Revalued sú sumy pohľadávok a záväzkov v cudzej mene v eurách
 	// prepočítané kurzom k 31. 12. (kľúč sale:ID, purchase:ID).
 	Revalued map[string]money.Dec `json:"revalued,omitempty"`
@@ -1045,6 +1048,11 @@ func (a *App) DeleteInternal(ctx context.Context, companyID int64, year int, id 
 // SetLedgerOpening uloží počiatočné stavy účtov k 1. 1. roka (riadky MD/D).
 // Strany sa musia rovnať (súvaha je vyrovnaná).
 func (a *App) SetLedgerOpening(ctx context.Context, companyID int64, year int, lines []ledger.Line) error {
+	return a.setLedgerOpening(ctx, companyID, year, lines, false)
+}
+
+// setLedgerOpening: auto = stavy prenáša uzávierka predchádzajúceho roka.
+func (a *App) setLedgerOpening(ctx context.Context, companyID int64, year int, lines []ledger.Line, auto bool) error {
 	return a.editLedger(ctx, companyID, year, func(d *LedgerData, c chart.Chart, _ []chart.Template) (string, error) {
 		out := map[string]money.Dec{}
 		if len(lines) > 0 {
@@ -1061,6 +1069,10 @@ func (a *App) SetLedgerOpening(ctx context.Context, companyID int64, year int, l
 			}
 		}
 		d.Opening = out
+		d.OpeningAuto = auto && len(out) > 0
+		if auto {
+			return fmt.Sprintf("Prenesené počiatočné stavy účtov k 1. 1. %d (%d účtov)", year, len(out)), nil
+		}
 		return fmt.Sprintf("Počiatočné stavy účtov k 1. 1. %d (%d účtov)", year, len(out)), nil
 	})
 }
