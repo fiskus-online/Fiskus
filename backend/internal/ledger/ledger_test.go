@@ -26,6 +26,9 @@ func TestCheckLines(t *testing.T) {
 		{"neznámy účet", []Line{{Account: "999", Debit: m("1")}, {Account: "321", Credit: m("1")}}, nil, false},
 		{"skrytý účet", []Line{{Account: "232", Debit: m("1")}, {Account: "321", Credit: m("1")}}, nil, false},
 		{"obe strany", []Line{{Account: "518", Debit: m("1"), Credit: m("1")}, {Account: "321", Credit: m("0")}}, nil, false},
+		// červené storno (záporné sumy na pôvodných stranách) je prípustná oprava
+		{"červené storno", []Line{{Account: "518", Debit: m("-100")}, {Account: "321", Credit: m("-100")}}, nil, true},
+		{"záporné nevyrovnané", []Line{{Account: "518", Debit: m("-100")}, {Account: "321", Credit: m("100")}}, ErrUnbalanced, false},
 		{"zlomok centu", []Line{{Account: "518", Debit: m("1.005")}, {Account: "321", Credit: m("1.005")}}, nil, false},
 	}
 	for _, tc := range cases {

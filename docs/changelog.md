@@ -13,6 +13,13 @@ etapách je v [pláne vývoja](./ROADMAP.md).
 
 ## 0.10.12
 
+- **Prísnejšie kontroly uzávierky podvojného účtovníctva.** Rok sa
+  neuzavrie bez zaúčtovaných účtovných odpisov, kurzových rozdielov k 31. 12.
+  (a kurzu pre každú menu) a s chybou ocenenia skladu (výdaj nad stav).
+  Nová kontrola nadväznosti počiatočných stavov na predchádzajúci rok.
+- **Opakovaná uzávierka prepočíta prenesené počiatočné stavy.** Po otvorení
+  a oprave roka sa počiatočné stavy ďalšieho roka, ktoré preniesla
+  uzávierka, prenesú znova; ručne zadané stavy ostanú.
 - **Zaúčtovanie miezd do hlavnej knihy.** V podvojnom účtovníctve sa
   uzavretý mesiac miezd zaúčtuje jedným interným dokladom k poslednému dňu
   mesiaca (521, 527 a 524 proti 331, 336, 342 a 379). Na účte 331 zostane

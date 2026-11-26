@@ -99,6 +99,9 @@ var (
 // CheckLines skontroluje ručné riadky voči rozvrhu: účet existuje a používa
 // sa, suma v centoch je práve na jednej strane, MD = D. Čísla účtov
 // normalizuje (221.001 → 221001).
+//
+// Záporná suma je prípustná: červené storno opravuje zápis zápornou sumou
+// na tých istých stranách (MD aj D záporné, súčty strán sa rovnajú).
 func CheckLines(lines []Line, c chart.Chart) error {
 	if len(lines) < 2 {
 		return fmt.Errorf("%w: zadajte aspoň dva riadky (MD a D)", ErrNoLines)
