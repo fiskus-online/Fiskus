@@ -272,7 +272,10 @@ func Compute(e Employee, in Input, p Params, month int) (Result, error) {
 	r.SickPay = in.SickPay
 	r.Income = r.Gross.Add(in.SickPay)
 
-	// sociálne poistenie
+	// sociálne poistenie; odvodová odpočítateľná položka (§ 138a zákona
+	// o sociálnom poistení) znižuje vymeriavací základ okrem úrazového
+	// a garančného poistenia — tie zamestnávateľ platí z celej odmeny
+	full := r.Gross
 	sb := r.Gross
 	if e.OOP && (e.Contract == DoBPS || (e.Contract.Agreement() && e.Pension != PensionNone)) {
 		sb = maxDec(money.Zero, sb.Sub(p.OOP))
@@ -288,7 +291,12 @@ func Compute(e Employee, in Input, p Params, month int) (Result, error) {
 			continue
 		}
 		base := capped
-		if !rt.Capped {
+		switch {
+		case rt.Fund == FundAccident:
+			base = full // bez maxima
+		case rt.Fund == FundGuarantee:
+			base = minDec(full, p.SocialMax)
+		case !rt.Capped:
 			base = sb
 		}
 		f := Fund{Fund: rt.Fund, Name: FundNames[rt.Fund], Base: base,

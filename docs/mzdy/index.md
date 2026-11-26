@@ -28,7 +28,7 @@ V časti **Mzdy → Zamestnanci** zadáte pri každom:
 | Zdravotná poisťovňa | súčty zdravotného poistenia podľa poisťovní |
 | Dôchodok | starobný: bez invalidného poistenia a poistenia v nezamestnanosti; invalidný nad 70 %: bez poistenia v nezamestnanosti |
 | ZŤP | znížená sadzba zdravotného poistenia |
-| Odvodová výnimka 200 € | študent na DoBPŠ a dôchodca na dohode — sociálne poistenie až zo sumy nad 200 € (iba na jednej dohode) |
+| Odvodová výnimka 200 € | študent na DoBPŠ a dôchodca na dohode — sociálne poistenie až zo sumy nad 200 € (iba na jednej dohode); úrazové a garančné poistenie platí zamestnávateľ z celej odmeny |
 | Vyhlásenie na NČZD | nezdaniteľná časť základu dane sa uplatní mesačne |
 | Daňový bonus | deti s rodným číslom; vek a mesiace sa určia ako v daňovom priznaní |
 
