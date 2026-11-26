@@ -7,6 +7,7 @@ import Button from 'primevue/button'
 import Checkbox from 'primevue/checkbox'
 import DatePicker from 'primevue/datepicker'
 import Dialog from 'primevue/dialog'
+import InputNumber from 'primevue/inputnumber'
 import InputText from 'primevue/inputtext'
 import { useToast } from 'primevue/usetoast'
 import FormField from './FormField.vue'
@@ -117,6 +118,7 @@ const kindLabel = { wage: 'výplata', social: 'poistné', health: 'zdravotné po
           <FormField label="Variabilný symbol" :error="errors[`health.${code}.vs`]"><InputText v-model="h.vs" size="small" inputmode="numeric" fluid /></FormField>
         </template>
         <FormField label="Osobný účet daňovníka (OÚD)" :error="errors.taxOud" hint="základné číslo účtu, bez predčíslia"><InputText v-model="form.taxOud" size="small" inputmode="numeric" fluid /></FormField>
+        <FormField label="Deň výplaty v mesiaci" :error="errors.payDay" hint="termíny odvodov v kalendári"><InputNumber v-model="form.payDay" :min="1" :max="31" size="small" fluid /></FormField>
       </div>
       <div class="actions">
         <Button label="Zrušiť" text size="small" @click="editing = false" />
@@ -162,7 +164,7 @@ const kindLabel = { wage: 'výplata', social: 'poistné', health: 'zdravotné po
           <Button label="Zrušiť" severity="secondary" text size="small" @click="visible = false" />
           <Button icon="pi pi-download" label="Stiahnuť príkaz (XML)" size="small" :loading="busy" :disabled="!selected.length || !companyIBAN" @click="downloadOrder" />
         </div>
-        <p class="hint">Preddavky dane sa odvádzajú do 5 dní od výplaty, poistné do 8. dňa nasledujúceho mesiaca. Zrážky zo mzdy uhraďte oprávneným osobám samostatne.</p>
+        <p class="hint">Poistné je splatné v deň určený na výplatu, preddavky dane do 5 dní od výplaty. Zrážky zo mzdy uhraďte oprávneným osobám samostatne.</p>
       </div>
     </template>
   </Dialog>

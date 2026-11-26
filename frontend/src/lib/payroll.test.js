@@ -94,5 +94,7 @@ describe('mzdy', () => {
     expect(f.socialVs).toBe('1234567890')
     expect(f.health['25']).toEqual({ iban: 'SK1', vs: '9' })
     expect(f.health['24']).toEqual({ iban: '', vs: '' })
+    expect(f.payDay).toBe(null)
+    expect(paySettingsForm({ payDay: 10 }).payDay).toBe(10)
   })
 })
