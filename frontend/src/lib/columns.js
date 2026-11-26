@@ -631,6 +631,7 @@ export const stockDocColumns = [
   t('Do skladu', (r) => r.to, 8),
   t('Partner', (r) => r.partner, 26),
   t('Doklad', (r) => r.linkNumber, 14),
+  t('Prijatá faktúra', (r) => r.purchaseNumber || (r.linkKind === 'purchase' ? r.linkNumber : ''), 14),
   t('Položka', (r) => r.line.name, 32),
   num('Množstvo', (r) => r.line.quantity),
   t('MJ', (r) => r.line.unit, 6),

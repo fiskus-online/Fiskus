@@ -66,7 +66,13 @@ Položku s pohybmi nemožno zo skladu vyradiť.
 | Prijatá faktúra | príjemka k nej jedným tlačidlom |
 | Vydaný [dodací list](../predaj/dodacie-listy.md) | výdajka (storno dodacieho listu ju zruší) |
 | [Prijatá objednávka](../predaj/prijate-objednavky.md) | rezervácia: zvyšok na dodanie sa odpočíta od voľného množstva |
-| Príjem z [objednávky](../nakup/objednavky.md) | príjemka v nákupnej cene z objednávky |
+| Príjem z [objednávky](../nakup/objednavky.md) | príjemka v nákupnej cene z objednávky; keď príde faktúra, pripojíte ju v príjemke (pole **K prijatej faktúre**) |
 | Materiál na [zákazke](../predaj/zakazky.md#material) | výdajka zákazky (upravuje sa so zákazkou) |
 | Objednávka z e-shopu | výdajka |
 | Výkaz o majetku a záväzkoch (JÚ) | hodnota zásob |
+
+Príjemka z objednávky, ku ktorej ešte nie je pripojená prijatá faktúra, má
+v zozname dokladov značku **bez faktúry**. V podvojnom účtovníctve sa
+faktúra pripojená k príjemke zaúčtuje na obstaranie zásob (111 alebo 131)
+namiesto priamo do spotreby a uzávierka ju nepočíta medzi príjemky bez
+faktúry.

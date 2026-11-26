@@ -454,8 +454,8 @@ func (a *App) stockAcquisitionCheck(ctx context.Context, companyID int64, year i
 	}
 	unlinked := 0
 	for _, d := range docs {
-		// príjemka z objednávky prijatú faktúru pripojenú nemá (faktúra ešte neprišla alebo ide mimo objednávky)
-		if d.Kind == stock.Receipt && !d.Return && d.Date.Year() == year && (d.LinkKind == "" || d.LinkKind == "porder") {
+		// príjemka bez prijatej faktúry (aj príjemka z objednávky, ku ktorej faktúra ešte nie je pripojená)
+		if d.Kind == stock.Receipt && !d.Return && d.Date.Year() == year && d.Purchase() == 0 && (d.LinkKind == "" || d.LinkKind == porderStockLink) {
 			unlinked++
 		}
 	}

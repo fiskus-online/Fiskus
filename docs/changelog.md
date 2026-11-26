@@ -13,6 +13,11 @@ etapách je v [pláne vývoja](./ROADMAP.md).
 
 ## 0.10.12
 
+- **Prijatá faktúra k príjemke z objednávky.** Príjemku z objednávky
+  dodávateľovi možno doplniť o prijatú faktúru; nákup sa potom zaúčtuje
+  na obstaranie zásob a uzávierka ju neráta medzi príjemky bez faktúry.
+  Oprava: úprava príjemky z objednávky menila väzbu na nesprávnu faktúru
+  alebo sa nedala uložiť.
 - **Termíny miezd v kalendári.** Výplata, poistné (splatné v deň výplaty)
   a preddavky dane (do 5 dní od výplaty) za každý mesiac, so sumou
   z uzavretých miezd a označením splnenia podľa bankových platieb. Deň

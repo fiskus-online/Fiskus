@@ -105,6 +105,10 @@ type Doc struct {
 	LinkKind   string `json:"linkKind,omitempty"` // invoice | purchase
 	LinkID     int64  `json:"linkId,omitempty"`
 	LinkNumber string `json:"linkNumber,omitempty"`
+	// PurchaseID: prijatá faktúra k príjemke z objednávky (LinkKind porder);
+	// pri príjemke viazanej priamo na faktúru je to LinkID.
+	PurchaseID     int64  `json:"purchaseId,omitempty"`
+	PurchaseNumber string `json:"purchaseNumber,omitempty"`
 	// Auto: výdajku vytvoril Fiškus z vystavenej faktúry (upravuje sa s ňou).
 	Auto bool `json:"auto,omitempty"`
 	// Return: príjem vrátenej zásoby (dobropis) — ocení sa priemernou cenou.
@@ -399,4 +403,17 @@ func NextNumber(docs []Doc, k Kind, year int) string {
 		}
 	}
 	return fmt.Sprintf("%s%03d", prefix, n+1)
+}
+
+// Purchase vráti ID prijatej faktúry, ku ktorej patrí príjemka (0 = žiadna).
+func (d Doc) Purchase() int64 {
+	switch {
+	case d.Kind != Receipt || d.Return:
+		return 0
+	case d.LinkKind == "purchase":
+		return d.LinkID
+	case d.LinkKind == "porder":
+		return d.PurchaseID
+	}
+	return 0
 }

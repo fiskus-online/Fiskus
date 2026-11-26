@@ -845,7 +845,8 @@ func (a *App) receiptKinds(ctx context.Context, companyID int64) (map[int64]map[
 	out := map[int64]map[stock.ItemKind]bool{}
 	var cfg *StockConfig
 	for _, d := range docs {
-		if d.Kind != stock.Receipt || d.Return || d.LinkKind != "purchase" || d.LinkID == 0 {
+		pid := d.Purchase()
+		if pid == 0 {
 			continue
 		}
 		if cfg == nil {
@@ -863,10 +864,10 @@ func (a *App) receiptKinds(ctx context.Context, companyID int64) (map[int64]map[
 			if si.Kind == stock.Product {
 				continue
 			}
-			if out[d.LinkID] == nil {
-				out[d.LinkID] = map[stock.ItemKind]bool{}
+			if out[pid] == nil {
+				out[pid] = map[stock.ItemKind]bool{}
 			}
-			out[d.LinkID][si.Kind] = true
+			out[pid][si.Kind] = true
 		}
 	}
 	return out, nil

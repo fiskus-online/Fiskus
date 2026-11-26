@@ -24,7 +24,7 @@ export function filterDocs(docs, { search = '', kind = '', warehouse = '' } = {}
       (d) =>
         inPicked(kind, d.kind) &&
         (!warehouse || d.warehouse === warehouse) &&
-        matches(terms, [d.number, d.partner, d.note, d.linkNumber, d.to, docLabel(d), ...d.lines.map((l) => l.name)]),
+        matches(terms, [d.number, d.partner, d.note, d.linkNumber, d.purchaseNumber, d.to, docLabel(d), ...d.lines.map((l) => l.name)]),
     )
     .slice()
     .reverse()
@@ -44,3 +44,17 @@ export function apiLines(lines) {
 
 /** Cena sa zadáva pri príjemke a pri prebytku (kladné množstvo inventúry). */
 export const needsCost = (kind, quantity, ret = false) => (kind === 'receipt' && !ret) || (kind === 'count' && Number(String(quantity).replace(',', '.')) > 0)
+
+/** Prijatá faktúra príjemky do formulára: pri príjemke z objednávky purchaseId, inak linkId. */
+export function receiptPurchase(d) {
+  if (!d || d.kind !== 'receipt' || d.return) return 0
+  if (d.linkKind === 'porder') return d.purchaseId || 0
+  return d.linkKind === 'purchase' ? d.linkId : 0
+}
+
+/** Väzba príjemky pre API: objednávka ostane, faktúra ide do purchaseId. */
+export function receiptLink(f) {
+  if (f.kind !== 'receipt' || f.return) return f.linkKind === 'porder' ? { linkKind: 'porder', linkId: f.linkId } : {}
+  if (f.linkKind === 'porder') return { linkKind: 'porder', linkId: f.linkId, purchaseId: f.purchase || 0 }
+  return f.purchase ? { linkKind: 'purchase', linkId: f.purchase } : {}
+}
