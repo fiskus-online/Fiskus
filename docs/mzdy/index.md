@@ -106,6 +106,21 @@ a na 342 preddavok dane. Úhrady z banky ich vyrovnajú. Ak mesiac otvoríte
 a mzdy sa zmenia, Fiškus upozorní, že doklad už nezodpovedá; po novom
 uzavretí ho zaúčtujete znova a pôvodný doklad sa nahradí (číslo ostane).
 
+## Termíny v kalendári
+
+Keď firma má zamestnancov, kalendár ukáže termíny miezd za každý mesiac:
+
+| Termín | Kedy |
+|---|---|
+| výplata miezd | deň výplaty v nasledujúcom mesiaci |
+| poistné Sociálnej a zdravotným poisťovniam | v deň výplaty (bez určeného dňa výplaty posledným dňom mesiaca) |
+| preddavky dane | do 5 dní od výplaty |
+
+Termín, ktorý pripadne na deň pracovného pokoja, sa posunie na najbližší
+pracovný deň. Deň výplaty zadáte v **Platobných údajoch** v okne príkazu na
+úhradu. Pri uzavretých mzdách kalendár ukáže sumu a termín označí ako
+splnený, keď sú všetky jeho úhrady na bankovom výpise.
+
 ## Peňažný denník
 
 V jednoduchom účtovníctve sa mzdy zapisujú až pri úhrade. Fiškus spozná

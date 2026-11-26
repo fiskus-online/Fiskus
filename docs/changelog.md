@@ -13,6 +13,11 @@ etapách je v [pláne vývoja](./ROADMAP.md).
 
 ## 0.10.12
 
+- **Termíny miezd v kalendári.** Výplata, poistné (splatné v deň výplaty)
+  a preddavky dane (do 5 dní od výplaty) za každý mesiac, so sumou
+  z uzavretých miezd a označením splnenia podľa bankových platieb. Deň
+  výplaty sa zadá v platobných údajoch miezd. Opravený nesprávny text
+  o splatnosti poistného v okne príkazu na úhradu.
 - **Mzdy v peňažnom denníku.** Úhrady výplat, odvodov a preddavkov dane
   z bankového výpisu (a výplaty v hotovosti) Fiškus spozná podľa
   uzavretých miezd a rozpíše na mzdy (e3) a poistné zamestnávateľa (e4).

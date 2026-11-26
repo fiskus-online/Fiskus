@@ -77,6 +77,13 @@ func (a *App) Calendar(ctx context.Context, companyID int64, from, to invoice.Da
 		}
 		add(es...)
 	}
+	if can(auth.PermLedgerRead) && !household {
+		es, err := a.payrollEvents(ctx, companyID, from, to, today, days)
+		if err != nil {
+			return CalendarView{}, err
+		}
+		add(es...)
+	}
 	if can(auth.PermLedgerRead) && household {
 		es, err := a.householdEvents(ctx, companyID, to)
 		if err != nil {
