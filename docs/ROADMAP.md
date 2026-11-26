@@ -171,7 +171,8 @@ Všetky časti (podvojné účtovníctvo, sklad, majetok, EPO, mzdy) píšeme od
 - [ ] Mesačný výkaz pre Sociálnu poisťovňu, výkazy zdravotných poisťovní, registračné listy (XML)
 - [ ] Mesačný prehľad a ročné hlásenie pre finančnú správu, potvrdenie o príjmoch, ročné zúčtovanie
 - [ ] Priemerný zárobok: náhrada mzdy za dovolenku, náhrada príjmu pri PN (dni 1 – 14), evidencia dochádzky a dovoleniek
-- [ ] Zaúčtovanie miezd do peňažného denníka a podvojného účtovníctva, príkazy na úhradu výplat a odvodov
+- [x] Zaúčtovanie miezd do podvojného účtovníctva: interný doklad za uzavretý mesiac (521, 527, 524 / 331, 336, 342, 379), kontrola, či doklad zodpovedá mzdám po otvorení mesiaca
+- [ ] Zápis miezd do peňažného denníka, príkazy na úhradu výplat a odvodov
 
 ## Odlíšenie od konkurencie
 Slovenské špecifiká: RÚZ, tri identifikátory (IČO / DIČ / IČ DPH), 2 % dane pre neziskovky, slovenská e-fakturácia, PAY by square.

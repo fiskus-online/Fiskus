@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  postingPairs,
   activeIn, contractLabel, employeeFromForm, employeeName, employeeState, employeeToForm, filterEmployees, inputFromForm, inputToForm, newEmployee,
   oopAllowed, periodLabel, shiftMonth,
 } from './payroll.js'
@@ -66,5 +67,18 @@ describe('mzdy', () => {
     expect(periodLabel(2026, 3)).toBe('marec 2026')
     expect(shiftMonth(2026, 1, -1)).toEqual({ year: 2025, month: 12 })
     expect(shiftMonth(2026, 12, 1)).toEqual({ year: 2027, month: 1 })
+  })
+  it('dvojice zaúčtovania miezd', () => {
+    const lines = [
+      { account: '521', debit: '1500.00', credit: '0' },
+      { account: '331', debit: '0', credit: '1500.00' },
+      { account: '331', debit: '34.52', credit: '0' },
+      { account: '379', debit: '0', credit: '34.52' },
+    ]
+    expect(postingPairs(lines)).toEqual([
+      { md: '521', d: '331', amount: '1500.00', label: 'Hrubé mzdy' },
+      { md: '331', d: '379', amount: '34.52', label: 'Zrážky zo mzdy' },
+    ])
+    expect(postingPairs()).toEqual([])
   })
 })

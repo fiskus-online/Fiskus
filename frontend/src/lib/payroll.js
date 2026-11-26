@@ -106,3 +106,24 @@ export function shiftMonth(year, month, d) {
   const t = year * 12 + (month - 1) + d
   return { year: Math.floor(t / 12), month: (t % 12) + 1 }
 }
+
+const pairLabels = {
+  '521/331': 'Hrubé mzdy',
+  '527/331': 'Náhrada príjmu pri PN',
+  '524/336': 'Poistné zamestnávateľa',
+  '331/336': 'Poistné zamestnancov',
+  '331/342': 'Preddavok na daň',
+  '342/331': 'Daňový bonus vyplatený zamestnávateľom',
+  '331/379': 'Zrážky zo mzdy',
+}
+
+/** Riadky dokladu miezd zo servera (MD, D, MD, D …) → dvojice na zobrazenie. */
+export function postingPairs(lines = []) {
+  const out = []
+  for (let i = 0; i + 1 < lines.length; i += 2) {
+    const md = lines[i].account
+    const d = lines[i + 1].account
+    out.push({ md, d, amount: lines[i].debit, label: pairLabels[`${md}/${d}`] ?? '' })
+  }
+  return out
+}

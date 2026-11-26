@@ -350,6 +350,8 @@ func (s *Server) Handler() http.Handler {
 	need("PUT /api/companies/{cid}/payroll/{year}/{month}", auth.PermLedgerWrite, s.putPayroll)
 	need("POST /api/companies/{cid}/payroll/{year}/{month}/close", auth.PermLedgerWrite, s.closePayroll)
 	need("POST /api/companies/{cid}/payroll/{year}/{month}/reopen", auth.PermLedgerWrite, s.reopenPayroll)
+	need("GET /api/companies/{cid}/payroll/{year}/{month}/posting", auth.PermLedgerRead, s.payrollPosting)
+	need("POST /api/companies/{cid}/payroll/{year}/{month}/posting", auth.PermLedgerWrite, s.postPayroll)
 	need("GET /api/companies/{cid}/year-close/{year}", auth.PermLedgerRead, s.getYearClose)
 	need("POST /api/companies/{cid}/year-close/{year}", auth.PermLedgerWrite, s.closeYear)
 	need("POST /api/companies/{cid}/year-close/{year}/reopen", auth.PermLedgerWrite, s.reopenYear)

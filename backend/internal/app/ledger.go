@@ -68,6 +68,8 @@ type InternalDoc struct {
 	FX bool `json:"fx,omitempty"`
 	// Dep: účtovné odpisy a vyradenie majetku za rok (vytvára Fiškus).
 	Dep bool `json:"dep,omitempty"`
+	// Payroll: mzdy za mesiac RRRR-MM (vytvára Fiškus).
+	Payroll string `json:"payroll,omitempty"`
 }
 
 // LedgerBook je účtovný denník a hlavná kniha za rok.
@@ -1016,7 +1018,7 @@ func (a *App) SaveInternal(ctx context.Context, companyID int64, year int, doc I
 				if strings.TrimSpace(doc.Number) == "" {
 					doc.Number = d.Internal[i].Number
 				}
-				doc.FX = d.Internal[i].FX
+				doc.FX, doc.Dep, doc.Payroll = d.Internal[i].FX, d.Internal[i].Dep, d.Internal[i].Payroll
 				d.Internal[i] = doc
 				return "Upravený interný doklad " + doc.Number + ": " + doc.Text, nil
 			}
