@@ -106,11 +106,28 @@ a na 342 preddavok dane. Úhrady z banky ich vyrovnajú. Ak mesiac otvoríte
 a mzdy sa zmenia, Fiškus upozorní, že doklad už nezodpovedá; po novom
 uzavretí ho zaúčtujete znova a pôvodný doklad sa nahradí (číslo ostane).
 
+## Peňažný denník
+
+V jednoduchom účtovníctve sa mzdy zapisujú až pri úhrade. Fiškus spozná
+platbu z bankového výpisu podľa účtu príjemcu, sumy a variabilného symbolu
+(z uzavretých miezd za predchádzajúce dva mesiace aj aktuálny mesiac)
+a rozpíše ju podľa opatrenia MF SR o jednoduchom účtovníctve:
+
+| Úhrada | Stĺpec |
+|---|---|
+| čistá mzda zamestnancovi | e3 mzdy |
+| preddavok dane daňovému úradu | e3 mzdy |
+| poistné Sociálnej a zdravotnej poisťovni — časť zamestnanca | e3 mzdy |
+| poistné — časť zamestnávateľa | e4 poistné a príspevky |
+
+Výplatu v hotovosti spozná z pokladničného výdavku na meno zamestnanca
+a sumu výplaty. Platbu, ktorú nespozná (napr. odvody za viac mesiacov
+naraz), rozpíšete ručne.
+
 :::info[Čo zatiaľ chýba]
 Výkazy pre Sociálnu poisťovňu a zdravotné poisťovne (XML), mesačný prehľad
 a ročné hlásenie pre finančnú správu, ročné zúčtovanie, výpočet náhrady
-pri PN a dovolenke z priemerného zárobku a zápis miezd do peňažného
-denníka v jednoduchom účtovníctve. Pribudnú
+pri PN a dovolenke z priemerného zárobku. Pribudnú
 v ďalších verziách — sumy z výplatnej listiny zatiaľ prepíšete do
 formulárov poisťovní a finančnej správy.
 :::

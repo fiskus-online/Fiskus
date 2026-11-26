@@ -5,8 +5,11 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/fiskus-online/fiskus/backend/internal/bank"
+	"github.com/fiskus-online/fiskus/backend/internal/cash"
 	"github.com/fiskus-online/fiskus/backend/internal/edition"
 	"github.com/fiskus-online/fiskus/backend/internal/invoice"
+	"github.com/fiskus-online/fiskus/backend/internal/journal"
 	m "github.com/fiskus-online/fiskus/backend/internal/money"
 	"github.com/fiskus-online/fiskus/backend/internal/payroll"
 )
@@ -143,4 +146,109 @@ func TestPayrollPaymentOrder(t *testing.T) {
 	if name != "mzdy-2026-10-prikaz.xml" {
 		t.Errorf("názov: %s", name)
 	}
+}
+
+// Úhrady uzavretých miezd z banky sa v peňažnom denníku rozpíšu na mzdy (e3)
+// a poistné zamestnávateľa (e4).
+func TestPayrollJournal(t *testing.T) {
+	a, c := newApp(t, edition.Desktop)
+	if _, err := a.SavePayrollPaySettings(ctx, c.ID, PayrollPaySettings{SocialIBAN: ibanSocial, SocialVS: "1234567890", TaxOUD: "1234567890",
+		Health: map[string]HealthPay{"25": {IBAN: ibanHealth, VS: "33334444"}}}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := a.SaveEmployee(ctx, c.ID, payroll.Employee{FirstName: "Jana", LastName: "Nová", Contract: payroll.TPP, Insurer: "25",
+		Start: "2026-01-01", Wage: m.MustParse("1500"), Hours: m.MustParse("40"), NCZD: true, IBAN: ibanWorker}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := a.ClosePayroll(ctx, c.ID, 2026, 9); err != nil {
+		t.Fatal(err)
+	}
+	pp, err := a.PayrollPaymentsFor(ctx, c.ID, 2026, 9)
+	if err != nil {
+		t.Fatal(err)
+	}
+	byKind := map[string]PayrollPayment{}
+	for _, p := range pp.Payments {
+		byKind[p.Key] = p
+	}
+	soc, wage, tax := byKind["social"], byKind["wage:1"], byKind["tax"]
+	tx := func(fp, iban, vs string, amount m.Dec) bank.Transaction {
+		return bank.Transaction{Account: ibanFirm, Date: invoice.MustDate("2026-10-08"), Amount: amount, Currency: "EUR",
+			Direction: bank.Out, VS: vs, CounterIBAN: iban, Fingerprint: fp, Status: bank.StatusOpen}
+	}
+	txs, _, err := a.Store.SaveBankTransactions(ctx, c.ID, []bank.Transaction{
+		tx("w", ibanWorker, "", wage.Amount),
+		tx("s", ibanSocial, "1234567890", soc.Amount),
+		tx("t", TaxIBAN("1234567890"), "1100092026", tax.Amount),
+		tx("x", ibanSocial, "9999999999", soc.Amount),                       // iný VS
+		tx("y", ibanSocial, "1234567890", soc.Amount.Add(m.MustParse("1"))), // iná suma
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	// výplata v hotovosti (meno v opačnom poradí)
+	if _, err := a.CreateCash(ctx, c.ID, cash.Document{Kind: cash.In, Date: invoice.MustDate("2026-10-01"), Amount: m.MustParse("5000"), Purpose: "Vklad"}); err != nil {
+		t.Fatal(err)
+	}
+	cd, err := a.CreateCash(ctx, c.ID, cash.Document{Kind: cash.Out, Date: invoice.MustDate("2026-10-08"), Amount: wage.Amount,
+		Partner: "Jana  Nová", Purpose: "Mzda 9/2026"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	other, _ := a.CreateCash(ctx, c.ID, cash.Document{Kind: cash.Out, Date: invoice.MustDate("2026-10-08"), Amount: wage.Amount,
+		Partner: "Peter Iný", Purpose: "Záloha"})
+	book, err := a.Journal(ctx, c.ID, 2026)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for k, want := range map[string]int{"cash:" + itoa(int(cd.ID)): 1, "cash:" + itoa(int(other.ID)): 0} {
+		for _, e := range book.Entries {
+			if e.Key == k && len(e.Lines) != want {
+				t.Errorf("pokladnica %s: %+v", k, e.Lines)
+			}
+		}
+	}
+	byKey := map[string]journal.Entry{}
+	for _, e := range book.Entries {
+		byKey[e.Key] = e
+	}
+	var socEmp m.Dec
+	for _, r := range mustPayroll(t, a, c.ID, 2026, 9).Rows {
+		socEmp = socEmp.Add(r.Result.SocialEmployee)
+	}
+	tests := []struct {
+		name string
+		tx   int
+		want []journal.Line
+	}{
+		{"výplata", 0, []journal.Line{{Column: journal.ExpWages, Amount: wage.Amount}}},
+		{"Sociálna poisťovňa", 1, []journal.Line{{Column: journal.ExpWages, Amount: socEmp}, {Column: journal.ExpInsur, Amount: soc.Amount.Sub(socEmp)}}},
+		{"preddavok dane", 2, []journal.Line{{Column: journal.ExpWages, Amount: tax.Amount}}},
+		{"iný VS", 3, nil},
+		{"iná suma", 4, nil},
+	}
+	for _, tt := range tests {
+		e := byKey["bank:"+itoa(int(txs[tt.tx].ID))]
+		if len(e.Lines) != len(tt.want) {
+			t.Errorf("%s: %+v", tt.name, e.Lines)
+			continue
+		}
+		for i, w := range tt.want {
+			if e.Lines[i].Column != w.Column || !e.Lines[i].Amount.Equal(w.Amount) {
+				t.Errorf("%s: riadok %d %+v, chcem %+v", tt.name, i, e.Lines[i], w)
+			}
+		}
+		if tt.want != nil && !e.Auto {
+			t.Errorf("%s: rozpis má byť navrhnutý", tt.name)
+		}
+	}
+}
+
+func mustPayroll(t *testing.T, a *App, cid int64, year, month int) PayrollView {
+	t.Helper()
+	v, err := a.Payroll(ctx, cid, year, month)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return v
 }
