@@ -56,6 +56,8 @@ func TestPayrollAPI(t *testing.T) {
 	e.do("PUT", base+"/payroll/payment-settings", `{"socialIban":"SK00"}`, 422, nil)
 	e.do("PUT", base+"/payroll/payment-settings", `{"socialIban":"SK2381800000007000000011","socialVs":"1234567890","taxOud":"1234567890"}`, 200, nil)
 	e.do("POST", base+"/payroll/2026/3/payment-order", `{"keys":[]}`, 422, nil)
+	// mesačný výkaz poistného: chýbajú údaje (VS, deň výplaty, zostavovateľ, RČ)
+	e.do("GET", base+"/payroll/2026/3/mvpp", nil, 422, nil)
 	// zaúčtovanie miezd: iba v podvojnom účtovníctve
 	e.do("GET", base+"/payroll/2026/3/posting", nil, 422, nil)
 	e.do("PUT", base, `{"name":"Test s.r.o.","bookkeeping":"double"}`, 200, nil)

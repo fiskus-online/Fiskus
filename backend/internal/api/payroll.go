@@ -221,3 +221,24 @@ func (s *Server) putPayrollPaySettings(w http.ResponseWriter, r *http.Request) {
 	}
 	writeJSON(w, http.StatusOK, out)
 }
+
+// payrollMVPP: GET …/payroll/{year}/{month}/mvpp — mesačný výkaz poistného (XML)
+func (s *Server) payrollMVPP(w http.ResponseWriter, r *http.Request) {
+	cid, year, month, ok := s.payrollPeriod(w, r)
+	if !ok {
+		return
+	}
+	name, data, err := s.App.PayrollMVPP(r.Context(), cid, year, month)
+	var me *app.MVPPError
+	if errors.As(err, &me) {
+		writeErr(w, http.StatusUnprocessableEntity, me.Error(), nil)
+		return
+	}
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	w.Header().Set("Content-Type", "application/xml; charset=utf-8")
+	w.Header().Set("Content-Disposition", `attachment; filename="`+name+`"`)
+	_, _ = w.Write(data)
+}

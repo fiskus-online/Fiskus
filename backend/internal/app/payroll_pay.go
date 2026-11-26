@@ -33,6 +33,11 @@ type PayrollPaySettings struct {
 	TaxOUD string               `json:"taxOud"` // osobný účet daňovníka (základné číslo účtu)
 	// PayDay je deň v mesiaci určený na výplatu miezd (0 = neurčený).
 	PayDay int `json:"payDay,omitempty"`
+	// osoba, ktorá zostavuje výkazy (mesačný výkaz Sociálnej poisťovne ju vyžaduje)
+	ContactFirst string `json:"contactFirst,omitempty"`
+	ContactLast  string `json:"contactLast,omitempty"`
+	ContactPhone string `json:"contactPhone,omitempty"`
+	ContactEmail string `json:"contactEmail,omitempty"`
 }
 
 // HealthPay sú platobné údaje zdravotnej poisťovne.
@@ -140,6 +145,11 @@ func (a *App) SavePayrollPaySettings(ctx context.Context, cid int64, s PayrollPa
 	s.TaxOUD = strings.TrimLeft(strings.TrimSpace(s.TaxOUD), "0")
 	if s.TaxOUD != "" && TaxIBAN(s.TaxOUD) == "" {
 		add("taxOud", "Osobný účet daňovníka má najviac 10 číslic")
+	}
+	s.ContactFirst, s.ContactLast = strings.TrimSpace(s.ContactFirst), strings.TrimSpace(s.ContactLast)
+	s.ContactPhone, s.ContactEmail = strings.TrimSpace(s.ContactPhone), strings.TrimSpace(s.ContactEmail)
+	if s.ContactEmail != "" && !strings.Contains(s.ContactEmail, "@") {
+		add("contactEmail", "Neplatný e-mail")
 	}
 	if s.PayDay < 0 || s.PayDay > 31 {
 		add("payDay", "Deň výplaty je 1 až 31")

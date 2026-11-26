@@ -13,6 +13,7 @@ import InputText from 'primevue/inputtext'
 import FormField from '../components/FormField.vue'
 import ExportButton from '../components/ExportButton.vue'
 import PayrollPayDialog from '../components/PayrollPayDialog.vue'
+import { saveBlob } from '../lib/export.js'
 import { api, ApiError } from '../lib/api.js'
 import { can, session } from '../lib/session.js'
 import { formatAmount, formatMoney } from '../lib/format.js'
@@ -119,6 +120,21 @@ const double = computed(() => session.company?.bookkeeping === 'double')
 const posting = ref(null)
 const postOpen = ref(false)
 const postBusy = ref(false)
+// mesačný výkaz poistného pre Sociálnu poisťovňu (XML)
+const mvppBusy = ref(false)
+async function downloadMVPP() {
+  mvppBusy.value = true
+  try {
+    const { blob, name } = await api.payrollMVPP(session.companyId, year.value, month.value)
+    saveBlob(blob, name)
+    toast.add({ severity: 'success', summary: 'Výkaz stiahnutý', detail: `${name} nahrajte na portáli Sociálnej poisťovne (eSlužby → Odvádzatelia poistného).`, life: 8000 })
+  } catch (e) {
+    toast.add({ severity: 'error', summary: 'Výkaz sa nedá zostaviť', detail: e.message, life: 10000 })
+  } finally {
+    mvppBusy.value = false
+  }
+}
+
 async function loadPosting() {
   posting.value = null
   if (!double.value || !view.value?.closed) return
@@ -159,6 +175,7 @@ const fmtClosed = (s) => (s ? new Date(s).toLocaleDateString('sk-SK') : '')
       <span v-if="view?.closed" class="tag" data-tone="paid" :title="`uzavrel ${view.closedBy} ${fmtClosed(view.closedAt)}`"><span class="tag-text"><i class="pi pi-lock" /> uzavreté</span></span>
       <div class="spacer" />
       <ExportButton v-if="rows.length" :name="`Mzdy ${periodLabel(year, month)}`" :columns="payrollColumns" :rows="rows" />
+      <Button v-if="view?.closed && rows.length && year >= 2026" label="Výkaz SP (XML)" icon="pi pi-file-export" severity="secondary" size="small" outlined :loading="mvppBusy" @click="downloadMVPP" />
       <Button v-if="view?.closed && rows.length && canWrite" label="Príkaz na úhradu…" icon="pi pi-send" severity="secondary" size="small" outlined @click="payOpen = true" />
       <Button v-if="rows.length" label="Výplatné pásky" icon="pi pi-print" severity="secondary" size="small" outlined
         @click="router.push({ path: '/mzdy/tlac', query: { rok: year, mesiac: month } })" />

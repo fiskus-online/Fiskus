@@ -13,6 +13,10 @@ etapách je v [pláne vývoja](./ROADMAP.md).
 
 ## 0.10.12
 
+- **Mesačný výkaz poistného pre Sociálnu poisťovňu (XML).** Z uzavretého
+  mesiaca výkaz vo formáte MVPP v2026 so súhrnom a prílohou za každého
+  zamestnanca. Do platobných údajov miezd pribudla osoba, ktorá výkazy
+  zostavuje.
 - **Prijatá faktúra k príjemke z objednávky.** Príjemku z objednávky
   dodávateľovi možno doplniť o prijatú faktúru; nákup sa potom zaúčtuje
   na obstaranie zásob a uzávierka ju neráta medzi príjemky bez faktúry.
