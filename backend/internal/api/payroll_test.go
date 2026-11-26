@@ -56,6 +56,26 @@ func TestPayrollAPI(t *testing.T) {
 	e.do("PUT", base+"/payroll/payment-settings", `{"socialIban":"SK00"}`, 422, nil)
 	e.do("PUT", base+"/payroll/payment-settings", `{"socialIban":"SK2381800000007000000011","socialVs":"1234567890","taxOud":"1234567890"}`, 200, nil)
 	e.do("POST", base+"/payroll/2026/3/payment-order", `{"keys":[]}`, 422, nil)
+	// zaúčtovanie miezd: iba v podvojnom účtovníctve
+	e.do("GET", base+"/payroll/2026/3/posting", nil, 422, nil)
+	e.do("PUT", base, `{"name":"Test s.r.o.","bookkeeping":"double"}`, 200, nil)
+	var pp struct {
+		Lines  []map[string]any `json:"lines"`
+		Posted string           `json:"posted"`
+		ToPay  string           `json:"toPay"`
+	}
+	e.do("GET", base+"/payroll/2026/3/posting", nil, 200, &pp)
+	if len(pp.Lines) == 0 || pp.ToPay != "1100.00" || pp.Posted != "" {
+		t.Fatalf("návrh: %+v", pp)
+	}
+	var doc struct {
+		Number  string `json:"number"`
+		Payroll string `json:"payroll"`
+	}
+	e.do("POST", base+"/payroll/2026/3/posting", nil, 200, &doc)
+	if doc.Payroll != "2026-03" || doc.Number == "" {
+		t.Fatalf("doklad: %+v", doc)
+	}
 	e.do("POST", base+"/payroll/2026/3/reopen", `{"reason":"oprava zrážky"}`, 200, &v)
 	e.do("GET", base+"/payroll/2026/13", nil, 400, nil)
 	e.do("GET", base+"/payroll/2020/1", nil, 422, nil)

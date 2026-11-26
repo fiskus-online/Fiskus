@@ -17,7 +17,7 @@ import { api, ApiError } from '../lib/api.js'
 import { can, session } from '../lib/session.js'
 import { formatAmount, formatMoney } from '../lib/format.js'
 import { payrollColumns } from '../lib/columns.js'
-import { contractShort, employeeName, inputFromForm, inputToForm, insurerLabel, periodLabel, shiftMonth } from '../lib/payroll.js'
+import { contractShort, employeeName, inputFromForm, inputToForm, insurerLabel, periodLabel, postingPairs, shiftMonth } from '../lib/payroll.js'
 
 const route = useRoute()
 const router = useRouter()
@@ -114,6 +114,35 @@ async function reopen() {
   }
 }
 const payOpen = ref(false)
+// ---- zaúčtovanie do hlavnej knihy (podvojné účtovníctvo) ----
+const double = computed(() => session.company?.bookkeeping === 'double')
+const posting = ref(null)
+const postOpen = ref(false)
+const postBusy = ref(false)
+async function loadPosting() {
+  posting.value = null
+  if (!double.value || !view.value?.closed) return
+  try {
+    posting.value = await api.payrollPosting(session.companyId, year.value, month.value)
+  } catch {
+    posting.value = null
+  }
+}
+watch(() => [view.value?.closed, view.value?.year, view.value?.month, double.value], loadPosting)
+const pairs = computed(() => postingPairs(posting.value?.lines))
+async function post() {
+  postBusy.value = true
+  try {
+    const doc = await api.postPayroll(session.companyId, year.value, month.value)
+    postOpen.value = false
+    toast.add({ severity: 'success', summary: `Zaúčtované ${doc.number}`, life: 3000 })
+    await loadPosting()
+  } catch (e) {
+    toast.add({ severity: 'error', summary: 'Nezaúčtované', detail: e.fields?.[0]?.message ?? e.message, life: 6000 })
+  } finally {
+    postBusy.value = false
+  }
+}
 const health = computed(() => Object.entries(t.value?.health ?? {}).sort())
 const fmtClosed = (s) => (s ? new Date(s).toLocaleDateString('sk-SK') : '')
 </script>
@@ -151,6 +180,15 @@ const fmtClosed = (s) => (s ? new Date(s).toLocaleDateString('sk-SK') : '')
       <div><span>Výplaty</span><strong class="num">{{ formatMoney(t.toPay) }}</strong><small>čistá mzda {{ formatAmount(t.net) }}</small></div>
       <div class="cost"><span>Cena práce</span><strong class="num"><span class="ledger">{{ formatMoney(t.cost) }}</span></strong><small>hrubé mzdy {{ formatAmount(t.gross) }}</small></div>
     </section>
+
+    <p v-if="posting" class="gl">
+      <i class="pi pi-book" aria-hidden="true" />
+      <span v-if="posting.posted && posting.current">Zaúčtované v hlavnej knihe dokladom <RouterLink to="/hlavna-kniha">{{ posting.posted }}</RouterLink>.</span>
+      <template v-else-if="posting.posted">Doklad {{ posting.posted }} nezodpovedá mzdám po otvorení mesiaca — zaúčtujte ich znova.</template>
+      <template v-else>Mzdy ešte nie sú zaúčtované v hlavnej knihe.</template>
+      <Button v-if="canWrite && !(posting.posted && posting.current)" :label="posting.posted ? 'Zaúčtovať znova…' : 'Zaúčtovať…'" size="small" text @click="postOpen = true" />
+      <Button v-else-if="posting.posted" label="Zobraziť zápis" size="small" text @click="postOpen = true" />
+    </p>
 
     <div v-if="rows.length" class="wrap">
       <table class="pl">
@@ -226,6 +264,20 @@ const fmtClosed = (s) => (s ? new Date(s).toLocaleDateString('sk-SK') : '')
     </Drawer>
 
     <PayrollPayDialog v-model:visible="payOpen" :year="year" :month="month" />
+    <Dialog v-model:visible="postOpen" :header="`Zaúčtovanie miezd — ${periodLabel(year, month)}`" modal :style="{ width: '34rem' }" :breakpoints="{ '480px': '96vw' }">
+      <p class="dlg">Interný doklad k poslednému dňu mesiaca. Na účte 331 zostane suma na výplatu, na 336 poistné a na 342 preddavok dane.</p>
+      <table class="slip post">
+        <thead><tr><th>MD</th><th>D</th><th>Text</th><th class="num">Suma</th></tr></thead>
+        <tbody>
+          <tr v-for="p in pairs" :key="p.md + p.d"><td>{{ p.md }}</td><td>{{ p.d }}</td><td>{{ p.label }}</td><td class="num">{{ formatAmount(p.amount) }}</td></tr>
+          <tr class="total"><td colspan="3">Zostatok 331 — na výplatu</td><td class="num"><span class="ledger">{{ formatMoney(posting?.toPay) }}</span></td></tr>
+        </tbody>
+      </table>
+      <template #footer>
+        <Button label="Zavrieť" text size="small" @click="postOpen = false" />
+        <Button v-if="canWrite && !(posting?.posted && posting?.current)" :label="posting?.posted ? 'Zaúčtovať znova' : 'Zaúčtovať'" icon="pi pi-check" size="small" :loading="postBusy" @click="post" />
+      </template>
+    </Dialog>
 
     <Dialog v-model:visible="reopening" :header="`Otvoriť mzdy — ${periodLabel(year, month)}`" modal :style="{ width: '28rem' }" :breakpoints="{ '480px': '96vw' }">
       <p class="dlg">Otvorené mzdy sa prepočítajú podľa aktuálnych údajov. Dôvod sa zapíše do auditu.</p>
@@ -417,6 +469,30 @@ const fmtClosed = (s) => (s ? new Date(s).toLocaleDateString('sk-SK') : '')
   font-weight: 700;
   font-size: var(--fs-md);
   padding: 6px 0;
+}
+.gl {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  font-size: var(--fs-sm);
+  color: var(--ink-soft);
+}
+.post th {
+  text-align: left;
+  font-size: var(--fs-xs);
+  color: var(--ink-soft);
+  font-weight: 600;
+  border-bottom: 1px solid var(--rule);
+  padding: 3px 8px 3px 0;
+}
+.post td {
+  padding: 3px 8px 3px 0;
+}
+.post .num {
+  text-align: right;
+  padding-right: 0;
 }
 .dlg {
   font-size: var(--fs-sm);

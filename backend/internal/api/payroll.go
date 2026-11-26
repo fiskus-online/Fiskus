@@ -140,6 +140,30 @@ func (s *Server) reopenPayroll(w http.ResponseWriter, r *http.Request) {
 	s.payrollResult(w, v, err)
 }
 
+// payrollPosting: GET …/payroll/{year}/{month}/posting — návrh zaúčtovania miezd
+func (s *Server) payrollPosting(w http.ResponseWriter, r *http.Request) {
+	if cid, year, month, ok := s.payrollPeriod(w, r); ok {
+		pp, err := s.App.PayrollPostingFor(r.Context(), cid, year, month)
+		if err != nil {
+			fail(w, err)
+			return
+		}
+		writeJSON(w, http.StatusOK, pp)
+	}
+}
+
+// postPayroll: POST …/payroll/{year}/{month}/posting — zaúčtuje mzdy do hlavnej knihy
+func (s *Server) postPayroll(w http.ResponseWriter, r *http.Request) {
+	if cid, year, month, ok := s.payrollPeriod(w, r); ok {
+		doc, err := s.App.PostPayroll(r.Context(), cid, year, month)
+		if err != nil {
+			fail(w, err)
+			return
+		}
+		writeJSON(w, http.StatusOK, doc)
+	}
+}
+
 // payrollPayments: GET …/payroll/{year}/{month}/payments — úhrady uzavretého mesiaca
 func (s *Server) payrollPayments(w http.ResponseWriter, r *http.Request) {
 	if cid, year, month, ok := s.payrollPeriod(w, r); ok {

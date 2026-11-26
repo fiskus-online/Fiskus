@@ -37,7 +37,10 @@ type LedgerData struct {
 	Internal []InternalDoc            `json:"internal,omitempty"`
 	// Opening sú počiatočné stavy účtov (kladný = MD, záporný = D).
 	Opening map[string]money.Dec `json:"opening,omitempty"`
-	NextID  int64                `json:"nextId,omitempty"`
+	// OpeningAuto: počiatočné stavy preniesla uzávierka predchádzajúceho
+	// roka (pri jej opakovaní sa prepočítajú); ručne zadané ostanú.
+	OpeningAuto bool  `json:"openingAuto,omitempty"`
+	NextID      int64 `json:"nextId,omitempty"`
 	// Revalued sú sumy pohľadávok a záväzkov v cudzej mene v eurách
 	// prepočítané kurzom k 31. 12. (kľúč sale:ID, purchase:ID).
 	Revalued map[string]money.Dec `json:"revalued,omitempty"`
@@ -68,6 +71,8 @@ type InternalDoc struct {
 	FX bool `json:"fx,omitempty"`
 	// Dep: účtovné odpisy a vyradenie majetku za rok (vytvára Fiškus).
 	Dep bool `json:"dep,omitempty"`
+	// Payroll: mzdy za mesiac RRRR-MM (vytvára Fiškus).
+	Payroll string `json:"payroll,omitempty"`
 }
 
 // LedgerBook je účtovný denník a hlavná kniha za rok.
@@ -1016,7 +1021,7 @@ func (a *App) SaveInternal(ctx context.Context, companyID int64, year int, doc I
 				if strings.TrimSpace(doc.Number) == "" {
 					doc.Number = d.Internal[i].Number
 				}
-				doc.FX = d.Internal[i].FX
+				doc.FX, doc.Dep, doc.Payroll = d.Internal[i].FX, d.Internal[i].Dep, d.Internal[i].Payroll
 				d.Internal[i] = doc
 				return "Upravený interný doklad " + doc.Number + ": " + doc.Text, nil
 			}
@@ -1045,6 +1050,11 @@ func (a *App) DeleteInternal(ctx context.Context, companyID int64, year int, id 
 // SetLedgerOpening uloží počiatočné stavy účtov k 1. 1. roka (riadky MD/D).
 // Strany sa musia rovnať (súvaha je vyrovnaná).
 func (a *App) SetLedgerOpening(ctx context.Context, companyID int64, year int, lines []ledger.Line) error {
+	return a.setLedgerOpening(ctx, companyID, year, lines, false)
+}
+
+// setLedgerOpening: auto = stavy prenáša uzávierka predchádzajúceho roka.
+func (a *App) setLedgerOpening(ctx context.Context, companyID int64, year int, lines []ledger.Line, auto bool) error {
 	return a.editLedger(ctx, companyID, year, func(d *LedgerData, c chart.Chart, _ []chart.Template) (string, error) {
 		out := map[string]money.Dec{}
 		if len(lines) > 0 {
@@ -1061,6 +1071,10 @@ func (a *App) SetLedgerOpening(ctx context.Context, companyID int64, year int, l
 			}
 		}
 		d.Opening = out
+		d.OpeningAuto = auto && len(out) > 0
+		if auto {
+			return fmt.Sprintf("Prenesené počiatočné stavy účtov k 1. 1. %d (%d účtov)", year, len(out)), nil
+		}
 		return fmt.Sprintf("Počiatočné stavy účtov k 1. 1. %d (%d účtov)", year, len(out)), nil
 	})
 }
