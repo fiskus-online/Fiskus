@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { apiLines, docLabel, docRows, filterCards, filterDocs, needsCost } from './stock.js'
+import { apiLines, docLabel, docRows, filterCards, filterDocs, needsCost, receiptLink, receiptPurchase } from './stock.js'
 
 const cards = [
   { warehouse: 'HL', itemId: 1, code: 'R24', name: 'Relé 24 V', kind: 'goods', low: true },
@@ -35,3 +35,22 @@ describe('sklad', () => {
     expect(needsCost('issue', '2')).toBe(false)
   })
 })
+
+describe('väzba príjemky na prijatú faktúru', () => {
+  it('formulár a API', () => {
+    const cases = [
+      { d: { kind: 'receipt', linkKind: 'purchase', linkId: 7 }, form: 7, api: { linkKind: 'purchase', linkId: 7 } },
+      { d: { kind: 'receipt', linkKind: 'porder', linkId: 3, purchaseId: 9 }, form: 9, api: { linkKind: 'porder', linkId: 3, purchaseId: 9 } },
+      { d: { kind: 'receipt', linkKind: 'porder', linkId: 3 }, form: 0, api: { linkKind: 'porder', linkId: 3, purchaseId: 0 } },
+      { d: { kind: 'receipt' }, form: 0, api: {} },
+      { d: { kind: 'issue' }, form: 0, api: {} },
+    ]
+    for (const c of cases) {
+      expect(receiptPurchase(c.d)).toBe(c.form)
+      expect(receiptLink({ ...c.d, purchase: c.form })).toEqual(c.api)
+    }
+    // nová väzba na faktúru pri ručnej príjemke
+    expect(receiptLink({ kind: 'receipt', purchase: 5 })).toEqual({ linkKind: 'purchase', linkId: 5 })
+  })
+})
+

@@ -13,6 +13,11 @@ etapách je v [pláne vývoja](./ROADMAP.md).
 
 ## 0.10.12
 
+- **Prijatá faktúra k príjemke z objednávky.** Príjemku z objednávky
+  dodávateľovi možno doplniť o prijatú faktúru; nákup sa potom zaúčtuje
+  na obstaranie zásob a uzávierka ju neráta medzi príjemky bez faktúry.
+  Oprava: úprava príjemky z objednávky menila väzbu na nesprávnu faktúru
+  alebo sa nedala uložiť.
 - **Mzdy v peňažnom denníku.** Úhrady výplat, odvodov a preddavkov dane
   z bankového výpisu (a výplaty v hotovosti) Fiškus spozná podľa
   uzavretých miezd a rozpíše na mzdy (e3) a poistné zamestnávateľa (e4).

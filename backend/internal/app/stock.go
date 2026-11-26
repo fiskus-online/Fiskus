@@ -346,6 +346,9 @@ func (a *App) checkStockDoc(ctx context.Context, companyID int64, cfg StockConfi
 		return mfaFieldErr("to", "Sklad "+d.To+" neexistuje")
 	}
 	if !d.Auto {
+		if d.LinkKind != porderStockLink {
+			d.PurchaseID, d.PurchaseNumber = 0, ""
+		}
 		switch d.LinkKind {
 		case "":
 			d.LinkID, d.LinkNumber = 0, ""
@@ -366,6 +369,16 @@ func (a *App) checkStockDoc(ctx context.Context, companyID int64, cfg StockConfi
 			d.LinkNumber = o.Number
 			if d.Partner == "" {
 				d.Partner = o.Supplier
+			}
+			// faktúra k príjemke z objednávky (prišla neskôr)
+			if d.PurchaseID != 0 && d.Kind == stock.Receipt && !d.Return {
+				p, err := a.Store.GetPurchase(ctx, companyID, d.PurchaseID)
+				if err != nil {
+					return mfaFieldErr("purchaseId", "Prijatá faktúra neexistuje")
+				}
+				d.PurchaseNumber = p.Number
+			} else {
+				d.PurchaseID, d.PurchaseNumber = 0, ""
 			}
 		default:
 			return mfaFieldErr("linkKind", "Skladový doklad sa ručne viaže iba na prijatú faktúru alebo objednávku")

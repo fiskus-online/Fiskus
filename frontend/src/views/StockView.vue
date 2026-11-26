@@ -25,7 +25,7 @@ import { can, session } from '../lib/session.js'
 import { formatAmount, formatDate, formatMoney, fromISODate, toISODate } from '../lib/format.js'
 import { stockCardColumns, stockDocColumns } from '../lib/columns.js'
 import { localOnly } from '../lib/calendar.js'
-import { apiLines, blankLine, docLabel, docRows, filterCards, filterDocs, itemKindLabels, needsCost } from '../lib/stock.js'
+import { apiLines, blankLine, docLabel, docRows, filterCards, filterDocs, itemKindLabels, needsCost, receiptLink, receiptPurchase } from '../lib/stock.js'
 
 const toast = useToast()
 const router = useRouter()
@@ -117,8 +117,8 @@ function editDoc(d) {
   loadPurchases()
   errors.value = {}
   form.value = d
-    ? { ...d, date: fromISODate(d.date) }
-    : { id: 0, kind: 'receipt', date: new Date(), warehouse: v.value.warehouses[0].code, to: '', partner: '', note: '', return: false, linkId: 0 }
+    ? { ...d, date: fromISODate(d.date), purchase: receiptPurchase(d) }
+    : { id: 0, kind: 'receipt', date: new Date(), warehouse: v.value.warehouses[0].code, to: '', partner: '', note: '', return: false, linkId: 0, purchase: 0 }
   lines.value = d
     ? d.lines.map((l) => ({ itemId: l.itemId, quantity: String(l.quantity), unitCost: Number(l.unitCost) ? String(l.unitCost) : '', name: l.name, unit: l.unit, total: l.total }))
     : [blankLine()]
@@ -151,7 +151,7 @@ async function saveDoc() {
     const saved = await api.saveStockDoc(session.companyId, {
       id: f.id || undefined, kind: f.kind, date: toISODate(f.date), warehouse: f.warehouse, partner: f.partner, note: f.note,
       return: f.kind === 'receipt' && f.return, lines: apiLines(lines.value), to: f.kind === 'transfer' ? f.to : '',
-      ...(f.kind === 'receipt' && !f.return && f.linkId ? { linkKind: 'purchase', linkId: f.linkId } : {}),
+      ...receiptLink(f),
     })
     toast.add({ severity: 'success', summary: f.id ? 'Doklad upravený' : 'Doklad vytvorený', detail: saved.number, life: 3000 })
     open.value = false
@@ -353,9 +353,10 @@ async function revokeFeed() {
                   <b>{{ d.number }}</b> <span class="kind">{{ docLabel(d) }}<template v-if="multi"> · {{ d.warehouse }}<template v-if="d.to"> → {{ d.to }}</template></template></span>
                   <span v-if="d.auto" class="tag">{{ autoTag(d) }}</span>
                   <span v-else-if="d.linkKind === 'porder'" class="tag">z objednávky</span>
+                  <span v-if="d.linkKind === 'porder' && !d.return && d.kind === 'receipt' && !d.purchaseId" class="tag warn" title="Príjemka z objednávky bez prijatej faktúry">bez faktúry</span>
                 </td>
                 <td class="text">
-                  {{ [d.partner, d.linkNumber].filter(Boolean).join(' · ') }}
+                  {{ [d.partner, d.linkNumber, d.purchaseNumber].filter(Boolean).join(' · ') }}
                   <span class="lines-sum">{{ d.lines.map((l) => `${l.name} ${formatAmount(l.quantity).replace(/,00$/, '')} ${l.unit}`).join(', ') }}</span>
                 </td>
                 <td class="num" :class="{ neg: d.kind === 'issue' }">{{ formatAmount(d.total) }}</td>
@@ -481,8 +482,9 @@ async function revokeFeed() {
             <InputText v-model="form.partner" size="small" :disabled="readonly" />
           </FormField>
         </div>
-        <FormField v-if="form.kind === 'receipt' && !form.return" label="K prijatej faktúre" :error="errors.linkId" hint="Nepovinné — dodávateľa doplní z faktúry">
-          <Select v-model="form.linkId" :options="purchaseOptions" option-label="label" option-value="value" filter size="small" fluid :disabled="readonly"
+        <p v-if="form.linkKind === 'porder'" class="hint">Príjem z objednávky <RouterLink :to="`/objednavky/${form.linkId}`">{{ form.linkNumber }}</RouterLink>. Keď príde faktúra, pripojte ju — nákup sa zaúčtuje na obstaranie zásob.</p>
+        <FormField v-if="form.kind === 'receipt' && !form.return" label="K prijatej faktúre" :error="errors.linkId || errors.purchaseId" hint="Nepovinné — dodávateľa doplní z faktúry">
+          <Select v-model="form.purchase" :options="purchaseOptions" option-label="label" option-value="value" filter size="small" fluid :disabled="readonly"
             :loading="purchases === null" />
         </FormField>
         <label v-if="form.kind === 'receipt'" class="check"><Checkbox v-model="form.return" binary :disabled="readonly" /> <span>Vrátenie od odberateľa (ocení sa cenou zo skladu)</span></label>
@@ -697,6 +699,10 @@ button.cell:disabled {
   margin-left: 4px;
   border-radius: 2px;
   white-space: nowrap;
+}
+.tag.warn {
+  border-color: var(--tone-overdue);
+  color: var(--tone-overdue);
 }
 .tag.low {
   border-color: var(--tone-overdue);

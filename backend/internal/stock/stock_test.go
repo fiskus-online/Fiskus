@@ -153,3 +153,23 @@ func TestShortageThenReceipt(t *testing.T) {
 		}
 	}
 }
+
+func TestDocPurchase(t *testing.T) {
+	tests := []struct {
+		name string
+		d    Doc
+		want int64
+	}{
+		{"príjemka k faktúre", Doc{Kind: Receipt, LinkKind: "purchase", LinkID: 7}, 7},
+		{"príjemka z objednávky s faktúrou", Doc{Kind: Receipt, LinkKind: "porder", LinkID: 3, PurchaseID: 9}, 9},
+		{"príjemka z objednávky bez faktúry", Doc{Kind: Receipt, LinkKind: "porder", LinkID: 3}, 0},
+		{"vrátenie", Doc{Kind: Receipt, Return: true, LinkKind: "purchase", LinkID: 7}, 0},
+		{"výdajka", Doc{Kind: Issue, LinkKind: "purchase", LinkID: 7}, 0},
+		{"bez väzby", Doc{Kind: Receipt, PurchaseID: 4}, 0},
+	}
+	for _, tt := range tests {
+		if got := tt.d.Purchase(); got != tt.want {
+			t.Errorf("%s: %d, chcem %d", tt.name, got, tt.want)
+		}
+	}
+}
