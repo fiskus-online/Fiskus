@@ -13,6 +13,9 @@ etapách je v [pláne vývoja](./ROADMAP.md).
 
 ## 0.10.12
 
+- **Mzdy v peňažnom denníku.** Úhrady výplat, odvodov a preddavkov dane
+  z bankového výpisu (a výplaty v hotovosti) Fiškus spozná podľa
+  uzavretých miezd a rozpíše na mzdy (e3) a poistné zamestnávateľa (e4).
 - **Príkaz na úhradu miezd.** Z uzavretého mesiaca hromadný príkaz SEPA
   s výplatami zamestnancov, poistným Sociálnej poisťovni a zdravotným
   poisťovniam a preddavkami dane daňovému úradu so správnymi symbolmi.

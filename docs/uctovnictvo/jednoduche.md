@@ -21,6 +21,7 @@ z bankových výpisov a pokladne.
 | Pohyb | Kto ho rozpíše do stĺpcov |
 |---|---|
 | úhrada spárovanej faktúry | Fiškus — základ podľa druhu plnenia alebo výdavku, DPH zvlášť, pomerne pri čiastočnej úhrade |
+| výplata a odvody z uzavretých miezd | Fiškus — mzdy (e3) a poistné zamestnávateľa (e4), pozri [Mzdy](../mzdy/index.md#penazny-dennik) |
 | iný pohyb (poplatok, vklad, odvody) | vy, s rýchlymi voľbami |
 
 Pod denníkom sú súčty stĺpcov a rozdiel príjmov a výdavkov.

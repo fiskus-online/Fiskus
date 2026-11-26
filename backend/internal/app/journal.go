@@ -304,6 +304,24 @@ type docCache struct {
 	cid  int64
 	invs map[int64]*invoice.Invoice
 	purs map[int64]*purchase.Purchase
+	pays map[string][]PayrollPayment // úhrady uzavretých miezd podľa RRRR-MM
+}
+
+// payroll vráti úhrady uzavretého mesiaca miezd (prázdne, ak nie je).
+func (c *docCache) payroll(year, month int) []PayrollPayment {
+	if c.pays == nil {
+		c.pays = map[string][]PayrollPayment{}
+	}
+	k := payrollYM(year, month)
+	if v, ok := c.pays[k]; ok {
+		return v
+	}
+	var out []PayrollPayment
+	if pp, err := c.a.PayrollPaymentsFor(c.ctx, c.cid, year, month); err == nil && pp.Closed {
+		out = pp.Payments
+	}
+	c.pays[k] = out
+	return out
 }
 
 // propose navrhne rozpis pohybu podľa spárovaného dokladu (nil = nevie).
@@ -358,7 +376,20 @@ func (c *docCache) proposeCash(e journal.Entry, vatPayer bool) []journal.Line {
 		return nil
 	}
 	d, err := c.a.Store.GetCashDocument(c.ctx, c.cid, n)
-	if err != nil || d.Tax == nil || len(d.Tax.Rows) == 0 {
+	if err != nil {
+		return nil
+	}
+	if d.Kind == cash.Out && d.Tax == nil && !d.Foreign() {
+		// výplata v hotovosti: meno zamestnanca a suma z uzavretých miezd
+		for _, k := range []int{-1, 0, -2} {
+			m := d.Date.AddMonths(k)
+			if p := matchCashWage(c.payroll(m.Year(), m.Month()), d.Partner, d.Amount); p != nil {
+				return p.Journal
+			}
+		}
+		return nil
+	}
+	if d.Tax == nil || len(d.Tax.Rows) == 0 {
 		return nil
 	}
 	_, tax, gross := d.Tax.Totals()
@@ -369,14 +400,28 @@ func (c *docCache) proposeCash(e journal.Entry, vatPayer bool) []journal.Line {
 }
 
 // proposeBank: pripísané platby kartou z terminálu sú priebežná položka
-// (tržba je už v pokladni z uzávierky e-kasy).
+// (tržba je už v pokladni z uzávierky e-kasy); odchádzajúce úhrady miezd
+// a odvodov z uzavretých mesiacov sa rozpíšu na mzdy a poistné.
 func (c *docCache) proposeBank(e journal.Entry) []journal.Line {
 	id, err := strconv.ParseInt(strings.TrimPrefix(e.Key, "bank:"), 10, 64)
-	if err != nil || e.Amount.Sign() <= 0 {
+	if err != nil || e.Amount.IsZero() {
 		return nil
 	}
 	t, err := c.a.Store.GetBankTransaction(c.ctx, c.cid, id)
-	if err != nil || !reCard.MatchString(t.Message+" "+t.CounterName+" "+t.Note) {
+	if err != nil {
+		return nil
+	}
+	if e.Amount.Sign() < 0 {
+		// mzdy sa vyplácajú a odvody platia v mesiaci po zúčtovaní
+		for _, d := range []int{-1, 0, -2} {
+			m := t.Date.AddMonths(d)
+			if p := matchPayroll(c.payroll(m.Year(), m.Month()), t.CounterIBAN, t.VS, t.Amount); p != nil {
+				return p.Journal
+			}
+		}
+		return nil
+	}
+	if !reCard.MatchString(t.Message + " " + t.CounterName + " " + t.Note) {
 		return nil
 	}
 	return []journal.Line{{Column: journal.TransitIn, Amount: e.Amount}}

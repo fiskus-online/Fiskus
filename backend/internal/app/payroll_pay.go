@@ -11,6 +11,7 @@ import (
 	"github.com/fiskus-online/fiskus/backend/internal/auth"
 	"github.com/fiskus-online/fiskus/backend/internal/bank"
 	"github.com/fiskus-online/fiskus/backend/internal/invoice"
+	"github.com/fiskus-online/fiskus/backend/internal/journal"
 	"github.com/fiskus-online/fiskus/backend/internal/money"
 	"github.com/fiskus-online/fiskus/backend/internal/party"
 	"github.com/fiskus-online/fiskus/backend/internal/payroll"
@@ -50,6 +51,10 @@ type PayrollPayment struct {
 	KS      string    `json:"ks"`
 	Info    string    `json:"info"`
 	Problem string    `json:"problem,omitempty"`
+	// Journal: rozpis úhrady v peňažnom denníku (opatrenie MF SR, § 4 ods. 6):
+	// čistá mzda, poistné zamestnanca a preddavok dane sú mzdy (e3),
+	// poistné zamestnávateľa poistné a príspevky (e4).
+	Journal []journal.Line `json:"-"`
 }
 
 // PayrollPayments je zoznam úhrad mesiaca.
@@ -161,7 +166,10 @@ func payrollPayList(year, month int, rows []PayrollRow, ibans map[int64]string, 
 	}
 	results := make([]payroll.Result, 0, len(rows))
 	insurers := map[int64]string{}
+	socialEmp, healthEmp := money.Zero, map[string]money.Dec{}
 	for _, r := range rows {
+		socialEmp = socialEmp.Add(r.Result.SocialEmployee)
+		healthEmp[r.Employee.Insurer] = healthEmp[r.Employee.Insurer].Add(r.Result.HealthEmployee)
 		results = append(results, r.Result)
 		insurers[r.Employee.ID] = r.Employee.Insurer
 		if r.Result.ToPay.Sign() <= 0 {
@@ -173,6 +181,7 @@ func payrollPayList(year, month int, rows []PayrollRow, ibans map[int64]string, 
 		}
 		p := PayrollPayment{Key: "wage:" + strconv.FormatInt(r.Employee.ID, 10), Kind: "wage", Name: r.Employee.Name(),
 			IBAN: formatIBAN(iban), Amount: r.Result.ToPay, Info: "Mzda " + period}
+		p.Journal = splitLines(p.Amount, money.Zero)
 		problem(&p, "Chýba IBAN zamestnanca — doplňte ho alebo vyplaťte v hotovosti")
 		out = append(out, p)
 	}
@@ -181,6 +190,7 @@ func payrollPayList(year, month int, rows []PayrollRow, ibans map[int64]string, 
 	if t.Social.Sign() > 0 {
 		p := PayrollPayment{Key: "social", Kind: "social", Name: "Sociálna poisťovňa", IBAN: formatIBAN(s.SocialIBAN), Amount: t.Social,
 			VS: s.SocialVS, SS: fmt.Sprintf("%s99%d", mm, year), KS: "3118", Info: "Poistne " + period}
+		p.Journal = splitLines(socialEmp, t.Social.Sub(socialEmp))
 		problem(&p, "Doplňte účet pobočky Sociálnej poisťovne v platobných údajoch")
 		if p.Problem == "" && p.VS == "" {
 			p.Problem = "Doplňte variabilný symbol pridelený Sociálnou poisťovňou"
@@ -200,6 +210,7 @@ func payrollPayList(year, month int, rows []PayrollRow, ibans map[int64]string, 
 		}
 		p := PayrollPayment{Key: "health:" + c, Kind: "health", Name: name, IBAN: formatIBAN(h.IBAN), Amount: t.Health[c],
 			VS: h.VS, Info: "Preddavky ZP " + period}
+		p.Journal = splitLines(healthEmp[c], t.Health[c].Sub(healthEmp[c]))
 		problem(&p, "Doplňte účet poisťovne "+name+" v platobných údajoch")
 		if p.Problem == "" && p.VS == "" {
 			p.Problem = "Doplňte variabilný symbol zamestnávateľa v poisťovni " + name
@@ -212,11 +223,66 @@ func payrollPayList(year, month int, rows []PayrollRow, ibans map[int64]string, 
 		if t.Tax.Sign() < 0 {
 			p.Problem = "Vyplatený daňový bonus je vyšší ako preddavky — nie je čo odviesť"
 		} else {
+			p.Journal = splitLines(p.Amount, money.Zero)
 			problem(&p, "Doplňte osobný účet daňovníka (OÚD) v platobných údajoch")
 		}
 		out = append(out, p)
 	}
 	return out
+}
+
+// splitLines: časť do miezd (e3), časť do poistného zamestnávateľa (e4).
+func splitLines(wages, insur money.Dec) []journal.Line {
+	var out []journal.Line
+	if wages.Sign() != 0 {
+		out = append(out, journal.Line{Column: journal.ExpWages, Amount: wages})
+	}
+	if insur.Sign() != 0 {
+		out = append(out, journal.Line{Column: journal.ExpInsur, Amount: insur})
+	}
+	return out
+}
+
+// matchPayroll nájde úhradu miezd k odchádzajúcej platbe z banky: rovnaký
+// účet príjemcu, suma a (ak sú oba vyplnené) variabilný symbol.
+func matchPayroll(pays []PayrollPayment, iban, vs string, amount money.Dec) *PayrollPayment {
+	iban = party.NormalizeID(iban)
+	if iban == "" {
+		return nil
+	}
+	for i, p := range pays {
+		if p.Problem != "" || party.NormalizeID(p.IBAN) != iban || !p.Amount.Equal(amount) {
+			continue
+		}
+		if p.VS != "" && vs != "" && strings.TrimLeft(p.VS, "0") != strings.TrimLeft(vs, "0") {
+			continue
+		}
+		return &pays[i]
+	}
+	return nil
+}
+
+// matchCashWage nájde výplatu zamestnanca v hotovosti (meno a suma).
+func matchCashWage(pays []PayrollPayment, partner string, amount money.Dec) *PayrollPayment {
+	name := strings.Join(strings.Fields(strings.ToLower(partner)), " ")
+	if name == "" {
+		return nil
+	}
+	for i, p := range pays {
+		if p.Kind != "wage" || !p.Amount.Equal(amount) {
+			continue
+		}
+		n := strings.ToLower(p.Name)
+		f := strings.Fields(n)
+		rev := ""
+		if len(f) == 2 {
+			rev = f[1] + " " + f[0]
+		}
+		if name == n || name == rev {
+			return &pays[i]
+		}
+	}
+	return nil
 }
 
 // PayrollPaymentsFor vráti úhrady uzavretého mesiaca a platobné údaje.
