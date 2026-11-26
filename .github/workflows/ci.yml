@@ -28,6 +28,29 @@ jobs:
       - name: Testy so skutočnou SQLite
         run: go test -race -tags sqlite ./...
 
+  vuln:
+    name: Zraniteľnosti závislostí
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: backend/go.mod
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Go (govulncheck, aj so SQLite)
+        working-directory: backend
+        run: |
+          go get modernc.org/sqlite@latest
+          go mod tidy
+          go run golang.org/x/vuln/cmd/govulncheck@latest ./...
+          go run golang.org/x/vuln/cmd/govulncheck@latest -tags sqlite ./...
+      # iba závislosti, ktoré idú do aplikácie (nie nástroje na build a testy)
+      - name: Frontend (npm audit)
+        working-directory: frontend
+        run: npm audit --omit=dev --audit-level=high
+
   windows:
     name: Go – Windows (ikona, aplikácia)
     runs-on: windows-latest
