@@ -39,7 +39,7 @@ func (a *App) integrityChecks(ctx context.Context, companyID int64, year int, ad
 		switch {
 		case !ok:
 			c.Text = fmt.Sprintf("Účtovné odpisy majetku za %d (%s €) nie sú zaúčtované", year, dp.Total.Display())
-		case !equalLines(lines, dp.Lines):
+		case !sameLines(lines, dp.Lines):
 			c.Text = fmt.Sprintf("Doklad odpisov %s nezodpovedá registru majetku — zaúčtujte odpisy znova", num)
 		default:
 			c.OK, c.Text = true, fmt.Sprintf("Účtovné odpisy sú zaúčtované (%s)", num)
@@ -63,7 +63,7 @@ func (a *App) integrityChecks(ctx context.Context, companyID int64, year int, ad
 		switch {
 		case !ok:
 			c.Text = fmt.Sprintf("Kurzové rozdiely k 31. 12. %d nie sú zaúčtované (%d položiek v cudzej mene)", year, len(fx.Items))
-		case !equalLines(lines, fx.Lines):
+		case !sameLines(lines, fx.Lines):
 			c.Text = fmt.Sprintf("Doklad kurzových rozdielov %s nezodpovedá otvoreným položkám — zaúčtujte ho znova", num)
 		default:
 			c.OK, c.Text = true, fmt.Sprintf("Kurzové rozdiely k 31. 12. sú zaúčtované (%s)", num)
@@ -157,17 +157,4 @@ func openingDiff(got, want map[string]money.Dec) []string {
 	}
 	sort.Strings(out)
 	return out
-}
-
-// equalLines: rovnaké účty a sumy v rovnakom poradí.
-func equalLines(a, b []ledger.Line) bool {
-	if len(a) != len(b) {
-		return false
-	}
-	for i := range a {
-		if a[i].Account != b[i].Account || !a[i].Debit.Equal(b[i].Debit) || !a[i].Credit.Equal(b[i].Credit) {
-			return false
-		}
-	}
-	return true
 }
