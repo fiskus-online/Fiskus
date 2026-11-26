@@ -13,6 +13,10 @@ etapách je v [pláne vývoja](./ROADMAP.md).
 
 ## 0.10.12
 
+- **Oprava: úrazové a garančné poistenie pri odvodovej výnimke.** Pri
+  dohode študenta alebo dôchodcu s uplatnenou odpočítateľnou položkou
+  200 € sa úrazové a garančné poistenie počítalo zo sumy po odpočítaní;
+  zamestnávateľ ich platí z celej odmeny.
 - **Prijatá faktúra k príjemke z objednávky.** Príjemku z objednávky
   dodávateľovi možno doplniť o prijatú faktúru; nákup sa potom zaúčtuje
   na obstaranie zásob a uzávierka ju neráta medzi príjemky bez faktúry.
