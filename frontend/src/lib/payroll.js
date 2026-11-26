@@ -142,5 +142,5 @@ export const payDefault = (payments = []) => payments.filter((p) => !p.problem).
 export function paySettingsForm(s = {}, codes = ['24', '25', '27']) {
   const health = {}
   for (const c of codes) health[c] = { iban: s.health?.[c]?.iban ?? '', vs: s.health?.[c]?.vs ?? '' }
-  return { socialIban: s.socialIban ?? '', socialVs: s.socialVs ?? '', taxOud: s.taxOud ?? '', health }
+  return { socialIban: s.socialIban ?? '', socialVs: s.socialVs ?? '', taxOud: s.taxOud ?? '', payDay: s.payDay || null, health }
 }

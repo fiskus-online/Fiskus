@@ -37,6 +37,10 @@ func seedPayroll(ctx context.Context, a *app.App, c store.Company) error {
 		}
 		ids[i] = s.ID
 	}
+	// deň výplaty (termíny v kalendári); účty poisťovní si zadá používateľ
+	if _, err := a.SavePayrollPaySettings(ctx, c.ID, app.PayrollPaySettings{PayDay: 12}); err != nil {
+		return err
+	}
 	prev := today.AddMonths(-1)
 	if prev.Year() == today.Year() {
 		if _, err := a.SavePayroll(ctx, c.ID, prev.Year(), prev.Month(), []payroll.Input{{EmployeeID: ids[2], Hours: m.MustParse("24")}}); err != nil {

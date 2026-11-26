@@ -184,4 +184,4 @@ Slovenské špecifiká: RÚZ, tri identifikátory (IČO / DIČ / IČ DPH), 2 % d
 - [x] Odber do mobilu a kalendára (iCalendar, tajný odkaz iba na čítanie, pripomienky 3 dni a 1 deň vopred), súbor .ics, odznak v menu
 - [x] Prepojenie kalendára termínov s Google Kalendárom a Outlookom (Microsoft 365, Outlook.com) cez ich API — funguje aj v desktopovej verzii
 - [x] Upozornenie e-mailom pred lehotou (daňové a vlastné termíny, splatné prijaté faktúry; 1 až 14 dní vopred, raz za termín, od 7:00)
-- [ ] Termíny miezd (etapa 4)
+- [x] Termíny miezd: výplata, poistné v deň výplaty, preddavky dane do 5 dní (posun na pracovný deň, splnené podľa bankových platieb)
