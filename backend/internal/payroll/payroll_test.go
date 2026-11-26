@@ -54,13 +54,13 @@ func TestCompute2026(t *testing.T) {
 		{
 			name:  "dôchodca, dohoda s nepravidelným príjmom, výnimka 200 €",
 			e:     Employee{Contract: DoVP, Wage: m("300"), Pension: PensionOld, OOP: true},
-			want:  map[string]string{"socialBase": "100", "socialEmployee": "4", "socialEmployer": "19.80", "healthEmployee": "15", "healthEmployer": "33", "tax": "53.39", "net": "227.61"},
+			want:  map[string]string{"socialBase": "100", "socialEmployee": "4", "socialEmployer": "21.90", "healthEmployee": "15", "healthEmployer": "33", "tax": "53.39", "net": "227.61"},
 			funds: []string{FundOldAge, FundGuarantee, FundAccident, FundReserve},
 		},
 		{
 			name:  "študent DoBPŠ 350 € s výnimkou",
 			e:     Employee{Contract: DoBPS, Wage: m("350"), OOP: true, NCZD: true},
-			want:  map[string]string{"socialBase": "150", "socialEmployee": "10.50", "socialEmployer": "34.19", "healthEmployee": "17.50", "tax": "0"},
+			want:  map[string]string{"socialBase": "150", "socialEmployee": "10.50", "socialEmployer": "36.29", "healthEmployee": "17.50", "tax": "0"},
 			funds: []string{FundOldAge, FundDisability, FundGuarantee, FundAccident, FundReserve},
 		},
 		{
@@ -121,6 +121,19 @@ func TestCompute2026(t *testing.T) {
 
 func TestComputeMisc(t *testing.T) {
 	p, _ := ParamsFor(2026)
+	// odvodová výnimka: úrazové a garančné z celej odmeny
+	for _, e := range []Employee{{Contract: DoBPS, Wage: m("150"), OOP: true}, {Contract: DoPC, Regular: true, Wage: m("150"), Pension: PensionOld, OOP: true}} {
+		r, _ := Compute(e, Input{}, p, 1)
+		if f := fund(r, FundAccident); !f.Base.Equal(m("150")) || !f.Employer.Equal(m("1.20")) {
+			t.Errorf("%s úrazové pri výnimke: %+v", e.Contract, f)
+		}
+		if f := fund(r, FundGuarantee); !f.Base.Equal(m("150")) || !f.Employer.Equal(m("0.37")) {
+			t.Errorf("%s garančné pri výnimke: %+v", e.Contract, f)
+		}
+		if f := fund(r, FundOldAge); !f.Base.IsZero() {
+			t.Errorf("%s starobné pri výnimke: %+v", e.Contract, f)
+		}
+	}
 	r, _ := Compute(Employee{Contract: TPP, Wage: m("20000")}, Input{}, p, 1)
 	if f := fund(r, FundAccident); !f.Base.Equal(m("20000")) || !f.Employer.Equal(m("160")) {
 		t.Errorf("úrazové bez maxima: %+v", f)
