@@ -13,6 +13,11 @@ etapách je v [pláne vývoja](./ROADMAP.md).
 
 ## 0.10.11
 
+- **Zaúčtovanie miezd do hlavnej knihy.** V podvojnom účtovníctve sa
+  uzavretý mesiac miezd zaúčtuje jedným interným dokladom k poslednému dňu
+  mesiaca (521, 527 a 524 proti 331, 336, 342 a 379). Na účte 331 zostane
+  suma na výplatu. Po otvorení a zmene miezd Fiškus upozorní, že doklad
+  treba zaúčtovať znova.
 - **Filtre zoznamov so zaškrtávaním viacerých volieb.** Pohyby domácnosti
   (účty, druhy, kategórie, mesiace), banka, pokladňa, vydané a prijaté
   faktúry, ponuky, objednávky, dodacie listy, zákazky, pravidelná

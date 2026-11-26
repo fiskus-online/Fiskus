@@ -68,10 +68,32 @@ zadáte mu koniec pracovného vzťahu.
   64 % základu podľa počtu detí. Ak je bonus vyšší ako preddavok, rozdiel
   vyplatí zamestnávateľ.
 
+## Zaúčtovanie do hlavnej knihy
+
+V podvojnom účtovníctve sa pod súčtami uzavretého mesiaca zobrazí, či sú
+mzdy zaúčtované. Tlačidlo **Zaúčtovať…** ukáže zápis a vytvorí interný
+doklad k poslednému dňu mesiaca:
+
+| MD | D | Text |
+|---|---|---|
+| 521 | 331 | hrubé mzdy |
+| 527 | 331 | náhrada príjmu pri PN |
+| 524 | 336 | poistné zamestnávateľa |
+| 331 | 336 | poistné zamestnancov |
+| 331 | 342 | preddavok na daň |
+| 342 | 331 | daňový bonus vyplatený zamestnávateľom |
+| 331 | 379 | zrážky zo mzdy |
+
+Na účte 331 potom zostane presne suma na výplatu, na 336 poistné
+a na 342 preddavok dane. Úhrady z banky ich vyrovnajú. Ak mesiac otvoríte
+a mzdy sa zmenia, Fiškus upozorní, že doklad už nezodpovedá; po novom
+uzavretí ho zaúčtujete znova a pôvodný doklad sa nahradí (číslo ostane).
+
 :::info[Čo zatiaľ chýba]
 Výkazy pre Sociálnu poisťovňu a zdravotné poisťovne (XML), mesačný prehľad
 a ročné hlásenie pre finančnú správu, ročné zúčtovanie, výpočet náhrady
-pri PN a dovolenke z priemerného zárobku a zaúčtovanie miezd. Pribudnú
+pri PN a dovolenke z priemerného zárobku a zápis miezd do peňažného
+denníka v jednoduchom účtovníctve. Pribudnú
 v ďalších verziách — sumy z výplatnej listiny zatiaľ prepíšete do
 formulárov poisťovní a finančnej správy.
 :::
