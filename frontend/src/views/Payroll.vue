@@ -12,6 +12,7 @@ import Drawer from 'primevue/drawer'
 import InputText from 'primevue/inputtext'
 import FormField from '../components/FormField.vue'
 import ExportButton from '../components/ExportButton.vue'
+import PayrollPayDialog from '../components/PayrollPayDialog.vue'
 import { api, ApiError } from '../lib/api.js'
 import { can, session } from '../lib/session.js'
 import { formatAmount, formatMoney } from '../lib/format.js'
@@ -112,6 +113,7 @@ async function reopen() {
     reasonErr.value = e.fields?.[0]?.message ?? e.message
   }
 }
+const payOpen = ref(false)
 // ---- zaúčtovanie do hlavnej knihy (podvojné účtovníctvo) ----
 const double = computed(() => session.company?.bookkeeping === 'double')
 const posting = ref(null)
@@ -157,6 +159,7 @@ const fmtClosed = (s) => (s ? new Date(s).toLocaleDateString('sk-SK') : '')
       <span v-if="view?.closed" class="tag" data-tone="paid" :title="`uzavrel ${view.closedBy} ${fmtClosed(view.closedAt)}`"><span class="tag-text"><i class="pi pi-lock" /> uzavreté</span></span>
       <div class="spacer" />
       <ExportButton v-if="rows.length" :name="`Mzdy ${periodLabel(year, month)}`" :columns="payrollColumns" :rows="rows" />
+      <Button v-if="view?.closed && rows.length && canWrite" label="Príkaz na úhradu…" icon="pi pi-send" severity="secondary" size="small" outlined @click="payOpen = true" />
       <Button v-if="rows.length" label="Výplatné pásky" icon="pi pi-print" severity="secondary" size="small" outlined
         @click="router.push({ path: '/mzdy/tlac', query: { rok: year, mesiac: month } })" />
       <template v-if="canWrite && view">
@@ -260,6 +263,7 @@ const fmtClosed = (s) => (s ? new Date(s).toLocaleDateString('sk-SK') : '')
       </template>
     </Drawer>
 
+    <PayrollPayDialog v-model:visible="payOpen" :year="year" :month="month" />
     <Dialog v-model:visible="postOpen" :header="`Zaúčtovanie miezd — ${periodLabel(year, month)}`" modal :style="{ width: '34rem' }" :breakpoints="{ '480px': '96vw' }">
       <p class="dlg">Interný doklad k poslednému dňu mesiaca. Na účte 331 zostane suma na výplatu, na 336 poistné a na 342 preddavok dane.</p>
       <table class="slip post">

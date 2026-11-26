@@ -23,9 +23,9 @@ func seedPayroll(ctx context.Context, a *app.App, c store.Company) error {
 		{FirstName: "Martin", LastName: "Kováč", Position: "elektrikár", Contract: payroll.TPP, Insurer: "25", Start: "2024-03-01",
 			Wage: m.MustParse("1450"), Hours: m.MustParse("40"), NCZD: true, Bonus: true, RC: "880512/0005",
 			Children: []dpfo.Child{{Name: "Ema", RC: "130620/0005"}, {Name: "Samuel", RC: "200304/0006"}},
-			Street:   "Okružná 14", City: "Žilina", Zip: "01001", IBAN: "SK3112000000198742637541"},
+			Street:   "Okružná 14", City: "Žilina", Zip: "01001", IBAN: "SK4609000000005000123456"},
 		{FirstName: "Lucia", LastName: "Hronská", Position: "administratíva", Contract: payroll.DoPC, Regular: true, Insurer: "24", Start: start,
-			Wage: m.MustParse("420"), Hours: m.MustParse("10"), NCZD: false, City: "Žilina"},
+			Wage: m.MustParse("420"), Hours: m.MustParse("10"), NCZD: false, City: "Žilina", IBAN: "SK7211000000002900111222"},
 		{FirstName: "Tomáš", LastName: "Bielik", Position: "pomocník na montážach", Contract: payroll.DoBPS, Insurer: "27", Start: start,
 			Hourly: true, Wage: m.MustParse("7"), OOP: true, NCZD: true, City: "Bytča"},
 	}

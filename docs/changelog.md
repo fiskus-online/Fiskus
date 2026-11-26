@@ -13,6 +13,11 @@ etapách je v [pláne vývoja](./ROADMAP.md).
 
 ## 0.10.12
 
+- **Príkaz na úhradu miezd.** Z uzavretého mesiaca hromadný príkaz SEPA
+  s výplatami zamestnancov, poistným Sociálnej poisťovni a zdravotným
+  poisťovniam a preddavkami dane daňovému úradu so správnymi symbolmi.
+  Platobné údaje poisťovní a osobný účet daňovníka sa zadajú raz.
+
 - **Prísnejšie kontroly uzávierky podvojného účtovníctva.** Rok sa
   neuzavrie bez zaúčtovaných účtovných odpisov, kurzových rozdielov k 31. 12.
   (a kurzu pre každú menu) a s chybou ocenenia skladu (výdaj nad stav).

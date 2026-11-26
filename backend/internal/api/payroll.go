@@ -1,10 +1,12 @@
 package api
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 
 	"github.com/fiskus-online/fiskus/backend/internal/app"
+	"github.com/fiskus-online/fiskus/backend/internal/invoice"
 	"github.com/fiskus-online/fiskus/backend/internal/payroll"
 )
 
@@ -160,4 +162,62 @@ func (s *Server) postPayroll(w http.ResponseWriter, r *http.Request) {
 		}
 		writeJSON(w, http.StatusOK, doc)
 	}
+}
+
+// payrollPayments: GET …/payroll/{year}/{month}/payments — úhrady uzavretého mesiaca
+func (s *Server) payrollPayments(w http.ResponseWriter, r *http.Request) {
+	if cid, year, month, ok := s.payrollPeriod(w, r); ok {
+		pp, err := s.App.PayrollPaymentsFor(r.Context(), cid, year, month)
+		if err != nil {
+			fail(w, err)
+			return
+		}
+		writeJSON(w, http.StatusOK, pp)
+	}
+}
+
+// payrollPaymentOrder: POST …/payroll/{year}/{month}/payment-order {keys, date} — XML pain.001
+func (s *Server) payrollPaymentOrder(w http.ResponseWriter, r *http.Request) {
+	cid, year, month, ok := s.payrollPeriod(w, r)
+	if !ok {
+		return
+	}
+	var body struct {
+		Keys []string     `json:"keys"`
+		Date invoice.Date `json:"date"`
+	}
+	if !decode(w, r, &body) {
+		return
+	}
+	name, data, err := s.App.PayrollPaymentOrder(r.Context(), cid, year, month, body.Keys, body.Date)
+	var poe *app.PaymentOrderError
+	if errors.As(err, &poe) {
+		writeErr(w, http.StatusUnprocessableEntity, poe.Msg, nil)
+		return
+	}
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	w.Header().Set("Content-Type", "application/xml; charset=utf-8")
+	w.Header().Set("Content-Disposition", `attachment; filename="`+name+`"`)
+	_, _ = w.Write(data)
+}
+
+// putPayrollPaySettings: PUT …/payroll/payment-settings — účty a symboly pre odvody
+func (s *Server) putPayrollPaySettings(w http.ResponseWriter, r *http.Request) {
+	cid, ok := s.company(w, r)
+	if !ok {
+		return
+	}
+	var in app.PayrollPaySettings
+	if !decode(w, r, &in) {
+		return
+	}
+	out, err := s.App.SavePayrollPaySettings(r.Context(), cid, in)
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, out)
 }

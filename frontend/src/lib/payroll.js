@@ -127,3 +127,20 @@ export function postingPairs(lines = []) {
   }
   return out
 }
+
+/** Súčet vybraných úhrad v eurách (sumy sú hotové zo servera; sčíta sa v centoch). */
+export function payTotal(payments = [], keys = []) {
+  const set = new Set(keys)
+  const cents = payments.filter((p) => set.has(p.key)).reduce((a, p) => a + Math.round(Number(p.amount) * 100), 0)
+  return (cents / 100).toFixed(2)
+}
+
+/** Predvolene vybrané úhrady: všetky bez problému. */
+export const payDefault = (payments = []) => payments.filter((p) => !p.problem).map((p) => p.key)
+
+/** Platobné údaje → formulár so všetkými poisťovňami. */
+export function paySettingsForm(s = {}, codes = ['24', '25', '27']) {
+  const health = {}
+  for (const c of codes) health[c] = { iban: s.health?.[c]?.iban ?? '', vs: s.health?.[c]?.vs ?? '' }
+  return { socialIban: s.socialIban ?? '', socialVs: s.socialVs ?? '', taxOud: s.taxOud ?? '', health }
+}

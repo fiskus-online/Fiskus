@@ -44,6 +44,18 @@ func TestPayrollAPI(t *testing.T) {
 	if !v.Closed {
 		t.Fatal("neuzavreté")
 	}
+	// príkazy na úhradu
+	var pays struct {
+		Closed   bool             `json:"closed"`
+		Payments []map[string]any `json:"payments"`
+	}
+	e.do("GET", base+"/payroll/2026/3/payments", nil, 200, &pays)
+	if !pays.Closed || len(pays.Payments) == 0 {
+		t.Fatalf("úhrady: %+v", pays)
+	}
+	e.do("PUT", base+"/payroll/payment-settings", `{"socialIban":"SK00"}`, 422, nil)
+	e.do("PUT", base+"/payroll/payment-settings", `{"socialIban":"SK2381800000007000000011","socialVs":"1234567890","taxOud":"1234567890"}`, 200, nil)
+	e.do("POST", base+"/payroll/2026/3/payment-order", `{"keys":[]}`, 422, nil)
 	// zaúčtovanie miezd: iba v podvojnom účtovníctve
 	e.do("GET", base+"/payroll/2026/3/posting", nil, 422, nil)
 	e.do("PUT", base, `{"name":"Test s.r.o.","bookkeeping":"double"}`, 200, nil)
