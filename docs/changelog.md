@@ -11,6 +11,13 @@ tags: [prehľad]
 Verzie sú značky v repozitári (`v0.2.0`). Podrobný zoznam funkcií po
 etapách je v [pláne vývoja](./ROADMAP.md).
 
+## 0.10.12
+
+- **Príkaz na úhradu miezd.** Z uzavretého mesiaca hromadný príkaz SEPA
+  s výplatami zamestnancov, poistným Sociálnej poisťovni a zdravotným
+  poisťovniam a preddavkami dane daňovému úradu so správnymi symbolmi.
+  Platobné údaje poisťovní a osobný účet daňovníka sa zadajú raz.
+
 ## 0.10.11
 
 - **Filtre zoznamov so zaškrtávaním viacerých volieb.** Pohyby domácnosti

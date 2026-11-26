@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  payTotal, payDefault, paySettingsForm,
   activeIn, contractLabel, employeeFromForm, employeeName, employeeState, employeeToForm, filterEmployees, inputFromForm, inputToForm, newEmployee,
   oopAllowed, periodLabel, shiftMonth,
 } from './payroll.js'
@@ -66,5 +67,19 @@ describe('mzdy', () => {
     expect(periodLabel(2026, 3)).toBe('marec 2026')
     expect(shiftMonth(2026, 1, -1)).toEqual({ year: 2025, month: 12 })
     expect(shiftMonth(2026, 12, 1)).toEqual({ year: 2027, month: 1 })
+  })
+  it('úhrady miezd: súčet a predvýber', () => {
+    const pays = [
+      { key: 'wage:1', amount: '1100.10' },
+      { key: 'social', amount: '550.65' },
+      { key: 'tax', amount: '-10.00', problem: 'nie je čo odviesť' },
+    ]
+    expect(payTotal(pays, ['wage:1', 'social'])).toBe('1650.75')
+    expect(payTotal(pays, [])).toBe('0.00')
+    expect(payDefault(pays)).toEqual(['wage:1', 'social'])
+    const f = paySettingsForm({ socialVs: '1234567890', health: { 25: { iban: 'SK1', vs: '9' } } })
+    expect(f.socialVs).toBe('1234567890')
+    expect(f.health['25']).toEqual({ iban: 'SK1', vs: '9' })
+    expect(f.health['24']).toEqual({ iban: '', vs: '' })
   })
 })

@@ -274,6 +274,10 @@ export const api = {
   savePayroll: (cid, year, month, inputs) => request('PUT', `/api/companies/${cid}/payroll/${year}/${month}`, { inputs }),
   closePayroll: (cid, year, month) => request('POST', `/api/companies/${cid}/payroll/${year}/${month}/close`),
   reopenPayroll: (cid, year, month, reason) => request('POST', `/api/companies/${cid}/payroll/${year}/${month}/reopen`, { reason }),
+  payrollPayments: (cid, year, month) => request('GET', `/api/companies/${cid}/payroll/${year}/${month}/payments`),
+  payrollPaymentOrder: (cid, year, month, keys, date, fetchImpl = globalThis.fetch) =>
+    download(`/api/companies/${cid}/payroll/${year}/${month}/payment-order`, 'mzdy-prikaz.xml', fetchImpl, { keys, date }),
+  savePayrollPaySettings: (cid, settings) => request('PUT', `/api/companies/${cid}/payroll/payment-settings`, settings),
   hhPlan: (cid, from, months = 12) => request('GET', `/api/companies/${cid}/household/plan?from=${encodeURIComponent(from)}&months=${months}`),
   hhObligations: (cid) => request('GET', `/api/companies/${cid}/household/obligations`),
   hhObligation: (cid, id) => request('GET', `/api/companies/${cid}/household/obligations/${id}`),

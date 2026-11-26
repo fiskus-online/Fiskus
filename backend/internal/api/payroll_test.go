@@ -44,6 +44,18 @@ func TestPayrollAPI(t *testing.T) {
 	if !v.Closed {
 		t.Fatal("neuzavreté")
 	}
+	// príkazy na úhradu
+	var pays struct {
+		Closed   bool             `json:"closed"`
+		Payments []map[string]any `json:"payments"`
+	}
+	e.do("GET", base+"/payroll/2026/3/payments", nil, 200, &pays)
+	if !pays.Closed || len(pays.Payments) == 0 {
+		t.Fatalf("úhrady: %+v", pays)
+	}
+	e.do("PUT", base+"/payroll/payment-settings", `{"socialIban":"SK00"}`, 422, nil)
+	e.do("PUT", base+"/payroll/payment-settings", `{"socialIban":"SK2381800000007000000011","socialVs":"1234567890","taxOud":"1234567890"}`, 200, nil)
+	e.do("POST", base+"/payroll/2026/3/payment-order", `{"keys":[]}`, 422, nil)
 	e.do("POST", base+"/payroll/2026/3/reopen", `{"reason":"oprava zrážky"}`, 200, &v)
 	e.do("GET", base+"/payroll/2026/13", nil, 400, nil)
 	e.do("GET", base+"/payroll/2020/1", nil, 422, nil)

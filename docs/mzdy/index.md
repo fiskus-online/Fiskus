@@ -68,6 +68,24 @@ zadáte mu koniec pracovného vzťahu.
   64 % základu podľa počtu detí. Ak je bonus vyšší ako preddavok, rozdiel
   vyplatí zamestnávateľ.
 
+## Príkaz na úhradu
+
+Pri uzavretom mesiaci tlačidlo **Príkaz na úhradu…** zostaví hromadný
+príkaz SEPA (XML), ktorý nahráte v internet bankingu:
+
+| Úhrada | Účet | Symboly |
+|---|---|---|
+| výplaty | IBAN zamestnanca | správa „Mzda MM/RRRR“ |
+| Sociálna poisťovňa | účet pobočky | VS pridelený poisťovňou, ŠS číslo výkazu MM99RRRR, KS 3118 |
+| zdravotné poisťovne | účet poisťovne | VS zamestnávateľa v poisťovni |
+| daňový úrad | predčíslie 500259 + OÚD / 8180 | VS 1100MMRRRR |
+
+Účty a variabilné symboly poisťovní a osobný účet daňovníka (OÚD) zadáte
+raz v **Platobných údajoch** priamo v okne príkazu. Úhrady bez IBAN
+zamestnanca alebo bez údajov poisťovne sa nedajú vybrať a okno napíše,
+čo doplniť. Zrážky zo mzdy (napr. exekúcie) uhraďte oprávneným osobám
+samostatne.
+
 :::info[Čo zatiaľ chýba]
 Výkazy pre Sociálnu poisťovňu a zdravotné poisťovne (XML), mesačný prehľad
 a ročné hlásenie pre finančnú správu, ročné zúčtovanie, výpočet náhrady
