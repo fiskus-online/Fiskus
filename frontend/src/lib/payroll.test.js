@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  filterSettlements, settlementFromForm, settlementOutcome, settlementToForm,
   postingPairs, payTotal, payDefault, paySettingsForm,
   activeIn, contractLabel, employeeFromForm, employeeName, employeeState, employeeToForm, filterEmployees, inputFromForm, inputToForm, newEmployee,
   oopAllowed, periodLabel, shiftMonth,
@@ -96,5 +97,23 @@ describe('mzdy', () => {
     expect(f.health['24']).toEqual({ iban: '', vs: '' })
     expect(f.payDay).toBe(null)
     expect(paySettingsForm({ payDay: 10 }).payDay).toBe(10)
+  })
+  it('ročné zúčtovanie: filter, výsledok, formulár', () => {
+    const list = [
+      { employee: { firstName: 'Jana', lastName: 'Nová', position: 'účtovníčka' }, request: { requested: true } },
+      { employee: { firstName: 'Peter', lastName: 'Malý' }, request: {} },
+    ]
+    expect(filterSettlements(list, { search: 'nova' }).length).toBe(1)
+    expect(filterSettlements(list, { requested: true }).length).toBe(1)
+    expect(filterSettlements(list).length).toBe(2)
+    expect(settlementOutcome('12.50')).toMatch(/nedoplatok/)
+    expect(settlementOutcome('-3.00')).toMatch(/preplatok/)
+    expect(settlementOutcome('0.00')).toBe('bez rozdielu')
+    const f = settlementToForm({ requested: true, dds: '60.00', spouse: { name: 'Eva', months: 6, ownIncome: '100.00' } })
+    expect(f.spouse).toBe(true)
+    expect(settlementFromForm({ ...f, otherIncome: '1 000,50' })).toMatchObject({
+      requested: true, dds: '60.00', spouse: { name: 'Eva', months: 6, ownIncome: '100.00' }, otherIncome: '1000.50', otherPrepaid: '0',
+    })
+    expect(settlementFromForm({ ...settlementToForm({}), spouse: false }).spouse).toBe(null)
   })
 })

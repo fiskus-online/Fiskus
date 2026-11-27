@@ -352,6 +352,8 @@ func (s *Server) Handler() http.Handler {
 	need("POST /api/companies/{cid}/payroll/{year}/{month}/reopen", auth.PermLedgerWrite, s.reopenPayroll)
 	need("GET /api/companies/{cid}/payroll/{year}/{month}/payments", auth.PermLedgerRead, s.payrollPayments)
 	need("GET /api/companies/{cid}/payroll/{year}/{month}/mvpp", auth.PermLedgerRead, s.payrollMVPP)
+	need("GET /api/companies/{cid}/payroll-settlement/{year}", auth.PermLedgerRead, s.settlements)
+	need("PUT /api/companies/{cid}/payroll-settlement/{year}/{employee}", auth.PermLedgerWrite, s.putSettlement)
 	need("POST /api/companies/{cid}/payroll/{year}/{month}/payment-order", auth.PermLedgerWrite, s.payrollPaymentOrder)
 	need("PUT /api/companies/{cid}/payroll/payment-settings", auth.PermLedgerWrite, s.putPayrollPaySettings)
 	need("GET /api/companies/{cid}/payroll/{year}/{month}/posting", auth.PermLedgerRead, s.payrollPosting)

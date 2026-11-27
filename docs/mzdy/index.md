@@ -129,6 +129,31 @@ vylúčené doby starostlivosti o dieťa a náhradu mzdy z vážnych
 prevádzkových dôvodov zatiaľ nevyplní — v týchto prípadoch výkaz doplňte
 na portáli.
 
+## Ročné zúčtovanie
+
+Menu **Mzdy → Ročné zúčtovanie** vypočíta ročné zúčtovanie preddavkov na
+daň (§ 38 zákona o dani z príjmov) zo súčtu uzavretých mesiacov roka.
+Zamestnávateľ ho vykoná na písomnú žiadosť zamestnanca do 31. marca
+nasledujúceho roka.
+
+Ku každému zamestnancovi doplníte podľa jeho dokladov:
+
+- že písomne požiadal o ročné zúčtovanie,
+- príspevky na III. pilier (najviac 180 €),
+- nezdaniteľnú časť na manžela/manželku (mesiace a vlastný príjem),
+- príjmy, poistné, preddavky a bonus od iných zamestnávateľov z ich
+  potvrdení.
+
+Fiškus vyplní riadky tlačiva — príjmy, poistné, základ dane,
+nezdaniteľné časti, daň podľa pásiem sadzieb, nárok na daňový bonus
+a vyplatený bonus, zrazené preddavky — a výsledok: sumu, ktorú
+zamestnávateľ zrazí (nedoplatok) alebo vráti (preplatok). **Tlačiť
+doklad** pripraví doklad pre zamestnanca.
+
+Zamestnaneckú prémiu a daňový bonus na zaplatené úroky Fiškus nepočíta.
+Vrátenie preplatku a zrazenie nedoplatku vo mzde zatiaľ zadáte ručne
+(preplatok najneskôr pri zúčtovaní mzdy za apríl).
+
 ## Termíny v kalendári
 
 Keď firma má zamestnancov, kalendár ukáže termíny miezd za každý mesiac:

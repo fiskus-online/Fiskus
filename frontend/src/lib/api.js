@@ -278,6 +278,8 @@ export const api = {
   payrollPaymentOrder: (cid, year, month, keys, date, fetchImpl = globalThis.fetch) =>
     download(`/api/companies/${cid}/payroll/${year}/${month}/payment-order`, 'mzdy-prikaz.xml', fetchImpl, { keys, date }),
   payrollMVPP: (cid, year, month, fetchImpl = globalThis.fetch) => download(`/api/companies/${cid}/payroll/${year}/${month}/mvpp`, 'mvpp.xml', fetchImpl),
+  settlements: (cid, year) => request('GET', `/api/companies/${cid}/payroll-settlement/${year}`),
+  saveSettlement: (cid, year, emp, body) => request('PUT', `/api/companies/${cid}/payroll-settlement/${year}/${emp}`, body),
   savePayrollPaySettings: (cid, settings) => request('PUT', `/api/companies/${cid}/payroll/payment-settings`, settings),
   payrollPosting: (cid, year, month) => request('GET', `/api/companies/${cid}/payroll/${year}/${month}/posting`),
   postPayroll: (cid, year, month) => request('POST', `/api/companies/${cid}/payroll/${year}/${month}/posting`, {}),

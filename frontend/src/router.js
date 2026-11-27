@@ -70,6 +70,8 @@ import HouseholdObligations from './views/HouseholdObligations.vue'
 import Employees from './views/Employees.vue'
 import Payroll from './views/Payroll.vue'
 import PayrollPrint from './views/PayrollPrint.vue'
+import PayrollSettlement from './views/PayrollSettlement.vue'
+import PayrollSettlementPrint from './views/PayrollSettlementPrint.vue'
 import LedgerNotesPrint from './views/LedgerNotesPrint.vue'
 
 // Moduly z etapového plánu — zatiaľ prázdne stránky s popisom.
@@ -137,6 +139,7 @@ export const modules = [
     items: [
       { path: '/mzdy', label: 'Mzdy', icon: 'pi-money-bill', ready: true, perm: 'ledger.read' },
       { path: '/zamestnanci', label: 'Zamestnanci', icon: 'pi-users', ready: true, perm: 'ledger.read' },
+      { path: '/rocne-zuctovanie', label: 'Ročné zúčtovanie', icon: 'pi-calculator', ready: true, perm: 'ledger.read' },
     ],
   },
   {
@@ -237,6 +240,8 @@ export const router = createRouter({
     { path: '/uctovy-rozvrh', component: ChartOfAccounts, meta: { title: 'Účtový rozvrh', perm: 'ledger.read' } },
     { path: '/mzdy', component: Payroll, meta: { title: 'Mzdy', perm: 'ledger.read' } },
     { path: '/mzdy/tlac', component: PayrollPrint, meta: { title: 'Výplatné pásky', bare: true, perm: 'ledger.read' } },
+    { path: '/rocne-zuctovanie', component: PayrollSettlement, meta: { title: 'Ročné zúčtovanie', perm: 'ledger.read' } },
+    { path: '/rocne-zuctovanie/tlac', component: PayrollSettlementPrint, meta: { title: 'Ročné zúčtovanie', bare: true, perm: 'ledger.read' } },
     { path: '/zamestnanci', component: Employees, meta: { title: 'Zamestnanci', perm: 'ledger.read' } },
     { path: '/kniha-jazd', component: Logbook, meta: { title: 'Kniha jázd', perm: 'ledger.read' } },
     { path: '/kniha-jazd/:id(\\d+)/tlac', component: LogbookPrint, props: true, meta: { title: 'Kniha jázd', bare: true, perm: 'ledger.read' } },
