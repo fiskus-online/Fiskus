@@ -144,3 +144,75 @@ export function paySettingsForm(s = {}, codes = ['24', '25', '27']) {
   for (const c of codes) health[c] = { iban: s.health?.[c]?.iban ?? '', vs: s.health?.[c]?.vs ?? '' }
   return { socialIban: s.socialIban ?? '', socialVs: s.socialVs ?? '', taxOud: s.taxOud ?? '', payDay: s.payDay || null, contactFirst: s.contactFirst ?? '', contactLast: s.contactLast ?? '', contactPhone: s.contactPhone ?? '', contactEmail: s.contactEmail ?? '', health }
 }
+
+/** Ročné zúčtovanie: hľadanie a filter „iba žiadosti“. */
+export function filterSettlements(list = [], { search = '', requested = false } = {}) {
+  const terms = searchTerms(search)
+  return list.filter((r) => (!requested || r.request?.requested) && matches(terms, [employeeName(r.employee), r.employee.position]))
+}
+
+/** Text výsledku ročného zúčtovania (suma zo servera: + zrazí, − vráti). */
+export function settlementOutcome(result) {
+  const v = Number(result)
+  if (v > 0) return 'nedoplatok — zrazí zo mzdy'
+  if (v < 0) return 'preplatok — vráti vo mzde'
+  return 'bez rozdielu'
+}
+
+/** Žiadosť o ročné zúčtovanie → formulár a späť (sumy ako text). */
+export function settlementToForm(r = {}) {
+  return {
+    requested: !!r.requested,
+    dds: r.dds ?? '',
+    spouse: !!r.spouse,
+    spouseMonths: r.spouse?.months ?? 12,
+    spouseIncome: r.spouse?.ownIncome ?? '',
+    spouseName: r.spouse?.name ?? '',
+    otherIncome: r.otherIncome ?? '',
+    otherSocial: r.otherSocial ?? '',
+    otherHealth: r.otherHealth ?? '',
+    otherPrepaid: r.otherPrepaid ?? '',
+    otherBonus: r.otherBonus ?? '',
+    date: r.date ?? '',
+  }
+}
+
+export function settlementFromForm(f) {
+  const n = (v) => (v === '' || v == null ? '0' : String(v).replace(',', '.').replace(/\s/g, ''))
+  return {
+    requested: f.requested,
+    dds: n(f.dds),
+    spouse: f.spouse ? { name: f.spouseName, months: Number(f.spouseMonths) || 0, ownIncome: n(f.spouseIncome) } : null,
+    otherIncome: n(f.otherIncome),
+    otherSocial: n(f.otherSocial),
+    otherHealth: n(f.otherHealth),
+    otherPrepaid: n(f.otherPrepaid),
+    otherBonus: n(f.otherBonus),
+    date: f.date || '',
+  }
+}
+
+/** Riadky tlačiva ročného zúčtovania (kód, text) v poradí. */
+export const settlementLines = [
+  ['01', 'Úhrn zdaniteľných príjmov zo závislej činnosti'],
+  ['01a', 'z toho príjmy z dohôd'],
+  ['02', 'Úhrn poistného zamestnanca'],
+  ['02a', 'z toho sociálne poistenie'],
+  ['02b', 'z toho zdravotné poistenie'],
+  ['03', 'Základ dane (r. 01 − r. 02)'],
+  ['04a', 'Nezdaniteľná časť na daňovníka'],
+  ['04b', 'Nezdaniteľná časť na manžela/manželku'],
+  ['04c', 'Príspevky na doplnkové dôchodkové sporenie'],
+  ['04', 'Nezdaniteľné časti spolu'],
+  ['05', 'Zdaniteľná mzda (r. 03 − r. 04)'],
+  ['06', 'Daň podľa § 15'],
+  ['09', 'Nárok na daňový bonus'],
+  ['10', 'Daňový bonus vyplatený zamestnávateľom'],
+  ['11', 'Daňový bonus na vyplatenie (r. 09 − r. 10 > 0)'],
+  ['13', 'Daňový bonus na vybratie (r. 09 − r. 10 < 0)'],
+  ['14', 'Daň znížená o daňový bonus'],
+  ['18', 'Úhrn zrazených preddavkov na daň'],
+  ['19', 'Nedoplatok dane (r. 06 − r. 18 > 0)'],
+  ['20', 'Preplatok dane (r. 06 − r. 18 < 0)'],
+  ['22', 'Zamestnávateľ zrazí (+) alebo vráti (−)'],
+]

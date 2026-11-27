@@ -242,3 +242,42 @@ func (s *Server) payrollMVPP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Disposition", `attachment; filename="`+name+`"`)
 	_, _ = w.Write(data)
 }
+
+// settlements: GET …/payroll-settlement/{year} — ročné zúčtovanie preddavkov
+func (s *Server) settlements(w http.ResponseWriter, r *http.Request) {
+	if cid, year, ok := s.yearCloseYear(w, r); ok {
+		v, err := s.App.Settlements(r.Context(), cid, year)
+		if err != nil {
+			fail(w, err)
+			return
+		}
+		writeJSON(w, http.StatusOK, v)
+	}
+}
+
+// putSettlement: PUT …/payroll-settlement/{year}/{employee} — žiadosť a doložené údaje
+func (s *Server) putSettlement(w http.ResponseWriter, r *http.Request) {
+	cid, year, ok := s.yearCloseYear(w, r)
+	if !ok {
+		return
+	}
+	emp, err := strconv.ParseInt(r.PathValue("employee"), 10, 64)
+	if err != nil {
+		writeErr(w, http.StatusBadRequest, "Neplatný zamestnanec", nil)
+		return
+	}
+	var in app.SettlementRequest
+	if !decode(w, r, &in) {
+		return
+	}
+	if err := s.App.SaveSettlementRequest(r.Context(), cid, year, emp, in); err != nil {
+		fail(w, err)
+		return
+	}
+	v, err := s.App.Settlements(r.Context(), cid, year)
+	if err != nil {
+		fail(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, v)
+}

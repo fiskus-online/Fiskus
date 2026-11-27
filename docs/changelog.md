@@ -13,6 +13,10 @@ etapách je v [pláne vývoja](./ROADMAP.md).
 
 ## 0.10.12
 
+- **Ročné zúčtovanie preddavkov na daň.** Nová obrazovka Mzdy → Ročné
+  zúčtovanie: výpočet zo súčtu uzavretých mesiacov roka so žiadosťou
+  zamestnanca, manželom/manželkou, III. pilierom a príjmami od iných
+  zamestnávateľov; výsledok (preplatok alebo nedoplatok) a doklad na tlač.
 - **Mesačný výkaz poistného pre Sociálnu poisťovňu (XML).** Z uzavretého
   mesiaca výkaz vo formáte MVPP v2026 so súhrnom a prílohou za každého
   zamestnanca. Do platobných údajov miezd pribudla osoba, ktorá výkazy

@@ -911,3 +911,20 @@ export const jobStatsColumns = [
   money('Zisk', (r) => r.profit),
   t('Marža', (r) => (r.margin == null ? '' : `${r.margin} %`), 8),
 ]
+
+// ročné zúčtovanie preddavkov na daň
+export const settlementColumns = [
+  t('Zamestnanec', (r) => employeeName(r.employee), 26),
+  t('Žiada', (r) => yes(r.request?.requested), 6),
+  t('Mesiace', (r) => String(r.months?.length ?? 0), 8),
+  money('Príjmy €', (r) => r.rows['01']),
+  money('Poistné €', (r) => r.rows['02']),
+  money('Základ dane €', (r) => r.rows['03']),
+  money('Nezdaniteľné časti €', (r) => r.rows['04']),
+  money('Zdaniteľná mzda €', (r) => r.rows['05']),
+  money('Daň €', (r) => r.rows['06']),
+  money('Daňový bonus €', (r) => r.rows['09']),
+  money('Bonus vyplatený €', (r) => r.rows['10']),
+  money('Preddavky €', (r) => r.rows['18']),
+  money('Zrazí (+) / vráti (−) €', (r) => r.result),
+]
