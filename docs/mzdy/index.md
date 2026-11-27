@@ -106,6 +106,29 @@ a na 342 preddavok dane. Úhrady z banky ich vyrovnajú. Ak mesiac otvoríte
 a mzdy sa zmenia, Fiškus upozorní, že doklad už nezodpovedá; po novom
 uzavretí ho zaúčtujete znova a pôvodný doklad sa nahradí (číslo ostane).
 
+## Mesačný výkaz pre Sociálnu poisťovňu
+
+Pri uzavretom mesiaci (od januára 2026) tlačidlo **Výkaz SP (XML)**
+stiahne mesačný výkaz poistného a príspevkov vo formáte Sociálnej
+poisťovne (schéma MVPP v2026). Súbor nahráte na portáli Sociálnej
+poisťovne v eSlužbách pre odvádzateľov poistného. Pred podaním ho môžete
+overiť v [testovacom validátore](https://esluzby.socpoist.sk/validator)
+Sociálnej poisťovne.
+
+| Údaj | Odkiaľ |
+|---|---|
+| vymeriavacie základy a poistné po fondoch | z výpočtu miezd, súhrn je súčet zamestnancov |
+| typ zamestnanca | pracovný pomer, dohoda s pravidelným alebo nepravidelným príjmom, odvodová výnimka |
+| počet dní | kalendárne dni pracovného vzťahu v mesiaci (od 2026 vrátane PN a iných sociálnych udalostí) |
+| počet hodín | hodinová mzda: hodiny z miezd; mesačná: pracovné dni × týždenný čas / 5; inak kód 999 |
+| deň výplaty, variabilný symbol, kto výkaz zostavil | z **Platobných údajov** v okne príkazu na úhradu |
+| rodné číslo | z karty zamestnanca |
+
+Ak niečo chýba, Fiškus výkaz nezostaví a napíše čo. Opravný výkaz,
+vylúčené doby starostlivosti o dieťa a náhradu mzdy z vážnych
+prevádzkových dôvodov zatiaľ nevyplní — v týchto prípadoch výkaz doplňte
+na portáli.
+
 ## Termíny v kalendári
 
 Keď firma má zamestnancov, kalendár ukáže termíny miezd za každý mesiac:

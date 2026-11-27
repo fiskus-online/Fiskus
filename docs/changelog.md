@@ -13,6 +13,10 @@ etapách je v [pláne vývoja](./ROADMAP.md).
 
 ## 0.10.12
 
+- **Mesačný výkaz poistného pre Sociálnu poisťovňu (XML).** Z uzavretého
+  mesiaca výkaz vo formáte MVPP v2026 so súhrnom a prílohou za každého
+  zamestnanca. Do platobných údajov miezd pribudla osoba, ktorá výkazy
+  zostavuje.
 - **Oprava: úrazové a garančné poistenie pri odvodovej výnimke.** Pri
   dohode študenta alebo dôchodcu s uplatnenou odpočítateľnou položkou
   200 € sa úrazové a garančné poistenie počítalo zo sumy po odpočítaní;

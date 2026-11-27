@@ -118,7 +118,11 @@ const kindLabel = { wage: 'výplata', social: 'poistné', health: 'zdravotné po
           <FormField label="Variabilný symbol" :error="errors[`health.${code}.vs`]"><InputText v-model="h.vs" size="small" inputmode="numeric" fluid /></FormField>
         </template>
         <FormField label="Osobný účet daňovníka (OÚD)" :error="errors.taxOud" hint="základné číslo účtu, bez predčíslia"><InputText v-model="form.taxOud" size="small" inputmode="numeric" fluid /></FormField>
-        <FormField label="Deň výplaty v mesiaci" :error="errors.payDay" hint="termíny odvodov v kalendári"><InputNumber v-model="form.payDay" :min="1" :max="31" size="small" fluid /></FormField>
+        <FormField label="Deň výplaty v mesiaci" :error="errors.payDay" hint="termíny odvodov v kalendári, výkaz SP"><InputNumber v-model="form.payDay" :min="1" :max="31" size="small" fluid /></FormField>
+        <FormField label="Výkazy zostavuje — meno" :error="errors.contactFirst"><InputText v-model="form.contactFirst" size="small" fluid /></FormField>
+        <FormField label="Priezvisko" :error="errors.contactLast"><InputText v-model="form.contactLast" size="small" fluid /></FormField>
+        <FormField label="Telefón" :error="errors.contactPhone"><InputText v-model="form.contactPhone" size="small" inputmode="tel" fluid /></FormField>
+        <FormField label="E-mail" :error="errors.contactEmail"><InputText v-model="form.contactEmail" size="small" inputmode="email" fluid /></FormField>
       </div>
       <div class="actions">
         <Button label="Zrušiť" text size="small" @click="editing = false" />
