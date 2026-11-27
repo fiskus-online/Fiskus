@@ -199,6 +199,11 @@ type Input struct {
 	SickPay    money.Dec `json:"sickPay"`   // náhrada príjmu pri PN (bez poistného)
 	Deduction  money.Dec `json:"deduction"` // zrážky z čistej mzdy
 	Note       string    `json:"note"`
+	// ročné zúčtovanie za predchádzajúci rok (dopĺňa Fiškus z ročného zúčtovania):
+	// SettleTax + nedoplatok dane zrazí / − preplatok vráti;
+	// SettleBonus + daňový bonus doplatí / − vyberie
+	SettleTax   money.Dec `json:"settleTax"`
+	SettleBonus money.Dec `json:"settleBonus"`
 }
 
 // Fund je poistné jedného fondu.
@@ -228,11 +233,13 @@ type Result struct {
 	ContribER      money.Dec `json:"contribER"` // poistné zamestnávateľa spolu
 	TaxBase        money.Dec `json:"taxBase"`
 	NCZD           money.Dec `json:"nczd"`
-	Tax            money.Dec `json:"tax"`       // preddavok pred bonusom
-	TaxBonus       money.Dec `json:"taxBonus"`  // daňový bonus na deti
-	TaxPaid        money.Dec `json:"taxPaid"`   // preddavok na úhradu (po bonuse, nie záporný)
-	BonusPaid      money.Dec `json:"bonusPaid"` // bonus nad preddavok — vyplatí zamestnávateľ
-	Net            money.Dec `json:"net"`       // čistá mzda
+	Tax            money.Dec `json:"tax"`         // preddavok pred bonusom
+	TaxBonus       money.Dec `json:"taxBonus"`    // daňový bonus na deti
+	TaxPaid        money.Dec `json:"taxPaid"`     // preddavok na úhradu (po bonuse, nie záporný)
+	BonusPaid      money.Dec `json:"bonusPaid"`   // bonus nad preddavok — vyplatí zamestnávateľ
+	SettleTax      money.Dec `json:"settleTax"`   // ročné zúčtovanie: + nedoplatok zrazený, − preplatok vrátený
+	SettleBonus    money.Dec `json:"settleBonus"` // ročné zúčtovanie: + bonus doplatený, − bonus vybratý
+	Net            money.Dec `json:"net"`         // čistá mzda
 	Deduction      money.Dec `json:"deduction"`
 	ToPay          money.Dec `json:"toPay"` // na výplatu
 	Cost           money.Dec `json:"cost"`  // cena práce
@@ -340,7 +347,9 @@ func Compute(e Employee, in Input, p Params, month int) (Result, error) {
 		r.TaxPaid = r.Tax.Sub(r.TaxBonus)
 	}
 
-	r.Net = r.Income.Sub(r.SocialEmployee).Sub(r.HealthEmployee).Sub(r.TaxPaid).Add(r.BonusPaid)
+	r.SettleTax, r.SettleBonus = in.SettleTax.RoundCents(), in.SettleBonus.RoundCents()
+	r.Net = r.Income.Sub(r.SocialEmployee).Sub(r.HealthEmployee).Sub(r.TaxPaid).Add(r.BonusPaid).
+		Sub(r.SettleTax).Add(r.SettleBonus)
 	r.Deduction = in.Deduction
 	r.ToPay = r.Net.Sub(in.Deduction)
 	r.Cost = r.Income.Add(r.SocialEmployer).Add(r.HealthEmployer)
@@ -394,7 +403,8 @@ func Sum(results []Result, insurers map[int64]string) Totals {
 		h := r.HealthEmployee.Add(r.HealthEmployer)
 		t.Health[insurers[r.EmployeeID]] = t.Health[insurers[r.EmployeeID]].Add(h)
 		t.HealthTotal = t.HealthTotal.Add(h)
-		t.Tax = t.Tax.Add(r.TaxPaid).Sub(r.BonusPaid)
+		// odvod správcovi dane: preddavky po bonuse a rozdiel z ročného zúčtovania
+		t.Tax = t.Tax.Add(r.TaxPaid).Sub(r.BonusPaid).Add(r.SettleTax).Sub(r.SettleBonus)
 		t.Net = t.Net.Add(r.Net)
 		t.ToPay = t.ToPay.Add(r.ToPay)
 		t.Cost = t.Cost.Add(r.Cost)

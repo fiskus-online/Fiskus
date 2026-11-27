@@ -21,7 +21,7 @@ import { api, ApiError } from '../lib/api.js'
 import { can, session } from '../lib/session.js'
 import { formatAmount, formatDate, formatMoney, fromISODate, toISODate } from '../lib/format.js'
 import { settlementColumns } from '../lib/columns.js'
-import { contractShort, employeeName, filterSettlements, settlementFromForm, settlementLines, settlementOutcome, settlementToForm } from '../lib/payroll.js'
+import { contractShort, employeeName, filterSettlements, settleMonthOptions, settlementFromForm, settlementLines, settlementOutcome, settlementToForm } from '../lib/payroll.js'
 
 const route = useRoute()
 const router = useRouter()
@@ -147,6 +147,9 @@ const printOne = (r) => router.push({ path: '/rocne-zuctovanie/tlac', query: { r
             <FormField label="Príspevky na III. pilier (DDS) €" :error="errors.dds" hint="najviac 180 € ročne"><InputText v-model="form.dds" size="small" inputmode="decimal" fluid :disabled="!canWrite" /></FormField>
             <FormField label="Dátum vykonania" :error="errors.date"><DatePicker :model-value="form.date ? fromISODate(form.date) : null" date-format="d. m. yy" show-icon icon-display="input" size="small" fluid :disabled="!canWrite" @update:model-value="(d) => (form.date = d ? toISODate(d) : '')" /></FormField>
           </div>
+          <FormField label="Vyrovnať vo mzde" :error="errors.settleMonth" hint="preplatok vráti alebo nedoplatok zrazí v zvolenej mzde">
+            <Select v-model="form.settleMonth" :options="settleMonthOptions(year)" option-label="label" option-value="value" size="small" fluid :disabled="!canWrite" />
+          </FormField>
           <label class="chk"><Checkbox v-model="form.spouse" binary :disabled="!canWrite" /> Nezdaniteľná časť na manžela/manželku</label>
           <div v-if="form.spouse" class="form-grid">
             <FormField label="Meno manžela/manželky"><InputText v-model="form.spouseName" size="small" fluid :disabled="!canWrite" /></FormField>
