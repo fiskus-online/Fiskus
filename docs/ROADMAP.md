@@ -167,7 +167,7 @@ Všetky časti (podvojné účtovníctvo, sklad, majetok, EPO, mzdy) píšeme od
 
 ## Etapa 4 — mzdy (samostatný návrh)
 - [x] Zamestnanci a dohodári (PP, DoPČ, DoVP, DoBPŠ, pravidelný/nepravidelný príjem, dôchodcovia, ZŤP, výnimka 200 €, NČZD, daňový bonus)
-- [x] Výpočet mzdy 2025 a 2026: sociálne poistenie po fondoch s maximom, zdravotné poistenie, preddavok na daň s pásmami 19/25/30/35 %, daňový bonus, čistá mzda, cena práce; výplatná listina so súčtami na úhradu podľa inštitúcií, výplatné pásky, uzavretie mesiaca
+- [x] Výpočet mzdy 2025, 2026 a 2027: sociálne poistenie po fondoch s maximom, zdravotné poistenie, preddavok na daň s pásmami 19/25/30/35 %, daňový bonus, čistá mzda, cena práce; výplatná listina so súčtami na úhradu podľa inštitúcií, výplatné pásky, uzavretie mesiaca
 - [x] Mesačný výkaz poistného a príspevkov pre Sociálnu poisťovňu (XML MVPP v2026): súhrn a príloha z uzavretých miezd, typy zamestnancov, výnimka, počet dní a hodín
 - [ ] Opravný mesačný výkaz, vylúčené doby starostlivosti o dieťa, náhrada mzdy z vážnych prevádzkových dôvodov
 - [ ] Výkazy zdravotných poisťovní, registračné listy (XML)

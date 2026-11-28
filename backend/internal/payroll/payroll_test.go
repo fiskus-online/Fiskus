@@ -177,3 +177,45 @@ func TestComputeMisc(t *testing.T) {
 		t.Errorf("súčty: %+v", tot)
 	}
 }
+
+func TestCompute2027(t *testing.T) {
+	p, err := ParamsFor(2027)
+	if err != nil {
+		t.Fatal(err)
+	}
+	tests := []struct {
+		name string
+		e    Employee
+		want map[string]string
+	}{
+		{
+			// minimálna mzda 972 €: odvody zamestnanca spolu 139,96 €, zamestnávateľa 351,85 €
+			// (fondy zaokrúhlené nadol, rovnako ako v zverejnených prepočtoch)
+			name: "minimálna mzda s NČZD",
+			e:    Employee{Contract: TPP, Wage: m("972"), NCZD: true},
+			want: map[string]string{"socialEmployee": "91.36", "healthEmployee": "48.60", "socialEmployer": "244.93",
+				"healthEmployer": "106.92", "taxBase": "832.04", "nczd": "516.64", "tax": "59.92", "net": "772.12"},
+		},
+		{
+			name: "nad maximálny vymeriavací základ 17 820 €",
+			e:    Employee{Contract: TPP, Wage: m("20000")},
+			want: map[string]string{"socialBase": "17820", "socialEmployee": "1675.08"},
+		},
+	}
+	for _, tt := range tests {
+		r, err := Compute(tt.e, Input{}, p, 3)
+		if err != nil {
+			t.Fatalf("%s: %v", tt.name, err)
+		}
+		got := map[string]money.Dec{"socialBase": r.SocialBase, "socialEmployee": r.SocialEmployee, "socialEmployer": r.SocialEmployer,
+			"healthEmployee": r.HealthEmployee, "healthEmployer": r.HealthEmployer, "taxBase": r.TaxBase, "nczd": r.NCZD, "tax": r.Tax, "net": r.Net}
+		for k, v := range tt.want {
+			if !got[k].Equal(m(v)) {
+				t.Errorf("%s: %s = %s, chcem %s", tt.name, k, got[k], v)
+			}
+		}
+	}
+	if !p.MinWage.Equal(m("972")) || !p.MinHourly.Equal(m("5.586")) || p.SickPayDays != 14 {
+		t.Errorf("parametre 2027: %+v", p)
+	}
+}
