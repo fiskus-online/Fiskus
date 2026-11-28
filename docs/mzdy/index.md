@@ -160,6 +160,31 @@ zamestnanec už nepracuje, vyrovnajte rozdiel ručne.
 
 Zamestnaneckú prémiu a daňový bonus na zaplatené úroky Fiškus nepočíta.
 
+## Potvrdenie o príjmoch
+
+Na tej istej obrazovke **Potvrdenia o príjmoch** vytlačí potvrdenie
+o zdaniteľných príjmoch zo závislej činnosti (§ 39 ods. 5 zákona o dani
+z príjmov) pre všetkých zamestnancov s príjmom v roku, alebo z detailu
+zamestnanca iba preňho. Zamestnávateľ ho vystaví na žiadosť zamestnanca
+do 10. februára, ak ročné zúčtovanie urobí iný zamestnávateľ, alebo do
+10. marca, ak zamestnanec podáva daňové priznanie.
+
+Fiškus vyplní údaje o zamestnancovi a zamestnávateľovi a z uzavretých
+mesiacov roka:
+
+- úhrn príjmov (r. 01) a z toho príjmy z dohôd (r. 01a),
+- poistné zamestnanca na sociálne a zdravotné poistenie (r. 02),
+- čiastkový základ dane (r. 03) a zrazené preddavky bez bonusu (r. 04),
+- nezdaniteľnú časť, na ktorú zamestnávateľ prihliadal (r. 11),
+- mesiace, ku ktorým sa sumy viažu (r. 13),
+- deti a mesiace, za ktoré zamestnávateľ priznal a vyplatil daňový
+  bonus (r. 14).
+
+Príjmy od iných zamestnávateľov zadané pri ročnom zúčtovaní do
+potvrdenia nepatria. Oslobodené príjmy (r. 05 až 10) a príspevky na
+III. pilier zrazené zo mzdy (r. 12) Fiškus nevedie, potvrdenie ich
+nevypĺňa.
+
 ## Termíny v kalendári
 
 Keď firma má zamestnancov, kalendár ukáže termíny miezd za každý mesiac:

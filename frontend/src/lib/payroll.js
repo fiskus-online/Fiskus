@@ -219,6 +219,24 @@ export const settlementLines = [
   ['22', 'Zamestnávateľ zrazí (+) alebo vráti (−)'],
 ]
 
+/** Riadky II. oddielu potvrdenia o zdaniteľných príjmoch (vzor POT395v26), ktoré Fiškus vypĺňa. */
+export const certificateLines = [
+  ['01', 'Úhrn vyplatených zdaniteľných príjmov zo závislej činnosti (§ 5 zákona), okrem príjmov, z ktorých sa daň vyberá zrážkou podľa § 43 zákona'],
+  ['01a', 'úhrn príjmov plynúcich na základe dohôd o prácach vykonávaných mimo pracovného pomeru'],
+  ['02', 'Poistné a príspevky celkom (r. 02a + r. 02b + r. 02c)'],
+  ['02a', 'úhrn poistného na sociálne poistenie (zabezpečenie)'],
+  ['02b', 'úhrn poistného na zdravotné poistenie'],
+  ['03', 'Čiastkový základ dane (r. 01 − r. 02)'],
+  ['04', 'Úhrn preddavkov na daň zrazených podľa § 35 zákona (bez uplatnenia daňového bonusu)'],
+  ['11', 'Nezdaniteľná časť základu dane na daňovníka, na ktorú zamestnávateľ prihliadol'],
+]
+
+/** Mriežka 12 mesiacov (r. 13, r. 14): true pre mesiace v zozname. */
+export function monthGrid(months = []) {
+  const set = new Set(months)
+  return Array.from({ length: 12 }, (_, i) => set.has(i + 1))
+}
+
 /** Riadky ročného zúčtovania na výplatnej páske (znamienko podľa vplyvu na čistú mzdu; sumy zo servera). */
 export function settleLines(result = {}) {
   const out = []

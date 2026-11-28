@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
+  certificateLines,
+  monthGrid,
   settleLines, settleMonthOptions,
   filterSettlements, settlementFromForm, settlementOutcome, settlementToForm,
   postingPairs, payTotal, payDefault, paySettingsForm,
@@ -127,5 +129,21 @@ describe('mzdy', () => {
     const o = settleMonthOptions(2026)
     expect(o.length).toBe(5)
     expect(o[3]).toEqual({ label: 'mzda za marec 2027', value: '2027-03' })
+  })
+})
+
+describe('potvrdenie o príjmoch', () => {
+  it.each([
+    [[], 0],
+    [[1, 2, 3], 3],
+    [[1, 12], 2],
+  ])('mriežka mesiacov %j', (months, marked) => {
+    const g = monthGrid(months)
+    expect(g).toHaveLength(12)
+    expect(g.filter(Boolean)).toHaveLength(marked)
+    months.forEach((m) => expect(g[m - 1]).toBe(true))
+  })
+  it('riadky potvrdenia majú kódy zo servera', () => {
+    expect(certificateLines.map(([c]) => c)).toEqual(['01', '01a', '02', '02a', '02b', '03', '04', '11'])
   })
 })

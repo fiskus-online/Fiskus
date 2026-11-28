@@ -80,6 +80,8 @@ async function save() {
   }
 }
 const printOne = (r) => router.push({ path: '/rocne-zuctovanie/tlac', query: { rok: year.value, id: r.employee.id } })
+const printCert = (r) =>
+  router.push({ path: '/rocne-zuctovanie/potvrdenie', query: r ? { rok: year.value, id: r.employee.id } : { rok: year.value } })
 </script>
 
 <template>
@@ -93,12 +95,14 @@ const printOne = (r) => router.push({ path: '/rocne-zuctovanie/tlac', query: { r
         <InputText v-model="search" placeholder="Hľadať zamestnanca" size="small" aria-label="Hľadať" />
       </IconField>
       <label class="only"><ToggleSwitch v-model="onlyRequested" /> iba žiadosti</label>
+      <Button label="Potvrdenia o príjmoch" icon="pi pi-print" severity="secondary" size="small" :disabled="!view?.list.length" @click="printCert()" />
       <ExportButton :name="`Ročné zúčtovanie ${year}`" :columns="settlementColumns" :rows="visible" />
     </header>
 
     <p v-if="view" class="info">
       Zamestnávateľ vykoná ročné zúčtovanie na písomnú žiadosť zamestnanca do {{ formatDate(view.deadline) }}. Výpočet je zo súčtu uzavretých mesiacov
-      roka; údaje od iných zamestnávateľov, manžela/manželku a III. pilier doplníte podľa dokladov zamestnanca.
+      roka; údaje od iných zamestnávateľov, manžela/manželku a III. pilier doplníte podľa dokladov zamestnanca. Potvrdenie o príjmoch vystavíte
+      zamestnancovi na požiadanie do 10. februára (ročné zúčtovanie u iného zamestnávateľa) alebo do 10. marca (daňové priznanie).
       <strong v-if="view.open.length" class="warn">Neuzavreté mesiace: {{ view.open.join(', ') }} — výsledok je predbežný.</strong>
     </p>
 
@@ -183,6 +187,7 @@ const printOne = (r) => router.push({ path: '/rocne-zuctovanie/tlac', query: { r
       </div>
       <template #footer>
         <Button label="Zavrieť" text size="small" @click="current = null" />
+        <Button label="Potvrdenie o príjmoch" icon="pi pi-file" severity="secondary" size="small" @click="printCert(current)" />
         <Button label="Tlačiť doklad" icon="pi pi-print" severity="secondary" size="small" @click="printOne(current)" />
       </template>
     </Dialog>
