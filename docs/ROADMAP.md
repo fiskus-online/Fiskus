@@ -173,7 +173,8 @@ Všetky časti (podvojné účtovníctvo, sklad, majetok, EPO, mzdy) píšeme od
 - [ ] Výkazy zdravotných poisťovní, registračné listy (XML)
 - [x] Ročné zúčtovanie preddavkov na daň: výpočet zo súčtu uzavretých mesiacov, žiadosť, manžel/ka, III. pilier, iní zamestnávatelia, doklad na tlač
 - [x] Vrátenie preplatku a zrazenie nedoplatku z ročného zúčtovania vo mzde (január až apríl), odvod dane, zaúčtovanie, výplatná páska
-- [ ] Mesačný prehľad a ročné hlásenie pre finančnú správu, potvrdenie o príjmoch
+- [x] Potvrdenie o zdaniteľných príjmoch zo závislej činnosti (§ 39 ods. 5, POT395v26) na tlač
+- [ ] Mesačný prehľad a ročné hlásenie pre finančnú správu
 - [ ] Priemerný zárobok: náhrada mzdy za dovolenku, náhrada príjmu pri PN (dni 1 – 14), evidencia dochádzky a dovoleniek
 - [x] Zaúčtovanie miezd do podvojného účtovníctva: interný doklad za uzavretý mesiac (521, 527, 524 / 331, 336, 342, 379), kontrola, či doklad zodpovedá mzdám po otvorení mesiaca
 - [x] Príkazy na úhradu miezd: hromadný príkaz SEPA s výplatami, poistným Sociálnej poisťovni (VS, ŠS MM99RRRR, KS 3118), zdravotným poisťovniam a preddavkami dane (500259-OÚD, VS 1100MMRRRR)

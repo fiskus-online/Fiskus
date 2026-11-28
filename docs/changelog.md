@@ -13,6 +13,10 @@ etapách je v [pláne vývoja](./ROADMAP.md).
 
 ## 0.10.12
 
+- **Potvrdenie o zdaniteľných príjmoch.** Na obrazovke Ročné zúčtovanie
+  sa dá vytlačiť potvrdenie podľa § 39 ods. 5 zákona o dani z príjmov
+  (vzor POT395v26) pre jedného alebo všetkých zamestnancov: príjmy,
+  poistné, preddavky, nezdaniteľná časť, mesiace a deti s daňovým bonusom.
 - **Ročné zúčtovanie vo mzde.** Preplatok alebo nedoplatok dane a rozdiel
   daňového bonusu sa vyrovná v zvolenej mzde za január až apríl
   nasledujúceho roka — v čistej mzde, odvode dane, zaúčtovaní

@@ -44,8 +44,9 @@ type SettlementRow struct {
 	Request   SettlementRequest `json:"request"`
 	Rows      map[string]string `json:"rows"` // r. 01 … 22 (sumy ako text)
 	Result    money.Dec         `json:"result"`
-	TaxDiff   money.Dec         `json:"taxDiff"`   // r. 06 − r. 18: + nedoplatok, − preplatok
-	BonusDiff money.Dec         `json:"bonusDiff"` // r. 09 − r. 10: + doplatiť, − vybrať
+	Cert      Certificate       `json:"certificate"` // potvrdenie o zdaniteľných príjmoch
+	TaxDiff   money.Dec         `json:"taxDiff"`     // r. 06 − r. 18: + nedoplatok, − preplatok
+	BonusDiff money.Dec         `json:"bonusDiff"`   // r. 09 − r. 10: + doplatiť, − vybrať
 	Notes     []string          `json:"notes"`
 }
 
@@ -99,6 +100,7 @@ func (a *App) Settlements(ctx context.Context, cid int64, year int) (SettlementV
 		e                                          payroll.Employee
 		months                                     []int
 		income, agree, social, health, prep, bonus money.Dec
+		cert                                       certAcc
 	}
 	sums := map[int64]*acc{}
 	for m := 1; m <= 12; m++ {
@@ -120,6 +122,7 @@ func (a *App) Settlements(ctx context.Context, cid int64, year int) (SettlementV
 				x.e = e // deti a údaje z aktuálnej karty
 			}
 			res := r.Result
+			x.cert.add(m, r.Employee, res, p)
 			x.months = append(x.months, m)
 			x.income = x.income.Add(res.Income)
 			if r.Employee.Contract.Agreement() {
@@ -142,7 +145,7 @@ func (a *App) Settlements(ctx context.Context, cid int64, year int) (SettlementV
 		}
 		s := dpfo.Settle(in, p)
 		row := SettlementRow{Employee: x.e, Months: x.months, Request: req, Rows: settlementRows(s), Result: s.R22,
-			TaxDiff: s.R06.Sub(s.R18), BonusDiff: s.R09.Sub(s.R10), Notes: s.Notes}
+			Cert: x.cert.certificate(), TaxDiff: s.R06.Sub(s.R18), BonusDiff: s.R09.Sub(s.R10), Notes: s.Notes}
 		if row.Notes == nil {
 			row.Notes = []string{}
 		}

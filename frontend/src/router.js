@@ -72,6 +72,7 @@ import Payroll from './views/Payroll.vue'
 import PayrollPrint from './views/PayrollPrint.vue'
 import PayrollSettlement from './views/PayrollSettlement.vue'
 import PayrollSettlementPrint from './views/PayrollSettlementPrint.vue'
+import PayrollCertificatePrint from './views/PayrollCertificatePrint.vue'
 import LedgerNotesPrint from './views/LedgerNotesPrint.vue'
 
 // Moduly z etapového plánu — zatiaľ prázdne stránky s popisom.
@@ -242,6 +243,7 @@ export const router = createRouter({
     { path: '/mzdy/tlac', component: PayrollPrint, meta: { title: 'Výplatné pásky', bare: true, perm: 'ledger.read' } },
     { path: '/rocne-zuctovanie', component: PayrollSettlement, meta: { title: 'Ročné zúčtovanie', perm: 'ledger.read' } },
     { path: '/rocne-zuctovanie/tlac', component: PayrollSettlementPrint, meta: { title: 'Ročné zúčtovanie', bare: true, perm: 'ledger.read' } },
+    { path: '/rocne-zuctovanie/potvrdenie', component: PayrollCertificatePrint, meta: { title: 'Potvrdenie o príjmoch', bare: true, perm: 'ledger.read' } },
     { path: '/zamestnanci', component: Employees, meta: { title: 'Zamestnanci', perm: 'ledger.read' } },
     { path: '/kniha-jazd', component: Logbook, meta: { title: 'Kniha jázd', perm: 'ledger.read' } },
     { path: '/kniha-jazd/:id(\\d+)/tlac', component: LogbookPrint, props: true, meta: { title: 'Kniha jázd', bare: true, perm: 'ledger.read' } },
