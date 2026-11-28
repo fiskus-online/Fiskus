@@ -121,6 +121,19 @@ func TestCompute2026(t *testing.T) {
 
 func TestComputeMisc(t *testing.T) {
 	p, _ := ParamsFor(2026)
+	// ročné zúčtovanie vo mzde: preplatok dane a doplatok bonusu zvýšia čistú mzdu a znížia odvod dane
+	{
+		e := Employee{Contract: TPP, Wage: m("1500"), NCZD: true}
+		base, _ := Compute(e, Input{}, p, 3)
+		r, _ := Compute(e, Input{SettleTax: m("-120.50"), SettleBonus: m("30")}, p, 3)
+		if !r.Net.Equal(base.Net.Add(m("150.50"))) || !r.ToPay.Equal(base.ToPay.Add(m("150.50"))) {
+			t.Errorf("ročné zúčtovanie: net %s, pred %s", r.Net, base.Net)
+		}
+		tb, tr := Sum([]Result{base}, nil), Sum([]Result{r}, nil)
+		if !tr.Tax.Equal(tb.Tax.Sub(m("150.50"))) {
+			t.Errorf("odvod dane %s, pred %s", tr.Tax, tb.Tax)
+		}
+	}
 	// odvodová výnimka: úrazové a garančné z celej odmeny
 	for _, e := range []Employee{{Contract: DoBPS, Wage: m("150"), OOP: true}, {Contract: DoPC, Regular: true, Wage: m("150"), Pension: PensionOld, OOP: true}} {
 		r, _ := Compute(e, Input{}, p, 1)

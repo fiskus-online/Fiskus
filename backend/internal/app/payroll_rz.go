@@ -32,16 +32,21 @@ type SettlementRequest struct {
 	OtherPrepaid money.Dec `json:"otherPrepaid"`
 	OtherBonus   money.Dec `json:"otherBonus"`
 	Date         string    `json:"date,omitempty"` // dátum vykonania RRRR-MM-DD
+	// SettleMonth: mzda (RRRR-MM, január až apríl nasledujúceho roka),
+	// v ktorej sa preplatok vráti alebo nedoplatok zrazí; prázdne = ručne
+	SettleMonth string `json:"settleMonth,omitempty"`
 }
 
 // SettlementRow je ročné zúčtovanie jedného zamestnanca.
 type SettlementRow struct {
-	Employee payroll.Employee  `json:"employee"`
-	Months   []int             `json:"months"` // uzavreté mesiace s príjmom
-	Request  SettlementRequest `json:"request"`
-	Rows     map[string]string `json:"rows"` // r. 01 … 22 (sumy ako text)
-	Result   money.Dec         `json:"result"`
-	Notes    []string          `json:"notes"`
+	Employee  payroll.Employee  `json:"employee"`
+	Months    []int             `json:"months"` // uzavreté mesiace s príjmom
+	Request   SettlementRequest `json:"request"`
+	Rows      map[string]string `json:"rows"` // r. 01 … 22 (sumy ako text)
+	Result    money.Dec         `json:"result"`
+	TaxDiff   money.Dec         `json:"taxDiff"`   // r. 06 − r. 18: + nedoplatok, − preplatok
+	BonusDiff money.Dec         `json:"bonusDiff"` // r. 09 − r. 10: + doplatiť, − vybrať
+	Notes     []string          `json:"notes"`
 }
 
 // SettlementView je ročné zúčtovanie za rok.
@@ -136,7 +141,8 @@ func (a *App) Settlements(ctx context.Context, cid int64, year int) (SettlementV
 			in.Children = x.e.Children
 		}
 		s := dpfo.Settle(in, p)
-		row := SettlementRow{Employee: x.e, Months: x.months, Request: req, Rows: settlementRows(s), Result: s.R22, Notes: s.Notes}
+		row := SettlementRow{Employee: x.e, Months: x.months, Request: req, Rows: settlementRows(s), Result: s.R22,
+			TaxDiff: s.R06.Sub(s.R18), BonusDiff: s.R09.Sub(s.R10), Notes: s.Notes}
 		if row.Notes == nil {
 			row.Notes = []string{}
 		}
@@ -183,6 +189,22 @@ func (a *App) SaveSettlementRequest(ctx context.Context, cid int64, year int, em
 			return vErr("spouse.months", "Najviac 12 mesiacov")
 		}
 	}
+	if r.SettleMonth != "" {
+		y, mo, ok := parseYM(r.SettleMonth)
+		if !ok || y != year+1 || mo > 4 {
+			return vErr("settleMonth", fmt.Sprintf("Vyrovnanie vo mzde za január až apríl %d", year+1))
+		}
+		if !r.Requested {
+			return vErr("settleMonth", "Ročné zúčtovanie sa vykoná iba na žiadosť zamestnanca")
+		}
+		var pm PayrollMonth
+		if _, err := a.loadJSON(ctx, payrollKey(cid, y, mo), &pm); err != nil {
+			return err
+		}
+		if pm.Closed {
+			return vErr("settleMonth", fmt.Sprintf("Mzdy za %d/%d sú uzavreté — otvorte ich alebo zvoľte iný mesiac", mo, y))
+		}
+	}
 	if r.Date != "" {
 		if _, err := invoice.ParseDate(r.Date); err != nil {
 			return vErr("date", "Neplatný dátum")
@@ -199,4 +221,42 @@ func (a *App) SaveSettlementRequest(ctx context.Context, cid int64, year int, em
 	a.record(ctx, cid, audit.CatPayroll, "update", "settlement", empID,
 		fmt.Sprintf("Ročné zúčtovanie %d: %s", year, name), nil, nil)
 	return nil
+}
+
+func parseYM(s string) (int, int, bool) {
+	var y, m int
+	if n, err := fmt.Sscanf(s, "%d-%d", &y, &m); err != nil || n != 2 || m < 1 || m > 12 || len(s) != 7 {
+		return 0, 0, false
+	}
+	return y, m, true
+}
+
+// settlementInputs: rozdiely ročného zúčtovania za predchádzajúci rok, ktoré
+// sa vyrovnajú v mzde year/month (zamestnanec → daň, bonus).
+func (a *App) settlementInputs(ctx context.Context, cid int64, year, month int) (map[int64][2]money.Dec, error) {
+	reqs := map[string]SettlementRequest{}
+	if _, err := a.loadJSON(ctx, settlementKey(cid, year-1), &reqs); err != nil {
+		return nil, err
+	}
+	ym := fmt.Sprintf("%04d-%02d", year, month)
+	any := false
+	for _, r := range reqs {
+		if r.Requested && r.SettleMonth == ym {
+			any = true
+		}
+	}
+	if !any {
+		return nil, nil
+	}
+	v, err := a.Settlements(ctx, cid, year-1)
+	if err != nil {
+		return nil, err
+	}
+	out := map[int64][2]money.Dec{}
+	for _, r := range v.List {
+		if r.Request.Requested && r.Request.SettleMonth == ym {
+			out[r.Employee.ID] = [2]money.Dec{r.TaxDiff, r.BonusDiff}
+		}
+	}
+	return out, nil
 }

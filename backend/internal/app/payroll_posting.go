@@ -33,7 +33,7 @@ type PayrollPosting struct {
 
 // payrollLines zostaví riadky dokladu z výsledkov miezd (nulové vynechá).
 func payrollLines(results []payroll.Result) []ledger.Line {
-	var gross, sick, er, contrib, tax, bonus, ded money.Dec
+	var gross, sick, er, contrib, tax, bonus, ded, stax, sbonus money.Dec
 	for _, r := range results {
 		gross = gross.Add(r.Gross)
 		sick = sick.Add(r.SickPay)
@@ -42,6 +42,7 @@ func payrollLines(results []payroll.Result) []ledger.Line {
 		tax = tax.Add(r.TaxPaid)
 		bonus = bonus.Add(r.BonusPaid)
 		ded = ded.Add(r.Deduction)
+		stax, sbonus = stax.Add(r.SettleTax), sbonus.Add(r.SettleBonus)
 	}
 	lines := []ledger.Line{}
 	add := func(debit, credit string, v money.Dec) {
@@ -56,6 +57,11 @@ func payrollLines(results []payroll.Result) []ledger.Line {
 	add("331", "342", tax)     // preddavok dane
 	add("342", "331", bonus)   // daňový bonus vyplatený zamestnávateľom
 	add("331", "379", ded)     // zrážky zo mzdy
+	// ročné zúčtovanie: nedoplatok dane / vybratý bonus zrazí, preplatok / doplatok bonusu vyplatí
+	add("331", "342", stax)
+	add("342", "331", stax.Neg())
+	add("342", "331", sbonus)
+	add("331", "342", sbonus.Neg())
 	return lines
 }
 

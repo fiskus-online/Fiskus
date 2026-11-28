@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  settleLines, settleMonthOptions,
   filterSettlements, settlementFromForm, settlementOutcome, settlementToForm,
   postingPairs, payTotal, payDefault, paySettingsForm,
   activeIn, contractLabel, employeeFromForm, employeeName, employeeState, employeeToForm, filterEmployees, inputFromForm, inputToForm, newEmployee,
@@ -115,5 +116,16 @@ describe('mzdy', () => {
       requested: true, dds: '60.00', spouse: { name: 'Eva', months: 6, ownIncome: '100.00' }, otherIncome: '1000.50', otherPrepaid: '0',
     })
     expect(settlementFromForm({ ...settlementToForm({}), spouse: false }).spouse).toBe(null)
+  })
+  it('ročné zúčtovanie vo mzde', () => {
+    expect(settleLines({ settleTax: '-120.50', settleBonus: '30.00' })).toEqual([
+      { label: 'Ročné zúčtovanie — preplatok dane', sign: '+', amount: '120.50' },
+      { label: 'Ročné zúčtovanie — doplatok bonusu', sign: '+', amount: '30.00' },
+    ])
+    expect(settleLines({ settleTax: '5.00', settleBonus: '-2.00' }).map((l) => l.sign)).toEqual(['−', '−'])
+    expect(settleLines({ settleTax: '0.00' })).toEqual([])
+    const o = settleMonthOptions(2026)
+    expect(o.length).toBe(5)
+    expect(o[3]).toEqual({ label: 'mzda za marec 2027', value: '2027-03' })
   })
 })

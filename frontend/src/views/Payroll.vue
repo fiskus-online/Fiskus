@@ -18,7 +18,7 @@ import { api, ApiError } from '../lib/api.js'
 import { can, session } from '../lib/session.js'
 import { formatAmount, formatMoney } from '../lib/format.js'
 import { payrollColumns } from '../lib/columns.js'
-import { contractShort, employeeName, inputFromForm, inputToForm, insurerLabel, periodLabel, postingPairs, shiftMonth } from '../lib/payroll.js'
+import { contractShort, employeeName, inputFromForm, inputToForm, insurerLabel, periodLabel, postingPairs, settleLines, shiftMonth } from '../lib/payroll.js'
 
 const route = useRoute()
 const router = useRouter()
@@ -268,6 +268,7 @@ const fmtClosed = (s) => (s ? new Date(s).toLocaleDateString('sk-SK') : '')
             <tr v-if="Number(row.result.nczd)"><td class="in">Nezdaniteľná časť</td><td class="num">{{ formatAmount(row.result.nczd) }}</td></tr>
             <tr><td>Preddavok na daň</td><td class="num">{{ Number(row.result.tax) ? '−' : '' }}{{ formatAmount(row.result.tax) }}</td></tr>
             <tr v-if="Number(row.result.taxBonus)"><td>Daňový bonus na deti</td><td class="num">+{{ formatAmount(row.result.taxBonus) }}</td></tr>
+            <tr v-for="l in settleLines(row.result)" :key="l.label"><td>{{ l.label }}</td><td class="num">{{ l.sign }}{{ formatAmount(l.amount) }}</td></tr>
             <tr class="sum"><td>Čistá mzda</td><td class="num">{{ formatAmount(row.result.net) }}</td></tr>
             <tr v-if="Number(row.result.deduction)"><td>Zrážky</td><td class="num">−{{ formatAmount(row.result.deduction) }}</td></tr>
             <tr class="total"><td>Na výplatu</td><td class="num"><span class="ledger">{{ formatMoney(row.result.toPay) }}</span></td></tr>
@@ -286,7 +287,7 @@ const fmtClosed = (s) => (s ? new Date(s).toLocaleDateString('sk-SK') : '')
       <table class="slip post">
         <thead><tr><th>MD</th><th>D</th><th>Text</th><th class="num">Suma</th></tr></thead>
         <tbody>
-          <tr v-for="p in pairs" :key="p.md + p.d"><td>{{ p.md }}</td><td>{{ p.d }}</td><td>{{ p.label }}</td><td class="num">{{ formatAmount(p.amount) }}</td></tr>
+          <tr v-for="(p, i) in pairs" :key="i"><td>{{ p.md }}</td><td>{{ p.d }}</td><td>{{ p.label }}</td><td class="num">{{ formatAmount(p.amount) }}</td></tr>
           <tr class="total"><td colspan="3">Zostatok 331 — na výplatu</td><td class="num"><span class="ledger">{{ formatMoney(posting?.toPay) }}</span></td></tr>
         </tbody>
       </table>

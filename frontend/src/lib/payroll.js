@@ -174,6 +174,7 @@ export function settlementToForm(r = {}) {
     otherPrepaid: r.otherPrepaid ?? '',
     otherBonus: r.otherBonus ?? '',
     date: r.date ?? '',
+    settleMonth: r.settleMonth ?? '',
   }
 }
 
@@ -189,6 +190,7 @@ export function settlementFromForm(f) {
     otherPrepaid: n(f.otherPrepaid),
     otherBonus: n(f.otherBonus),
     date: f.date || '',
+    settleMonth: f.settleMonth || '',
   }
 }
 
@@ -216,3 +218,25 @@ export const settlementLines = [
   ['20', 'Preplatok dane (r. 06 − r. 18 < 0)'],
   ['22', 'Zamestnávateľ zrazí (+) alebo vráti (−)'],
 ]
+
+/** Riadky ročného zúčtovania na výplatnej páske (znamienko podľa vplyvu na čistú mzdu; sumy zo servera). */
+export function settleLines(result = {}) {
+  const out = []
+  const abs = (v) => String(v).replace(/^-/, '')
+  const neg = (v) => String(v).startsWith('-')
+  const tax = result.settleTax
+  if (tax && Number(tax)) {
+    out.push(neg(tax) ? { label: 'Ročné zúčtovanie — preplatok dane', sign: '+', amount: abs(tax) } : { label: 'Ročné zúčtovanie — nedoplatok dane', sign: '−', amount: tax })
+  }
+  const bonus = result.settleBonus
+  if (bonus && Number(bonus)) {
+    out.push(neg(bonus) ? { label: 'Ročné zúčtovanie — vrátenie bonusu', sign: '−', amount: abs(bonus) } : { label: 'Ročné zúčtovanie — doplatok bonusu', sign: '+', amount: bonus })
+  }
+  return out
+}
+
+/** Mesiace, v ktorých možno vyrovnať ročné zúčtovanie za rok (január až apríl nasledujúceho roka). */
+export function settleMonthOptions(year) {
+  const y = year + 1
+  return [{ label: 'ručne (mimo miezd)', value: '' }, ...[1, 2, 3, 4].map((m) => ({ label: `mzda za ${monthNames[m - 1]} ${y}`, value: `${y}-0${m}` }))]
+}

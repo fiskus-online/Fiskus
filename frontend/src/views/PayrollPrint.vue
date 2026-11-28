@@ -6,7 +6,7 @@ import Button from 'primevue/button'
 import { api } from '../lib/api.js'
 import { session } from '../lib/session.js'
 import { formatAmount, formatDate, formatMoney } from '../lib/format.js'
-import { contractLabel, employeeName, insurerLabel, periodLabel } from '../lib/payroll.js'
+import { contractLabel, employeeName, insurerLabel, periodLabel, settleLines } from '../lib/payroll.js'
 
 const route = useRoute()
 const router = useRouter()
@@ -76,6 +76,7 @@ const print = () => window.print()
             <tr v-if="nz(r.result.nczd)"><td class="in">Nezdaniteľná časť</td><td>{{ formatAmount(r.result.nczd) }}</td></tr>
             <tr><td>Preddavok na daň</td><td>{{ nz(r.result.tax) ? '−' : '' }}{{ formatAmount(r.result.tax) }}</td></tr>
             <tr v-if="nz(r.result.taxBonus)"><td>Daňový bonus na deti</td><td>+{{ formatAmount(r.result.taxBonus) }}</td></tr>
+            <tr v-for="l in settleLines(r.result)" :key="l.label"><td>{{ l.label }}</td><td>{{ l.sign }}{{ formatAmount(l.amount) }}</td></tr>
             <tr class="sum"><td>Čistá mzda</td><td>{{ formatAmount(r.result.net) }}</td></tr>
             <tr v-if="nz(r.result.deduction)"><td>Zrážky</td><td>−{{ formatAmount(r.result.deduction) }}</td></tr>
             <tr class="total"><td>Na výplatu</td><td><span class="ledger">{{ formatMoney(r.result.toPay) }}</span></td></tr>

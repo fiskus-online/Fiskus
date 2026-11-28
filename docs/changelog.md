@@ -13,6 +13,10 @@ etapách je v [pláne vývoja](./ROADMAP.md).
 
 ## 0.10.12
 
+- **Ročné zúčtovanie vo mzde.** Preplatok alebo nedoplatok dane a rozdiel
+  daňového bonusu sa vyrovná v zvolenej mzde za január až apríl
+  nasledujúceho roka — v čistej mzde, odvode dane, zaúčtovaní
+  aj na výplatnej páske.
 - **Ročné zúčtovanie preddavkov na daň.** Nová obrazovka Mzdy → Ročné
   zúčtovanie: výpočet zo súčtu uzavretých mesiacov roka so žiadosťou
   zamestnanca, manželom/manželkou, III. pilierom a príjmami od iných
