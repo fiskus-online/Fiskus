@@ -353,15 +353,28 @@ func (a *App) Payroll(ctx context.Context, cid int64, year, month int) (PayrollV
 		}
 		p, _ := payroll.ParamsFor(year)
 		ym := fmt.Sprintf("%04d-%02d", year, month)
+		settle, err := a.settlementInputs(ctx, cid, year, month)
+		if err != nil {
+			return v, err
+		}
 		for _, e := range b.List {
 			if !e.ActiveIn(ym) {
 				continue
 			}
 			in := inputs[e.ID]
 			in.EmployeeID = e.ID
+			// rozdiel z ročného zúčtovania dopĺňa Fiškus, nie formulár
+			in.SettleTax, in.SettleBonus = settle[e.ID][0], settle[e.ID][1]
 			r, err := payroll.Compute(e, in, p, month)
 			if err != nil {
 				return v, vErr("employee", e.Name()+": "+err.Error())
+			}
+			if d := in.SettleTax.Sub(in.SettleBonus); !d.IsZero() {
+				what := "zrazí sa nedoplatok"
+				if d.Sign() < 0 {
+					what = "vráti sa preplatok"
+				}
+				r.Notes = append(r.Notes, fmt.Sprintf("Ročné zúčtovanie za %d: %s %s €.", year-1, what, d.Abs().Display()))
 			}
 			v.Rows = append(v.Rows, PayrollRow{Employee: e, Input: in, Result: r})
 			insurers[e.ID] = e.Insurer
@@ -402,6 +415,9 @@ func (a *App) SavePayroll(ctx context.Context, cid int64, year, month int, input
 	if len(f) > 0 {
 		sort.Slice(f, func(i, j int) bool { return f[i].Field < f[j].Field })
 		return PayrollView{}, &invoice.ValidationError{Fields: f}
+	}
+	for i := range inputs { // rozdiel z ročného zúčtovania dopĺňa Fiškus pri výpočte
+		inputs[i].SettleTax, inputs[i].SettleBonus = money.Zero, money.Zero
 	}
 	pm.Inputs = inputs
 	if err := a.saveJSON(ctx, key, pm); err != nil {

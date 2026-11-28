@@ -172,7 +172,7 @@ Všetky časti (podvojné účtovníctvo, sklad, majetok, EPO, mzdy) píšeme od
 - [ ] Opravný mesačný výkaz, vylúčené doby starostlivosti o dieťa, náhrada mzdy z vážnych prevádzkových dôvodov
 - [ ] Výkazy zdravotných poisťovní, registračné listy (XML)
 - [x] Ročné zúčtovanie preddavkov na daň: výpočet zo súčtu uzavretých mesiacov, žiadosť, manžel/ka, III. pilier, iní zamestnávatelia, doklad na tlač
-- [ ] Vrátenie preplatku a zrazenie nedoplatku z ročného zúčtovania vo mzde
+- [x] Vrátenie preplatku a zrazenie nedoplatku z ročného zúčtovania vo mzde (január až apríl), odvod dane, zaúčtovanie, výplatná páska
 - [ ] Mesačný prehľad a ročné hlásenie pre finančnú správu, potvrdenie o príjmoch
 - [ ] Priemerný zárobok: náhrada mzdy za dovolenku, náhrada príjmu pri PN (dni 1 – 14), evidencia dochádzky a dovoleniek
 - [x] Zaúčtovanie miezd do podvojného účtovníctva: interný doklad za uzavretý mesiac (521, 527, 524 / 331, 336, 342, 379), kontrola, či doklad zodpovedá mzdám po otvorení mesiaca

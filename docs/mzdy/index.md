@@ -153,9 +153,15 @@ a vyplatený bonus, zrazené preddavky — a výsledok: sumu, ktorú
 zamestnávateľ zrazí (nedoplatok) alebo vráti (preplatok). **Tlačiť
 doklad** pripraví doklad pre zamestnanca.
 
+V poli **Vyrovnať vo mzde** zvolíte mzdu za január až apríl
+nasledujúceho roka. Pri jej výpočte Fiškus vráti preplatok dane alebo
+zrazí nedoplatok a doplatí alebo vyberie rozdiel daňového bonusu: zmení
+sa čistá mzda, odvod dane daňovému úradu (príkaz na úhradu, kalendár)
+aj zaúčtovanie (331/342). Na výplatnej páske je to samostatný riadok.
+Preplatok treba vrátiť najneskôr pri zúčtovaní mzdy za apríl. Ak
+zamestnanec už nepracuje, vyrovnajte rozdiel ručne.
+
 Zamestnaneckú prémiu a daňový bonus na zaplatené úroky Fiškus nepočíta.
-Vrátenie preplatku a zrazenie nedoplatku vo mzde zatiaľ zadáte ručne
-(preplatok najneskôr pri zúčtovaní mzdy za apríl).
 
 ## Termíny v kalendári
 

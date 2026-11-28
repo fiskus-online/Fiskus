@@ -19,6 +19,10 @@ etapách je v [pláne vývoja](./ROADMAP.md).
   45 700,06 €, 62 704,73 € a 77 938,08 €, hranica daňového bonusu 29 160 €.
   Ročné zúčtovanie za rok 2026 sa tak dá vysporiadať v mzdách za január až
   apríl 2027.
+- **Ročné zúčtovanie vo mzde.** Preplatok alebo nedoplatok dane a rozdiel
+  daňového bonusu sa vyrovná v zvolenej mzde za január až apríl
+  nasledujúceho roka — v čistej mzde, odvode dane, zaúčtovaní
+  aj na výplatnej páske.
 - **Ročné zúčtovanie preddavkov na daň.** Nová obrazovka Mzdy → Ročné
   zúčtovanie: výpočet zo súčtu uzavretých mesiacov roka so žiadosťou
   zamestnanca, manželom/manželkou, III. pilierom a príjmami od iných
