@@ -13,6 +13,12 @@ etapách je v [pláne vývoja](./ROADMAP.md).
 
 ## 0.10.12
 
+- **Mzdy za rok 2027.** Zákonné hodnoty na rok 2027: minimálna mzda 972 €
+  (hodinová 5,586 €), maximálny vymeriavací základ 17 820 €, nezdaniteľná
+  časť 6 199,62 € ročne (516,64 € mesačne), pásma dane 19/25/30/35 % od
+  45 700,06 €, 62 704,73 € a 77 938,08 €, hranica daňového bonusu 29 160 €.
+  Ročné zúčtovanie za rok 2026 sa tak dá vysporiadať v mzdách za január až
+  apríl 2027.
 - **Ročné zúčtovanie preddavkov na daň.** Nová obrazovka Mzdy → Ročné
   zúčtovanie: výpočet zo súčtu uzavretých mesiacov roka so žiadosťou
   zamestnanca, manželom/manželkou, III. pilierom a príjmami od iných

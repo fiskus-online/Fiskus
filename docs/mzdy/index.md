@@ -9,8 +9,11 @@ tags: [mzdy, zamestnanci]
 
 Fiškus vypočíta mzdy zamestnancov v pracovnom pomere aj odmeny z dohôd:
 poistné do Sociálnej poisťovne po fondoch, zdravotné poistenie, preddavok
-na daň, daňový bonus na deti, čistú mzdu a cenu práce. Počíta roky 2025
-a 2026 podľa sadzieb a limitov platných v danom roku.
+na daň, daňový bonus na deti, čistú mzdu a cenu práce. Počíta roky 2025,
+2026 a 2027 podľa sadzieb a limitov platných v danom roku. Pre rok 2027
+platí minimálna mzda 972 €, maximálny vymeriavací základ 17 820 € mesačne
+a nezdaniteľná časť 516,64 € mesačne. Daňové priznanie za rok 2027 Fiškus
+zostaví, až keď finančná správa vydá jeho tlačivo.
 
 ## Zamestnanci
 

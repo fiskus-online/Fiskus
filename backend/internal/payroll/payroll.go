@@ -120,6 +120,12 @@ var years = map[int]Params{
 	2026: {Year: 2026, Social: socialRates(), SocialMax: m("16764"), OOP: m("200"),
 		Health: m("5"), HealthER: m("11"), HealthZTP: m("2.5"), HealthZTPER: m("5.5"),
 		MinWage: m("915"), MinHourly: m("5.259"), SickPayDays: 14},
+	// 2027: max. VZ 11 × 1 620 € (priemerná mzda 2025), sadzby ako 2026
+	// (zdravotné 5 % podľa konsolidačného balíka aj v 2027), minimálna mzda
+	// 972 € (oznámenie MPSVR SR 232/2026 Z. z.), hodinová 972 / 174.
+	2027: {Year: 2027, Social: socialRates(), SocialMax: m("17820"), OOP: m("200"),
+		Health: m("5"), HealthER: m("11"), HealthZTP: m("2.5"), HealthZTPER: m("5.5"),
+		MinWage: m("972"), MinHourly: m("5.586"), SickPayDays: 14},
 }
 
 // ErrYear — mzdy za rok Fiškus nevie vypočítať.
@@ -140,7 +146,7 @@ func ParamsFor(year int) (Params, error) {
 }
 
 // Years sú roky, za ktoré sa dajú počítať mzdy.
-func Years() []int { return []int{2025, 2026} }
+func Years() []int { return []int{2025, 2026, 2027} }
 
 // Employee je zamestnanec alebo dohodár.
 type Employee struct {

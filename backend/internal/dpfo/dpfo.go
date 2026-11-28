@@ -54,7 +54,8 @@ var m = money.MustParse
 
 // years sú overené hodnoty. Zdroje: kontroly polí formulára DPFOBv25
 // (za 2025) a podpora.financnasprava.sk 214187, 081400 (za 2026); manžel/ka
-// 426769, 614044; daňový bonus 790897, 215354.
+// 426769, 614044; daňový bonus 790897, 215354. Rok 2027 je odvodený zo
+// životného minima (pozri pri ňom).
 var years = map[int]Params{
 	2025: {
 		Year: 2025, NCZD: m("5753.79"), NCZDLimit: m("25426.27"), NCZDConst: m("12110.36"), NCZDDiv: 4, DDSMax: m("180"),
@@ -71,6 +72,20 @@ var years = map[int]Params{
 		MinTax: m("17"), NoTaxIncome: m("2983.37"), Form: "DPFOBv25",
 		SpouseFull: m("5455.30"), SpouseLimit: m("43983.32"), SpouseConst: m("20116.40"), SpouseDiv: 3,
 		BonusYoung: m("100"), BonusOld: m("50"), BonusLimit: m("27432"), // 1,5 × 12 × 1 524 € (priemerná mzda 2024)
+	},
+	// 2027: životné minimum od 1. 7. 2026 je 295,22 € (opatrenie MPSVR SR);
+	// NČZD 21×, hranica plnej NČZD 91,8×, konštanta 51,6×, pásma 154,8×,
+	// 212,4× a 264×, manžel/ka 19,2× a 70,8× ŽM — rovnaké násobky ako 2026.
+	// Bonus: 100/50 € a hranica 1,5 × 12 × 1 620 € (priemerná mzda 2025).
+	// Tlačivo DPFO za 2027 ešte nie je vydané (Form ""), preto rok slúži
+	// len mzdám a ročnému zúčtovaniu, nie priznaniu.
+	2027: {
+		Year: 2027, NCZD: m("6199.62"), NCZDLimit: m("27101.20"), NCZDConst: m("15233.35"), NCZDDiv: 3, DDSMax: m("180"),
+		Brackets: []Bracket{{m("45700.06"), 19}, {m("62704.73"), 25}, {m("77938.08"), 30}, {money.Zero, 35}},
+		FlatRate: 15, FlatLimit: m("100000"), MicroLimit: m("60000"), ExpensePct: 60, ExpenseMax: m("20000"),
+		MinTax: m("17"), NoTaxIncome: m("3099.81"),
+		SpouseFull: m("5668.22"), SpouseLimit: m("45700.06"), SpouseConst: m("20901.58"), SpouseDiv: 3,
+		BonusYoung: m("100"), BonusOld: m("50"), BonusLimit: m("29160"), // 1,5 × 12 × 1 620 € (priemerná mzda 2025)
 	},
 }
 
@@ -93,11 +108,13 @@ func ParamsFor(year int) (Params, error) {
 	return p, nil
 }
 
-// Years vráti roky, za ktoré vie Fiškus priznanie zostaviť.
+// Years vráti roky, za ktoré vie Fiškus priznanie zostaviť (je známe tlačivo).
 func Years() []int {
 	out := make([]int, 0, len(years))
-	for y := range years {
-		out = append(out, y)
+	for y, p := range years {
+		if p.Form != "" {
+			out = append(out, y)
+		}
 	}
 	for i := 1; i < len(out); i++ {
 		for j := i; j > 0 && out[j] > out[j-1]; j-- {
@@ -229,6 +246,9 @@ func Compute(in Input) (Result, error) {
 	p, err := ParamsFor(in.Year)
 	if err != nil {
 		return Result{}, err
+	}
+	if p.Form == "" {
+		return Result{}, fmt.Errorf("%w: tlačivo priznania za rok %d ešte nie je vydané", ErrYear, in.Year)
 	}
 	r := map[string]money.Dec{}
 	res := Result{Params: p, Rows: r}
